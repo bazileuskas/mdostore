@@ -19,6 +19,11 @@
     img{max-width:100%;display:block}
     a{color:inherit;text-decoration:none}
 
+    /* ── setup banner (hidden once DB_URL is replaced) ── */
+    .setup-banner{background:#161616;color:#fffaf2;padding:18px 24px;font-family:'Courier New',monospace;font-size:12px;line-height:1.9;border-bottom:3px solid var(--accent2)}
+    .setup-banner strong{color:var(--accent2);display:block;margin-bottom:4px;font-size:13px;letter-spacing:.05em}
+    .setup-banner code{background:#2a2a2a;padding:2px 6px;border-radius:2px}
+
     /* ── nav ── */
     .nav{
       position:sticky;top:0;z-index:50;
@@ -40,7 +45,6 @@
       border:2px solid var(--ink);background:#fff;
       box-shadow:var(--shadow);padding:36px;
       display:flex;flex-direction:column;gap:16px;
-      position:relative;
     }
     .product-card .eyebrow{font-size:11px;font-weight:800;letter-spacing:.14em;
       text-transform:uppercase;color:var(--muted)}
@@ -56,10 +60,9 @@
       border:2px solid var(--ink);background:var(--ink);color:var(--cream);
       font-family:inherit;font-weight:900;font-size:14px;letter-spacing:.06em;
       text-transform:uppercase;padding:14px 28px;cursor:pointer;
-      transition:background .15s,color .15s;
     }
     .add-bag-btn:hover{background:var(--accent2);color:var(--ink)}
-    .add-bag-btn:disabled{background:#aaa;cursor:not-allowed}
+    .add-bag-btn:disabled{background:#aaa;cursor:not-allowed;color:#fff}
 
     /* ── mini bag ── */
     .mini-bag{
@@ -78,6 +81,7 @@
       text-transform:uppercase;padding:12px 22px;cursor:pointer;white-space:nowrap;
     }
     .queue-btn:hover{background:var(--accent);color:#fff}
+    .queue-btn:disabled{background:#ccc;color:#888;cursor:not-allowed}
 
     /* ── queue display ── */
     .queue-section{
@@ -89,16 +93,16 @@
     .ticket-label{font-size:11px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
     .ticket-num{font-size:clamp(64px,14vw,110px);font-weight:900;letter-spacing:-.04em;line-height:1;color:var(--ink)}
     .queue-divider{border:none;border-top:2px dashed #ddd;margin:28px 0}
-    .serving-row{display:flex;justify-content:center;gap:40px;flex-wrap:wrap}
-    .serving-block{text-align:center}
+    .serving-row{display:flex;justify-content:center;gap:48px;flex-wrap:wrap}
     .serving-block .s-label{font-size:10px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
-    .serving-block .s-num{font-size:36px;font-weight:900;color:var(--ink)}
+    .serving-block .s-num{font-size:36px;font-weight:900;color:var(--ink);transition:color .3s}
+    .serving-block .s-num.ticked{color:var(--accent2)}
     .queue-status{margin-top:22px;font-size:13px;color:var(--muted);letter-spacing:.02em;min-height:20px}
-    .queue-status.urgent{color:var(--accent);font-weight:800}
-
-    /* ── progress bar ── */
+    .queue-status.urgent{color:var(--accent);font-weight:800;font-size:15px}
     .q-bar-wrap{margin-top:20px;height:6px;background:#eee;border:1px solid #ddd;overflow:hidden}
-    .q-bar{height:100%;background:var(--accent2);transition:width .8s ease;width:0}
+    .q-bar{height:100%;background:var(--accent2);transition:width 1s ease;width:0}
+    .live-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--accent);margin-right:5px;animation:pulse 1.4s ease-in-out infinite}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
 
     /* ── meeting form ── */
     .meet-section{
@@ -120,12 +124,14 @@
       background-repeat:no-repeat;background-position:right 14px center;padding-right:36px;
     }
     .meet-field select:focus{border-color:var(--accent2)}
+    .meet-err{color:var(--accent2);font-size:12px;margin-top:8px;font-weight:800;display:none}
     .confirm-btn{
       width:100%;border:2px solid var(--cream);background:var(--accent2);color:var(--ink);
       font-family:inherit;font-weight:900;font-size:15px;letter-spacing:.06em;
       text-transform:uppercase;padding:16px;cursor:pointer;margin-top:8px;
     }
     .confirm-btn:hover{background:#fff}
+    .confirm-btn:disabled{background:#555;color:#888;border-color:#555;cursor:not-allowed}
 
     /* ── confirmation ── */
     .confirm-section{
@@ -134,13 +140,28 @@
       display:none;text-align:center;
     }
     .confirm-section.visible{display:block}
-    .confirm-section h2{font-size:clamp(28px,5vw,44px);letter-spacing:-.02em;margin-bottom:12px}
-    .confirm-detail{font-size:16px;color:#333;line-height:1.8;margin-bottom:20px}
-    .confirm-detail strong{font-weight:900}
-    .confirm-fine{font-size:12px;color:#666;font-style:italic}
+    .confirm-section h2{font-size:clamp(28px,5vw,44px);letter-spacing:-.02em;margin-bottom:14px}
+    .confirm-detail{font-size:16px;color:#222;line-height:2;margin-bottom:20px}
+    .confirm-detail strong{font-weight:900;font-size:18px}
+    .confirm-fine{font-size:12px;color:#555;font-style:italic;line-height:1.8}
+
+    /* ── error state ── */
+    .db-error{margin-top:20px;border:2px solid var(--accent);background:#fff5f5;padding:20px 24px;
+      font-size:13px;color:var(--accent);display:none;line-height:1.7}
   </style>
 </head>
 <body>
+
+<!-- Setup banner — remove this div after configuring Firebase -->
+<div class="setup-banner" id="setupBanner" style="display:none">
+  <strong>⚙ Firebase not yet configured — queue is offline</strong>
+  1. Go to <code>console.firebase.google.com</code> → New project (any name)<br>
+  2. Build → Realtime Database → Create database → Start in <strong>test mode</strong><br>
+  3. Copy the database URL (looks like <code>https://your-project-default-rtdb.firebaseio.com</code>)<br>
+  4. Open <code>talk.html</code> and replace <code>YOUR_PROJECT_ID</code> in the script with your URL<br>
+  5. (Optional but recommended) Set these security rules in Firebase Console → Realtime Database → Rules:<br>
+  <code>{ "rules": { "queue": { ".read": true, "nextTicket": { ".write": "newData.isNumber() && newData.val() === (data.val() || 0) + 1" }, "currentlyServing": { ".write": "newData.isNumber() && newData.val() === (data.val() || 0) + 1" } } } }</code>
+</div>
 
 <nav class="nav">
   <span class="logo">Martin's Door Is Open</span>
@@ -161,7 +182,7 @@
     </p>
     <p class="fine">
       Available 12:00 – 18:00 · Barcelona, Spain only · Non-refundable<br>
-      Seats limited by the number of hours in the day and Martin's patience.
+      Slots limited by the number of hours in the day and Martin's patience.
     </p>
     <button class="add-bag-btn" id="addBagBtn">Add to bag</button>
   </div>
@@ -177,26 +198,30 @@
     </div>
   </div>
 
+  <div class="db-error" id="dbError">
+    Could not connect to the queue. Check that Firebase is configured and try again.
+  </div>
+
   <!-- Queue display -->
   <div class="queue-section" id="queueSection">
-    <div class="ticket-label">Your number</div>
-    <div class="ticket-num" id="yourNum">—</div>
+    <div class="ticket-label"><span class="live-dot"></span>Your number</div>
+    <div class="ticket-num" id="yourNumEl">—</div>
 
     <hr class="queue-divider">
 
     <div class="serving-row">
       <div class="serving-block">
         <div class="s-label">Now serving</div>
-        <div class="s-num" id="servingNum">—</div>
+        <div class="s-num" id="servingNumEl">—</div>
       </div>
       <div class="serving-block">
         <div class="s-label">Ahead of you</div>
-        <div class="s-num" id="aheadNum">—</div>
+        <div class="s-num" id="aheadNumEl">—</div>
       </div>
     </div>
 
     <div class="q-bar-wrap"><div class="q-bar" id="qBar"></div></div>
-    <div class="queue-status" id="queueStatus">Joining the queue…</div>
+    <div class="queue-status" id="queueStatus">Connecting…</div>
   </div>
 
   <!-- Meeting form -->
@@ -223,22 +248,17 @@
       <label for="timeSelect">Time (12:00 – 18:00)</label>
       <select id="timeSelect">
         <option value="">— pick a time —</option>
-        <option>12:00</option>
-        <option>12:30</option>
-        <option>13:00</option>
-        <option>13:30</option>
-        <option>14:00</option>
-        <option>14:30</option>
-        <option>15:00</option>
-        <option>15:30</option>
-        <option>16:00</option>
-        <option>16:30</option>
-        <option>17:00</option>
-        <option>17:30</option>
+        <option>12:00</option><option>12:30</option>
+        <option>13:00</option><option>13:30</option>
+        <option>14:00</option><option>14:30</option>
+        <option>15:00</option><option>15:30</option>
+        <option>16:00</option><option>16:30</option>
+        <option>17:00</option><option>17:30</option>
         <option>18:00</option>
       </select>
     </div>
 
+    <p class="meet-err" id="meetErr">Pick a place and a time. Both.</p>
     <button class="confirm-btn" id="confirmBtn">Confirm meetup →</button>
   </div>
 
@@ -248,178 +268,262 @@
     <div class="confirm-detail" id="confirmDetail"></div>
     <p class="confirm-fine">
       No ticket needed. No dress code. Just show up.<br>
-      Martin might already be there, or he might be running two minutes late.<br>
-      The door, as always, is open.
+      Martin might already be there. Or two minutes late. Both are canon.
     </p>
   </div>
 
 </div><!-- /page -->
 
 <script>
-(function(){
-  var SK = 'mdo_meetup';
+// ─────────────────────────────────────────────────────────────
+//  REPLACE THIS with your Firebase Realtime Database URL
+//  e.g. "https://mdostore-queue-default-rtdb.firebaseio.com"
+// ─────────────────────────────────────────────────────────────
+var DB_URL = 'https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com';
 
-  // ── restore state if returning ──
-  var saved = {};
-  try{ saved = JSON.parse(localStorage.getItem(SK)||'{}'); }catch(e){}
+var POLL_MS   = 4000;   // how often to refresh queue (ms)
+var STORE_KEY = 'mdo_meetup_v2';
 
-  // DOM refs
-  var addBagBtn    = document.getElementById('addBagBtn');
-  var miniBag      = document.getElementById('miniBag');
-  var goQueueBtn   = document.getElementById('goQueueBtn');
-  var queueSection = document.getElementById('queueSection');
-  var yourNumEl    = document.getElementById('yourNum');
-  var servingNumEl = document.getElementById('servingNum');
-  var aheadNumEl   = document.getElementById('aheadNum');
-  var qBar         = document.getElementById('qBar');
-  var queueStatus  = document.getElementById('queueStatus');
-  var meetSection  = document.getElementById('meetSection');
-  var confirmBtn   = document.getElementById('confirmBtn');
-  var confirmSection = document.getElementById('confirmSection');
-  var confirmDetail  = document.getElementById('confirmDetail');
+// ── detect unconfigured ──
+if(DB_URL.indexOf('YOUR_PROJECT_ID') !== -1){
+  document.getElementById('setupBanner').style.display = 'block';
+}
 
-  var yourNumber    = saved.yourNumber    || 0;
-  var servingNumber = saved.servingNumber || 0;
-  var phase         = saved.phase         || 'idle'; // idle | bag | queue | form | done
-  var qInterval;
-
-  // ── save state ──
-  function persist(){
-    try{ localStorage.setItem(SK, JSON.stringify({yourNumber:yourNumber,servingNumber:servingNumber,phase:phase})); }catch(e){}
+// ── helpers ──
+function dbGet(path){
+  return fetch(DB_URL + path + '.json').then(function(r){ return r.json(); });
+}
+function dbSet(path, val){
+  return fetch(DB_URL + path + '.json', {
+    method:'PUT',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify(val)
+  }).then(function(r){ return r.json(); });
+}
+// Atomic increment via ETag-based conditional write
+function dbIncrement(path, maxTries){
+  maxTries = maxTries || 6;
+  function attempt(n){
+    if(n <= 0) return Promise.reject(new Error('increment failed'));
+    return fetch(DB_URL + path + '.json', { headers:{'X-Firebase-ETag':'true'} })
+      .then(function(r){
+        var etag = r.headers.get('ETag');
+        return r.json().then(function(cur){
+          var next = (cur || 0) + 1;
+          return fetch(DB_URL + path + '.json', {
+            method:'PUT',
+            headers:{'Content-Type':'application/json','if-match': etag},
+            body: JSON.stringify(next)
+          }).then(function(wr){
+            if(wr.status === 412) return attempt(n-1); // conflict → retry
+            return wr.json().then(function(){ return { prev: cur || 0, next: next }; });
+          });
+        });
+      });
   }
+  return attempt(maxTries);
+}
 
-  // ── update queue display ──
-  function refreshQueue(){
-    var ahead = Math.max(0, yourNumber - servingNumber);
-    yourNumEl.textContent    = '#' + String(yourNumber).padStart(3,'0');
-    servingNumEl.textContent = '#' + String(servingNumber).padStart(3,'0');
-    aheadNumEl.textContent   = ahead;
+// ── FormSubmit email ──
+function sendEmail(ticket, place, time){
+  return fetch('https://formsubmit.co/ajax/buy@mdostore.com',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','Accept':'application/json'},
+    body: JSON.stringify({
+      _subject: 'Meetup booking — ticket #' + String(ticket).padStart(3,'0'),
+      _template: 'table',
+      _captcha: 'false',
+      'Ticket':  '#' + String(ticket).padStart(3,'0'),
+      'Place':   place,
+      'Time':    time,
+      'Booked':  new Date().toLocaleString('en-GB')
+    })
+  }).catch(function(){});
+}
 
-    var progress = Math.min(100, Math.round(100 - (ahead / (yourNumber - (yourNumber - 6))) * 100));
-    qBar.style.width = progress + '%';
+// ── state (localStorage) ──
+var state = {};
+try{ state = JSON.parse(localStorage.getItem(STORE_KEY)||'{}'); }catch(e){}
+function persist(){ try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){} }
 
-    if(ahead <= 0){
-      queueStatus.textContent = 'You\'re up. Step forward.';
-      queueStatus.className   = 'queue-status urgent';
-    } else if(ahead === 1){
-      queueStatus.textContent = 'You\'re next. Get ready.';
-      queueStatus.className   = 'queue-status urgent';
-    } else if(ahead === 2){
-      queueStatus.textContent = 'Almost there. Two ahead.';
-      queueStatus.className   = 'queue-status';
-    } else {
-      queueStatus.textContent = 'Hang tight. ' + ahead + ' ahead of you.';
-      queueStatus.className   = 'queue-status';
-    }
+// ── DOM refs ──
+var addBagBtn      = document.getElementById('addBagBtn');
+var miniBag        = document.getElementById('miniBag');
+var goQueueBtn     = document.getElementById('goQueueBtn');
+var dbError        = document.getElementById('dbError');
+var queueSection   = document.getElementById('queueSection');
+var yourNumEl      = document.getElementById('yourNumEl');
+var servingNumEl   = document.getElementById('servingNumEl');
+var aheadNumEl     = document.getElementById('aheadNumEl');
+var qBar           = document.getElementById('qBar');
+var queueStatus    = document.getElementById('queueStatus');
+var meetSection    = document.getElementById('meetSection');
+var meetErr        = document.getElementById('meetErr');
+var confirmBtn     = document.getElementById('confirmBtn');
+var confirmSection = document.getElementById('confirmSection');
+var confirmDetail  = document.getElementById('confirmDetail');
+
+var pollTimer = null;
+
+// ── queue display update ──
+function tickNum(el, newVal){
+  if(el.textContent === String(newVal)) return;
+  el.classList.remove('ticked');
+  el.textContent = String(newVal).padStart(3,'0');
+  void el.offsetWidth;
+  el.classList.add('ticked');
+  setTimeout(function(){ el.classList.remove('ticked'); }, 600);
+}
+
+function refreshDisplay(serving){
+  var your   = state.ticket || 0;
+  var ahead  = Math.max(0, your - serving);
+  var total  = Math.max(1, your - (state.initialServing || 0));
+  var done   = total - ahead;
+  var pct    = Math.min(100, Math.round((done / total) * 100));
+
+  yourNumEl.textContent = '#' + String(your).padStart(3,'0');
+  tickNum(servingNumEl, '#' + String(serving).padStart(3,'0'));
+  tickNum(aheadNumEl, ahead);
+  qBar.style.width = pct + '%';
+
+  if(ahead <= 0){
+    queueStatus.textContent = 'Step forward. It\'s your turn.';
+    queueStatus.className   = 'queue-status urgent';
+    stopPolling();
+    showMeetForm();
+  } else if(ahead === 1){
+    queueStatus.textContent = 'You\'re next. Get ready.';
+    queueStatus.className   = 'queue-status urgent';
+  } else {
+    queueStatus.textContent = ahead + ' people ahead of you. Hang tight.';
+    queueStatus.className   = 'queue-status';
   }
+}
 
-  // ── advance queue every random interval ──
-  function startAdvancing(){
-    if(qInterval) return;
-    function tick(){
-      if(servingNumber >= yourNumber){
-        clearInterval(qInterval);
-        qInterval = null;
-        showMeetForm();
-        return;
-      }
-      servingNumber++;
+// ── polling ──
+function startPolling(){
+  if(pollTimer) return;
+  function tick(){
+    dbGet('/queue').then(function(q){
+      dbError.style.display = 'none';
+      var serving = (q && q.currentlyServing) || 1;
+      state.serving = serving;
       persist();
-      refreshQueue();
-      // reschedule with random delay 7-14s
-      qInterval = setTimeout(tick, 7000 + Math.random() * 7000);
+      refreshDisplay(serving);
+    }).catch(function(){
+      dbError.style.display = 'block';
+    });
+  }
+  tick();
+  pollTimer = setInterval(tick, POLL_MS);
+}
+function stopPolling(){
+  if(pollTimer){ clearInterval(pollTimer); pollTimer = null; }
+}
+
+// ── phase transitions ──
+function showBag(){
+  state.phase = 'bag'; persist();
+  addBagBtn.disabled = true;
+  addBagBtn.textContent = 'In your bag ✓';
+  miniBag.classList.add('open');
+}
+
+function joinQueue(){
+  goQueueBtn.disabled = true;
+  goQueueBtn.textContent = 'Joining…';
+
+  // Ensure queue node exists, then atomically grab next ticket
+  dbGet('/queue').then(function(q){
+    if(!q || q.nextTicket == null){
+      return dbSet('/queue', { nextTicket: 1, currentlyServing: 1 });
     }
-    qInterval = setTimeout(tick, 7000 + Math.random() * 7000);
-  }
+  }).then(function(){
+    return dbIncrement('/queue/nextTicket');
+  }).then(function(res){
+    var ticket = res.prev || 1; // the number WE got
+    return dbGet('/queue/currentlyServing').then(function(serving){
+      state.ticket         = ticket;
+      state.initialServing = (serving || 1);
+      state.phase          = 'queue';
+      persist();
 
-  // ── show states ──
-  function showBag(){
-    phase = 'bag';
-    persist();
-    addBagBtn.disabled = true;
-    addBagBtn.textContent = 'In your bag ✓';
-    miniBag.classList.add('open');
-  }
+      miniBag.classList.remove('open');
+      queueSection.classList.add('visible');
+      queueSection.scrollIntoView({behavior:'smooth', block:'start'});
+      startPolling();
+    });
+  }).catch(function(err){
+    goQueueBtn.disabled = false;
+    goQueueBtn.textContent = 'Go in queue →';
+    dbError.style.display = 'block';
+    dbError.textContent = 'Could not join queue: ' + (err.message||'network error') + '. Is Firebase configured?';
+  });
+}
 
-  function showQueue(){
-    phase = 'queue';
-    // assign numbers
-    yourNumber    = 100 + Math.floor(Math.random() * 60);
-    servingNumber = yourNumber - Math.floor(Math.random() * 3) - 3; // 3-5 ahead
-    persist();
-    miniBag.classList.remove('open');
-    goQueueBtn.disabled = true;
-    queueSection.classList.add('visible');
-    refreshQueue();
-    startAdvancing();
-  }
-
-  function showMeetForm(){
-    phase = 'form';
-    persist();
-    setTimeout(function(){
-      queueSection.classList.remove('visible');
-      meetSection.classList.add('visible');
-      meetSection.scrollIntoView({behavior:'smooth',block:'start'});
-    }, 800);
-  }
-
-  function showConfirmation(place, time){
-    phase = 'done';
-    persist();
-    meetSection.classList.remove('visible');
-    confirmDetail.innerHTML =
-      '<strong>' + place + '</strong><br>' +
-      '<strong>' + time + '</strong><br><br>' +
-      'Martin has been notified.<br>He said: "ok"';
-    confirmSection.classList.add('visible');
-    confirmSection.scrollIntoView({behavior:'smooth',block:'start'});
-  }
-
-  // ── restore previous session ──
-  if(phase === 'bag'){
-    showBag();
-  } else if(phase === 'queue'){
-    showBag();
-    addBagBtn.disabled = true;
-    miniBag.classList.remove('open');
-    queueSection.classList.add('visible');
-    refreshQueue();
-    if(servingNumber < yourNumber) startAdvancing();
-    else showMeetForm();
-  } else if(phase === 'form'){
-    addBagBtn.disabled = true;
+function showMeetForm(){
+  state.phase = 'form'; persist();
+  setTimeout(function(){
     queueSection.classList.remove('visible');
     meetSection.classList.add('visible');
-  } else if(phase === 'done'){
-    addBagBtn.disabled = true;
+    meetSection.scrollIntoView({behavior:'smooth', block:'start'});
+  }, 600);
+}
+
+function confirmMeetup(){
+  var place = document.getElementById('placeSelect').value;
+  var time  = document.getElementById('timeSelect').value;
+  if(!place || !time){ meetErr.style.display = 'block'; return; }
+  meetErr.style.display = 'none';
+  confirmBtn.disabled = true;
+  confirmBtn.textContent = 'Confirming…';
+
+  // Advance the queue for the next person
+  dbIncrement('/queue/currentlyServing').catch(function(){});
+  // Send email
+  sendEmail(state.ticket, place, time);
+
+  state.phase = 'done'; state.place = place; state.time = time; persist();
+  meetSection.classList.remove('visible');
+  confirmDetail.innerHTML =
+    '<strong>' + place + '</strong><br>' +
+    '<strong>' + time + '</strong><br><br>' +
+    'Booking sent to Martin.<br>' +
+    'He has been notified. He said: "ok"';
+  confirmSection.classList.add('visible');
+  confirmSection.scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+// ── restore session ──
+(function restore(){
+  var p = state.phase;
+  if(!p || p === 'idle') return;
+  if(p === 'bag'){
+    showBag();
+  } else if(p === 'queue'){
+    addBagBtn.disabled = true; addBagBtn.textContent = 'In your bag ✓';
+    queueSection.classList.add('visible');
+    startPolling();
+  } else if(p === 'form'){
+    addBagBtn.disabled = true; addBagBtn.textContent = 'In your bag ✓';
+    meetSection.classList.add('visible');
+  } else if(p === 'done'){
+    addBagBtn.disabled = true; addBagBtn.textContent = 'In your bag ✓';
+    confirmDetail.innerHTML =
+      '<strong>' + (state.place||'') + '</strong><br>' +
+      '<strong>' + (state.time||'')  + '</strong><br><br>' +
+      'Booking sent to Martin.<br>He said: "ok"';
     confirmSection.classList.add('visible');
-    confirmDetail.innerHTML = 'Your meetup is confirmed.<br>Check below for details.';
   }
-
-  // ── event listeners ──
-  addBagBtn.addEventListener('click', showBag);
-
-  goQueueBtn.addEventListener('click', showQueue);
-
-  confirmBtn.addEventListener('click', function(){
-    var place = document.getElementById('placeSelect').value;
-    var time  = document.getElementById('timeSelect').value;
-    if(!place || !time){
-      var err = document.getElementById('meetErr');
-      if(!err){
-        err = document.createElement('p');
-        err.id = 'meetErr';
-        err.style.cssText = 'color:#e63946;font-size:12px;margin-top:8px;font-weight:800';
-        confirmBtn.after(err);
-      }
-      err.textContent = 'Pick a place and a time. Both.';
-      return;
-    }
-    showConfirmation(place, time);
-  });
-
 })();
+
+// ── event listeners ──
+addBagBtn.addEventListener('click', showBag);
+goQueueBtn.addEventListener('click', joinQueue);
+confirmBtn.addEventListener('click', confirmMeetup);
+document.getElementById('placeSelect').addEventListener('change', function(){ meetErr.style.display='none'; });
+document.getElementById('timeSelect').addEventListener('change',  function(){ meetErr.style.display='none'; });
 </script>
 
 </body>
