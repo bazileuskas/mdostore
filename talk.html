@@ -394,7 +394,7 @@ function tickNum(el, newVal){
 }
 
 function refreshDisplay(serving){
-  var your   = state.ticket || 0;
+  var your   = (typeof state.ticket === 'number') ? state.ticket : 0;
   var ahead  = Math.max(0, your - serving);
   var total  = Math.max(1, your - (state.initialServing || 0));
   var done   = total - ahead;
@@ -456,12 +456,12 @@ function joinQueue(){
   // Ensure queue node exists, then atomically grab next ticket
   dbGet('/queue').then(function(q){
     if(!q || q.nextTicket == null){
-      return dbSet('/queue', { nextTicket: 1, currentlyServing: 1 });
+      return dbSet('/queue', { nextTicket: 0, currentlyServing: 1 });
     }
   }).then(function(){
     return dbIncrement('/queue/nextTicket');
   }).then(function(res){
-    var ticket = res.prev || 1; // the number WE got
+    var ticket = res.next; // the value WE just wrote = our ticket number
     return dbGet('/queue/currentlyServing').then(function(serving){
       state.ticket         = ticket;
       state.initialServing = (serving || 1);
@@ -516,6 +516,10 @@ function confirmMeetup(){
 
 // ── restore session ──
 (function restore(){
+  // Wipe corrupted state — ticket must be a plain number
+  if(state.ticket !== undefined && typeof state.ticket !== 'number'){
+    state = {}; persist(); return;
+  }
   var p = state.phase;
   if(!p || p === 'idle') return;
   showCancel();
