@@ -173,6 +173,24 @@
     .admin-btn.danger:hover{background:var(--accent);color:#fff}
     .admin-log{margin-top:14px;font-size:11px;color:#555;font-family:'Courier New',monospace;min-height:16px;line-height:1.7}
 
+    /* ── share link ── */
+    .share-row{
+      margin-top:20px;padding:14px 16px;
+      background:var(--soft);border:1px dashed #b9a98c;
+      font-size:12px;text-align:center;
+    }
+    .share-row .s-lbl{color:var(--muted);margin-bottom:6px;letter-spacing:.04em}
+    .share-url{
+      font-family:'Courier New',monospace;font-size:12px;font-weight:700;
+      word-break:break-all;color:var(--ink);margin-bottom:8px;
+    }
+    .share-copy{
+      border:2px solid var(--ink);background:var(--ink);color:var(--cream);
+      font-family:inherit;font-size:11px;font-weight:800;letter-spacing:.08em;
+      text-transform:uppercase;padding:6px 14px;cursor:pointer;
+    }
+    .share-copy:hover{background:var(--accent2);color:var(--ink);border-color:var(--accent2)}
+
     /* ── cancel row ── */
     .cancel-row{
       margin-top:28px;text-align:center;display:none;
@@ -273,6 +291,12 @@
 
     <div class="q-bar-wrap"><div class="q-bar" id="qBar"></div></div>
     <div class="queue-status" id="queueStatus">Connecting…</div>
+
+    <div class="share-row">
+      <div class="s-lbl">Check your place from another device:</div>
+      <div class="share-url" id="shareUrl"></div>
+      <button class="share-copy" id="shareCopyBtn">Copy link</button>
+    </div>
   </div>
 
   <!-- Meeting form -->
@@ -402,6 +426,28 @@ var state = {};
 try{ state = JSON.parse(localStorage.getItem(STORE_KEY)||'{}'); }catch(e){}
 function persist(){ try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){} }
 
+// ── ticket URL ──
+function setTicketUrl(ticket){
+  try{ history.replaceState(null,'','?t='+ticket); }catch(e){}
+  var url = location.origin + location.pathname + '?t=' + ticket;
+  var el = document.getElementById('shareUrl');
+  if(el) el.textContent = url;
+}
+
+// ── load ticket from URL param (other device) ──
+(function(){
+  var params   = new URLSearchParams(location.search);
+  var urlTicket = parseInt(params.get('t'), 10);
+  if(!urlTicket || isNaN(urlTicket)) return;
+  // Adopt the ticket from URL if we have no active session or it matches
+  if(!state.phase || state.phase === 'idle' || state.ticket !== urlTicket){
+    state.ticket         = urlTicket;
+    state.initialServing = urlTicket;
+    state.phase          = 'queue';
+    persist();
+  }
+})();
+
 // ── DOM refs ──
 var addBagBtn      = document.getElementById('addBagBtn');
 var miniBag        = document.getElementById('miniBag');
@@ -527,6 +573,7 @@ function joinQueue(){
       state.initialServing = (serving || 1);
       state.phase          = 'queue';
       persist();
+      setTicketUrl(ticket);
 
       miniBag.classList.remove('open');
       queueSection.classList.add('visible');
@@ -587,6 +634,7 @@ function confirmMeetup(){
     showBag();
   } else if(p === 'queue'){
     addBagBtn.disabled = true; addBagBtn.textContent = 'In your bag ✓';
+    if(state.ticket) setTicketUrl(state.ticket);
     queueSection.classList.add('visible');
     startPolling();
   } else if(p === 'form'){
@@ -700,6 +748,24 @@ confirmBtn.addEventListener('click', confirmMeetup);
 document.getElementById('placeSelect').addEventListener('change', function(){ meetErr.style.display='none'; });
 document.getElementById('timeSelect').addEventListener('change',  function(){ meetErr.style.display='none'; });
 cancelBtn.addEventListener('click', cancelBooking);
+
+document.getElementById('shareCopyBtn').addEventListener('click', function(){
+  var url = document.getElementById('shareUrl').textContent;
+  if(!url) return;
+  var btn = this;
+  navigator.clipboard.writeText(url).then(function(){
+    btn.textContent = 'Copied ✓';
+    setTimeout(function(){ btn.textContent = 'Copy link'; }, 2000);
+  }).catch(function(){
+    // fallback: select the text
+    var el = document.getElementById('shareUrl');
+    var range = document.createRange(); range.selectNode(el);
+    window.getSelection().removeAllRanges();
+    window.getSelection().addRange(range);
+    btn.textContent = 'Select & copy manually';
+    setTimeout(function(){ btn.textContent = 'Copy link'; }, 3000);
+  });
+});
 </script>
 
 </body>
