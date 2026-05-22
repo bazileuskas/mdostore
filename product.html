@@ -222,6 +222,9 @@
 (function(){
   const STORE_EMAIL = "buy@mdostore.com";
   const FREE_OVER = 19.99;
+  var MDO_DB="https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com";
+  window.MDO_DB=MDO_DB;
+  function dbOk(){ return MDO_DB.indexOf("YOUR_PROJECT_ID")===-1; }
   const CATALOG = {
     redbull:{name:"Red Bull · 250ml",price:3.49,img:"https://picsum.photos/seed/mdo-redbull/120/120"},
     tictac:{name:"Tic Tac · Mogu Mogu Rip-Off",price:1.99,img:"https://picsum.photos/seed/mdo-tictac/120/120"},
@@ -438,11 +441,15 @@
     let bytes=0; for(var i=0;i<files.length;i++) bytes+=files[i].size;
     if(!name || !rvRating || !text){ e.preventDefault(); err.textContent="Pop in a name, a rating, and a few words."; err.style.display="block"; return; }
     if(bytes > 10*1024*1024){ e.preventDefault(); err.textContent="Photos exceed 10MB total — trim a couple and retry."; err.style.display="block"; return; }
-    // Save to localStorage before FormSubmit redirect
+    // Save to Firebase + localStorage before FormSubmit redirect
+    var product=mWrap.querySelector("#rvProduct").value||"";
+    var reviewObj={name:name,rating:rvRating,product:product,review:text,date:new Date().toISOString()};
+    if(dbOk()){
+      fetch(MDO_DB+"/reviews.json",{method:"POST",keepalive:true,headers:{"Content-Type":"application/json"},body:JSON.stringify(reviewObj)}).catch(function(){});
+    }
     try{
-      var product=mWrap.querySelector("#rvProduct").value||"";
       var all=JSON.parse(localStorage.getItem("mdo_community_reviews")||"[]");
-      all.unshift({name:name,rating:rvRating,product:product,review:text,date:new Date().toISOString()});
+      all.unshift(reviewObj);
       localStorage.setItem("mdo_community_reviews",JSON.stringify(all));
     }catch(ex){}
     // valid → native multipart submit to FormSubmit, then _next redirect back
@@ -450,27 +457,46 @@
 
   window.MDOReview={ open: openReview };
 
-  // Render product community reviews (filtered by product name)
+  // Render product community reviews (filtered by product name) — Firebase with localStorage fallback
   window._renderProductCR=function(productName){
     var el=document.getElementById("crGridProduct");
     if(!el) return;
-    var all=[];
-    try{all=JSON.parse(localStorage.getItem("mdo_community_reviews")||"[]");}catch(e){}
-    var filtered=all.filter(function(r){ return r.product===productName; });
-    if(!filtered.length){
-      el.innerHTML='<p class="cr-empty">No community reviews yet for this product.</p>';
+    function lsFiltered(){
+      var all=[];
+      try{all=JSON.parse(localStorage.getItem("mdo_community_reviews")||"[]");}catch(e){}
+      return all.filter(function(r){ return r.product===productName; });
+    }
+    function paintCards(filtered){
+      if(!filtered.length){
+        el.innerHTML='<p class="cr-empty">No community reviews yet for this product.</p>';
+        return;
+      }
+      el.innerHTML=filtered.map(function(r){
+        var stars="★".repeat(r.rating||0)+"☆".repeat(5-(r.rating||0));
+        var d="";
+        try{d=new Date(r.date).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"});}catch(ex){}
+        return '<div class="cr-card">'+
+          '<div class="cr-stars">'+stars+'</div>'+
+          '<p class="cr-text">'+esc(r.review)+'</p>'+
+          '<div class="cr-who">'+esc(r.name)+(d?'<small>'+d+'</small>':'')+'</div>'+
+        '</div>';
+      }).join("");
+    }
+    if(!dbOk()){
+      paintCards(lsFiltered());
       return;
     }
-    el.innerHTML=filtered.map(function(r){
-      var stars="★".repeat(r.rating||0)+"☆".repeat(5-(r.rating||0));
-      var d="";
-      try{d=new Date(r.date).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"});}catch(ex){}
-      return '<div class="cr-card">'+
-        '<div class="cr-stars">'+stars+'</div>'+
-        '<p class="cr-text">'+esc(r.review)+'</p>'+
-        '<div class="cr-who">'+esc(r.name)+(d?'<small>'+d+'</small>':'')+'</div>'+
-      '</div>';
-    }).join("");
+    fetch(MDO_DB+"/reviews.json")
+      .then(function(r){return r.json();})
+      .then(function(data){
+        var all=[];
+        if(data && typeof data==="object"){
+          Object.keys(data).forEach(function(k){ all.push(data[k]); });
+          all.sort(function(a,b){return new Date(b.date)-new Date(a.date);});
+        }
+        paintCards(all.filter(function(r){ return r.product===productName; }));
+      })
+      .catch(function(){ paintCards(lsFiltered()); });
   };
 
   // Thank-you banner after a review redirect (?review=sent)

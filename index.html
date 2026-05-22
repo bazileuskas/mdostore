@@ -641,6 +641,11 @@
 <!-- ===== Cart + Reviews module ===== -->
 <script>
 (function(){
+  // ─── Firebase DB URL — replace YOUR_PROJECT_ID with your project ───
+  var MDO_DB="https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com";
+  window.MDO_DB=MDO_DB;
+  function dbOk(){ return MDO_DB.indexOf("YOUR_PROJECT_ID")===-1; }
+
   const STORE_EMAIL = "buy@mdostore.com";
   const FREE_OVER = 19.99;
   const CATALOG = {
@@ -886,11 +891,15 @@
     let bytes=0; for(var i=0;i<files.length;i++) bytes+=files[i].size;
     if(!name || !rvRating || !text){ e.preventDefault(); err.textContent="Pop in a name, a rating, and a few words."; err.style.display="block"; return; }
     if(bytes > 10*1024*1024){ e.preventDefault(); err.textContent="Photos exceed 10MB total — trim a couple and retry."; err.style.display="block"; return; }
-    // Save to localStorage before FormSubmit redirect
+    // Save to Firebase (shared) + localStorage (backup)
+    var product=mWrap.querySelector("#rvProduct").value||"";
+    var reviewObj={name:name,rating:rvRating,product:product,review:text,date:new Date().toISOString()};
+    if(dbOk()){
+      fetch(MDO_DB+"/reviews.json",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(reviewObj)}).catch(function(){});
+    }
     try{
-      var product=mWrap.querySelector("#rvProduct").value||"";
       var all=JSON.parse(localStorage.getItem("mdo_community_reviews")||"[]");
-      all.unshift({name:name,rating:rvRating,product:product,review:text,date:new Date().toISOString()});
+      all.unshift(reviewObj);
       localStorage.setItem("mdo_community_reviews",JSON.stringify(all));
     }catch(ex){}
     // valid → native multipart submit to FormSubmit, then _next redirect back
@@ -901,26 +910,43 @@
   });
   window.MDOReview={ open: openReview };
 
-  // Render community reviews from localStorage
-  function renderCR(){
+  // ── helpers ──
+  function lsReviews(){ try{return JSON.parse(localStorage.getItem("mdo_community_reviews")||"[]");}catch(e){return [];} }
+  function buildCards(all){
     var el=document.getElementById("crGrid");
     if(!el) return;
-    var all=[];
-    try{all=JSON.parse(localStorage.getItem("mdo_community_reviews")||"[]");}catch(e){}
-    if(!all.length){
-      el.innerHTML='<p class="cr-empty">No reviews yet — be the first brave soul.</p>';
-      return;
-    }
+    if(!all.length){ el.innerHTML='<p class="cr-empty">No reviews yet — be the first brave soul.</p>'; return; }
     el.innerHTML=all.map(function(r){
       var stars="★".repeat(r.rating||0)+"☆".repeat(5-(r.rating||0));
-      var d="";
-      try{d=new Date(r.date).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"});}catch(ex){}
-      return '<div class="cr-card">'+
+      var d=""; try{d=new Date(r.date).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"});}catch(ex){}
+      var fbk=r._fbkey?' data-fbkey="'+esc(r._fbkey)+'"':'';
+      return '<div class="cr-card"'+fbk+'>'+
         '<div class="cr-stars">'+stars+'</div>'+
         '<p class="cr-text">'+esc(r.review)+'</p>'+
         '<div class="cr-who">'+esc(r.name)+'<small>'+esc(r.product||"")+(d?' · '+d:'')+'</small></div>'+
       '</div>';
     }).join("");
+  }
+
+  // Render community reviews — Firebase if configured, localStorage fallback
+  function renderCR(){
+    var el=document.getElementById("crGrid");
+    if(!el) return Promise.resolve();
+    if(!dbOk()){
+      buildCards(lsReviews());
+      return Promise.resolve();
+    }
+    return fetch(MDO_DB+"/reviews.json")
+      .then(function(r){return r.json();})
+      .then(function(data){
+        var all=[];
+        if(data && typeof data==="object"){
+          Object.keys(data).forEach(function(k){ all.push(Object.assign({},data[k],{_fbkey:k})); });
+          all.sort(function(a,b){return new Date(b.date)-new Date(a.date);});
+        }
+        buildCards(all);
+      })
+      .catch(function(){ buildCards(lsReviews()); });
   }
   window._renderCR=renderCR;
   window._escCR=esc;
@@ -1057,6 +1083,12 @@
   if(crSection) crSection.appendChild(adminBtn);
 
   /* Apply admin controls to each rendered card */
+  function rerender(){
+    var p=window._renderCR ? window._renderCR() : null;
+    if(p && typeof p.then==="function") p.then(function(){ applyAdminUI(); });
+    else applyAdminUI();
+  }
+
   function applyAdminUI(){
     if(!isAdmin()) return;
     adminBtn.className="admin-btn active";
@@ -1067,13 +1099,16 @@
       adminBtn.textContent="Admin";
       adminBtn.onclick=null;
       adminBtn.addEventListener("click",loginFlow);
-      if(window._renderCR) window._renderCR();
+      rerender();
     };
 
     var cards=document.querySelectorAll("#crGrid .cr-card");
     cards.forEach(function(card,i){
-      if(card.querySelector(".cr-actions")) return; // already wired
+      if(card.querySelector(".cr-actions")) return;
       card.classList.add("am");
+
+      var fbkey=card.dataset.fbkey||"";
+      var currentText=(card.querySelector(".cr-text")||{}).textContent||"";
 
       var actions=document.createElement("div");
       actions.className="cr-actions";
@@ -1082,11 +1117,8 @@
 
       var ef=document.createElement("div");
       ef.className="cr-ef";
-      var all=[];
-      try{ all=JSON.parse(localStorage.getItem("mdo_community_reviews")||"[]"); }catch(e){}
-      var rv=all[i]||{};
       ef.innerHTML=
-        '<textarea class="cr-ef-ta">'+((rv.review||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"))+'</textarea>'+
+        '<textarea class="cr-ef-ta">'+currentText.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")+'</textarea>'+
         '<button class="cr-save">Save</button>';
       card.appendChild(ef);
 
@@ -1100,23 +1132,29 @@
       ef.querySelector(".cr-save").addEventListener("click",function(){
         var newText=ef.querySelector("textarea").value.trim();
         if(!newText) return;
-        var a=[];
-        try{ a=JSON.parse(localStorage.getItem("mdo_community_reviews")||"[]"); }catch(e){}
-        if(a[i]) a[i].review=newText;
-        try{ localStorage.setItem("mdo_community_reviews",JSON.stringify(a)); }catch(e){}
-        if(window._renderCR) window._renderCR();
-        applyAdminUI();
+        if(fbkey && window.MDO_DB && window.MDO_DB.indexOf("YOUR_PROJECT_ID")===-1){
+          fetch(window.MDO_DB+"/reviews/"+fbkey+".json",{
+            method:"PATCH",headers:{"Content-Type":"application/json"},
+            body:JSON.stringify({review:newText})
+          }).then(function(){ rerender(); }).catch(function(){ rerender(); });
+        } else {
+          var a=lsReviews(); if(a[i]) a[i].review=newText;
+          try{localStorage.setItem("mdo_community_reviews",JSON.stringify(a));}catch(e){}
+          rerender();
+        }
       });
 
       /* Delete */
       actions.querySelector(".cr-del").addEventListener("click",function(){
         if(!confirm("Delete this review?")) return;
-        var a=[];
-        try{ a=JSON.parse(localStorage.getItem("mdo_community_reviews")||"[]"); }catch(e){}
-        a.splice(i,1);
-        try{ localStorage.setItem("mdo_community_reviews",JSON.stringify(a)); }catch(e){}
-        if(window._renderCR) window._renderCR();
-        applyAdminUI();
+        if(fbkey && window.MDO_DB && window.MDO_DB.indexOf("YOUR_PROJECT_ID")===-1){
+          fetch(window.MDO_DB+"/reviews/"+fbkey+".json",{method:"DELETE"})
+            .then(function(){ rerender(); }).catch(function(){ rerender(); });
+        } else {
+          var a=lsReviews(); a.splice(i,1);
+          try{localStorage.setItem("mdo_community_reviews",JSON.stringify(a));}catch(e){}
+          rerender();
+        }
       });
     });
   }

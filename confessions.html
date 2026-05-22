@@ -285,50 +285,72 @@
     document.title = titles[ti];
   }, 6000);
 
-  // ── Community reviews from localStorage ──
+  // ── Community reviews from Firebase (falls back to localStorage) ──
   (function(){
-    var all = [];
-    try{ all = JSON.parse(localStorage.getItem('mdo_community_reviews')||'[]'); }catch(e){}
-    var container = document.getElementById('communityConfessions');
-    if(!container) return;
-    if(!all.length){
-      container.innerHTML =
-        '<div style="text-align:center;padding:40px 24px;font-family:\'Courier New\',monospace;font-size:11px;'+
-        'letter-spacing:.14em;color:#2e2c2a;text-transform:uppercase">'+
-        '· no community confessions on file · this section remains empty · for now ·</div>';
-      return;
+    var MDO_DB = "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com";
+    function dbOk(){ return MDO_DB.indexOf("YOUR_PROJECT_ID") === -1; }
+    function lsReviews(){
+      try{ return JSON.parse(localStorage.getItem('mdo_community_reviews')||'[]'); }catch(e){ return []; }
     }
-    var divider =
-      '<div style="text-align:center;padding:36px 24px 0;font-family:\'Courier New\',monospace;'+
-      'font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:#2e2c2a;'+
-      'border-top:1px solid #1a1917">'+
-      '· the following were submitted voluntarily · or so we were told ·</div>';
+    function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
-    var cards = all.map(function(r, i){
-      var n = i + 6; // file numbers continue from 005
-      var stars = '★'.repeat(r.rating||0)+'☆'.repeat(5-(r.rating||0));
-      var d = '';
-      try{ d = new Date(r.date).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}); }catch(e){}
-      var fileNum = n < 10 ? '00'+n : (n < 100 ? '0'+n : n);
-      // escape for HTML
-      var name = (r.name||'unknown').replace(/&/g,'&amp;').replace(/</g,'&lt;');
-      var product = (r.product||'unspecified').replace(/&/g,'&amp;').replace(/</g,'&lt;');
-      var review = (r.review||'').replace(/&/g,'&amp;').replace(/</g,'&lt;');
-      return '<div class="confession">'+
-        '<div class="c-index">FILE '+fileNum+' &nbsp;/&nbsp; COMMUNITY &nbsp;/&nbsp; UNVERIFIED</div>'+
-        '<div class="c-name" id="cq'+n+'name">'+name+'</div>'+
-        '<div class="c-tag">'+product+' &nbsp;·&nbsp; '+stars+(d?' &nbsp;·&nbsp; '+d:'')+'</div>'+
-        '<div class="c-quote" id="cq'+n+'">"'+review+'"</div>'+
-        '<div class="c-meta">'+
-          '· submitted: through the form on the website<br>'+
-          '· <span class="flag">this person chose to say this. publicly. to us.</span><br>'+
-          '· <span class="note">we have not followed up. we considered it.</span>'+
-        '</div>'+
-      '</div>';
-    }).join('');
+    function renderReviews(all){
+      var container = document.getElementById('communityConfessions');
+      if(!container) return;
+      if(!all.length){
+        container.innerHTML =
+          '<div style="text-align:center;padding:40px 24px;font-family:\'Courier New\',monospace;font-size:11px;'+
+          'letter-spacing:.14em;color:#2e2c2a;text-transform:uppercase">'+
+          '· no community confessions on file · this section remains empty · for now ·</div>';
+        return;
+      }
+      var divider =
+        '<div style="text-align:center;padding:36px 24px 0;font-family:\'Courier New\',monospace;'+
+        'font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:#2e2c2a;'+
+        'border-top:1px solid #1a1917">'+
+        '· the following were submitted voluntarily · or so we were told ·</div>';
 
-    container.innerHTML = divider +
-      '<div class="confessions" style="padding-top:0">'+cards+'</div>';
+      var cards = all.map(function(r, i){
+        var n = i + 6; // file numbers continue from 005
+        var stars = '★'.repeat(r.rating||0)+'☆'.repeat(5-(r.rating||0));
+        var d = '';
+        try{ d = new Date(r.date).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}); }catch(e){}
+        var fileNum = n < 10 ? '00'+n : (n < 100 ? '0'+n : n);
+        var name = esc(r.name||'unknown');
+        var product = esc(r.product||'unspecified');
+        var review = esc(r.review||'');
+        return '<div class="confession">'+
+          '<div class="c-index">FILE '+fileNum+' &nbsp;/&nbsp; COMMUNITY &nbsp;/&nbsp; UNVERIFIED</div>'+
+          '<div class="c-name" id="cq'+n+'name">'+name+'</div>'+
+          '<div class="c-tag">'+product+' &nbsp;·&nbsp; '+stars+(d?' &nbsp;·&nbsp; '+d:'')+'</div>'+
+          '<div class="c-quote" id="cq'+n+'">"'+review+'"</div>'+
+          '<div class="c-meta">'+
+            '· submitted: through the form on the website<br>'+
+            '· <span class="flag">this person chose to say this. publicly. to us.</span><br>'+
+            '· <span class="note">we have not followed up. we considered it.</span>'+
+          '</div>'+
+        '</div>';
+      }).join('');
+
+      container.innerHTML = divider +
+        '<div class="confessions" style="padding-top:0">'+cards+'</div>';
+    }
+
+    if(dbOk()){
+      fetch(MDO_DB+"/reviews.json")
+        .then(function(r){ return r.json(); })
+        .then(function(data){
+          var all=[];
+          if(data && typeof data==="object"){
+            Object.keys(data).forEach(function(k){ all.push(data[k]); });
+            all.sort(function(a,b){ return new Date(b.date)-new Date(a.date); });
+          }
+          renderReviews(all);
+        })
+        .catch(function(){ renderReviews(lsReviews()); });
+    } else {
+      renderReviews(lsReviews());
+    }
   })();
 
   // Glitch effect — corrupts a word in a random quote (curated + community)
