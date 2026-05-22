@@ -273,7 +273,7 @@
     <a class="card" href="product.html?id=redbull">
       <div class="ph">
         <span class="badge pg13">PG-13</span>
-        <img class="product-img" src="https://loremflickr.com/600/600/redbull,energy,can" alt="Red Bull"
+        <img class="product-img" src="https://picsum.photos/seed/mdo-redbull/600/600" alt="Red Bull"
              onerror="this.style.display='none';this.parentNode.querySelector('svg').style.display='block'">
         <svg class="art" style="display:none" viewBox="0 0 100 140" xmlns="http://www.w3.org/2000/svg">
           <defs><linearGradient id="rb" x1="0" x2="1"><stop offset="0%" stop-color="#7e9ad6"/><stop offset="50%" stop-color="#9fb5dc"/><stop offset="100%" stop-color="#6b86c1"/></linearGradient></defs>
@@ -298,7 +298,7 @@
     <a class="card" href="product.html?id=tictac">
       <div class="ph">
         <span class="badge">Cult Pick</span>
-        <img class="product-img" src="https://loremflickr.com/600/600/tictac,candy,mints" alt="Tic Tac Mogu Mogu"
+        <img class="product-img" src="https://picsum.photos/seed/mdo-tictac/600/600" alt="Tic Tac Mogu Mogu"
              onerror="this.style.display='none';this.parentNode.querySelector('svg').style.display='block'">
         <svg class="art" style="display:none" viewBox="0 0 140 100" xmlns="http://www.w3.org/2000/svg">
           <rect x="10" y="20" width="120" height="60" rx="10" fill="#ffffff" stroke="#161616" stroke-width="2"/>
@@ -322,7 +322,7 @@
     <a class="card" href="product.html?id=apple">
       <div class="ph">
         <span class="badge">Fresh</span>
-        <img class="product-img" src="https://loremflickr.com/600/600/pink-lady,apple,fruit" alt="Pink Lady Apple"
+        <img class="product-img" src="https://picsum.photos/seed/mdo-apple/600/600" alt="Pink Lady Apple"
              onerror="this.style.display='none';this.parentNode.querySelector('svg').style.display='block'">
         <svg class="art" style="display:none" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
           <defs><radialGradient id="apple" cx="40%" cy="40%" r="60%"><stop offset="0%" stop-color="#ffd6e0"/><stop offset="60%" stop-color="#ff8aa6"/><stop offset="100%" stop-color="#c94f73"/></radialGradient></defs>
@@ -345,7 +345,7 @@
     <a class="card" href="product.html?id=peppa">
       <div class="ph">
         <span class="badge">Limited</span>
-        <img class="product-img" src="https://loremflickr.com/600/600/peppa-pig,plush,toy" alt="Peppa Pig"
+        <img class="product-img" src="https://picsum.photos/seed/mdo-peppa/600/600" alt="Peppa Pig"
              onerror="this.style.display='none';this.parentNode.querySelector('svg').style.display='block'">
         <svg class="art" style="display:none" viewBox="0 0 140 120" xmlns="http://www.w3.org/2000/svg">
           <ellipse cx="78" cy="78" rx="44" ry="32" fill="#ffb6cf" stroke="#161616" stroke-width="2"/>
@@ -371,7 +371,7 @@
     <a class="card" href="product.html?id=kinder">
       <div class="ph">
         <span class="badge oos">Out of stock</span>
-        <img class="product-img" src="https://loremflickr.com/600/600/kinder,chocolate,egg" alt="Kinder Eggs"
+        <img class="product-img" src="https://picsum.photos/seed/mdo-kinder/600/600" alt="Kinder Eggs"
              onerror="this.style.display='none';this.parentNode.querySelector('svg').style.display='block'">
         <svg class="art" style="display:none" viewBox="0 0 120 140" xmlns="http://www.w3.org/2000/svg">
           <defs><linearGradient id="foil" x1="0" x2="1"><stop offset="0%" stop-color="#fff7d6"/><stop offset="50%" stop-color="#ffe27a"/><stop offset="100%" stop-color="#e0b020"/></linearGradient></defs>
@@ -561,11 +561,11 @@
   const STORE_EMAIL = "buy@mdostore.com";
   const FREE_OVER = 19.99;
   const CATALOG = {
-    redbull:{name:"Red Bull · 250ml",price:3.49,img:"https://loremflickr.com/120/120/redbull,energy,can"},
-    tictac:{name:"Tic Tac · Mogu Mogu Rip-Off",price:1.99,img:"https://loremflickr.com/120/120/tictac,candy,mints"},
-    apple:{name:"Pink Lady Apples",price:0.89,img:"https://loremflickr.com/120/120/pink-lady,apple,fruit"},
-    peppa:{name:"Peppa Pig · Plushy Pal",price:12.50,img:"https://loremflickr.com/120/120/peppa-pig,plush,toy"},
-    kinder:{name:"Kinder Eggs · Surprise Inside",price:2.20,img:"https://loremflickr.com/120/120/kinder,chocolate,egg",oos:true}
+    redbull:{name:"Red Bull · 250ml",price:3.49,img:"https://picsum.photos/seed/mdo-redbull/120/120"},
+    tictac:{name:"Tic Tac · Mogu Mogu Rip-Off",price:1.99,img:"https://picsum.photos/seed/mdo-tictac/120/120"},
+    apple:{name:"Pink Lady Apples",price:0.89,img:"https://picsum.photos/seed/mdo-apple/120/120"},
+    peppa:{name:"Peppa Pig · Plushy Pal",price:12.50,img:"https://picsum.photos/seed/mdo-peppa/120/120"},
+    kinder:{name:"Kinder Eggs · Surprise Inside",price:2.20,img:"https://picsum.photos/seed/mdo-kinder/120/120",oos:true}
   };
 
   function getCart(){ try{ return JSON.parse(localStorage.getItem("mdo_cart")||"{}"); }catch(e){ return {}; } }
