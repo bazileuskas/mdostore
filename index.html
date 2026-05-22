@@ -957,9 +957,10 @@
     '<div class="admin-box">'+
       '<button class="ab-close" id="abClose">&#x2715;</button>'+
       '<h3>Admin login</h3>'+
-      '<p class="ab-sub">Enter your admin email to manage reviews.</p>'+
-      '<p class="ab-err" id="abErr">That email isn\'t on the list.</p>'+
-      '<input type="email" id="abEmail" placeholder="you@email.com" autocomplete="email">'+
+      '<p class="ab-sub">Admin access only.</p>'+
+      '<p class="ab-err" id="abErr">Wrong email or password.</p>'+
+      '<input type="email" id="abEmail" placeholder="Email" autocomplete="email">'+
+      '<input type="password" id="abPass" placeholder="Password" autocomplete="current-password">'+
       '<button class="ab-submit" id="abSubmit">Log in</button>'+
     '</div>';
   document.body.appendChild(ov);
@@ -970,14 +971,16 @@
 
   function tryLogin(){
     var email=(document.getElementById("abEmail").value||"").trim().toLowerCase();
+    var pass=(document.getElementById("abPass").value||"").trim();
     var err=document.getElementById("abErr");
-    if(ADMINS.indexOf(email)===-1){ err.style.display="block"; return; }
+    if(ADMINS.indexOf(email)===-1||pass!=="IriskaColombo2605"){ err.style.display="block"; return; }
     try{ sessionStorage.setItem(SK,email); }catch(e){}
     ov.classList.remove("open");
     applyAdminUI();
   }
   document.getElementById("abSubmit").addEventListener("click",tryLogin);
   document.getElementById("abEmail").addEventListener("keydown",function(e){ if(e.key==="Enter") tryLogin(); });
+  document.getElementById("abPass").addEventListener("keydown",function(e){ if(e.key==="Enter") tryLogin(); });
 
   /* Admin button injected below the cr-grid */
   var crSection=document.getElementById("community-reviews");
@@ -987,6 +990,7 @@
   adminBtn.addEventListener("click",function(){
     if(isAdmin()){ applyAdminUI(); return; }
     document.getElementById("abEmail").value="";
+    document.getElementById("abPass").value="";
     document.getElementById("abErr").style.display="none";
     ov.classList.add("open");
     setTimeout(function(){ document.getElementById("abEmail").focus(); },120);
@@ -1061,6 +1065,7 @@
   function loginFlow(){
     if(isAdmin()){ applyAdminUI(); return; }
     document.getElementById("abEmail").value="";
+    document.getElementById("abPass").value="";
     document.getElementById("abErr").style.display="none";
     ov.classList.add("open");
     setTimeout(function(){ document.getElementById("abEmail").focus(); },120);
