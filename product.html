@@ -85,6 +85,15 @@
   .pr-card .stars{color:var(--accent2);letter-spacing:2px;font-size:14px;margin-bottom:8px}
   .pr-card .q{font-size:14px;line-height:1.55}
   .pr-card .by{margin-top:12px;font-weight:800;font-size:12px;letter-spacing:.06em;text-transform:uppercase}
+
+  /* Community reviews (product page) */
+  .cr-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px;margin-top:24px}
+  .cr-card{background:#fffaf2;border:2px solid var(--ink);padding:22px;box-shadow:6px 6px 0 var(--accent2)}
+  .cr-stars{color:var(--accent2);letter-spacing:2px;margin-bottom:10px;font-size:14px;-webkit-text-stroke:.4px var(--ink)}
+  .cr-text{font-size:15px;line-height:1.55;color:#222}
+  .cr-who{margin-top:14px;font-weight:800;font-size:13px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink)}
+  .cr-who small{display:block;font-weight:500;color:#666;text-transform:none;letter-spacing:0;margin-top:2px}
+  .cr-empty{color:#888;font-size:14px;padding:24px 0;font-style:italic}
   .pr-card .by small{display:block;font-weight:500;color:var(--muted);letter-spacing:0;text-transform:none;margin-top:2px}
 
   /* Related */
@@ -415,10 +424,40 @@
     let bytes=0; for(var i=0;i<files.length;i++) bytes+=files[i].size;
     if(!name || !rvRating || !text){ e.preventDefault(); err.textContent="Pop in a name, a rating, and a few words."; err.style.display="block"; return; }
     if(bytes > 10*1024*1024){ e.preventDefault(); err.textContent="Photos exceed 10MB total — trim a couple and retry."; err.style.display="block"; return; }
+    // Save to localStorage before FormSubmit redirect
+    try{
+      var product=mWrap.querySelector("#rvProduct").value||"";
+      var all=JSON.parse(localStorage.getItem("mdo_community_reviews")||"[]");
+      all.unshift({name:name,rating:rvRating,product:product,review:text,date:new Date().toISOString()});
+      localStorage.setItem("mdo_community_reviews",JSON.stringify(all));
+    }catch(ex){}
     // valid → native multipart submit to FormSubmit, then _next redirect back
   });
 
   window.MDOReview={ open: openReview };
+
+  // Render product community reviews (filtered by product name)
+  window._renderProductCR=function(productName){
+    var el=document.getElementById("crGridProduct");
+    if(!el) return;
+    var all=[];
+    try{all=JSON.parse(localStorage.getItem("mdo_community_reviews")||"[]");}catch(e){}
+    var filtered=all.filter(function(r){ return r.product===productName; });
+    if(!filtered.length){
+      el.innerHTML='<p class="cr-empty">No community reviews yet for this product.</p>';
+      return;
+    }
+    el.innerHTML=filtered.map(function(r){
+      var stars="★".repeat(r.rating||0)+"☆".repeat(5-(r.rating||0));
+      var d="";
+      try{d=new Date(r.date).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"});}catch(ex){}
+      return '<div class="cr-card">'+
+        '<div class="cr-stars">'+stars+'</div>'+
+        '<p class="cr-text">'+esc(r.review)+'</p>'+
+        '<div class="cr-who">'+esc(r.name)+(d?'<small>'+d+'</small>':'')+'</div>'+
+      '</div>';
+    }).join("");
+  };
 
   // Thank-you banner after a review redirect (?review=sent)
   (function(){
@@ -710,6 +749,11 @@
               <div class="by">${r.who}<small>${r.note}</small></div>
             </div>`).join('')}
         </div>
+        <div style="margin-top:48px;border-top:2px dashed #ccc;padding-top:32px">
+          <h2 style="margin-bottom:8px">From the people</h2>
+          <p style="color:#888;font-size:14px;margin-bottom:4px">Submitted by actual customers. Unfiltered.</p>
+          <div class="cr-grid" id="crGridProduct"></div>
+        </div>
       </section>
 
       ${renderRelated(id)}
@@ -739,6 +783,9 @@
     // Review this product
     const rvBtn = document.getElementById('rvBtnProduct');
     if (rvBtn) rvBtn.addEventListener('click', () => window.MDOReview.open(id));
+
+    // Render community reviews for this product
+    if (window._renderProductCR) window._renderProductCR(p.name);
   }
 
   render();
