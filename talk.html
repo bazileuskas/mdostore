@@ -148,6 +148,17 @@
     /* ── error state ── */
     .db-error{margin-top:20px;border:2px solid var(--accent);background:#fff5f5;padding:20px 24px;
       font-size:13px;color:var(--accent);display:none;line-height:1.7}
+
+    /* ── cancel row ── */
+    .cancel-row{
+      margin-top:28px;text-align:center;display:none;
+    }
+    .cancel-link{
+      background:none;border:none;font-family:inherit;
+      font-size:12px;color:var(--muted);letter-spacing:.04em;
+      text-decoration:underline;cursor:pointer;padding:6px 10px;
+    }
+    .cancel-link:hover{color:var(--accent)}
   </style>
 </head>
 <body>
@@ -272,6 +283,11 @@
     </p>
   </div>
 
+  <!-- Cancel -->
+  <div class="cancel-row" id="cancelRow">
+    <button class="cancel-link" id="cancelBtn">✕ Cancel booking</button>
+  </div>
+
 </div><!-- /page -->
 
 <script>
@@ -363,7 +379,9 @@ var confirmBtn     = document.getElementById('confirmBtn');
 var confirmSection = document.getElementById('confirmSection');
 var confirmDetail  = document.getElementById('confirmDetail');
 
-var pollTimer = null;
+var cancelRow  = document.getElementById('cancelRow');
+var cancelBtn  = document.getElementById('cancelBtn');
+var pollTimer  = null;
 
 // ── queue display update ──
 function tickNum(el, newVal){
@@ -428,6 +446,7 @@ function showBag(){
   addBagBtn.disabled = true;
   addBagBtn.textContent = 'In your bag ✓';
   miniBag.classList.add('open');
+  showCancel();
 }
 
 function joinQueue(){
@@ -499,6 +518,7 @@ function confirmMeetup(){
 (function restore(){
   var p = state.phase;
   if(!p || p === 'idle') return;
+  showCancel();
   if(p === 'bag'){
     showBag();
   } else if(p === 'queue'){
@@ -518,12 +538,48 @@ function confirmMeetup(){
   }
 })();
 
+// ── cancel helpers ──
+function showCancel(){ cancelRow.style.display = 'block'; }
+function hideCancel(){ cancelRow.style.display = 'none'; }
+
+function cancelBooking(){
+  var isDone = (state.phase === 'done');
+  var msg = isDone
+    ? 'Your meetup is already confirmed and Martin has been notified.\n\nThis will only reset this page — to actually cancel, contact Martin directly at buy@mdostore.com.\n\nReset this page anyway?'
+    : 'Cancel your booking? Your place in the queue will be released.';
+  if(!confirm(msg)) return;
+
+  // Release our queue slot so the next person isn\'t stuck waiting
+  if(state.phase === 'queue' || state.phase === 'form'){
+    dbIncrement('/queue/currentlyServing').catch(function(){});
+  }
+
+  stopPolling();
+  state = {}; persist();
+
+  // Reset all UI back to initial state
+  addBagBtn.disabled = false;
+  addBagBtn.textContent = 'Add to bag';
+  miniBag.classList.remove('open');
+  goQueueBtn.disabled = false;
+  goQueueBtn.textContent = 'Go in queue →';
+  queueSection.classList.remove('visible');
+  meetSection.classList.remove('visible');
+  confirmSection.classList.remove('visible');
+  confirmBtn.disabled = false;
+  confirmBtn.textContent = 'Confirm meetup →';
+  dbError.style.display = 'none';
+  hideCancel();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
 // ── event listeners ──
 addBagBtn.addEventListener('click', showBag);
 goQueueBtn.addEventListener('click', joinQueue);
 confirmBtn.addEventListener('click', confirmMeetup);
 document.getElementById('placeSelect').addEventListener('change', function(){ meetErr.style.display='none'; });
 document.getElementById('timeSelect').addEventListener('change',  function(){ meetErr.style.display='none'; });
+cancelBtn.addEventListener('click', cancelBooking);
 </script>
 
 </body>
