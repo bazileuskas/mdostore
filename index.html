@@ -229,11 +229,94 @@
   .rv-photos img{width:64px;height:64px;object-fit:cover;border:2px solid var(--ink)}
   .rv-note{font-size:12px;color:var(--muted);margin-top:8px;font-style:italic;line-height:1.5}
 
+  /* ===== Door Bot chat ===== */
+  .db-fab{
+    position:fixed;bottom:24px;right:24px;z-index:120;
+    width:64px;height:64px;border-radius:50%;
+    background:var(--ink);color:var(--bg);
+    border:2px solid var(--ink);box-shadow:var(--shadow);
+    display:flex;align-items:center;justify-content:center;
+    font-size:28px;cursor:pointer;transition:transform .15s ease;
+  }
+  .db-fab:hover{transform:translate(-2px,-2px);background:var(--accent)}
+  .db-fab .ping{
+    position:absolute;top:6px;right:6px;width:10px;height:10px;
+    border-radius:50%;background:var(--accent);
+    box-shadow:0 0 0 0 rgba(230,57,70,.6);
+    animation:dbPing 1.8s ease-out infinite;
+  }
+  @keyframes dbPing{
+    0%{box-shadow:0 0 0 0 rgba(230,57,70,.6)}
+    100%{box-shadow:0 0 0 12px rgba(230,57,70,0)}
+  }
+  .db-wrap{
+    position:fixed;bottom:100px;right:24px;z-index:121;
+    width:min(380px,calc(100% - 48px));height:min(560px,calc(100vh - 140px));
+    background:var(--bg);border:2px solid var(--ink);box-shadow:var(--shadow);
+    display:none;flex-direction:column;overflow:hidden;
+  }
+  .db-wrap.open{display:flex}
+  .db-head{
+    background:var(--ink);color:var(--bg);
+    padding:14px 18px;display:flex;align-items:center;justify-content:space-between;
+    border-bottom:2px solid var(--ink);
+  }
+  .db-head .who{display:flex;align-items:center;gap:10px}
+  .db-head .who .av{
+    width:34px;height:34px;background:var(--accent);border:2px solid var(--bg);
+    border-radius:50%;display:flex;align-items:center;justify-content:center;
+    font-weight:900;font-size:14px;
+  }
+  .db-head .who .nm{font-weight:900;font-size:14px;letter-spacing:.02em}
+  .db-head .who .st{font-size:10px;color:#aaa;letter-spacing:.08em;text-transform:uppercase;display:flex;align-items:center;gap:5px}
+  .db-head .who .st::before{content:"";width:7px;height:7px;background:#3a8a3a;border-radius:50%}
+  .db-head .x{background:none;border:none;color:var(--bg);font-size:22px;cursor:pointer;line-height:1;font-weight:700}
+  .db-body{
+    flex:1;overflow-y:auto;padding:18px;background:var(--soft);
+    display:flex;flex-direction:column;gap:10px;
+  }
+  .db-msg{max-width:80%;padding:10px 14px;font-size:14px;line-height:1.45;border:2px solid var(--ink)}
+  .db-msg.bot{align-self:flex-start;background:#fff}
+  .db-msg.you{align-self:flex-end;background:var(--ink);color:var(--bg);border-color:var(--ink)}
+  .db-msg.typing{display:inline-flex;gap:4px;padding:14px;background:#fff}
+  .db-msg.typing span{
+    width:7px;height:7px;border-radius:50%;background:var(--muted);
+    animation:dbBounce 1.2s ease-in-out infinite;
+  }
+  .db-msg.typing span:nth-child(2){animation-delay:.15s}
+  .db-msg.typing span:nth-child(3){animation-delay:.3s}
+  @keyframes dbBounce{0%,80%,100%{transform:translateY(0);opacity:.4}40%{transform:translateY(-5px);opacity:1}}
+  .db-input-row{
+    display:flex;gap:8px;padding:12px;background:var(--bg);border-top:2px solid var(--ink);
+  }
+  .db-input-row input{
+    flex:1;border:2px solid var(--ink);background:#fff;padding:10px 12px;
+    font-family:inherit;font-size:14px;outline:none;
+  }
+  .db-input-row input:focus{border-color:var(--accent)}
+  .db-input-row button{
+    border:2px solid var(--ink);background:var(--ink);color:var(--bg);
+    padding:10px 16px;font-family:inherit;font-weight:800;font-size:12px;
+    letter-spacing:.06em;text-transform:uppercase;cursor:pointer;
+  }
+  .db-input-row button:hover{background:var(--accent)}
+  .db-suggest{
+    padding:10px 12px 4px;background:var(--bg);border-top:1px dashed #ccc;
+    display:flex;gap:6px;flex-wrap:wrap;
+  }
+  .db-chip{
+    border:1px solid var(--ink);background:#fff;padding:5px 10px;
+    font-size:11px;font-family:inherit;cursor:pointer;letter-spacing:.02em;
+  }
+  .db-chip:hover{background:var(--ink);color:var(--bg)}
+
   @media (max-width: 820px){
     .hero{grid-template-columns:1fr;padding-top:36px}
     .trust-inner{grid-template-columns:repeat(2,1fr)}
     .c-grid{grid-template-columns:1fr;padding:48px 24px}
     nav ul{display:none}
+    .db-wrap{bottom:88px;right:12px;left:12px;width:auto}
+    .db-fab{bottom:16px;right:16px;width:56px;height:56px;font-size:24px}
   }
 </style>
 </head>
@@ -637,6 +720,29 @@
   © 2026 <b>Martin's Door Is Open</b> · we live · we love · we lie<br/>
   This shop exists in the space between a corner store and a confession booth.
 </footer>
+
+<!-- ===== Door Bot chat ===== -->
+<button class="db-fab" id="dbFab" aria-label="Talk to Door Bot">
+  💬<span class="ping"></span>
+</button>
+<div class="db-wrap" id="dbWrap" role="dialog" aria-label="Door Bot chat">
+  <div class="db-head">
+    <div class="who">
+      <div class="av">DB</div>
+      <div>
+        <div class="nm">Door Bot</div>
+        <div class="st">online · always</div>
+      </div>
+    </div>
+    <button class="x" id="dbClose" aria-label="Close">&times;</button>
+  </div>
+  <div class="db-body" id="dbBody"></div>
+  <div class="db-suggest" id="dbSuggest"></div>
+  <div class="db-input-row">
+    <input id="dbInput" placeholder="Ask Door Bot…" autocomplete="off">
+    <button id="dbSend">Send</button>
+  </div>
+</div>
 
 <!-- ===== Cart + Reviews module ===== -->
 <script>
@@ -1170,6 +1276,204 @@
 
   /* Auto-apply if already logged in (e.g. page refresh within same tab) */
   if(isAdmin()) applyAdminUI();
+})();
+</script>
+
+<!-- ===== Door Bot chat module ===== -->
+<script>
+(function(){
+  var fab     = document.getElementById('dbFab');
+  var wrap    = document.getElementById('dbWrap');
+  var closeB  = document.getElementById('dbClose');
+  var body    = document.getElementById('dbBody');
+  var input   = document.getElementById('dbInput');
+  var sendB   = document.getElementById('dbSend');
+  var suggest = document.getElementById('dbSuggest');
+  var KEY     = 'mdo_doorbot_chat';
+
+  function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+  function rand(arr){return arr[Math.floor(Math.random()*arr.length)];}
+
+  // ─── Knowledge base (swap getBotReply for an LLM later) ───
+  var KB = [
+    { tags:['hi','hello','hey','yo','sup','hola','ola','greet'], replies:[
+      "Door's open. What.",
+      "Hi. Martin's not here. I am.",
+      "I'm Door Bot. I never sleep. Ask."
+    ]},
+    { tags:['queue','turn','my number','ticket','didnt work','didn\'t work','broken','stuck','missed','skipped'], replies:[
+      "Your ticket lives in the URL. Open mdostore.com/talk?t=YOUR_NUMBER on any device — the queue picks back up.",
+      "If your turn came and the form didn't show, refresh the page once. The form appears the moment currentlyServing reaches your number.",
+      "If you got skipped, email buy@mdostore.com with your ticket number. Martin can pull you to the front. He won't apologize."
+    ]},
+    { tags:['order','where is my order','delivery','arrive','shipping','status'], replies:[
+      "Martin replies between sips. Usually within a day. If it's been longer, follow up at buy@mdostore.com.",
+      "Orders go through the form, then through Martin. He doesn't use a dashboard. He uses memory."
+    ]},
+    { tags:['kinder','out of stock','restock','egg','eggs','sold out','back in stock'], replies:[
+      "The Kinder Eggs are still out. They return when they return. Cailte knows where they are. Cailte won't say.",
+      "We don't know when. We never know when. They appear."
+    ]},
+    { tags:['where','address','location','barcelona','shop','store','hours','open'], replies:[
+      "We are somewhere in Barcelona. The exact spot is part of the door's mystique.",
+      "Hours: when the door is open. Which is most of the time. But not all."
+    ]},
+    { tags:['refund','return','money back','exchange'], replies:[
+      "Refunds are handled with eye contact. Bring the item back. Don't speak. Martin will know.",
+      "14-day returns. Bring it back, no eye contact. The receipt is optional. Your reasons are not."
+    ]},
+    { tags:['martin','who is','owner'], replies:[
+      "Martin is at the door. Always.",
+      "I am not Martin. I am near him.",
+      "Martin is the door. The door is Martin. You decide which."
+    ]},
+    { tags:['job','career','apply','hiring','work','position'], replies:[
+      "Scroll to Careers. Click Apply. We read every application. Out loud.",
+      "We're hiring. The role is whatever you make it. The interview is whatever Martin makes it."
+    ]},
+    { tags:['review','feedback','rate','star'], replies:[
+      "Reviews go in the Reviews section. We keep them. We keep all of them. Even the ones you'd take back.",
+      "Hit the ★ Leave a review button. Be honest. Or don't. We do both."
+    ]},
+    { tags:['admin','login','password','locked'], replies:[
+      "Admin access is for specific people only. If you are one of them, you know the password. If you don't know it, you aren't.",
+      "Martin won't tell you the password. Neither will I. Especially not here."
+    ]},
+    { tags:['confession','confessions'], replies:[
+      "/confessions exists. It's not linked from anywhere. If you find it, we already know.",
+      "The Confessions page is real. It is not for everyone. It is for some."
+    ]},
+    { tags:['meet','meetup','schedule','book','appointment'], replies:[
+      "Go to /talk. Add MEET UP to your bag. Join the queue. Pick a place. Show up.",
+      "Meetups are free. The cost is showing up."
+    ]},
+    { tags:['who are you','what are you','door bot','bot','ai'], replies:[
+      "I'm Door Bot. I answer questions about the shop. I am here so Martin can be there.",
+      "Bot. Door. Bot at the door. Door Bot. You see the structure."
+    ]},
+    { tags:['help','support','contact','email'], replies:[
+      "Anything I can't answer goes to buy@mdostore.com. Martin reads it. Eventually.",
+      "Need a human? buy@mdostore.com. Otherwise I am right here."
+    ]},
+    { tags:['bye','goodbye','thanks','thank you','ty','cheers','ciao','later'], replies:[
+      "The door is always open.",
+      "Come back. You will.",
+      "Mhm."
+    ]},
+    { tags:['lie','lying','honest','truth','trust'], replies:[
+      "We live. We love. We lie. It's on the banner. You read it.",
+      "Some things here are true. Some aren't. The Pink Lady apples are real. That much I'll say."
+    ]}
+  ];
+
+  var FALLBACKS = [
+    "I don't have an answer for that. Try emailing buy@mdostore.com — Martin might.",
+    "Door Bot heard you. Door Bot does not understand. Try rephrasing, or email buy@mdostore.com.",
+    "Hmm. I'll think about it. (I will not think about it.) Email buy@mdostore.com if it's urgent.",
+    "That's not in my notes. Yet. buy@mdostore.com reaches Martin directly."
+  ];
+
+  function getBotReply(text){
+    var t = (text||'').toLowerCase();
+    // score each entry by tag hits
+    var best = null, bestScore = 0;
+    for(var i=0;i<KB.length;i++){
+      var score = 0;
+      for(var j=0;j<KB[i].tags.length;j++){
+        if(t.indexOf(KB[i].tags[j]) !== -1) score++;
+      }
+      if(score > bestScore){ bestScore = score; best = KB[i]; }
+    }
+    if(best) return rand(best.replies);
+    return rand(FALLBACKS);
+  }
+
+  // ─── UI ───
+  function loadHistory(){
+    try{ return JSON.parse(localStorage.getItem(KEY)||'[]'); }catch(e){ return []; }
+  }
+  function saveHistory(h){ try{ localStorage.setItem(KEY, JSON.stringify(h.slice(-60))); }catch(e){} }
+
+  function addMsg(who, text, skipSave){
+    var d = document.createElement('div');
+    d.className = 'db-msg ' + who;
+    d.textContent = text;
+    body.appendChild(d);
+    body.scrollTop = body.scrollHeight;
+    if(!skipSave){
+      var h = loadHistory(); h.push({who:who,text:text}); saveHistory(h);
+    }
+  }
+  function addTyping(){
+    var d = document.createElement('div');
+    d.className = 'db-msg typing';
+    d.id = 'dbTyping';
+    d.innerHTML = '<span></span><span></span><span></span>';
+    body.appendChild(d);
+    body.scrollTop = body.scrollHeight;
+  }
+  function removeTyping(){
+    var t = document.getElementById('dbTyping');
+    if(t) t.remove();
+  }
+
+  function send(text){
+    text = (text||'').trim();
+    if(!text) return;
+    addMsg('you', text);
+    input.value = '';
+    addTyping();
+    // Realistic typing delay (random 700–1500ms)
+    var delay = 700 + Math.random()*800;
+    setTimeout(function(){
+      removeTyping();
+      addMsg('bot', getBotReply(text));
+    }, delay);
+  }
+
+  // Suggestion chips
+  var SUGGESTIONS = [
+    "My queue turn came but it didn't work",
+    "When are Kinder Eggs back?",
+    "Where's the shop?",
+    "How do I leave a review?"
+  ];
+  function paintSuggestions(){
+    suggest.innerHTML = SUGGESTIONS.map(function(s){
+      return '<button class="db-chip">'+esc(s)+'</button>';
+    }).join('');
+    suggest.querySelectorAll('.db-chip').forEach(function(c){
+      c.addEventListener('click', function(){ send(c.textContent); });
+    });
+  }
+
+  function openChat(){
+    wrap.classList.add('open');
+    var h = loadHistory();
+    if(!h.length){
+      // Greeting on first open
+      addMsg('bot', "Door's open. I'm Door Bot. Ask me anything — queue help, orders, hours. If I can't answer, Martin can at buy@mdostore.com.");
+      paintSuggestions();
+    } else {
+      body.innerHTML = '';
+      h.forEach(function(m){ addMsg(m.who, m.text, true); });
+      paintSuggestions();
+    }
+    setTimeout(function(){ input.focus(); }, 50);
+  }
+  function closeChat(){ wrap.classList.remove('open'); }
+
+  fab.addEventListener('click', function(){
+    if(wrap.classList.contains('open')) closeChat(); else openChat();
+  });
+  closeB.addEventListener('click', closeChat);
+  sendB.addEventListener('click', function(){ send(input.value); });
+  input.addEventListener('keydown', function(e){
+    if(e.key === 'Enter'){ e.preventDefault(); send(input.value); }
+  });
+
+  // Expose for debugging / future LLM swap
+  window.DoorBot = { getBotReply: getBotReply, send: send, open: openChat };
 })();
 </script>
 
