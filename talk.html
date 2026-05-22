@@ -149,6 +149,30 @@
     .db-error{margin-top:20px;border:2px solid var(--accent);background:#fff5f5;padding:20px 24px;
       font-size:13px;color:var(--accent);display:none;line-height:1.7}
 
+    /* ── admin panel ── */
+    .admin-panel{
+      background:var(--ink);color:var(--cream);padding:24px 28px;
+      margin-bottom:32px;border:2px solid var(--accent2);
+      box-shadow:var(--shadow);display:none;
+    }
+    .admin-panel h3{
+      font-size:11px;font-weight:800;letter-spacing:.2em;text-transform:uppercase;
+      color:var(--accent2);margin-bottom:16px;
+    }
+    .admin-stats{display:flex;gap:32px;flex-wrap:wrap;margin-bottom:20px}
+    .admin-stat .al{font-size:10px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#666;margin-bottom:4px}
+    .admin-stat .av{font-size:32px;font-weight:900;line-height:1}
+    .admin-actions{display:flex;gap:10px;flex-wrap:wrap}
+    .admin-btn{
+      border:2px solid var(--cream);background:transparent;color:var(--cream);
+      font-family:inherit;font-weight:800;font-size:11px;letter-spacing:.1em;
+      text-transform:uppercase;padding:10px 16px;cursor:pointer;
+    }
+    .admin-btn:hover{background:var(--cream);color:var(--ink)}
+    .admin-btn.danger{border-color:var(--accent);color:var(--accent)}
+    .admin-btn.danger:hover{background:var(--accent);color:#fff}
+    .admin-log{margin-top:14px;font-size:11px;color:#555;font-family:'Courier New',monospace;min-height:16px;line-height:1.7}
+
     /* ── cancel row ── */
     .cancel-row{
       margin-top:28px;text-align:center;display:none;
@@ -180,6 +204,22 @@
 </nav>
 
 <div class="page">
+
+  <!-- Admin panel (visible only at ?martin) -->
+  <div class="admin-panel" id="adminPanel">
+    <h3>⚙ Queue control · Martin only</h3>
+    <div class="admin-stats">
+      <div class="admin-stat"><div class="al">Now serving</div><div class="av" id="adServing">—</div></div>
+      <div class="admin-stat"><div class="al">Last ticket</div><div class="av" id="adNext">—</div></div>
+      <div class="admin-stat"><div class="al">Waiting</div><div class="av" id="adWaiting">—</div></div>
+      <div class="admin-stat"><div class="al">At front since</div><div class="av" style="font-size:14px;padding-top:8px" id="adAge">—</div></div>
+    </div>
+    <div class="admin-actions">
+      <button class="admin-btn" id="adSkipBtn">Skip current →</button>
+      <button class="admin-btn danger" id="adResetBtn">Reset queue</button>
+    </div>
+    <div class="admin-log" id="adLog"></div>
+  </div>
 
   <!-- Product -->
   <div class="product-card">
@@ -419,15 +459,35 @@ function refreshDisplay(serving){
   }
 }
 
+// ── advance queue + reset servedAt (used by confirm, cancel, admin) ──
+function advanceQueue(){
+  return dbIncrement('/queue/currentlyServing').then(function(){
+    return dbSet('/queue/servedAt', new Date().toISOString());
+  });
+}
+
 // ── polling ──
+var STALL_MIN = 15; // minutes before auto-advance
 function startPolling(){
   if(pollTimer) return;
   function tick(){
     dbGet('/queue').then(function(q){
       dbError.style.display = 'none';
-      var serving = (q && q.currentlyServing) || 1;
+      var serving  = (q && q.currentlyServing) || 1;
+      var nextT    = (q && q.nextTicket)        || 0;
+      var servedAt = (q && q.servedAt)          || null;
       state.serving = serving;
       persist();
+
+      // Auto-advance if someone has been at the front too long
+      if(nextT >= serving && servedAt){
+        var ageMin = (Date.now() - new Date(servedAt).getTime()) / 60000;
+        if(ageMin > STALL_MIN){
+          advanceQueue().catch(function(){});
+          return; // next poll tick will show the updated state
+        }
+      }
+
       refreshDisplay(serving);
     }).catch(function(){
       dbError.style.display = 'block';
@@ -456,7 +516,7 @@ function joinQueue(){
   // Ensure queue node exists, then atomically grab next ticket
   dbGet('/queue').then(function(q){
     if(!q || q.nextTicket == null){
-      return dbSet('/queue', { nextTicket: 0, currentlyServing: 1 });
+      return dbSet('/queue', { nextTicket: 0, currentlyServing: 1, servedAt: new Date().toISOString() });
     }
   }).then(function(){
     return dbIncrement('/queue/nextTicket');
@@ -498,8 +558,8 @@ function confirmMeetup(){
   confirmBtn.disabled = true;
   confirmBtn.textContent = 'Confirming…';
 
-  // Advance the queue for the next person
-  dbIncrement('/queue/currentlyServing').catch(function(){});
+  // Advance the queue for the next person + reset servedAt timer
+  advanceQueue().catch(function(){});
   // Send email
   sendEmail(state.ticket, place, time);
 
@@ -553,9 +613,9 @@ function cancelBooking(){
     : 'Cancel your booking? Your place in the queue will be released.';
   if(!confirm(msg)) return;
 
-  // Release our queue slot so the next person isn\'t stuck waiting
+  // Release our queue slot so the next person isn't stuck waiting
   if(state.phase === 'queue' || state.phase === 'form'){
-    dbIncrement('/queue/currentlyServing').catch(function(){});
+    advanceQueue().catch(function(){});
   }
 
   stopPolling();
@@ -576,6 +636,62 @@ function cancelBooking(){
   hideCancel();
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
+
+// ── admin panel ──
+(function(){
+  if(new URLSearchParams(location.search).get('martin') === null) return;
+  var panel    = document.getElementById('adminPanel');
+  var adLog    = document.getElementById('adLog');
+  panel.style.display = 'block';
+
+  function log(msg){
+    var t = new Date().toLocaleTimeString('en-GB');
+    adLog.innerHTML = '<span style="color:var(--accent2)">' + t + '</span> · ' + msg +
+      (adLog.innerHTML ? '<br>' + adLog.innerHTML : '');
+  }
+
+  function updateAdmin(q){
+    var serving = (q && q.currentlyServing) || 1;
+    var next    = (q && q.nextTicket)        || 0;
+    var waiting = Math.max(0, next - serving + 1);
+    var age     = '—';
+    if(q && q.servedAt){
+      var min = Math.floor((Date.now() - new Date(q.servedAt).getTime()) / 60000);
+      var sec = Math.floor(((Date.now() - new Date(q.servedAt).getTime()) % 60000) / 1000);
+      age = min + 'm ' + sec + 's';
+    }
+    document.getElementById('adServing').textContent  = '#' + String(serving).padStart(3,'0');
+    document.getElementById('adNext').textContent     = next > 0 ? '#' + String(next).padStart(3,'0') : '—';
+    document.getElementById('adWaiting').textContent  = next < serving ? '0' : waiting;
+    document.getElementById('adAge').textContent      = age;
+  }
+
+  // Live refresh every 3 s
+  var adminTimer = setInterval(function(){
+    dbGet('/queue').then(updateAdmin).catch(function(){});
+  }, 3000);
+  dbGet('/queue').then(updateAdmin).catch(function(){});
+
+  document.getElementById('adSkipBtn').addEventListener('click', function(){
+    var btn = this; btn.disabled = true; btn.textContent = 'Skipping…';
+    advanceQueue().then(function(){
+      log('Skipped to next ticket.');
+      return dbGet('/queue').then(updateAdmin);
+    }).catch(function(e){ log('Error: ' + (e.message||e)); })
+    .finally(function(){ btn.disabled = false; btn.textContent = 'Skip current →'; });
+  });
+
+  document.getElementById('adResetBtn').addEventListener('click', function(){
+    if(!confirm('Reset the queue to zero? Everyone currently waiting will lose their spot.')) return;
+    var btn = this; btn.disabled = true;
+    dbSet('/queue', { nextTicket: 0, currentlyServing: 1, servedAt: new Date().toISOString() })
+      .then(function(){
+        log('Queue reset.');
+        return dbGet('/queue').then(updateAdmin);
+      }).catch(function(e){ log('Error: ' + (e.message||e)); })
+      .finally(function(){ btn.disabled = false; });
+  });
+})();
 
 // ── event listeners ──
 addBagBtn.addEventListener('click', showBag);
