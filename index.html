@@ -111,6 +111,29 @@
   .cr-who small{display:block;font-weight:500;color:#666;text-transform:none;letter-spacing:0;margin-top:2px}
   .cr-empty{color:#888;font-size:14px;padding:40px 0;text-align:center;grid-column:1/-1;font-style:italic}
 
+  /* Admin */
+  .admin-btn{display:inline-block;margin-top:22px;background:none;border:none;color:#bbb;font-size:11px;cursor:pointer;font-family:inherit;text-decoration:underline;padding:0;letter-spacing:.03em}
+  .admin-btn.active{color:var(--accent2);font-weight:800}
+  .admin-overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:950;display:flex;align-items:center;justify-content:center;padding:16px;opacity:0;pointer-events:none;transition:opacity .2s}
+  .admin-overlay.open{opacity:1;pointer-events:all}
+  .admin-box{background:#fffaf2;border:2px solid var(--ink);box-shadow:8px 8px 0 var(--ink);padding:28px;width:100%;max-width:340px;position:relative}
+  .admin-box h3{font-size:18px;margin-bottom:6px;letter-spacing:-.02em}
+  .admin-box .ab-sub{font-size:12px;color:#888;margin-bottom:18px}
+  .admin-box input{width:100%;border:2px solid var(--ink);padding:9px 12px;font-family:inherit;font-size:14px;background:#fff;box-sizing:border-box;margin-bottom:10px;outline:none}
+  .admin-box input:focus{box-shadow:3px 3px 0 var(--accent2)}
+  .admin-box .ab-err{color:var(--accent);font-size:12px;margin-bottom:8px;display:none}
+  .admin-box .ab-submit{width:100%;border:2px solid var(--ink);padding:10px;font-family:inherit;font-weight:800;font-size:13px;background:var(--ink);color:#fff;cursor:pointer;letter-spacing:.04em;text-transform:uppercase}
+  .admin-box .ab-close{position:absolute;top:12px;right:14px;background:none;border:none;font-size:20px;cursor:pointer;color:var(--ink);line-height:1}
+  .cr-card.am{position:relative}
+  .cr-actions{display:flex;gap:8px;margin-top:12px;padding-top:10px;border-top:1px dashed #ccc}
+  .cr-actions button{border:2px solid var(--ink);background:#fff;font-family:inherit;font-size:11px;font-weight:800;letter-spacing:.05em;padding:5px 12px;cursor:pointer;text-transform:uppercase}
+  .cr-actions .cr-del{border-color:var(--accent);color:var(--accent)}
+  .cr-actions .cr-del:hover{background:var(--accent);color:#fff}
+  .cr-actions .cr-edit:hover{background:var(--ink);color:#fff}
+  .cr-ef{margin-top:12px;display:none}
+  .cr-ef textarea{width:100%;border:2px solid var(--ink);padding:8px;font-family:inherit;font-size:13px;min-height:80px;resize:vertical;box-sizing:border-box;outline:none}
+  .cr-ef .cr-save{margin-top:6px;border:2px solid var(--ink);background:var(--ink);color:#fff;font-family:inherit;font-weight:800;font-size:12px;padding:6px 16px;cursor:pointer}
+
   /* Application modal */
   .apply-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:900;display:flex;align-items:center;justify-content:center;padding:16px;opacity:0;pointer-events:none;transition:opacity .2s}
   .apply-overlay.open{opacity:1;pointer-events:all}
@@ -840,6 +863,8 @@
       '</div>';
     }).join("");
   }
+  window._renderCR=renderCR;
+  window._escCR=esc;
   renderCR();
 
   // Thank-you banner after a review redirect (?review=sent)
@@ -909,6 +934,140 @@
     })();
   })();
 
+})();
+</script>
+
+<script>
+/* ===== ADMIN MODULE ===== */
+(function(){
+  var ADMINS=["difugcobra@gmail.com","bazileuskas@gmail.com"];
+  var SK="mdo_admin_email";
+
+  function isAdmin(){
+    try{ return ADMINS.indexOf((sessionStorage.getItem(SK)||"").toLowerCase().trim())>-1; }catch(e){ return false; }
+  }
+  function getAdminEmail(){
+    try{ return sessionStorage.getItem(SK)||""; }catch(e){ return ""; }
+  }
+
+  /* Login overlay */
+  var ov=document.createElement("div");
+  ov.className="admin-overlay";
+  ov.innerHTML=
+    '<div class="admin-box">'+
+      '<button class="ab-close" id="abClose">&#x2715;</button>'+
+      '<h3>Admin login</h3>'+
+      '<p class="ab-sub">Enter your admin email to manage reviews.</p>'+
+      '<p class="ab-err" id="abErr">That email isn\'t on the list.</p>'+
+      '<input type="email" id="abEmail" placeholder="you@email.com" autocomplete="email">'+
+      '<button class="ab-submit" id="abSubmit">Log in</button>'+
+    '</div>';
+  document.body.appendChild(ov);
+
+  document.getElementById("abClose").addEventListener("click",function(){ ov.classList.remove("open"); });
+  ov.addEventListener("click",function(e){ if(e.target===ov) ov.classList.remove("open"); });
+  document.addEventListener("keydown",function(e){ if(e.key==="Escape") ov.classList.remove("open"); });
+
+  function tryLogin(){
+    var email=(document.getElementById("abEmail").value||"").trim().toLowerCase();
+    var err=document.getElementById("abErr");
+    if(ADMINS.indexOf(email)===-1){ err.style.display="block"; return; }
+    try{ sessionStorage.setItem(SK,email); }catch(e){}
+    ov.classList.remove("open");
+    applyAdminUI();
+  }
+  document.getElementById("abSubmit").addEventListener("click",tryLogin);
+  document.getElementById("abEmail").addEventListener("keydown",function(e){ if(e.key==="Enter") tryLogin(); });
+
+  /* Admin button injected below the cr-grid */
+  var crSection=document.getElementById("community-reviews");
+  var adminBtn=document.createElement("button");
+  adminBtn.className="admin-btn"+(isAdmin()?" active":"");
+  adminBtn.textContent=isAdmin()?"⚙ Admin mode ("+getAdminEmail()+") — click to refresh":"Admin";
+  adminBtn.addEventListener("click",function(){
+    if(isAdmin()){ applyAdminUI(); return; }
+    document.getElementById("abEmail").value="";
+    document.getElementById("abErr").style.display="none";
+    ov.classList.add("open");
+    setTimeout(function(){ document.getElementById("abEmail").focus(); },120);
+  });
+  if(crSection) crSection.appendChild(adminBtn);
+
+  /* Apply admin controls to each rendered card */
+  function applyAdminUI(){
+    if(!isAdmin()) return;
+    adminBtn.className="admin-btn active";
+    adminBtn.textContent="⚙ Admin mode ("+getAdminEmail()+") · Logout";
+    adminBtn.onclick=function(){
+      try{ sessionStorage.removeItem(SK); }catch(e){}
+      adminBtn.className="admin-btn";
+      adminBtn.textContent="Admin";
+      adminBtn.onclick=null;
+      adminBtn.addEventListener("click",loginFlow);
+      if(window._renderCR) window._renderCR();
+    };
+
+    var cards=document.querySelectorAll("#crGrid .cr-card");
+    cards.forEach(function(card,i){
+      if(card.querySelector(".cr-actions")) return; // already wired
+      card.classList.add("am");
+
+      var actions=document.createElement("div");
+      actions.className="cr-actions";
+      actions.innerHTML='<button class="cr-edit">Edit</button><button class="cr-del">Delete</button>';
+      card.appendChild(actions);
+
+      var ef=document.createElement("div");
+      ef.className="cr-ef";
+      var all=[];
+      try{ all=JSON.parse(localStorage.getItem("mdo_community_reviews")||"[]"); }catch(e){}
+      var rv=all[i]||{};
+      ef.innerHTML=
+        '<textarea class="cr-ef-ta">'+((rv.review||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"))+'</textarea>'+
+        '<button class="cr-save">Save</button>';
+      card.appendChild(ef);
+
+      /* Edit toggle */
+      actions.querySelector(".cr-edit").addEventListener("click",function(){
+        ef.style.display=ef.style.display==="block"?"none":"block";
+        if(ef.style.display==="block") ef.querySelector("textarea").focus();
+      });
+
+      /* Save */
+      ef.querySelector(".cr-save").addEventListener("click",function(){
+        var newText=ef.querySelector("textarea").value.trim();
+        if(!newText) return;
+        var a=[];
+        try{ a=JSON.parse(localStorage.getItem("mdo_community_reviews")||"[]"); }catch(e){}
+        if(a[i]) a[i].review=newText;
+        try{ localStorage.setItem("mdo_community_reviews",JSON.stringify(a)); }catch(e){}
+        if(window._renderCR) window._renderCR();
+        applyAdminUI();
+      });
+
+      /* Delete */
+      actions.querySelector(".cr-del").addEventListener("click",function(){
+        if(!confirm("Delete this review?")) return;
+        var a=[];
+        try{ a=JSON.parse(localStorage.getItem("mdo_community_reviews")||"[]"); }catch(e){}
+        a.splice(i,1);
+        try{ localStorage.setItem("mdo_community_reviews",JSON.stringify(a)); }catch(e){}
+        if(window._renderCR) window._renderCR();
+        applyAdminUI();
+      });
+    });
+  }
+
+  function loginFlow(){
+    if(isAdmin()){ applyAdminUI(); return; }
+    document.getElementById("abEmail").value="";
+    document.getElementById("abErr").style.display="none";
+    ov.classList.add("open");
+    setTimeout(function(){ document.getElementById("abEmail").focus(); },120);
+  }
+
+  /* Auto-apply if already logged in (e.g. page refresh within same tab) */
+  if(isAdmin()) applyAdminUI();
 })();
 </script>
 
