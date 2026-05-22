@@ -287,7 +287,7 @@
 
   // ── Community reviews from Firebase (falls back to localStorage) ──
   (function(){
-    var MDO_DB = "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com";
+    var MDO_DB = "https://mdoreviewservice-default-rtdb.firebaseio.com";
     function dbOk(){ return MDO_DB.indexOf("YOUR_PROJECT_ID") === -1; }
     function lsReviews(){
       try{ return JSON.parse(localStorage.getItem('mdo_community_reviews')||'[]'); }catch(e){ return []; }
