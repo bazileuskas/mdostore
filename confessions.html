@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Confessions — Martin's Door Is Open</title>
+  <style>
+    :root{
+      --ink:#050505;
+      --cream:#d4cfc8;
+      --dim:#6b6762;
+      --red:#e63946;
+      --faint:#1a1917;
+    }
+    *{margin:0;padding:0;box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      background:var(--ink);
+      color:var(--cream);
+      font-family:'Georgia',serif;
+      min-height:100vh;
+      cursor:crosshair;
+      animation:breathe 18s ease-in-out infinite;
+    }
+    @keyframes breathe{
+      0%,100%{background-color:#050505}
+      50%{background-color:#090807}
+    }
+
+    /* ── top warning ── */
+    .warning-strip{
+      text-align:center;
+      padding:18px 24px 0;
+      font-family:'Courier New',monospace;
+      font-size:11px;
+      letter-spacing:.18em;
+      text-transform:uppercase;
+      color:var(--dim);
+      opacity:.7;
+    }
+
+    /* ── masthead ── */
+    .masthead{
+      text-align:center;
+      padding:48px 24px 12px;
+      border-bottom:1px solid #1f1d1b;
+    }
+    .masthead h1{
+      font-size:clamp(48px,8vw,96px);
+      font-weight:900;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      color:var(--cream);
+      line-height:1;
+    }
+    .masthead .sub{
+      margin-top:14px;
+      font-size:13px;
+      color:var(--dim);
+      font-style:italic;
+      letter-spacing:.04em;
+    }
+
+    /* ── timer ── */
+    .presence{
+      text-align:center;
+      font-family:'Courier New',monospace;
+      font-size:11px;
+      color:var(--dim);
+      letter-spacing:.1em;
+      padding:14px 24px;
+      border-bottom:1px solid #1a1917;
+    }
+    .presence span{color:var(--red)}
+
+    /* ── confession cards ── */
+    .confessions{
+      max-width:780px;
+      margin:0 auto;
+      padding:0 24px 80px;
+    }
+    .confession{
+      border-bottom:1px solid #1f1d1b;
+      padding:56px 0;
+      position:relative;
+    }
+    .confession:last-child{border-bottom:none}
+
+    .c-index{
+      font-family:'Courier New',monospace;
+      font-size:10px;
+      letter-spacing:.22em;
+      text-transform:uppercase;
+      color:var(--dim);
+      margin-bottom:10px;
+      opacity:.5;
+    }
+    .c-name{
+      font-size:clamp(28px,4vw,42px);
+      font-weight:900;
+      letter-spacing:.02em;
+      line-height:1.1;
+      color:var(--cream);
+      margin-bottom:6px;
+    }
+    .c-tag{
+      font-family:'Courier New',monospace;
+      font-size:11px;
+      letter-spacing:.12em;
+      color:var(--dim);
+      margin-bottom:28px;
+      text-transform:uppercase;
+    }
+    .c-quote{
+      font-size:clamp(17px,2.4vw,22px);
+      line-height:1.65;
+      color:#bfbab4;
+      border-left:2px solid #2a2825;
+      padding-left:24px;
+      font-style:italic;
+      margin-bottom:28px;
+    }
+    .c-meta{
+      font-family:'Courier New',monospace;
+      font-size:11px;
+      color:var(--dim);
+      line-height:2;
+      letter-spacing:.05em;
+    }
+    .c-meta .flag{
+      color:var(--red);
+      opacity:.75;
+    }
+    .c-meta .note{
+      opacity:.45;
+      font-style:italic;
+    }
+
+    /* ── glitch class (applied by JS) ── */
+    .glitch-word{
+      color:var(--red);
+      opacity:.9;
+    }
+
+    /* ── footer ── */
+    .page-foot{
+      text-align:center;
+      padding:40px 24px 60px;
+      border-top:1px solid #1a1917;
+      font-family:'Courier New',monospace;
+      font-size:11px;
+      color:var(--dim);
+      letter-spacing:.1em;
+      opacity:.5;
+      line-height:2.2;
+    }
+
+    /* scrollbar */
+    ::-webkit-scrollbar{width:4px}
+    ::-webkit-scrollbar-track{background:#050505}
+    ::-webkit-scrollbar-thumb{background:#2a2825}
+  </style>
+</head>
+<body>
+
+<p class="warning-strip">this page is not linked from the homepage &nbsp;·&nbsp; something brought you here &nbsp;·&nbsp; we kept these</p>
+
+<div class="masthead">
+  <h1>Confessions</h1>
+  <p class="sub">These are the things people said. We wrote them down. We always write them down.</p>
+</div>
+
+<div class="presence">
+  you have been on this page for <span id="secs">0</span> seconds &nbsp;·&nbsp; we noticed when you arrived
+</div>
+
+<div class="confessions">
+
+  <div class="confession">
+    <div class="c-index">FILE 001 &nbsp;/&nbsp; VERIFIED &nbsp;/&nbsp; UNPROMPTED</div>
+    <div class="c-name">Denis Spivakov</div>
+    <div class="c-tag">Red Bull · 250ml &nbsp;·&nbsp; ★★★★★ &nbsp;·&nbsp; visit 3 of the week</div>
+    <div class="c-quote" id="q1">
+      "Walked in for a Red Bull and walked out questioning my career. 10/10 — would dissociate again."
+    </div>
+    <div class="c-meta">
+      · submitted: without hesitation, on the third visit<br>
+      · duration of stay: longer than necessary<br>
+      · <span class="flag">Denis has returned twice since filing this.</span><br>
+      · <span class="note">He does not remember writing it.</span>
+    </div>
+  </div>
+
+  <div class="confession">
+    <div class="c-index">FILE 002 &nbsp;/&nbsp; VERIFIED &nbsp;/&nbsp; PHYSICAL CONTACT NOTED</div>
+    <div class="c-name">Richard Han</div>
+    <div class="c-tag">Tic Tac · Mogu Mogu Edition &nbsp;·&nbsp; ★★★★★ &nbsp;·&nbsp; single visit, so far</div>
+    <div class="c-quote" id="q2">
+      "Their Tic Tacs taste vaguely litigious. I love it. Martin gave me a hug. I didn't ask."
+    </div>
+    <div class="c-meta">
+      · submitted: calmly, which was unusual<br>
+      · the hug: confirmed. duration: unlogged.<br>
+      · <span class="flag">Richard has not pursued legal action at time of writing.</span><br>
+      · <span class="note">The Tic Tacs have since been restocked. He hasn't come back for more. We find this notable.</span>
+    </div>
+  </div>
+
+  <div class="confession">
+    <div class="c-index">FILE 003 &nbsp;/&nbsp; VERIFIED &nbsp;/&nbsp; ITEM BEHAVIOR UNEXPLAINED</div>
+    <div class="c-name">Alex Anurov</div>
+    <div class="c-tag">Pink Lady Apple + Peppa Pig Plush &nbsp;·&nbsp; ★★★★☆ &nbsp;·&nbsp; repeat offender</div>
+    <div class="c-quote" id="q3">
+      "The Pink Lady apple was the most honest thing I've held in months. The Peppa was vibrating slightly."
+    </div>
+    <div class="c-meta">
+      · submitted: 11 minutes after purchase, unprompted<br>
+      · the apple: consumed same evening. fully.<br>
+      · <span class="flag">the vibration was not investigated by staff.</span><br>
+      · <span class="note">The Peppa Pig remains in Alex's possession. We have been informed it is now named.</span>
+    </div>
+  </div>
+
+  <div class="confession">
+    <div class="c-index">FILE 004 &nbsp;/&nbsp; VERIFIED &nbsp;/&nbsp; EMOTIONAL STATE: UNSTABLE</div>
+    <div class="c-name">Viggo Biancini</div>
+    <div class="c-tag">Assorted snacks &nbsp;·&nbsp; ★★★★★ &nbsp;·&nbsp; came for one thing, stayed for another</div>
+    <div class="c-quote" id="q4">
+      "Came for snacks, stayed for the existential lighting. Five stars and one tear."
+    </div>
+    <div class="c-meta">
+      · submitted: at the door, before leaving<br>
+      · the tear: singular. witnessed.<br>
+      · <span class="flag">Viggo did not specify which snacks.</span><br>
+      · <span class="note">The lighting has not been changed. We have considered it. We decided against it.</span>
+    </div>
+  </div>
+
+  <div class="confession">
+    <div class="c-index">FILE 005 &nbsp;/&nbsp; VERIFIED &nbsp;/&nbsp; INFORMATION WITHHELD</div>
+    <div class="c-name">Cailte Scully</div>
+    <div class="c-tag">Pink Lady Apples ×3 (intended: Kinder Eggs) &nbsp;·&nbsp; ★★★★★</div>
+    <div class="c-quote" id="q5">
+      "Kinder eggs were out of stock. Martin's eyes told me the truth. I bought three apples instead."
+    </div>
+    <div class="c-meta">
+      · submitted: calmly. too calmly.<br>
+      · the eggs: still out of stock.<br>
+      · <span class="flag">Cailte knows where the eggs are.</span><br>
+      · <span class="note">Cailte has not told us. We have not asked directly. We are waiting.</span>
+    </div>
+  </div>
+
+</div>
+
+<div class="page-foot">
+  martin's door is open &nbsp;·&nbsp; these reviews were given freely &nbsp;·&nbsp; we did not ask for all of them<br>
+  if you found this page, we already know about it<br>
+  <a href="/" style="color:#3a3835;text-decoration:none">← back to the shop</a>
+</div>
+
+<script>
+  // Seconds counter
+  var start = Date.now();
+  setInterval(function(){
+    document.getElementById('secs').textContent = Math.floor((Date.now()-start)/1000);
+  }, 1000);
+
+  // Tab title cycling
+  var titles = [
+    "Confessions — Martin's Door Is Open",
+    "you're still here",
+    "Confessions — Martin's Door Is Open",
+    "we kept these",
+    "Confessions — Martin's Door Is Open",
+    "don't scroll too fast"
+  ];
+  var ti = 0;
+  setInterval(function(){
+    ti = (ti+1) % titles.length;
+    document.title = titles[ti];
+  }, 6000);
+
+  // Glitch effect — briefly corrupts a word in a random quote
+  var quotes = ['q1','q2','q3','q4','q5'];
+  function glitch(){
+    var el = document.getElementById(quotes[Math.floor(Math.random()*quotes.length)]);
+    if(!el) return;
+    var original = el.innerHTML;
+    // grab plain text, pick a random word
+    var text = el.textContent;
+    var words = text.match(/\b\w{4,}\b/g);
+    if(!words||!words.length) return;
+    var word = words[Math.floor(Math.random()*words.length)];
+    var chars = '█▓▒░#@$%&*!?/\\|';
+    var garbled = word.split('').map(function(c){
+      return Math.random()>.4 ? chars[Math.floor(Math.random()*chars.length)] : c;
+    }).join('');
+    el.innerHTML = original.replace(word,'<span class="glitch-word">'+garbled+'</span>');
+    setTimeout(function(){ el.innerHTML = original; }, 180);
+  }
+  setInterval(glitch, 3400);
+
+  // Subtle: if user is idle for 30s, add a line to the presence bar
+  var idle;
+  function resetIdle(){
+    clearTimeout(idle);
+    idle = setTimeout(function(){
+      var p = document.querySelector('.presence');
+      if(p && !p.dataset.warned){
+        p.dataset.warned = '1';
+        p.innerHTML += ' &nbsp;·&nbsp; <span style="color:#e63946;opacity:.6">you stopped moving</span>';
+      }
+    }, 30000);
+  }
+  document.addEventListener('mousemove', resetIdle);
+  document.addEventListener('keydown', resetIdle);
+  resetIdle();
+</script>
+
+</body>
+</html>
