@@ -77,6 +77,15 @@
   .desc-block ul{margin-left:20px;font-size:14px;color:#333}
   .desc-block ul li{margin-bottom:4px}
 
+  /* Color picker (pen product page) */
+  .color-picker{margin:16px 0 4px;border:2px solid var(--ink);padding:14px 16px;background:#fafafa}
+  .cp-label{font-size:12px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;margin-bottom:10px;color:#444}
+  .cp-label span{color:var(--ink)}
+  .cp-swatches{display:flex;gap:10px;flex-wrap:wrap}
+  .cp-swatch{width:30px;height:30px;border-radius:50%;border:2px solid var(--ink);cursor:pointer;transition:transform .12s;flex-shrink:0;padding:0;background:transparent}
+  .cp-swatch:hover{transform:scale(1.15)}
+  .cp-swatch.active{transform:scale(1.28);box-shadow:0 0 0 3px #fff,0 0 0 5px var(--ink)}
+
   /* Reviews on product page */
   .product-reviews{max-width:1200px;margin:0 auto;padding:48px 24px;border-top:2px solid var(--ink)}
   .product-reviews h2{font-size:clamp(28px,3.5vw,40px);letter-spacing:-.02em;margin-bottom:18px}
@@ -218,7 +227,12 @@
     tictac:{name:"Tic Tac · Mogu Mogu Rip-Off",price:1.99,img:"https://picsum.photos/seed/mdo-tictac/120/120"},
     apple:{name:"Pink Lady Apples",price:0.89,img:"https://picsum.photos/seed/mdo-apple/120/120"},
     peppa:{name:"Peppa Pig · Plushy Pal",price:12.50,img:"https://picsum.photos/seed/mdo-peppa/120/120"},
-    kinder:{name:"Kinder Eggs · Surprise Inside",price:2.20,img:"https://picsum.photos/seed/mdo-kinder/120/120",oos:true}
+    kinder:{name:"Kinder Eggs · Surprise Inside",price:2.20,img:"https://picsum.photos/seed/mdo-kinder/120/120",oos:true},
+    "pen-black":{name:"The Pen · Black",price:1.50,img:"https://picsum.photos/seed/mdo-pen/120/120"},
+    "pen-blue":{name:"The Pen · Blue",price:1.50,img:"https://picsum.photos/seed/mdo-pen/120/120"},
+    "pen-red":{name:"The Pen · Red",price:1.50,img:"https://picsum.photos/seed/mdo-pen/120/120"},
+    "pen-green":{name:"The Pen · Green",price:1.50,img:"https://picsum.photos/seed/mdo-pen/120/120"},
+    "pen-purple":{name:"The Pen · Purple",price:1.50,img:"https://picsum.photos/seed/mdo-pen/120/120"}
   };
 
   function getCart(){ try{ return JSON.parse(localStorage.getItem("mdo_cart")||"{}"); }catch(e){ return {}; } }
@@ -624,6 +638,42 @@
         { stars: 5, who: "Richard Han", note: "Verified buyer", quote: "Best egg I ever had. Crying about it now." }
       ],
       stock: false
+    },
+    pen: {
+      name: "The Pen",
+      eyebrow: "Stationery · Chromatic",
+      tag: "One pen. Five destinies. Choose wisely.",
+      badge: { text: "New" },
+      price: 1.50,
+      img: "https://picsum.photos/seed/mdo-pen/900/900",
+      thumbs: [
+        "https://picsum.photos/seed/mdo-pen/300/300",
+        "https://picsum.photos/seed/mdo-pen-b/300/300",
+        "https://picsum.photos/seed/mdo-pen-c/300/300"
+      ],
+      colors: [
+        { name: "Black",  hex: "#1a1a1a", cartId: "pen-black"  },
+        { name: "Blue",   hex: "#1d4ed8", cartId: "pen-blue"   },
+        { name: "Red",    hex: "#dc2626", cartId: "pen-red"    },
+        { name: "Green",  hex: "#15803d", cartId: "pen-green"  },
+        { name: "Purple", hex: "#7c3aed", cartId: "pen-purple" }
+      ],
+      rating: 4.5,
+      reviewCount: 11,
+      paragraphs: [
+        "This is a pen. It holds ink. The ink goes on paper. You already know how this works — what you didn't know is that you get to choose the color of your regret.",
+        "Black for the classics. Blue for the romantics. Red for the people who correct other people's documents. Green for the optimists. Purple for everyone else."
+      ],
+      bullets: [
+        "Smooth ballpoint. Won't skip. Unlike some people.",
+        "Clip included. For the shirt pocket you definitely use.",
+        "Refillable in theory. In practice, you'll buy another."
+      ],
+      reviews: [
+        { stars: 5, who: "Denis Spivakov", note: "Bought purple", quote: "I chose purple. My handwriting improved. Coincidence? Probably." },
+        { stars: 4, who: "Alex Anurov",    note: "Bought red",    quote: "Corrected 14 documents. Zero friends lost. Four stars." }
+      ],
+      stock: true
     }
   };
 
@@ -673,6 +723,14 @@
     const oosOverlay = !p.stock ? `<div class="oos-overlay"><span>Sold out</span></div>` : '';
     const stars = '★'.repeat(Math.round(p.rating)) + '☆'.repeat(5 - Math.round(p.rating));
     const strikeHTML = p.strike ? `<div class="strike">$${p.strike.toFixed(2)}</div><div class="save">Save $${(p.strike - p.price).toFixed(2)}</div>` : '';
+    const colorPickerHTML = p.colors ? `
+      <div class="color-picker">
+        <div class="cp-label">Color: <span id="cpSelected">${p.colors[0].name}</span></div>
+        <div class="cp-swatches">
+          ${p.colors.map((c,i) => `<button class="cp-swatch${i===0?' active':''}" data-color="${c.name}" data-cartid="${c.cartId}" style="background:${c.hex}" title="${c.name}"></button>`).join('')}
+        </div>
+      </div>` : '';
+    let cartId = p.colors ? p.colors[0].cartId : id;
 
     root.innerHTML = `
       <div class="crumbs">
@@ -709,6 +767,8 @@
             <div class="price">$${p.price.toFixed(2)}</div>
             ${strikeHTML}
           </div>
+
+          ${colorPickerHTML}
 
           <div class="qty-row">
             <div class="qty">
@@ -773,12 +833,24 @@
     const addBig = document.getElementById('addBig');
     addBig.addEventListener('click', () => {
       if (addBig.disabled) return;
-      window.MDOCart.add(id, qty);
+      window.MDOCart.add(cartId, qty);
       const orig = addBig.textContent;
       addBig.textContent = '✓ Added ' + qty + ' to bag';
       addBig.style.background = '#3a8a3a';
       setTimeout(() => { addBig.textContent = orig; addBig.style.background = ''; }, 1400);
     });
+
+    // Color picker wiring (pen / any product with colors)
+    if (p.colors) {
+      document.querySelectorAll('.cp-swatch').forEach(sw => {
+        sw.addEventListener('click', () => {
+          document.querySelectorAll('.cp-swatch').forEach(s => s.classList.remove('active'));
+          sw.classList.add('active');
+          document.getElementById('cpSelected').textContent = sw.dataset.color;
+          cartId = sw.dataset.cartid;
+        });
+      });
+    }
 
     // Review this product
     const rvBtn = document.getElementById('rvBtnProduct');
