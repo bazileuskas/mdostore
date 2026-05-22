@@ -254,6 +254,9 @@
 
 </div>
 
+<!-- Community reviews injected by JS -->
+<div id="communityConfessions"></div>
+
 <div class="page-foot">
   martin's door is open &nbsp;·&nbsp; these reviews were given freely &nbsp;·&nbsp; we did not ask for all of them<br>
   if you found this page, we already know about it<br>
@@ -282,13 +285,63 @@
     document.title = titles[ti];
   }, 6000);
 
-  // Glitch effect — briefly corrupts a word in a random quote
-  var quotes = ['q1','q2','q3','q4','q5'];
+  // ── Community reviews from localStorage ──
+  (function(){
+    var all = [];
+    try{ all = JSON.parse(localStorage.getItem('mdo_community_reviews')||'[]'); }catch(e){}
+    var container = document.getElementById('communityConfessions');
+    if(!container) return;
+    if(!all.length){
+      container.innerHTML =
+        '<div style="text-align:center;padding:40px 24px;font-family:\'Courier New\',monospace;font-size:11px;'+
+        'letter-spacing:.14em;color:#2e2c2a;text-transform:uppercase">'+
+        '· no community confessions on file · this section remains empty · for now ·</div>';
+      return;
+    }
+    var divider =
+      '<div style="text-align:center;padding:36px 24px 0;font-family:\'Courier New\',monospace;'+
+      'font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:#2e2c2a;'+
+      'border-top:1px solid #1a1917">'+
+      '· the following were submitted voluntarily · or so we were told ·</div>';
+
+    var cards = all.map(function(r, i){
+      var n = i + 6; // file numbers continue from 005
+      var stars = '★'.repeat(r.rating||0)+'☆'.repeat(5-(r.rating||0));
+      var d = '';
+      try{ d = new Date(r.date).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}); }catch(e){}
+      var fileNum = n < 10 ? '00'+n : (n < 100 ? '0'+n : n);
+      // escape for HTML
+      var name = (r.name||'unknown').replace(/&/g,'&amp;').replace(/</g,'&lt;');
+      var product = (r.product||'unspecified').replace(/&/g,'&amp;').replace(/</g,'&lt;');
+      var review = (r.review||'').replace(/&/g,'&amp;').replace(/</g,'&lt;');
+      return '<div class="confession">'+
+        '<div class="c-index">FILE '+fileNum+' &nbsp;/&nbsp; COMMUNITY &nbsp;/&nbsp; UNVERIFIED</div>'+
+        '<div class="c-name" id="cq'+n+'name">'+name+'</div>'+
+        '<div class="c-tag">'+product+' &nbsp;·&nbsp; '+stars+(d?' &nbsp;·&nbsp; '+d:'')+'</div>'+
+        '<div class="c-quote" id="cq'+n+'">"'+review+'"</div>'+
+        '<div class="c-meta">'+
+          '· submitted: through the form on the website<br>'+
+          '· <span class="flag">this person chose to say this. publicly. to us.</span><br>'+
+          '· <span class="note">we have not followed up. we considered it.</span>'+
+        '</div>'+
+      '</div>';
+    }).join('');
+
+    container.innerHTML = divider +
+      '<div class="confessions" style="padding-top:0">'+cards+'</div>';
+  })();
+
+  // Glitch effect — corrupts a word in a random quote (curated + community)
+  function getAllQuoteIds(){
+    var ids = ['q1','q2','q3','q4','q5'];
+    document.querySelectorAll('[id^="cq"]').forEach(function(el){ ids.push(el.id); });
+    return ids;
+  }
   function glitch(){
-    var el = document.getElementById(quotes[Math.floor(Math.random()*quotes.length)]);
+    var ids = getAllQuoteIds();
+    var el = document.getElementById(ids[Math.floor(Math.random()*ids.length)]);
     if(!el) return;
     var original = el.innerHTML;
-    // grab plain text, pick a random word
     var text = el.textContent;
     var words = text.match(/\b\w{4,}\b/g);
     if(!words||!words.length) return;
