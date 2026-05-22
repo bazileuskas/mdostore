@@ -525,15 +525,6 @@ function startPolling(){
       state.serving = serving;
       persist();
 
-      // Auto-advance if someone has been at the front too long
-      if(nextT >= serving && servedAt){
-        var ageMin = (Date.now() - new Date(servedAt).getTime()) / 60000;
-        if(ageMin > STALL_MIN){
-          advanceQueue().catch(function(){});
-          return; // next poll tick will show the updated state
-        }
-      }
-
       refreshDisplay(serving);
     }).catch(function(){
       dbError.style.display = 'block';
@@ -661,10 +652,7 @@ function cancelBooking(){
     : 'Cancel your booking? Your place in the queue will be released.';
   if(!confirm(msg)) return;
 
-  // Release our queue slot so the next person isn't stuck waiting
-  if(state.phase === 'queue' || state.phase === 'form'){
-    advanceQueue().catch(function(){});
-  }
+  // Note: queue only advances on confirm — cancel just drops this device's session
 
   stopPolling();
   state = {}; persist();
