@@ -102,6 +102,25 @@
   .role.oos .label{background:#666;color:#fff}
   .role.oos .stamp{position:absolute;top:50%;right:18px;transform:translateY(-50%) rotate(-12deg);border:3px solid var(--accent);color:var(--accent);font-weight:900;letter-spacing:.18em;font-size:14px;padding:6px 12px;background:rgba(255,250,242,.85);text-transform:uppercase}
 
+  /* Application modal */
+  .apply-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:900;display:flex;align-items:center;justify-content:center;padding:16px;opacity:0;pointer-events:none;transition:opacity .2s}
+  .apply-overlay.open{opacity:1;pointer-events:all}
+  .apply-modal{background:#fffaf2;border:2px solid var(--ink);box-shadow:8px 8px 0 var(--ink);padding:32px;width:100%;max-width:480px;position:relative;max-height:90vh;overflow-y:auto}
+  .apply-modal h2{font-size:22px;letter-spacing:-.02em;margin-bottom:4px}
+  .apply-modal .role-tag{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#888;margin-bottom:22px;display:block}
+  .apply-modal .field{margin-bottom:16px}
+  .apply-modal label{display:block;font-size:12px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;margin-bottom:5px}
+  .apply-modal input,.apply-modal textarea{width:100%;border:2px solid var(--ink);padding:9px 12px;font-family:inherit;font-size:14px;background:#fff;box-sizing:border-box;outline:none}
+  .apply-modal input:focus,.apply-modal textarea:focus{box-shadow:3px 3px 0 var(--accent2)}
+  .apply-modal textarea{resize:vertical;min-height:130px}
+  .apply-modal .row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .apply-modal .submit-btn{margin-top:8px;width:100%;border:2px solid var(--ink);padding:12px;font-family:inherit;font-size:13px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;background:var(--ink);color:#fff;cursor:pointer}
+  .apply-modal .submit-btn:hover{background:var(--accent2);color:var(--ink)}
+  .apply-modal .close-btn{position:absolute;top:14px;right:16px;background:none;border:none;font-size:22px;cursor:pointer;line-height:1;color:var(--ink)}
+  .apply-modal .form-note{font-size:11px;color:#888;margin-top:10px;text-align:center}
+  .apply-modal .success-msg{display:none;text-align:center;padding:24px 0}
+  .apply-modal .success-msg p{font-size:15px;margin-top:10px}
+
   .contact{background:var(--soft);border-top:2px solid var(--ink)}
   .c-grid{max-width:1200px;margin:0 auto;padding:72px 24px;display:grid;grid-template-columns:1fr 1fr;gap:40px}
   .c-grid h2{font-size:clamp(32px,4.5vw,52px);letter-spacing:-.03em;line-height:1}
@@ -439,18 +458,70 @@
       <span class="label">Front of house</span>
       <h3>Seller</h3>
       <p class="perks">Greet, ring, never blink first. Bilingual in eye contact. Must love Red Bull at room temperature.</p>
-      <a class="apply" href="#contact">Apply →</a>
+      <button class="apply" data-role="Seller">Apply →</button>
     </div>
 
     <div class="role">
       <span class="label">Brand</span>
       <h3>Marker</h3>
       <p class="perks">You hold the marker. You write the prices. You decide what an apple is worth today. Sharpie provided.</p>
-      <a class="apply" href="#contact">Apply →</a>
+      <button class="apply" data-role="Marker">Apply →</button>
     </div>
 
   </div>
 </section>
+
+<!-- APPLICATION MODAL -->
+<div class="apply-overlay" id="applyOverlay">
+  <div class="apply-modal" role="dialog" aria-modal="true" aria-labelledby="applyTitle">
+    <button class="close-btn" id="applyClose" aria-label="Close">&#x2715;</button>
+    <h2 id="applyTitle">Apply for the position</h2>
+    <span class="role-tag" id="applyRoleTag"></span>
+
+    <form id="applyForm" action="https://formsubmit.co/buy@mdostore.com" method="POST" enctype="multipart/form-data">
+      <input type="hidden" name="_subject" id="applySubject" value="New application">
+      <input type="hidden" name="_template" value="table">
+      <input type="hidden" name="_captcha" value="false">
+      <input type="hidden" name="_next" value="https://mdostore.com/?applied=sent">
+      <input type="hidden" name="Position" id="applyPositionField">
+      <input type="text" name="_honey" style="display:none">
+
+      <div class="row">
+        <div class="field">
+          <label for="applyName">First name</label>
+          <input type="text" id="applyName" name="First name" required placeholder="Martin">
+        </div>
+        <div class="field">
+          <label for="applyLast">Last name</label>
+          <input type="text" id="applyLast" name="Last name" required placeholder="Doe">
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="applyEmail">E-mail</label>
+        <input type="email" id="applyEmail" name="Email" required placeholder="you@example.com">
+      </div>
+
+      <div class="field">
+        <label for="applyClass">Class</label>
+        <input type="text" id="applyClass" name="Class" required placeholder="e.g. 7a, 7b, 7c">
+      </div>
+
+      <div class="field">
+        <label for="applyResume">Resume / cover letter</label>
+        <textarea id="applyResume" name="Resume" required placeholder="Tell us about yourself. Why this role? What's your relationship with Tic Tacs?"></textarea>
+      </div>
+
+      <button type="submit" class="submit-btn">Send application &rarr;</button>
+      <p class="form-note">We read every application. Martin may reply between sips.</p>
+    </form>
+
+    <div class="success-msg" id="applySuccess">
+      <div style="font-size:36px">&#10003;</div>
+      <p>Application received.<br>We'll be in touch.</p>
+    </div>
+  </div>
+</div>
 
 <!-- CONTACT -->
 <section class="contact" id="contact">
@@ -734,6 +805,56 @@
   })();
 
   sync();
+
+  // Application modal
+  (function(){
+    var overlay=document.getElementById("applyOverlay");
+    var closeBtn=document.getElementById("applyClose");
+    var roleTag=document.getElementById("applyRoleTag");
+    var posField=document.getElementById("applyPositionField");
+    var subjectField=document.getElementById("applySubject");
+    var form=document.getElementById("applyForm");
+    var successMsg=document.getElementById("applySuccess");
+
+    function openApply(role){
+      roleTag.textContent=role;
+      posField.value=role;
+      subjectField.value="New application — "+role;
+      form.style.display="";
+      successMsg.style.display="none";
+      overlay.classList.add("open");
+      document.body.style.overflow="hidden";
+    }
+    function closeApply(){
+      overlay.classList.remove("open");
+      document.body.style.overflow="";
+    }
+
+    document.querySelectorAll(".apply[data-role]").forEach(function(btn){
+      btn.addEventListener("click",function(e){
+        e.preventDefault();
+        openApply(btn.getAttribute("data-role"));
+      });
+    });
+
+    closeBtn.addEventListener("click",closeApply);
+    overlay.addEventListener("click",function(e){ if(e.target===overlay) closeApply(); });
+    document.addEventListener("keydown",function(e){ if(e.key==="Escape") closeApply(); });
+
+    // Handle ?applied=sent redirect from FormSubmit
+    (function(){
+      try{
+        if(new URLSearchParams(location.search).get("applied")==="sent"){
+          var b=document.createElement("div");
+          b.style.cssText="position:fixed;left:50%;top:18px;transform:translateX(-50%);z-index:999;background:#161616;color:#fffaf2;border:2px solid #fffaf2;box-shadow:6px 6px 0 #e63946;padding:14px 20px;font-weight:800;font-size:14px;max-width:90%;text-align:center";
+          b.textContent="Application received. Martin is reading it between sips.";
+          document.body.appendChild(b);
+          setTimeout(function(){ b.style.transition="opacity .4s"; b.style.opacity="0"; setTimeout(function(){ b.remove(); },400); },5000);
+        }
+      }catch(e){}
+    })();
+  })();
+
 })();
 </script>
 
