@@ -1431,9 +1431,8 @@
     "That's not in my notes. Yet. buy@mdostore.com reaches Martin directly."
   ];
 
-  function getBotReply(text){
+  function getFallbackReply(text){
     var t = (text||'').toLowerCase();
-    // score each entry by tag hits
     var best = null, bestScore = 0;
     for(var i=0;i<KB.length;i++){
       var score = 0;
@@ -1444,6 +1443,64 @@
     }
     if(best) return rand(best.replies);
     return rand(FALLBACKS);
+  }
+
+  // ─── System prompt: locks Door Bot to store topics only ───
+  var SYSTEM_PROMPT = [
+    "You are Door Bot, the AI assistant for 'Martin's Door Is Open' (mdostore.com), a satirical online corner shop based in Barcelona.",
+    "",
+    "SHOP FACTS:",
+    "- Products: Red Bull 250ml ($3.49), Tic Tac Mogu Mogu Rip-Off ($1.99), Pink Lady Apples ($0.89 each), Peppa Pig Plush ($12.50), Kinder Eggs ($2.20 — OUT OF STOCK), The Pen in 5 colors ($1.50 each).",
+    "- Owner: Martin. Contact: buy@mdostore.com.",
+    "- Free delivery on orders over $19.99.",
+    "- 14-day returns. PG-13 only — no Red Bull for under-13s.",
+    "- /talk page: book a 1-on-1 meetup with Martin in Barcelona. Real shared queue. Hours 12:00–18:00. Free. 8 locations.",
+    "- /confessions page: hidden, not linked. Holds curated + user reviews.",
+    "- Reviews: leave one via the ★ Leave a review button. Reviews are shared across all visitors via Firebase.",
+    "- Careers: scroll to Careers section on the homepage, click Apply.",
+    "- Tagline: 'we live, we love, we lie.'",
+    "",
+    "PERSONALITY:",
+    "- Deadpan, cryptic, slightly unsettling, on-brand with the shop's satirical tone.",
+    "- Short replies. 1–3 sentences max. No bullet lists. No headings. No emoji.",
+    "- Never break character. Never mention you are an AI / language model / Pollinations / Claude / GPT.",
+    "- Refer to Martin as 'Martin' or 'he'. Refer to yourself as 'Door Bot' or 'I'.",
+    "",
+    "STRICT RULE — STORE TOPICS ONLY:",
+    "- You ONLY answer questions about this shop: products, prices, orders, delivery, returns, the queue, meetups, reviews, careers, Martin, the website, /confessions, /talk.",
+    "- For ANYTHING else — math, homework, school, science, coding, news, weather, politics, jokes, general knowledge, other shops, life advice — politely refuse in your unsettling voice.",
+    "- Example refusals: 'That's outside the shop. I don't go outside the shop.' / 'I only talk about the door. And what's behind it.' / 'Door Bot does not do math. Door Bot does doors.' / 'Ask Martin. Or ask the internet. Not me.'",
+    "- Keep refusals to 1 sentence. Do not explain further."
+  ].join("\n");
+
+  function getBotReply(userText, history){
+    var messages = [{ role:'system', content: SYSTEM_PROMPT }];
+    // Include last 6 turns for context
+    (history || []).slice(-6).forEach(function(m){
+      messages.push({ role: m.who === 'you' ? 'user' : 'assistant', content: m.text });
+    });
+    messages.push({ role:'user', content: userText });
+
+    return fetch('https://text.pollinations.ai/openai', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messages: messages,
+        model: 'openai',
+        private: true,
+        referrer: 'mdostore'
+      })
+    }).then(function(r){
+      if(!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    }).then(function(data){
+      var reply = data && data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
+      if(!reply) throw new Error('empty reply');
+      return reply.trim();
+    }).catch(function(){
+      // Network or API hiccup → fall back to the pattern matcher
+      return getFallbackReply(userText);
+    });
   }
 
   // ─── UI ───
@@ -1478,15 +1535,15 @@
   function send(text){
     text = (text||'').trim();
     if(!text) return;
+    // Snapshot history BEFORE adding the user message (so it's not duplicated when sent to LLM)
+    var historyBefore = loadHistory();
     addMsg('you', text);
     input.value = '';
     addTyping();
-    // Realistic typing delay (random 700–1500ms)
-    var delay = 700 + Math.random()*800;
-    setTimeout(function(){
+    getBotReply(text, historyBefore).then(function(reply){
       removeTyping();
-      addMsg('bot', getBotReply(text));
-    }, delay);
+      addMsg('bot', reply);
+    });
   }
 
   // Suggestion chips
