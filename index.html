@@ -960,11 +960,6 @@
           Object.keys(CATALOG).map(function(id){return '<option value="'+esc(CATALOG[id].name)+'">'+esc(CATALOG[id].name)+'</option>';}).join("")+
         '</select></div>'+
         '<div class="co-field"><label>Your review</label><textarea name="Review" id="rvText" placeholder="Tell the truth. Or don\'t. We do both." style="min-height:90px"></textarea></div>'+
-        '<div class="co-field"><label>Photos of what you bought</label>'+
-          '<input type="file" name="attachment" id="rvPhotos" accept="image/*" multiple>'+
-          '<div class="rv-photos" id="rvPreview"></div>'+
-          '<div class="rv-note">Up to 10MB total. Photos attach to the email automatically — no copy-paste needed.</div>'+
-        '</div>'+
         '<div class="co-err" id="rvErr">Pop in a name, a rating, and a few words.</div>'+
         '<button type="submit" class="send-order" id="rvSend">Send review →</button>'+
       '</div>'+
@@ -984,12 +979,6 @@
   });
   starWrap.addEventListener("mouseleave", function(){ paintStars(); });
 
-  mWrap.querySelector("#rvPhotos").addEventListener("change", function(e){
-    const files=Array.from(e.target.files||[]);
-    const prev=mWrap.querySelector("#rvPreview"); prev.innerHTML="";
-    files.forEach(function(f){ const im=document.createElement("img"); im.src=URL.createObjectURL(f); prev.appendChild(im); });
-  });
-
   function openReview(prefill){
     if(prefill && CATALOG[prefill]) mWrap.querySelector("#rvProduct").value=CATALOG[prefill].name;
     mWrap.classList.add("open");
@@ -998,32 +987,92 @@
   mWrap.querySelector(".x").addEventListener("click", closeReview);
   mWrap.addEventListener("click", function(e){ if(e.target===mWrap) closeReview(); });
 
+  function showReviewToast(){
+    var b=document.createElement("div");
+    b.style.cssText="position:fixed;left:50%;top:18px;transform:translateX(-50%);z-index:200;background:#161616;color:#fffaf2;border:2px solid #fffaf2;box-shadow:6px 6px 0 #e63946;padding:14px 20px;font-weight:800;font-size:14px;max-width:90%;text-align:center";
+    b.textContent="★ Review received. Martin is reading it. (Allegedly.)";
+    document.body.appendChild(b);
+    setTimeout(function(){ b.style.transition="opacity .4s"; b.style.opacity="0"; setTimeout(function(){ b.remove(); },400); },4000);
+  }
+
   mWrap.addEventListener("submit", function(e){
+    e.preventDefault(); // always handle via AJAX — no page redirect, no race condition
     const name=(mWrap.querySelector("#rvName").value||"").trim();
     const text=(mWrap.querySelector("#rvText").value||"").trim();
-    const files=mWrap.querySelector("#rvPhotos").files;
     const err=mWrap.querySelector("#rvErr");
-    let bytes=0; for(var i=0;i<files.length;i++) bytes+=files[i].size;
-    if(!name || !rvRating || !text){ e.preventDefault(); err.textContent="Pop in a name, a rating, and a few words."; err.style.display="block"; return; }
-    if(bytes > 10*1024*1024){ e.preventDefault(); err.textContent="Photos exceed 10MB total — trim a couple and retry."; err.style.display="block"; return; }
-    // Save to Firebase (shared) + localStorage (backup)
+    if(!name || !rvRating || !text){
+      err.textContent="Pop in a name, a rating, and a few words."; err.style.display="block"; return;
+    }
+    err.style.display="none";
+
+    var sendBtn=document.getElementById("rvSend");
+    sendBtn.disabled=true; sendBtn.textContent="Sending…";
+
     var product=mWrap.querySelector("#rvProduct").value||"";
     var reviewObj={name:name,rating:rvRating,product:product,review:text,date:new Date().toISOString()};
-    if(dbOk()){
-      fetch(MDO_DB+"/reviews.json",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(reviewObj)}).catch(function(){});
-    }
+
+    // 1) Firebase (shared, source of truth)
+    var fbPromise = dbOk()
+      ? fetch(MDO_DB+"/reviews.json",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(reviewObj)})
+      : Promise.resolve();
+
+    // 2) localStorage backup
     try{
       var all=JSON.parse(localStorage.getItem("mdo_community_reviews")||"[]");
       all.unshift(reviewObj);
       localStorage.setItem("mdo_community_reviews",JSON.stringify(all));
     }catch(ex){}
-    // valid → native multipart submit to FormSubmit, then _next redirect back
+
+    // 3) Email notification to Martin (fire-and-forget)
+    fetch("https://formsubmit.co/ajax/"+STORE_EMAIL,{
+      method:"POST",
+      headers:{"Content-Type":"application/json","Accept":"application/json"},
+      body: JSON.stringify({
+        _subject: "New review — Martin's Door Is Open",
+        _template: "table",
+        _captcha: "false",
+        Name: name, Rating: rvRating, Product: product, Review: text
+      })
+    }).catch(function(){});
+
+    fbPromise.then(function(){
+      sendBtn.textContent="Sent ✓";
+      // reset form
+      mWrap.querySelector("#rvName").value="";
+      mWrap.querySelector("#rvText").value="";
+      rvRating=0; rvRatingInput.value=""; paintStars();
+      setTimeout(function(){
+        closeReview();
+        sendBtn.disabled=false; sendBtn.textContent="Send review →";
+        if(window._renderCR) window._renderCR();
+        showReviewToast();
+      },500);
+    }).catch(function(){
+      sendBtn.disabled=false; sendBtn.textContent="Send review →";
+      err.textContent="Couldn't save — try again in a moment."; err.style.display="block";
+    });
   });
 
   document.querySelectorAll("[data-review]").forEach(function(b){
     b.addEventListener("click", function(e){ e.preventDefault(); openReview(b.getAttribute("data-review")||null); });
   });
   window.MDOReview={ open: openReview };
+
+  // ── cleanup malformed Firebase entries (auto, on every load) ──
+  function cleanupBrokenReviews(){
+    if(!dbOk()) return;
+    fetch(MDO_DB+"/reviews.json").then(function(r){return r.json();}).then(function(data){
+      if(!data || typeof data !== "object") return;
+      Object.keys(data).forEach(function(k){
+        var r = data[k];
+        var bad = !r || !r.name || !r.review || !r.rating || !r.date;
+        if(bad){
+          fetch(MDO_DB+"/reviews/"+k+".json",{method:"DELETE"}).catch(function(){});
+        }
+      });
+    }).catch(function(){});
+  }
+  cleanupBrokenReviews();
 
   // ── helpers ──
   function lsReviews(){ try{return JSON.parse(localStorage.getItem("mdo_community_reviews")||"[]");}catch(e){return [];} }
