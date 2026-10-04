@@ -1,1596 +1,1454 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Martin's Door Is Open — we live. we love. we lie.</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>JUJUTSU UNLIMITEDS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@400;600&family=Yuji+Syuku&display=swap" rel="stylesheet">
 <style>
-  :root{
-    --bg:#fffaf2;
-    --ink:#161616;
-    --muted:#6b6b6b;
-    --accent:#e63946;
-    --accent2:#ffb703;
-    --soft:#f1e7d6;
-    --border:#1b1b1b;
-    --green:#3a8a3a;
-    --shadow:6px 6px 0 #161616;
-  }
-  *{box-sizing:border-box;margin:0;padding:0}
-  html,body{background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif;line-height:1.5;-webkit-font-smoothing:antialiased}
-  a{color:inherit;text-decoration:none}
-  img{max-width:100%;display:block}
+*{box-sizing:border-box}
+:root{
+  --ink:#05040a; --bone:#f4efe4; --red:#ff2440; --blood:#8a0018; --blue:#38c8ff; --purple:#a55cff;
+  --f-display:'Anton',Impact,Haettenschweiler,'Arial Narrow Bold',sans-serif;
+  --f-jp:'Yuji Syuku','Yu Mincho','Hiragino Mincho ProN','MS PMincho',serif;
+  --f-ui:'Oswald','Segoe UI',system-ui,sans-serif;
+  --pad-x:clamp(22px,6.5vw,120px);
+  --extrude:
+    .005em .006em 0 #ff2440, .010em .012em 0 #f01f3a, .015em .018em 0 #dc1a34,
+    .020em .024em 0 #c8152e, .025em .030em 0 #b41128, .030em .036em 0 #a00d22,
+    .035em .042em 0 #8c0a1c, .040em .048em 0 #780716, .045em .054em 0 #640511,
+    .050em .060em 0 #50030c, .09em .12em .14em rgba(0,0,0,.8);
+}
+html,body{height:100%;margin:0}
+body{background:var(--ink);color:var(--bone);font-family:var(--f-ui);overflow:hidden;user-select:none;-webkit-user-select:none}
+canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
+#scene{z-index:0}
+#fx{z-index:20;pointer-events:none}
 
-  .promo{background:var(--ink);color:#fffaf2;text-align:center;font-size:13px;letter-spacing:.08em;text-transform:uppercase;padding:8px 12px}
-  .promo span{opacity:.85}
+/* ---------- atmosphere overlays ---------- */
+.halftone{position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.32;
+  background-image:radial-gradient(rgba(255,36,64,.55) 1.2px,transparent 1.7px);background-size:9px 9px;
+  -webkit-mask-image:linear-gradient(118deg,#000 0%,transparent 36%);mask-image:linear-gradient(118deg,#000 0%,transparent 36%)}
+.vignette{position:fixed;inset:0;z-index:1;pointer-events:none;
+  background:radial-gradient(ellipse at 50% 45%,transparent 45%,rgba(0,0,0,.74) 100%),
+             linear-gradient(90deg,rgba(3,2,8,.8) 0%,rgba(3,2,8,.38) 38%,transparent 62%)}
 
-  header{position:sticky;top:0;z-index:50;background:var(--bg);border-bottom:2px solid var(--ink)}
-  .nav{max-width:1200px;margin:0 auto;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;gap:24px}
-  .brand{display:flex;align-items:center;gap:10px;font-weight:900;letter-spacing:-.02em;font-size:20px}
-  .brand .dot{width:14px;height:14px;background:var(--accent);border:2px solid var(--ink);transform:rotate(45deg)}
-  nav ul{list-style:none;display:flex;gap:22px;font-weight:600;font-size:14px}
-  nav a:hover{color:var(--accent)}
-  .cart{display:flex;align-items:center;gap:14px}
-  .cart .bag{border:2px solid var(--ink);padding:8px 14px;font-weight:700;font-size:13px;background:#fff;box-shadow:var(--shadow);transition:transform .15s ease;cursor:pointer}
-  .cart .bag:hover{transform:translate(-2px,-2px)}
+/* ---------- stage (tilts in 3D with the pointer) ---------- */
+.stage{position:fixed;inset:0;z-index:2;perspective:1100px}
+.stage.shake{animation:shake .3s linear}
+.ui{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;
+  gap:clamp(16px,4.2vh,46px);padding:clamp(20px,5vh,60px) var(--pad-x);
+  transform-style:preserve-3d;transform:rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));transform-origin:35% 50%;will-change:transform}
 
-  .hero{max-width:1200px;margin:0 auto;padding:64px 24px 48px;display:grid;grid-template-columns:1.2fr .8fr;gap:40px;align-items:center}
-  .hero h1{font-size:clamp(44px,7vw,96px);line-height:.92;letter-spacing:-.04em;font-weight:900}
-  .hero h1 em{font-style:normal;color:var(--accent);font-family:"Times New Roman",serif;font-style:italic}
-  .hero p.lead{margin-top:18px;font-size:18px;max-width:520px;color:#2a2a2a}
-  .hero .cta{margin-top:28px;display:flex;gap:14px;flex-wrap:wrap}
-  .btn{display:inline-block;padding:14px 22px;font-weight:800;border:2px solid var(--ink);background:#fff;box-shadow:var(--shadow);transition:transform .15s ease;cursor:pointer}
-  .btn.primary{background:var(--accent);color:#fff}
-  .btn:hover{transform:translate(-2px,-2px)}
-  .hero-card{border:2px solid var(--ink);background:var(--soft);padding:28px;box-shadow:var(--shadow);position:relative;overflow:hidden}
-  .hero-card .tag{position:absolute;top:14px;right:-40px;background:var(--accent);color:#fff;font-size:11px;font-weight:800;letter-spacing:.15em;padding:6px 50px;transform:rotate(35deg)}
-  .hero-card h3{font-size:28px;letter-spacing:-.02em}
-  .hero-card ul{margin-top:14px;list-style:none;font-size:14px;color:#333}
-  .hero-card ul li{padding:6px 0;border-bottom:1px dashed #b9a98c}
-  .hero-card ul li:last-child{border-bottom:0}
+/* ---------- title ---------- */
+.title{position:relative;transform-style:preserve-3d;font-size:clamp(58px,min(12.5vw,21vh),420px)}
+.title h1{position:relative;display:inline-block;margin:0;font:400 1em/.9 var(--f-display);transform-style:preserve-3d}
+.ghost{position:absolute;left:-.14em;top:-.46em;font:400 2.3em/1 var(--f-jp);color:rgba(255,36,64,.09);
+  -webkit-text-stroke:1px rgba(255,36,64,.26);transform:translateZ(-140px);pointer-events:none;opacity:0}
+.t1{display:block;letter-spacing:.012em;color:var(--bone);text-shadow:var(--extrude);filter:url(#ink);
+  transform:translateZ(46px);opacity:0}
+.t2{position:relative;display:flex;justify-content:space-between;margin-top:.14em;padding:.1em .16em .07em;
+  font-size:.36em;line-height:1;color:var(--bone);transform:translateZ(24px);opacity:0}
+.t2::before{content:"";position:absolute;inset:0;z-index:-1;transform:skewX(-12deg);filter:url(#ink);
+  background:linear-gradient(90deg,var(--red),#c10f2b 60%,var(--blood));box-shadow:.12em .14em 0 rgba(0,0,0,.55)}
+.t2 i{font-style:normal;text-shadow:0 .05em 0 rgba(0,0,0,.4)}
+.seal{position:absolute;left:calc(100% + .14em);top:.04em;writing-mode:vertical-rl;white-space:nowrap;
+  font:400 .15em/1.15 var(--f-jp);letter-spacing:.08em;color:var(--red);border:.1em solid var(--red);
+  padding:.3em .2em;background:rgba(255,36,64,.07);filter:url(#ink-fine);transform:translateZ(80px) rotate(6deg);opacity:0}
+.cut{position:absolute;left:-6%;right:-12%;top:46%;height:2px;opacity:0;pointer-events:none;
+  background:linear-gradient(90deg,transparent,var(--red) 20%,#fff 50%,var(--red) 80%,transparent);
+  box-shadow:0 0 14px var(--red);transform:translateZ(90px) rotate(-7deg) scaleX(0);transform-origin:left}
+.tag{margin:1.5em 0 0;font:400 clamp(11px,min(1.15vw,2vh),28px)/1.2 var(--f-ui);letter-spacing:.34em;text-transform:uppercase;
+  color:rgba(244,239,228,.62);transform:translateZ(20px);opacity:0}
+.tag span{font-family:var(--f-jp);letter-spacing:.2em;color:var(--red);margin-right:.5em}
 
-  .trust{border-top:2px solid var(--ink);border-bottom:2px solid var(--ink);background:#fff}
-  .trust-inner{max-width:1200px;margin:0 auto;padding:18px 24px;display:grid;grid-template-columns:repeat(4,1fr);gap:20px;text-align:center;font-size:13px;font-weight:600;letter-spacing:.05em;text-transform:uppercase}
-  .trust-inner div{display:flex;align-items:center;justify-content:center;gap:8px}
+/* ---------- menu ---------- */
+.menu{display:inline-grid;gap:clamp(5px,1vh,12px);transform-style:preserve-3d;transform:translateZ(30px)}
+.mbtn{position:relative;display:grid;grid-template-columns:1.4em 1fr auto;align-items:center;column-gap:.7em;
+  min-width:clamp(270px,31vw,820px);padding:.45em 1.7em .45em .9em;border:0;background:none;outline:none;cursor:pointer;
+  color:rgba(244,239,228,.72);font:400 clamp(19px,min(2.4vw,3.8vh),64px)/1 var(--f-display);letter-spacing:.07em;
+  text-align:left;text-transform:uppercase;-webkit-tap-highlight-color:transparent;
+  transform:skewX(-11deg);transition:transform .2s cubic-bezier(.2,.9,.25,1.3),color .15s;opacity:0}
+.mbtn::before{content:"";position:absolute;inset:0;z-index:-2;border-left:3px solid rgba(255,36,64,.55);
+  background:linear-gradient(90deg,rgba(14,9,26,.88),rgba(14,9,26,.3) 75%,transparent);transition:border-color .15s,box-shadow .2s}
+.mbtn::after{content:"";position:absolute;inset:0;z-index:-1;transform:scaleX(0);transform-origin:left;
+  background:linear-gradient(90deg,var(--red) 0%,#b10d27 45%,rgba(120,0,24,0) 100%);
+  clip-path:polygon(0 0,100% 0,calc(100% - 26px) 100%,0 100%);transition:transform .24s cubic-bezier(.2,.9,.2,1)}
+.mbtn.sel{color:#fff;transform:skewX(-11deg) translateX(22px) translateZ(46px)}
+.mbtn.sel::before{border-left-color:#fff;box-shadow:-12px 0 26px -6px var(--red)}
+.mbtn.sel::after{transform:scaleX(1)}
+.mbtn:active{transform:skewX(-11deg) translateX(12px) translateZ(14px)}
+.mbtn:focus-visible::before{outline:1px solid rgba(255,255,255,.6);outline-offset:3px}
+.num{font:400 .82em/1 var(--f-jp);color:var(--red);transition:color .15s}
+.lbl{white-space:nowrap}
+.jp{font:400 .5em/1 var(--f-jp);letter-spacing:.3em;color:rgba(244,239,228,.32);transition:color .15s}
+.mbtn.sel .num{color:#fff}
+.mbtn.sel .jp{color:rgba(255,255,255,.92)}
 
-  section{max-width:1200px;margin:0 auto;padding:64px 24px}
-  .section-head{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:30px;gap:20px;flex-wrap:wrap}
-  .section-head h2{font-size:clamp(32px,4.5vw,52px);letter-spacing:-.03em;line-height:1}
-  .section-head p{color:var(--muted);max-width:380px}
+/* ---------- fixed chrome ---------- */
+.hud{position:absolute;font:400 clamp(11px,1.25vh,18px)/1 var(--f-ui);letter-spacing:.32em;text-transform:uppercase;color:rgba(244,239,228,.42);opacity:0}
+.hud b{font:400 1.25em/1 var(--f-jp);color:var(--red);letter-spacing:.1em;margin-right:.7em}
+.hud.tl{left:var(--pad-x);top:clamp(16px,3.4vh,34px)}
+.hud.bl{left:var(--pad-x);bottom:clamp(14px,3.2vh,30px)}
+.hud.br{right:clamp(16px,3vw,44px);bottom:clamp(14px,3.2vh,30px)}
+.sfx{position:absolute;right:clamp(16px,3vw,44px);top:clamp(12px,2.8vh,28px);padding:7px 12px 6px;cursor:pointer;
+  background:rgba(5,4,10,.4);border:1px solid rgba(244,239,228,.22);color:rgba(244,239,228,.6);
+  font:400 clamp(11px,1.25vh,18px)/1 var(--f-ui);letter-spacing:.28em;opacity:0;transition:color .15s,border-color .15s}
+.sfx:hover,.sfx:focus-visible{color:#fff;border-color:var(--red);outline:none}
+.side{position:absolute;right:clamp(10px,2.2vw,36px);top:50%;translate:0 -50%;writing-mode:vertical-rl;pointer-events:none;
+  font:400 clamp(26px,4.6vh,54px)/1 var(--f-jp);letter-spacing:.5em;color:transparent;-webkit-text-stroke:1px rgba(244,239,228,.2);opacity:0}
 
-  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:22px}
-  .card{border:2px solid var(--ink);background:#fff;box-shadow:var(--shadow);transition:transform .2s ease;position:relative;display:flex;flex-direction:column;cursor:pointer;text-decoration:none;color:inherit}
-  .card:hover{transform:translate(-3px,-3px)}
-  .ph{aspect-ratio:1/1;background:var(--soft);border-bottom:2px solid var(--ink);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
-  .ph .product-img{width:100%;height:100%;object-fit:cover;display:block}
-  .badge{position:absolute;top:10px;left:10px;background:var(--ink);color:#fff;font-size:10px;font-weight:800;letter-spacing:.12em;padding:4px 8px;text-transform:uppercase;z-index:3}
-  .badge.pg13{background:var(--accent2);color:#161616}
-  .badge.oos{background:#666}
-  .ph .oos-overlay{position:absolute;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:2}
-  .ph .oos-overlay span{background:#fffaf2;color:#161616;border:2px solid #161616;padding:6px 14px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;font-size:13px;transform:rotate(-6deg)}
-  .card .body{padding:16px 18px 18px;display:flex;flex-direction:column;flex:1}
-  .card h4{font-size:17px;letter-spacing:-.01em}
-  .card .desc{font-size:13px;color:var(--muted);margin-top:4px;flex:1}
-  .price-row{display:flex;align-items:center;justify-content:space-between;margin-top:14px}
-  .price{font-weight:900;font-size:18px}
-  .add{border:2px solid var(--ink);background:var(--accent);color:#fff;padding:8px 12px;font-weight:800;font-size:12px;letter-spacing:.05em;cursor:pointer}
-  .add:disabled{background:#bbb;cursor:not-allowed;color:#333}
-  .add:hover:not(:disabled){background:#161616}
+/* ---------- intro ---------- */
+.ready .ghost{animation:fade 1.4s ease-out .2s both}
+.ready .t1{animation:slam .55s cubic-bezier(.16,1.3,.3,1) .15s both}
+.ready .t2{animation:wipe .4s cubic-bezier(.7,0,.2,1) .62s both}
+.ready .seal{animation:stamp .35s cubic-bezier(.2,1.6,.3,1) 1.02s both}
+.ready .cut{animation:cut 1s cubic-bezier(.7,0,.2,1) .9s both}
+.ready .tag{animation:fade .6s ease-out 1.1s both}
+.ready .mbtn{animation:slidein .45s cubic-bezier(.2,.9,.2,1) calc(1.05s + var(--i)*.08s) both}
+.ready .hud,.ready .sfx,.ready .side{animation:fade .8s ease-out 1.6s both}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+@keyframes slam{0%{opacity:0;transform:translateZ(46px) scale(2.6)}55%{opacity:1}100%{opacity:1;transform:translateZ(46px) scale(1)}}
+@keyframes wipe{0%{opacity:1;clip-path:inset(-30% 100% -30% -6%)}100%{opacity:1;clip-path:inset(-30% -6% -30% -6%)}}
+@keyframes stamp{0%{opacity:0;transform:translateZ(80px) rotate(-10deg) scale(2.4)}100%{opacity:1;transform:translateZ(80px) rotate(6deg) scale(1)}}
+@keyframes cut{0%{opacity:1;transform:translateZ(90px) rotate(-7deg) scaleX(0)}35%{opacity:1;transform:translateZ(90px) rotate(-7deg) scaleX(1)}100%{opacity:.26;transform:translateZ(90px) rotate(-7deg) scaleX(1)}}
+@keyframes slidein{from{opacity:0;translate:-46px 0}to{opacity:1;translate:0 0}}
+@keyframes shake{0%,100%{transform:none}15%{transform:translate(-9px,5px)}30%{transform:translate(8px,-6px)}45%{transform:translate(-6px,-3px)}60%{transform:translate(5px,4px)}80%{transform:translate(-2px,1px)}}
 
-  .art{width:75%;height:75%;display:block}
+/* ---------- sub-screen (opens with a domain-style wipe) ---------- */
+.panel{position:fixed;inset:0;z-index:10;display:flex;align-items:center;overflow:hidden;
+  padding:clamp(24px,6vh,70px) var(--pad-x);
+  background:radial-gradient(90% 120% at 82% 40%,#3a0714 0%,#12050a 42%,#040205 100%);
+  clip-path:circle(0px at var(--px,50%) var(--py,50%));visibility:hidden;
+  transition:clip-path .6s cubic-bezier(.75,0,.2,1),visibility 0s .6s}
+.panel.open{clip-path:circle(150vmax at var(--px,50%) var(--py,50%));visibility:visible;
+  transition:clip-path .6s cubic-bezier(.75,0,.2,1),visibility 0s}
+.panel::before{content:"";position:absolute;inset:0;opacity:.25;pointer-events:none;
+  background-image:radial-gradient(rgba(255,36,64,.6) 1.2px,transparent 1.7px);background-size:9px 9px;
+  -webkit-mask-image:linear-gradient(300deg,#000 0%,transparent 45%);mask-image:linear-gradient(300deg,#000 0%,transparent 45%)}
+.pk{position:absolute;right:clamp(10px,5vw,90px);top:50%;translate:0 -50%;writing-mode:vertical-rl;white-space:nowrap;
+  font:400 min(38vh,26vw)/1 var(--f-jp);color:transparent;-webkit-text-stroke:2px rgba(255,36,64,.3);pointer-events:none}
+.pin{position:relative;max-width:min(max(640px,44vw),100%)}
+.pnum{display:flex;align-items:center;gap:.7em;margin:0 0 .6em;font:400 clamp(20px,min(2.4vw,4.2vh),54px)/1 var(--f-jp);color:var(--red)}
+.pnum::after{content:"";width:90px;height:2px;background:var(--red)}
+.pnum span{font-size:.6em;letter-spacing:.4em;color:rgba(244,239,228,.55)}
+.panel h2{margin:0 0 .4em;font:400 clamp(40px,min(8vw,13vh),200px)/.94 var(--f-display);text-transform:uppercase;
+  text-shadow:var(--extrude);filter:url(#ink-mid)}
+.pbody{font:400 clamp(14px,min(1.3vw,2.3vh),28px)/1.6 var(--f-ui);letter-spacing:.04em;color:rgba(244,239,228,.75)}
+.pbody p{margin:0 0 1em;max-width:46ch}
+.pbody .lead{font:600 clamp(15px,min(1.5vw,2.7vh),34px)/1.2 var(--f-ui);letter-spacing:.3em;text-transform:uppercase;color:var(--red);margin:0 0 .6em}
+.pbody .fine{font-size:.8em;color:rgba(244,239,228,.45)}
+.slots{display:flex;gap:clamp(12px,1.6vw,22px);margin:0 0 1.5em;perspective:700px}
+.slot{display:grid;place-items:center;align-content:center;gap:.6em;width:clamp(56px,min(6vw,10.5vh),140px);aspect-ratio:2/4.6;
+  background:linear-gradient(160deg,#f2ead6,#cbbe9f);color:#a5102a;border:2px solid #a5102a;outline:3px solid #f2ead6;
+  box-shadow:14px 16px 26px rgba(0,0,0,.6);transform:rotateY(-24deg) rotateX(6deg);transition:transform .3s cubic-bezier(.2,.9,.2,1.2)}
+.slot:hover{transform:rotateY(0deg) translateZ(34px)}
+.slot b{font:400 clamp(26px,min(3vw,5.2vh),70px)/1 var(--f-jp)}
+.slot i{font:600 clamp(9px,1.1vh,14px)/1 var(--f-ui);font-style:normal;letter-spacing:.24em;writing-mode:vertical-rl}
+.cred{display:grid;grid-template-columns:auto 1fr;gap:.5em 1.6em;margin:0 0 1.6em}
+.cred dt{letter-spacing:.3em;text-transform:uppercase;font-size:.78em;color:var(--red);align-self:center}
+.cred dd{margin:0;color:var(--bone);font-size:1.1em;letter-spacing:.08em}
+.back{margin-top:1em;padding:.6em 1.6em .55em 1.1em;cursor:pointer;background:rgba(14,9,26,.7);color:var(--bone);
+  border:0;border-left:3px solid var(--red);font:400 clamp(16px,min(1.7vw,3vh),38px)/1 var(--f-display);letter-spacing:.1em;text-transform:uppercase;
+  transform:skewX(-11deg);transition:background .15s,transform .15s;outline:none}
+.back:hover,.back:focus-visible{background:var(--red);transform:skewX(-11deg) translateX(8px)}
+.back small{margin-left:1.1em;font:400 .5em/1 var(--f-ui);letter-spacing:.3em;opacity:.6}
+.panel.open .pin>*{animation:rise .5s cubic-bezier(.2,.9,.2,1) .3s both}
+.panel.open .pin>*:nth-child(2){animation-delay:.36s}
+.panel.open .pin>*:nth-child(3){animation-delay:.44s}
+.panel.open .pin>*:nth-child(4){animation-delay:.52s}
+@keyframes rise{from{opacity:0;translate:0 26px}to{opacity:1;translate:0 0}}
 
-  /* Pen color swatches */
-  .pen-swatches{display:flex;align-items:center;gap:7px;margin-top:10px;flex-wrap:wrap}
-  .pen-swatch{width:20px;height:20px;border-radius:50%;border:2px solid var(--ink);cursor:pointer;flex-shrink:0;transition:transform .12s}
-  .pen-swatch:hover{transform:scale(1.15)}
-  .pen-swatch.active{transform:scale(1.3);box-shadow:0 0 0 2px #fff,0 0 0 4px var(--ink)}
-  .pen-color-label{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#666;margin-left:2px}
+.flash{position:fixed;inset:0;z-index:15;pointer-events:none;opacity:0;mix-blend-mode:screen;
+  background:radial-gradient(circle 55vmax at var(--fx,50%) var(--fy,50%),#fff 0%,rgba(255,36,64,.6) 22%,transparent 100%)}
+.flash.go{animation:flash .34s ease-out}
+@keyframes flash{0%{opacity:.75}100%{opacity:0}}
 
-  .reviews{background:var(--ink);color:#fffaf2;border-top:2px solid var(--ink);border-bottom:2px solid var(--ink)}
-  .reviews .inner{max-width:1200px;margin:0 auto;padding:72px 24px}
-  .reviews h2{font-size:clamp(32px,4.5vw,52px);letter-spacing:-.03em;line-height:1;color:#fffaf2}
-  .reviews .sub{color:#bdbdbd;margin-top:8px}
-  .r-grid{margin-top:36px;display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px}
-  .review{background:#1f1f1f;border:2px solid #fffaf2;padding:22px;box-shadow:6px 6px 0 var(--accent)}
-  .stars{color:var(--accent2);letter-spacing:2px;margin-bottom:10px;font-size:14px}
-  .quote{font-size:15px;line-height:1.55}
-  .who{margin-top:14px;font-weight:800;font-size:13px;letter-spacing:.05em;text-transform:uppercase}
-  .who small{display:block;font-weight:500;color:#9b9b9b;text-transform:none;letter-spacing:0;margin-top:2px}
+/* ---------- the fight ---------- */
+.game{position:fixed;inset:0;z-index:10;overflow:hidden;background:var(--ink);
+  clip-path:circle(0px at var(--px,50%) var(--py,50%));visibility:hidden;
+  transition:clip-path .65s cubic-bezier(.75,0,.2,1),visibility 0s .65s}
+.game.open{clip-path:circle(150vmax at var(--px,50%) var(--py,50%));visibility:visible;
+  transition:clip-path .65s cubic-bezier(.75,0,.2,1),visibility 0s}
+.game canvas{position:absolute;z-index:0}
+.game>div{position:absolute;z-index:1;pointer-events:none}
+.g-top{left:0;right:0;top:0;display:grid;grid-template-columns:1fr auto 1fr;align-items:start;
+  gap:clamp(10px,2.4vw,44px);padding:clamp(12px,3vh,36px) clamp(16px,4vw,90px)}
+.fb{display:flex;flex-direction:column;gap:.4em;font:400 clamp(15px,min(1.9vw,3.4vh),44px)/1 var(--f-display);letter-spacing:.06em;text-transform:uppercase}
+.fb.p2{align-items:flex-end}
+.nm{display:flex;align-items:baseline;gap:.6em;text-shadow:0 2px 0 #000,0 0 12px rgba(0,0,0,.8)}
+.nm b{font-weight:400}
+.fb.p2 .nm{flex-direction:row-reverse}
+.nm span{font:400 .62em/1 var(--f-jp);letter-spacing:.2em;color:var(--red)}
+.hpb{position:relative;width:100%;height:clamp(14px,2.7vh,34px);overflow:hidden;background:rgba(8,6,14,.82);
+  border:2px solid var(--bone);box-shadow:4px 5px 0 rgba(0,0,0,.6);transform:skewX(-18deg)}
+.fb.p2 .hpb{transform:skewX(18deg)}
+.hpb i,.hpb u{position:absolute;inset:0;transform-origin:left}
+.fb.p2 .hpb i,.fb.p2 .hpb u{transform-origin:right}
+.hpb u{background:#fff;transition:transform .5s .35s}
+.hpb i{background:linear-gradient(180deg,#ff6b7c,var(--red) 45%,#a80d24)}
+.vs{display:grid;justify-items:center;gap:.12em;font:400 clamp(26px,min(3.6vw,6.4vh),84px)/.8 var(--f-display);text-shadow:0 3px 0 var(--blood)}
+.vs b{font-weight:400}
+.vs span{font:400 .2em/1 var(--f-ui);letter-spacing:.42em;margin-right:-.42em;text-transform:uppercase;color:rgba(244,239,228,.6);text-shadow:none}
+.combo{left:clamp(16px,4vw,90px);top:24%;font:400 clamp(34px,min(5.4vw,9.5vh),130px)/.9 var(--f-display);
+  text-shadow:var(--extrude);text-transform:uppercase;transform:skewX(-10deg);opacity:0;transition:opacity .25s}
+.combo.on{opacity:1}
+.combo b{display:inline-block;font-weight:400}
+.combo b.pop{animation:pop .18s ease-out}
+.combo span{margin-left:.3em;font-size:.36em;letter-spacing:.1em;color:var(--red);text-shadow:0 2px 0 #000}
+.combo em{display:block;margin-top:.6em;font:600 .19em/1 var(--f-ui);letter-spacing:.3em;color:rgba(244,239,228,.72);text-shadow:0 1px 0 #000}
+@keyframes pop{from{transform:scale(1.55)}to{transform:scale(1)}}
+.banner{left:0;right:0;top:30%;display:grid;justify-items:center;opacity:0}
+.banner span{margin:0 -.5em .15em 0;font:400 clamp(20px,min(3.4vw,6vh),84px)/1 var(--f-jp);letter-spacing:.5em;color:var(--red);text-shadow:0 2px 0 #000}
+.banner b{font:400 clamp(60px,min(13vw,24vh),320px)/.9 var(--f-display);letter-spacing:.02em;text-shadow:var(--extrude);filter:url(#ink-mid)}
+.banner.bf b{color:#0b0306;text-shadow:0 0 .1em var(--red),0 0 .28em var(--red),.03em .04em 0 var(--red)}
+.banner.sm b{font-size:clamp(40px,min(8.4vw,17vh),210px)}
+.banner.xs b{font-size:clamp(24px,min(4.6vw,10vh),120px)}
+.banner.go{animation:banner 1.15s cubic-bezier(.2,.9,.2,1) both}
+@keyframes banner{0%{opacity:0;transform:scale(2.2)}14%{opacity:1;transform:scale(1)}75%{opacity:1;transform:scale(1.04)}100%{opacity:0;transform:scale(1.12)}}
+.hotbar{left:50%;bottom:clamp(12px,3vh,36px);translate:-50% 0;display:flex;gap:clamp(6px,.8vw,16px)}
+.mv{position:relative;display:grid;align-content:space-between;overflow:hidden;width:clamp(72px,min(9.4vw,15vh),180px);aspect-ratio:1.55/1;
+  padding:.5em .6em;background:rgba(10,7,18,.84);border:1px solid rgba(244,239,228,.25);border-bottom:3px solid var(--red);
+  transform:skewX(-8deg);font:400 clamp(10px,min(1.15vw,2vh),22px)/1.05 var(--f-display);letter-spacing:.06em;text-transform:uppercase}
+.mv kbd{font:600 .8em/1 var(--f-ui);letter-spacing:.1em;color:var(--red)}
+.mv b{font-weight:400}
+.mv::after{content:"";position:absolute;inset:0;background:rgba(0,0,0,.72);transform-origin:bottom;transform:scaleY(var(--cd,0))}
+.mv.act{border-color:#fff;background:rgba(255,36,64,.55)}
+.mv.rdy{animation:rdy .35s ease-out}
+@keyframes rdy{from{background:var(--red)}to{background:rgba(10,7,18,.84)}}
+.ghint{left:clamp(16px,3vw,44px);bottom:clamp(12px,3vh,36px);display:grid;gap:.55em;
+  font:400 clamp(10px,1.2vh,17px)/1 var(--f-ui);letter-spacing:.24em;text-transform:uppercase;color:rgba(244,239,228,.5)}
+.ghint b{font-weight:600;color:var(--bone)}
 
-  .careers .roles{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;margin-top:8px}
-  .role{border:2px solid var(--ink);background:#fff;padding:24px;box-shadow:var(--shadow);position:relative}
-  .role .label{position:absolute;top:-12px;left:18px;background:var(--accent2);border:2px solid var(--ink);padding:2px 10px;font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase}
-  .role h3{font-size:24px;letter-spacing:-.02em;margin-top:6px}
-  .role .perks{margin-top:10px;color:#444;font-size:14px}
-  .role .apply{margin-top:18px;display:inline-block;border:2px solid var(--ink);padding:8px 14px;font-weight:800;font-size:12px;letter-spacing:.05em;background:var(--ink);color:#fff}
-  .role.oos{background:#f3f0ea;position:relative;overflow:hidden}
-  .role.oos h3, .role.oos .perks{opacity:.55}
-  .role.oos .apply{background:#888;cursor:not-allowed;pointer-events:none;opacity:.7}
-  .role.oos .label{background:#666;color:#fff}
-  .role.oos .stamp{position:absolute;top:50%;right:18px;transform:translateY(-50%) rotate(-12deg);border:3px solid var(--accent);color:var(--accent);font-weight:900;letter-spacing:.18em;font-size:14px;padding:6px 12px;background:rgba(255,250,242,.85);text-transform:uppercase}
+/* ---------- Cursed Technique: roll the talisman ---------- */
+.roll{display:flex;align-items:center;gap:clamp(18px,3vw,56px);margin:0 0 1em;perspective:900px}
+.paper{--c:#a5102a;display:grid;place-items:center;align-content:center;gap:.5em;flex:none;width:clamp(88px,min(10vw,15vh),190px);aspect-ratio:2/4.2;
+  cursor:pointer;color:var(--c);background:linear-gradient(160deg,#f2ead6,#cbbe9f);border:3px solid var(--c);outline:4px solid #f2ead6;
+  box-shadow:14px 16px 26px rgba(0,0,0,.6);font:inherit;transform:rotateY(-18deg);transition:transform .3s cubic-bezier(.2,.9,.2,1.2)}
+.paper:hover,.paper:focus-visible{transform:rotateY(0deg) scale(1.05)}
+.paper b{font:400 clamp(40px,min(5vw,9vh),96px)/1 var(--f-jp)}
+.paper i{padding:0 .4em;font:600 clamp(8px,1vh,13px)/1.25 var(--f-ui);font-style:normal;letter-spacing:.2em;text-transform:uppercase;text-align:center}
+.paper.spin{transition:none;box-shadow:0 0 70px var(--c)}
+.paper.back>*{transform:scaleX(-1)}
+.paper.got{animation:got .5s cubic-bezier(.2,1.6,.3,1)}
+@keyframes got{from{scale:1.7}to{scale:1}}
+.rres{display:grid;gap:.3em}
+.rres small{font:600 .7em/1 var(--f-ui);letter-spacing:.34em;text-transform:uppercase;color:rgba(244,239,228,.55)}
+.rres b{font:400 clamp(28px,min(4.2vw,7.4vh),88px)/1 var(--f-display);letter-spacing:.03em;text-transform:uppercase}
+.rres span{font:400 clamp(16px,min(2vw,3.6vh),40px)/1.1 var(--f-jp);letter-spacing:.2em;color:var(--bone)}
+.rres em{font-size:.8em;font-style:normal;letter-spacing:.2em;text-transform:uppercase;color:rgba(244,239,228,.6)}
+.rres p{margin:.4em 0 0;max-width:40ch;font-size:.9em}
+.tcards{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:clamp(6px,.8vw,14px);max-width:min(100%,60em);margin:0 0 1.3em}
+.tcard{--c:#a5102a;display:grid;justify-items:center;align-content:center;gap:.4em;padding:.75em .3em .65em;cursor:pointer;color:var(--bone);
+  background:rgba(14,9,26,.82);border:0;border-top:3px solid var(--c);outline:none;font:inherit;transition:transform .16s cubic-bezier(.2,.9,.25,1.3),background .15s}
+.tcard b{font:400 clamp(22px,min(2.8vw,5vh),54px)/1 var(--f-jp);color:var(--c)}
+.tcard span{font:400 clamp(10px,min(1.05vw,1.9vh),20px)/1.05 var(--f-display);letter-spacing:.05em;text-transform:uppercase;text-align:center}
+.tcard i{font:600 .7em/1 var(--f-ui);font-style:normal;letter-spacing:.2em;color:rgba(244,239,228,.5)}
+.tcard:hover,.tcard:focus-visible{transform:translateY(-6px);background:rgba(44,28,66,.92)}
+.tcard.on{background:var(--c);color:#0b0710}
+.tcard.on b,.tcard.on i{color:#0b0710}
+.tcard.lim{grid-template-columns:auto 1fr auto auto;justify-items:start;align-items:center;gap:0 1.1em;width:100%;max-width:min(100%,60em);margin:0 0 clamp(6px,.8vw,14px);
+  padding:.5em 1.1em .45em;text-align:left;border-top:0;border-left:4px solid var(--c);background:linear-gradient(100deg,rgba(150,10,30,.55),rgba(14,9,26,.86) 64%)}
+.tcard.lim b{color:var(--bone)}
+.tcard.lim span{display:grid;gap:.3em;text-align:left;font-size:clamp(15px,min(1.7vw,3vh),34px)}
+.tcard.lim small{font:600 .42em/1 var(--f-ui);letter-spacing:.34em;color:#ffd23d}
+.tcard.lim u{padding:.5em .8em;font:600 .78em/1 var(--f-ui);letter-spacing:.2em;text-decoration:none;text-transform:uppercase;white-space:nowrap;color:#0b0710;background:#ffd23d;animation:lim 1.6s ease-in-out infinite}
+.tcard.lim:hover,.tcard.lim:focus-visible{transform:translateX(8px);background:linear-gradient(100deg,rgba(200,16,42,.75),rgba(44,28,66,.92) 64%)}
+.tcard.lim.on{background:var(--c)}
+.tcard.lim.on small{color:#0b0710}
+.tcard.lim.over{opacity:.45;cursor:default}
+.tcard.lim.over u{background:rgba(244,239,228,.45);animation:none}
+@keyframes lim{50%{box-shadow:0 0 18px #ffd23d}}
+/* an early-access technique: the same banner in its own colours, with its price where a limited one shows its time left */
+.tcard.lim.ea{background:linear-gradient(100deg,rgba(150,118,30,.5),rgba(14,9,26,.86) 64%)}
+.tcard.lim.ea:hover,.tcard.lim.ea:focus-visible{background:linear-gradient(100deg,rgba(210,170,50,.62),rgba(44,28,66,.92) 64%)}
+.tcard.lim.ea small{color:#7de0b0}
+.tcard.lim.ea u{color:#06140c;background:#7de0b0;animation:none}
+.tcard.lim.ea.on small{color:#0b0710}
+.tcard.no{animation:shake .3s}
+/* a limited clan: the same banner a limited technique gets */
+.ccard.lim{grid-template-columns:auto 1fr auto auto;justify-items:start;align-items:center;gap:0 1.1em;width:100%;max-width:min(100%,60em);margin:0 0 clamp(6px,.8vw,14px);
+  padding:.5em 1.1em .45em;text-align:left;border-top:0;border-left:4px solid var(--c);background:linear-gradient(100deg,rgba(120,130,150,.5),rgba(14,9,26,.86) 64%)}
+.ccard.lim b{color:var(--bone)}
+.ccard.lim span{display:grid;gap:.3em;text-align:left;font-size:clamp(15px,min(1.7vw,3vh),34px)}
+.ccard.lim small{font:600 .42em/1 var(--f-ui);letter-spacing:.34em;color:#ffd23d}
+.ccard.lim u{padding:.5em .8em;font:600 .78em/1 var(--f-ui);letter-spacing:.2em;text-decoration:none;text-transform:uppercase;white-space:nowrap;color:#0b0710;background:#ffd23d;animation:lim 1.6s ease-in-out infinite}
+.ccard.lim:hover,.ccard.lim:focus-visible{transform:translateX(8px)}
+.ccard.lim.on{background:var(--c)}
+.ccard.lim.on small{color:#0b0710}
+.ccard.lim.over{opacity:.45;cursor:default}
+/* the Cursed Tools screen: a reel that spins, the pockets a tool can go in, and a card for each tool */
+.reelbox{display:flex;align-items:center;gap:clamp(14px,2vw,36px);margin:0 0 1em;flex-wrap:wrap}
+.reel{position:relative;overflow:hidden;width:min(100%,34em);padding:.5em 0;background:rgba(8,6,14,.82);border-top:3px solid #cfd8e0;border-bottom:3px solid #cfd8e0}
+.strip{display:flex;gap:.5em;will-change:transform}
+.tile{flex:none;display:grid;justify-items:center;align-content:center;gap:.3em;width:7.4em;height:6em;font-style:normal;background:rgba(14,9,26,.9);border-top:3px solid var(--c)}
+.tile b{font:400 clamp(22px,min(2.6vw,4.6vh),50px)/1 var(--f-jp);color:var(--c)}
+.tile span{padding:0 .3em;font:400 clamp(9px,min(.9vw,1.6vh),16px)/1.05 var(--f-display);letter-spacing:.05em;text-transform:uppercase;text-align:center}
+.reel u{position:absolute;left:50%;top:0;bottom:0;width:3px;translate:-50% 0;background:#ffd23d;box-shadow:0 0 14px #ffd23d}
+.spinb{display:grid;gap:.3em;justify-items:center;padding:.8em 1.6em .7em;cursor:pointer;color:#0b0710;background:#cfd8e0;border:0;outline:none;
+  font:400 clamp(18px,min(2.1vw,3.8vh),42px)/1 var(--f-display);letter-spacing:.06em;text-transform:uppercase;transform:skewX(-9deg);transition:transform .16s,background .15s}
+.spinb span{font:400 .5em/1 var(--f-jp);letter-spacing:.4em}
+.spinb:hover,.spinb:focus-visible{transform:skewX(-9deg) translateY(-5px);background:#fff}
+.pockets{display:flex;gap:clamp(6px,.8vw,14px);margin:0 0 .9em;flex-wrap:wrap}
+.pocket{--c:#555;display:grid;gap:.35em;min-width:12em;padding:.6em 1em .65em;text-align:left;cursor:pointer;color:var(--bone);background:rgba(14,9,26,.82);border:0;border-left:4px solid var(--c);
+  outline:2px solid transparent;font:inherit;transition:outline-color .15s,transform .15s}
+.pocket small{font:600 .68em/1 var(--f-ui);letter-spacing:.24em;text-transform:uppercase;color:rgba(244,239,228,.55)}
+.pocket b{font:400 clamp(14px,min(1.5vw,2.7vh),30px)/1 var(--f-display);letter-spacing:.05em;text-transform:uppercase;color:var(--c)}
+.pocket.on{outline-color:#ffd23d}
+.pocket:hover,.pocket:focus-visible{transform:translateY(-3px)}
+.wcards{grid-template-columns:repeat(4,minmax(0,1fr))}
+.wcard{--c:#a5102a;display:grid;justify-items:center;align-content:start;gap:.4em;padding:.75em .5em .7em;cursor:pointer;color:var(--bone);background:rgba(14,9,26,.82);border:0;border-top:3px solid var(--c);
+  outline:2px solid transparent;font:inherit;transition:transform .16s cubic-bezier(.2,.9,.25,1.3),background .15s}
+.wcard b{font:400 clamp(22px,min(2.8vw,5vh),54px)/1 var(--f-jp);color:var(--c)}
+.wcard span{font:400 clamp(10px,min(1.05vw,1.9vh),20px)/1.05 var(--f-display);letter-spacing:.05em;text-transform:uppercase;text-align:center}
+.wcard i{font:600 .7em/1 var(--f-ui);font-style:normal;letter-spacing:.2em;color:rgba(244,239,228,.5)}
+.wcard p{margin:0;font-size:.78em;text-align:center;color:rgba(244,239,228,.66)}
+.wcard:hover,.wcard:focus-visible{transform:translateY(-6px);background:rgba(44,28,66,.92)}
+.wcard.on{outline-color:var(--c)}
+.formb{--c:#c77dff;display:grid;gap:.3em;width:100%;max-width:min(100%,60em);margin:0 0 .9em;padding:.6em 1.1em .65em;text-align:left;cursor:pointer;color:var(--bone);
+  background:linear-gradient(100deg,rgba(120,60,160,.4),rgba(14,9,26,.86) 64%);border:0;border-left:4px solid var(--c);outline:none;font:inherit;transition:transform .15s}
+.formb.on{--c:#e0354c;background:linear-gradient(100deg,rgba(194,24,43,.5),rgba(14,9,26,.86) 64%)}
+.formb b{font:400 clamp(15px,min(1.7vw,3vh),34px)/1 var(--f-display);letter-spacing:.05em;text-transform:uppercase;color:var(--c)}
+.formb small{font:600 .68em/1 var(--f-ui);letter-spacing:.2em;text-transform:uppercase;color:#ffd23d}
+.formb p{margin:0;font-size:.85em;color:rgba(244,239,228,.66)}
+.formb:hover,.formb:focus-visible{transform:translateX(8px)}
+.mbtn.toolb .num{color:#cfd8e0}
+/* in a fight: which tool is in his hand, and what the other pockets hold */
+.tools{gap:.5em}
+.tpk{display:grid;gap:.25em;padding:.4em .7em;background:rgba(8,6,14,.74);border-bottom:2px solid transparent}
+.tpk small{font-size:.8em;color:rgba(244,239,228,.5)}
+.tpk.on{color:#0b0710;background:#cfd8e0;text-shadow:none;border-bottom-color:#fff}
+.tpk.on small{color:rgba(11,7,16,.6)}
+.tpk.key{align-content:center;color:#ffd23d}
+/* Awakened Ten Shadows: under his health bar, how many shikigami are left to call and how much cursed energy there is to call them with */
+.tsm{display:flex;align-items:center;gap:1em;margin-top:.3em;font:600 clamp(9px,min(.85vw,1.5vh),15px)/1 var(--f-ui);letter-spacing:.18em;text-transform:uppercase;
+  color:rgba(244,239,228,.78);text-shadow:0 1px 0 #000;opacity:0;transition:opacity .3s}
+.tsm.on{opacity:1}
+.tsk{display:flex;align-items:center;gap:.6em}
+.tsk b{min-width:1.7em;padding:.25em .4em .2em;text-align:center;font:400 1.6em/1 var(--f-display);letter-spacing:0;color:#0b0710;background:#8f9bff;text-shadow:none}
+.tce{position:relative;display:grid;place-items:center;width:clamp(150px,17vw,320px);height:2em;overflow:hidden;background:rgba(8,6,14,.82);border:1px solid rgba(143,155,255,.55)}
+.tce i{position:absolute;inset:0;background:linear-gradient(90deg,#3a3f8f,#8f9bff);transform-origin:left;transform:scaleX(var(--v,0));transition:transform .15s}
+.tce em{position:relative;font-style:normal;color:#fff;text-shadow:0 1px 2px #000}
+/* AWAKEN CT: the button across from the talisman, and the four cards behind it */
+.awkct{display:grid;gap:.35em;justify-items:center;margin-left:auto;padding:.85em 1.4em .75em;cursor:pointer;color:var(--bone);border:0;border-top:3px solid #d24fb4;outline:none;
+  background:linear-gradient(135deg,rgba(210,79,180,.4),rgba(14,9,26,.86) 70%);font:400 clamp(16px,min(1.9vw,3.4vh),38px)/1 var(--f-display);letter-spacing:.06em;text-transform:uppercase;
+  transform:skewX(-9deg);transition:transform .16s cubic-bezier(.2,.9,.25,1.3),background .15s}
+.awkct span{font:400 .5em/1 var(--f-jp);letter-spacing:.4em;color:#f0a6dd}
+.awkct:hover,.awkct:focus-visible{transform:skewX(-9deg) translateY(-5px);background:#d24fb4}
+.awkct:hover span,.awkct:focus-visible span{color:#fff}
+.awkhd{display:flex;align-items:baseline;gap:1em;margin:0 0 1em}
+.awkhd b{font:400 clamp(20px,min(2.6vw,4.6vh),52px)/1 var(--f-display);letter-spacing:.05em;text-transform:uppercase}
+.awkhd span{font:400 clamp(12px,min(1.3vw,2.3vh),26px)/1 var(--f-jp);letter-spacing:.3em;color:#d24fb4}
+.acards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:clamp(8px,1vw,18px);max-width:min(100%,64em);margin:0 0 1em}
+.acard{--c:#d24fb4;display:grid;gap:.45em;align-content:start;justify-items:start;padding:1em 1em 1.1em;text-align:left;cursor:pointer;color:var(--bone);background:rgba(14,9,26,.82);
+  border:0;border-top:3px solid var(--c);outline:none;font:inherit;transition:transform .16s cubic-bezier(.2,.9,.25,1.3),background .15s}
+.acard>b{font:400 clamp(30px,min(3.6vw,6.4vh),72px)/1 var(--f-jp);color:var(--c)}
+.acard h4{margin:0;font:400 clamp(15px,min(1.7vw,3vh),34px)/1.02 var(--f-display);letter-spacing:.05em;text-transform:uppercase}
+.acard p{margin:0;font-size:.85em;color:rgba(244,239,228,.66)}
+.acard small{font:600 .7em/1.3 var(--f-ui);letter-spacing:.2em;text-transform:uppercase;color:#ffd23d}
+.acard:hover,.acard:focus-visible{transform:translateY(-6px);background:rgba(44,28,66,.92)}
+.acard.on{background:var(--c);color:#0b0710}
+.acard.on>b,.acard.on p,.acard.on small{color:#0b0710}
+.acard.soon{opacity:.5;cursor:default}
+.acard.soon:hover{transform:none;background:rgba(14,9,26,.82)}
+.acard.no{animation:shake .3s}
+@media (max-width:820px){.acards{grid-template-columns:repeat(2,minmax(0,1fr))}}
 
-  /* Community reviews section */
-  .cr-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px;margin-top:36px}
-  .cr-card{background:#fffaf2;border:2px solid var(--ink);padding:22px;box-shadow:6px 6px 0 var(--accent2)}
-  .cr-stars{color:var(--accent2);letter-spacing:2px;margin-bottom:10px;font-size:14px;-webkit-text-stroke:.4px var(--ink)}
-  .cr-text{font-size:15px;line-height:1.55;color:#222}
-  .cr-who{margin-top:14px;font-weight:800;font-size:13px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink)}
-  .cr-who small{display:block;font-weight:500;color:#666;text-transform:none;letter-spacing:0;margin-top:2px}
-  .cr-empty{color:#888;font-size:14px;padding:40px 0;text-align:center;grid-column:1/-1;font-style:italic}
+/* ---------- Clan: three talismans, the draw, and a card per clan ---------- */
+.papers{flex-wrap:wrap}
+.cpaper{width:clamp(70px,min(8vw,14vh),150px)}
+.cpaper b{font-size:clamp(30px,min(3.8vw,6.6vh),72px)}
+.rres ul,.cinfo ul{display:grid;gap:.25em;max-width:48ch;margin:.3em 0 0;padding:0;list-style:none}
+.rres li{font-size:.9em}
+.rres li.ab,.cinfo li.ab{font-style:italic;opacity:.8}
+.ccard{--c:#a5102a;display:grid;justify-items:center;align-content:center;gap:.4em;padding:.75em .3em .65em;cursor:pointer;color:var(--bone);
+  background:rgba(14,9,26,.82);border:0;border-top:3px solid var(--c);outline:none;font:inherit;transition:transform .16s cubic-bezier(.2,.9,.25,1.3),background .15s}
+.ccard b{font:400 clamp(22px,min(2.8vw,5vh),54px)/1 var(--f-jp);color:var(--c)}
+.ccard span{font:400 clamp(10px,min(1.05vw,1.9vh),20px)/1.05 var(--f-display);letter-spacing:.05em;text-transform:uppercase;text-align:center}
+.ccard i{font:600 .7em/1 var(--f-ui);font-style:normal;letter-spacing:.2em;color:rgba(244,239,228,.5)}
+.ccard:hover,.ccard:focus-visible{transform:translateY(-6px);background:rgba(44,28,66,.92)}
+.ccard.on{background:var(--c);color:#0b0710}
+.ccard.on b,.ccard.on i{color:#0b0710}
+.creveal{--c:#ff2440;position:fixed;inset:0;z-index:14;display:grid;place-items:center;align-content:center;gap:clamp(14px,3vh,36px);perspective:1100px;cursor:pointer;
+  background:radial-gradient(circle at 50% 42%,rgba(20,8,18,.3),rgba(3,2,6,.95) 62%);opacity:0;transition:opacity .5s}
+.creveal.in{opacity:1}
+.crays{position:absolute;left:50%;top:42%;width:160vmax;height:160vmax;translate:-50% -50%;opacity:.5;
+  background:repeating-conic-gradient(from var(--spin,0deg),var(--c) 0 5deg,transparent 5deg 18deg);
+  -webkit-mask-image:radial-gradient(circle,#000 0%,transparent 42%);mask-image:radial-gradient(circle,#000 0%,transparent 42%)}
+.cp{position:relative;display:grid;place-items:center;align-content:center;gap:.5em;width:clamp(150px,min(17vw,30vh),320px);aspect-ratio:2/4.2;color:var(--c);
+  background:linear-gradient(160deg,#f2ead6,#cbbe9f);border:4px solid var(--c);outline:5px solid #f2ead6;box-shadow:0 0 90px var(--c),0 30px 60px rgba(0,0,0,.7);transition:width .4s}
+.cp b{font:400 clamp(60px,min(8vw,14vh),150px)/1 var(--f-jp)}
+.cp i{font:600 clamp(10px,1.4vh,18px)/1.2 var(--f-ui);font-style:normal;letter-spacing:.24em;text-transform:uppercase}
+.cp.back>*{transform:scaleX(-1)}
+.cp.got{animation:got .5s cubic-bezier(.2,1.6,.3,1)}
+.creveal.done .cp{width:clamp(90px,min(9vw,15vh),170px)}
+.creveal.done .cp b{font-size:clamp(36px,min(4.6vw,8vh),86px)}
+.cinfo{position:relative;display:grid;justify-items:center;gap:.3em;max-width:min(92vw,48em);text-align:center;font:400 clamp(13px,min(1.3vw,2.3vh),24px)/1.4 var(--f-ui);
+  letter-spacing:.05em;color:rgba(244,239,228,.85)}
+.cinfo small{font:600 .75em/1 var(--f-ui);letter-spacing:.34em;text-transform:uppercase;color:rgba(244,239,228,.55)}
+.cinfo b{font:400 clamp(44px,min(8vw,13vh),150px)/.95 var(--f-display);text-transform:uppercase;color:var(--c);text-shadow:0 .04em 0 #000}
+.cinfo span{font:400 clamp(18px,min(2.4vw,4.2vh),48px)/1.1 var(--f-jp);letter-spacing:.3em;color:var(--bone)}
+.cinfo em{margin-top:.8em;font:600 .7em/1 var(--f-ui);font-style:normal;letter-spacing:.3em;text-transform:uppercase;color:rgba(244,239,228,.45)}
+.vows{left:50%;top:46%;translate:-50% -50%;display:grid;gap:.7em;width:min(90vw,max(560px,40vw));padding:clamp(14px,2.4vh,30px);background:rgba(10,3,6,.95);
+  border-left:4px solid var(--red);box-shadow:8px 10px 0 rgba(0,0,0,.5);opacity:0;transition:opacity .2s;font:400 clamp(13px,min(1.3vw,2.3vh),24px)/1.4 var(--f-ui)}
+.vows.on{opacity:1}
+.vows small{font-size:.75em;letter-spacing:.34em;text-transform:uppercase;color:var(--red)}
+.vows div{display:grid;grid-template-columns:auto 1fr;gap:.1em .8em;align-items:baseline}
+.vows kbd{grid-row:span 2;font:400 1.8em/1 var(--f-display);color:var(--red)}
+.vows b{font:400 1.3em/1 var(--f-display);letter-spacing:.06em;text-transform:uppercase}
+.vows i{font-style:normal;color:rgba(244,239,228,.7)}
+.vows .used{opacity:.3;text-decoration:line-through}
+.vows em{font-size:.7em;font-style:normal;letter-spacing:.3em;text-transform:uppercase;color:rgba(244,239,228,.45)}
 
-  /* Admin */
-  .admin-btn{display:inline-block;margin-top:22px;background:none;border:none;color:#bbb;font-size:11px;cursor:pointer;font-family:inherit;text-decoration:underline;padding:0;letter-spacing:.03em}
-  .admin-btn.active{color:var(--accent2);font-weight:800}
-  .admin-overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:950;display:flex;align-items:center;justify-content:center;padding:16px;opacity:0;pointer-events:none;transition:opacity .2s}
-  .admin-overlay.open{opacity:1;pointer-events:all}
-  .admin-box{background:#fffaf2;border:2px solid var(--ink);box-shadow:8px 8px 0 var(--ink);padding:28px;width:100%;max-width:340px;position:relative}
-  .admin-box h3{font-size:18px;margin-bottom:6px;letter-spacing:-.02em}
-  .admin-box .ab-sub{font-size:12px;color:#888;margin-bottom:18px}
-  .admin-box input{width:100%;border:2px solid var(--ink);padding:9px 12px;font-family:inherit;font-size:14px;background:#fff;box-sizing:border-box;margin-bottom:10px;outline:none}
-  .admin-box input:focus{box-shadow:3px 3px 0 var(--accent2)}
-  .admin-box .ab-err{color:var(--accent);font-size:12px;margin-bottom:8px;display:none}
-  .admin-box .ab-submit{width:100%;border:2px solid var(--ink);padding:10px;font-family:inherit;font-weight:800;font-size:13px;background:var(--ink);color:#fff;cursor:pointer;letter-spacing:.04em;text-transform:uppercase}
-  .admin-box .ab-close{position:absolute;top:12px;right:14px;background:none;border:none;font-size:20px;cursor:pointer;color:var(--ink);line-height:1}
-  .cr-card.am{position:relative}
-  .cr-actions{display:flex;gap:8px;margin-top:12px;padding-top:10px;border-top:1px dashed #ccc}
-  .cr-actions button{border:2px solid var(--ink);background:#fff;font-family:inherit;font-size:11px;font-weight:800;letter-spacing:.05em;padding:5px 12px;cursor:pointer;text-transform:uppercase}
-  .cr-actions .cr-del{border-color:var(--accent);color:var(--accent)}
-  .cr-actions .cr-del:hover{background:var(--accent);color:#fff}
-  .cr-actions .cr-edit:hover{background:var(--ink);color:#fff}
-  .cr-ef{margin-top:12px;display:none}
-  .cr-ef textarea{width:100%;border:2px solid var(--ink);padding:8px;font-family:inherit;font-size:13px;min-height:80px;resize:vertical;box-sizing:border-box;outline:none}
-  .cr-ef .cr-save{margin-top:6px;border:2px solid var(--ink);background:var(--ink);color:#fff;font-family:inherit;font-weight:800;font-size:12px;padding:6px 16px;cursor:pointer}
+/* ---------- Patch notes: an old scroll, unrolled between two rods ---------- */
+.panel[data-id="notes"] .pin{width:100%;max-width:min(max(1180px,56vw),100%)}
+.panel[data-id="notes"] h2{margin-bottom:.3em;font-size:clamp(34px,min(6vw,9vh),130px)}
+.panel[data-id="notes"] .pk{opacity:.3}
+.scroll{--ink:#2b1a10;--seal:#a5102a;--edge:clamp(10px,1.4vw,22px);position:relative;width:min(100%,64em);padding:0 var(--edge);
+  font:400 clamp(13px,min(1.15vw,2.1vh),22px)/1.5 var(--f-ui);letter-spacing:.02em;color:var(--ink)}
+.rod{position:relative;z-index:1;height:clamp(14px,2.3vh,26px);margin:0 calc(var(--edge) * -1);border-radius:99px;
+  background:linear-gradient(180deg,#7a5230,#3a2414 55%,#160c06);box-shadow:0 6px 16px rgba(0,0,0,.65)}
+.rod::before,.rod::after{content:"";position:absolute;top:-22%;width:clamp(14px,1.6vw,26px);height:144%;border-radius:5px;
+  background:linear-gradient(180deg,#e2c27a,#a07a34 55%,#5e4318);box-shadow:0 2px 6px rgba(0,0,0,.5)}
+.rod::before{left:-4px}
+.rod::after{right:-4px}
+.parch{max-height:min(56vh,820px);overflow-y:auto;overscroll-behavior:contain;outline:none;scrollbar-width:thin;scrollbar-color:#8a6a3c transparent;
+  padding:clamp(14px,2.4vh,30px) clamp(16px,2.6vw,48px) clamp(18px,3vh,36px);
+  background:radial-gradient(60% 40% at 14% 18%,rgba(120,78,30,.2),transparent 70%),radial-gradient(50% 36% at 88% 62%,rgba(120,78,30,.22),transparent 70%),
+    radial-gradient(40% 30% at 40% 92%,rgba(96,58,20,.18),transparent 70%),repeating-linear-gradient(0deg,rgba(96,62,22,.05) 0 1px,transparent 1px 5px),
+    linear-gradient(90deg,#b49b68 0%,#e2d3ad 5%,#efe4c8 50%,#e2d3ad 95%,#b49b68 100%);
+  box-shadow:inset 0 14px 18px -12px rgba(60,34,10,.7),inset 0 -14px 18px -12px rgba(60,34,10,.7),0 18px 40px rgba(0,0,0,.55)}
+.panel.open .parch{animation:unroll .9s cubic-bezier(.2,.8,.2,1) .35s both}
+@keyframes unroll{from{max-height:0;padding-top:0;padding-bottom:0}}
+.shead{display:grid;grid-template-columns:auto 1fr auto;align-items:end;gap:.4em 1.2em;margin:0 0 .4em;padding-bottom:.9em;border-bottom:3px double rgba(43,26,16,.55)}
+.shead b{font:400 clamp(30px,min(4.4vw,7.6vh),88px)/1 var(--f-jp);letter-spacing:.12em;filter:url(#ink-fine)}
+.shead p{margin:0;font-style:italic;color:rgba(43,26,16,.75)}
+.shead i{display:grid;place-items:center;width:2.2em;aspect-ratio:1;font:400 clamp(20px,min(2.6vw,4.6vh),52px)/1 var(--f-jp);font-style:normal;color:#f4e9d0;background:var(--seal);
+  border-radius:6px;transform:rotate(-6deg);filter:url(#ink-fine)}
+.note{display:grid;grid-template-columns:auto minmax(0,1fr) minmax(0,38%);gap:.2em clamp(14px,1.8vw,30px);align-items:start;padding:1.3em 0 1.5em}
+.note+.note{border-top:1px solid rgba(43,26,16,.3)}
+.hanko{writing-mode:vertical-rl;padding:.5em .22em;font:400 clamp(18px,min(2.1vw,3.8vh),42px)/1 var(--f-jp);letter-spacing:.14em;color:var(--seal);border:3px solid var(--seal);
+  background:rgba(165,16,42,.06);transform:rotate(-3deg);filter:url(#ink-fine)}
+.ntext small{font:600 .78em/1 var(--f-ui);letter-spacing:.26em;text-transform:uppercase;color:var(--seal)}
+.ntext h3{margin:.2em 0 .35em;font:400 clamp(22px,min(2.9vw,5.2vh),60px)/1 var(--f-display);letter-spacing:.04em;text-transform:uppercase}
+.ntext ul{display:grid;gap:.3em;margin:0;padding:0;list-style:none}
+.ntext li{position:relative;padding-left:1.1em}
+.ntext li::before{content:"";position:absolute;left:.1em;top:.6em;width:.42em;height:.42em;background:var(--seal);transform:rotate(45deg)}
+.npic{margin:.3em 0 0;padding:6px 6px 0;background:#f7f0dc;border:1px solid rgba(43,26,16,.45);box-shadow:4px 5px 0 rgba(43,26,16,.22);transform:rotate(1.4deg);transition:transform .2s}
+.note:nth-of-type(even) .npic{transform:rotate(-1.6deg)}
+.npic img{display:block;width:100%;aspect-ratio:16/9;object-fit:cover;filter:sepia(.28) saturate(.92) contrast(1.04);transition:filter .2s}
+.npic figcaption{padding:.35em .2em .4em;font:italic 400 .82em/1.2 var(--f-ui);text-align:center;color:rgba(43,26,16,.8)}
+.npic:hover,.note:nth-of-type(even) .npic:hover{transform:rotate(0deg) scale(1.04)}
+.npic:hover img{filter:none}
+.send{margin:.6em 0 0;text-align:center;font:400 clamp(18px,3vh,34px)/1 var(--f-jp);letter-spacing:.4em;color:rgba(43,26,16,.55)}
 
-  /* Application modal */
-  .apply-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:900;display:flex;align-items:center;justify-content:center;padding:16px;opacity:0;pointer-events:none;transition:opacity .2s}
-  .apply-overlay.open{opacity:1;pointer-events:all}
-  .apply-modal{background:#fffaf2;border:2px solid var(--ink);box-shadow:8px 8px 0 var(--ink);padding:32px;width:100%;max-width:480px;position:relative;max-height:90vh;overflow-y:auto}
-  .apply-modal h2{font-size:22px;letter-spacing:-.02em;margin-bottom:4px}
-  .apply-modal .role-tag{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#888;margin-bottom:22px;display:block}
-  .apply-modal .field{margin-bottom:16px}
-  .apply-modal label{display:block;font-size:12px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;margin-bottom:5px}
-  .apply-modal input,.apply-modal textarea{width:100%;border:2px solid var(--ink);padding:9px 12px;font-family:inherit;font-size:14px;background:#fff;box-sizing:border-box;outline:none}
-  .apply-modal input:focus,.apply-modal textarea:focus{box-shadow:3px 3px 0 var(--accent2)}
-  .apply-modal textarea{resize:vertical;min-height:130px}
-  .apply-modal .row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-  .apply-modal .submit-btn{margin-top:8px;width:100%;border:2px solid var(--ink);padding:12px;font-family:inherit;font-size:13px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;background:var(--ink);color:#fff;cursor:pointer}
-  .apply-modal .submit-btn:hover{background:var(--accent2);color:var(--ink)}
-  .apply-modal .close-btn{position:absolute;top:14px;right:16px;background:none;border:none;font-size:22px;cursor:pointer;line-height:1;color:var(--ink)}
-  .apply-modal .form-note{font-size:11px;color:#888;margin-top:10px;text-align:center}
-  .apply-modal .success-msg{display:none;text-align:center;padding:24px 0}
-  .apply-modal .success-msg p{font-size:15px;margin-top:10px}
+/* ---------- the Shop: its button on the right of the title screen, and the counter inside ---------- */
+.shopbox{position:absolute;right:clamp(54px,6.5vw,130px);bottom:clamp(64px,15vh,190px);display:grid;justify-items:end;gap:clamp(6px,1.2vh,14px);transform-style:preserve-3d;transform:translateZ(30px)}
+.wallet{display:flex;align-items:center;gap:.55em;font:400 clamp(11px,min(1.1vw,2vh),22px)/1 var(--f-ui);letter-spacing:.24em;text-transform:uppercase;color:rgba(244,239,228,.6);opacity:0}
+.wallet i,.purse i,.buy i{display:grid;place-items:center;width:1.7em;aspect-ratio:1;border-radius:50%;font:400 1em/1 var(--f-jp);font-style:normal;letter-spacing:0;color:#3a1206;
+  background:radial-gradient(circle at 35% 30%,#ffe9a0,#ffd23d 45%,#b07d10);box-shadow:0 0 0 2px #7a5206,0 0 14px rgba(255,210,61,.5)}
+.wallet b{font:400 1.7em/1 var(--f-display);letter-spacing:.04em;color:#ffd23d}
+.ready .wallet{animation:slidein2 .45s cubic-bezier(.2,.9,.2,1) 1.6s both}
+.mbtn.shopb{grid-template-columns:auto 1fr 1.4em;min-width:clamp(210px,21vw,560px);padding:.45em .9em .45em 1.7em;text-align:right}
+.mbtn.shopb .jp{order:1}
+.mbtn.shopb .lbl{order:2}
+.mbtn.shopb .num{order:3;color:#ffd23d}
+.mbtn.shopb::before{border-left:0;border-right:3px solid rgba(255,210,61,.6);background:linear-gradient(270deg,rgba(14,9,26,.88),rgba(14,9,26,.3) 75%,transparent)}
+.mbtn.shopb::after{transform-origin:right;background:linear-gradient(270deg,#e0ac1c 0%,#9a7412 45%,rgba(120,90,0,0) 100%);clip-path:polygon(0 0,100% 0,100% 100%,26px 100%)}
+.mbtn.shopb.sel{transform:skewX(-11deg) translateX(-22px) translateZ(46px)}
+.mbtn.shopb.sel::before{border-right-color:#fff;box-shadow:12px 0 26px -6px #ffd23d}
+.mbtn.shopb.sel .num{color:#fff}
+.mbtn.shopb:active{transform:skewX(-11deg) translateX(-12px) translateZ(14px)}
+.ready .mbtn.shopb{animation-name:slidein2}
+@keyframes slidein2{from{opacity:0;translate:46px 0}to{opacity:1;translate:0 0}}
+.panel[data-id="shop"] .pin{width:100%;max-width:min(max(920px,50vw),100%)}
+.shop{display:grid;gap:clamp(10px,1.8vh,22px);font:400 clamp(13px,min(1.2vw,2.2vh),24px)/1.45 var(--f-ui);letter-spacing:.03em}
+.purse{display:flex;align-items:center;flex-wrap:wrap;gap:.5em .7em;padding:.6em 1em;background:rgba(14,9,26,.82);border-left:4px solid #ffd23d}
+.purse b{font:400 1.9em/1 var(--f-display);color:#ffd23d}
+.purse span{font-size:.8em;letter-spacing:.24em;text-transform:uppercase;color:rgba(244,239,228,.7)}
+.purse em{margin-left:auto;font-size:.8em;font-style:normal;color:rgba(244,239,228,.5)}
+.stabs{display:flex;gap:clamp(6px,.8vw,14px)}
+.stab{padding:.55em 1.3em .5em;cursor:pointer;color:var(--bone);background:rgba(14,9,26,.82);border:0;border-bottom:3px solid rgba(255,210,61,.35);outline:none;
+  font:400 clamp(15px,min(1.7vw,3vh),34px)/1 var(--f-display);letter-spacing:.06em;text-transform:uppercase;transform:skewX(-9deg);transition:background .15s,transform .15s}
+.stab:hover,.stab:focus-visible{transform:skewX(-9deg) translateY(-3px)}
+.stab.on{background:#ffd23d;color:#0b0710;border-bottom-color:#fff}
+.stab.ea{border-bottom-color:rgba(125,224,176,.5)}
+.stab.ea.on{background:#7de0b0}
+.good.ea small{color:#7de0b0}
+.buy button.cash{padding-left:.9em;color:#06140c;background:#7de0b0}
+.buy button.cash:hover,.buy button.cash:focus-visible{background:#b6f2d6}
+.goods{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,14em),1fr));gap:clamp(8px,1vw,18px)}
+.good{--c:#ffd23d;display:grid;gap:.35em;align-content:start;padding:.9em 1em 1em;background:rgba(14,9,26,.82);border-top:3px solid var(--c)}
+.good small{font:600 .72em/1.2 var(--f-ui);letter-spacing:.24em;text-transform:uppercase;color:rgba(244,239,228,.55)}
+.good>b{font:400 clamp(28px,min(3.4vw,6vh),68px)/1 var(--f-jp);color:var(--c)}
+.good h4{margin:0;font:400 clamp(17px,min(1.9vw,3.4vh),38px)/1 var(--f-display);letter-spacing:.05em;text-transform:uppercase}
+.good p{margin:0;font-size:.9em;color:rgba(244,239,228,.66)}
+.good .own{font-size:.8em;letter-spacing:.2em;text-transform:uppercase;color:#ffd23d}
+.buy{display:flex;flex-wrap:wrap;gap:.5em;margin-top:.4em}
+.buy button{display:flex;align-items:center;gap:.5em;padding:.45em .9em .4em .5em;cursor:pointer;color:#0b0710;background:#ffd23d;border:0;outline:none;
+  font:600 .86em/1 var(--f-ui);letter-spacing:.14em;text-transform:uppercase;transition:transform .12s,background .15s}
+.buy button:hover,.buy button:focus-visible{transform:translateY(-3px);background:#fff3b0}
+.buy button.poor{color:rgba(244,239,228,.5);background:rgba(244,239,228,.16)}
+.buy button.sold{padding-left:.9em;color:#ffd23d;background:none;outline:1px solid rgba(255,210,61,.5);cursor:default;transform:none}
+.buy button.no{animation:shake .3s}
 
-  .contact{background:var(--soft);border-top:2px solid var(--ink)}
-  .c-grid{max-width:1200px;margin:0 auto;padding:72px 24px;display:grid;grid-template-columns:1fr 1fr;gap:40px}
-  .c-grid h2{font-size:clamp(32px,4.5vw,52px);letter-spacing:-.03em;line-height:1}
-  .c-grid p{margin-top:14px;color:#2a2a2a;max-width:460px}
-  .c-card{border:2px solid var(--ink);background:#fff;padding:22px;box-shadow:var(--shadow);margin-top:18px;display:flex;align-items:center;gap:14px}
-  .c-card .icon{width:44px;height:44px;border:2px solid var(--ink);display:flex;align-items:center;justify-content:center;font-weight:900;background:var(--accent);color:#fff}
-  .c-card .icon.wa{background:var(--green)}
-  .c-card .info b{display:block;font-size:15px}
-  .c-card .info span{font-size:13px;color:#555}
+/* ---------- Play > choose a mode ---------- */
+.modes{display:grid;gap:clamp(10px,1.8vh,20px);margin:0 0 1.2em}
+.mode{display:grid;grid-template-columns:1fr auto;gap:.3em 1.2em;align-items:baseline;width:min(100%,36em);padding:.85em 1.8em .85em 1.2em;
+  text-align:left;cursor:pointer;color:var(--bone);background:rgba(14,9,26,.82);border:0;border-left:4px solid var(--red);outline:none;font:inherit;
+  transform:skewX(-9deg);transition:transform .18s cubic-bezier(.2,.9,.25,1.3),background .15s}
+.mode b{font:400 clamp(24px,min(3vw,5.4vh),64px)/1 var(--f-display);letter-spacing:.05em;text-transform:uppercase}
+.mode span{font:400 clamp(13px,min(1.5vw,2.6vh),28px)/1 var(--f-jp);letter-spacing:.3em;color:var(--red)}
+.mode i{grid-column:1/-1;font-style:normal;color:rgba(244,239,228,.66)}
+.mode:hover,.mode:focus-visible{background:var(--red);transform:skewX(-9deg) translateX(14px)}
+.mode:hover span,.mode:focus-visible span,.mode:hover i,.mode:focus-visible i{color:#fff}
 
-  .note{margin-top:20px;font-size:13px;color:#666;font-style:italic}
+.duo{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(8px,1.4vh,16px) clamp(8px,1vw,16px);width:min(100%,36em)}
+.duo .mode{grid-template-columns:1fr;align-content:start;gap:.3em;width:auto;padding:.7em 1em .75em}
+.duo .mode:last-child:nth-child(odd){grid-column:1/-1}
+.duo .mode b{font-size:clamp(17px,min(2vw,3.6vh),42px)}
+.duo .mode span{order:-1;font-size:clamp(10px,min(1vw,1.8vh),19px)}
+.duo .mode i{font-size:.88em;line-height:1.35}
+.duo .mode:hover,.duo .mode:focus-visible{transform:skewX(-9deg) translateY(-5px)}
+.chaps{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:clamp(4px,.6vw,10px);width:min(100%,36em);margin:-.3em 0 .2em}
+.mode.chap{grid-template-columns:1fr;justify-items:center;gap:.2em;width:auto;padding:.36em .2em;text-align:center;border-left:0;border-top:3px solid var(--red)}
+.mode.chap b{font-size:clamp(16px,min(1.7vw,3vh),36px)}
+.mode.chap.did{border-top-color:#ffd23d}
+.mode.chap.did b{color:#ffd23d}
+.mode.chap i{grid-column:auto;font-size:.56em;line-height:1.15;letter-spacing:.06em;text-transform:uppercase}
+.mode.chap:hover,.mode.chap:focus-visible{transform:skewX(-9deg) translateY(-5px)}
+/* the story is picked by season first: three buttons, and each opens onto its own chapters */
+.sbox{display:grid;gap:clamp(6px,1vh,12px);width:min(100%,36em);margin:-.3em 0 .2em}
+.sbox .chaps{width:auto;margin:0}
+.sbox .mode.chap{padding:.5em .3em}
+.sbox .mode.chap i{font-size:.62em}
+.seasons{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(6px,.9vw,14px)}
+.mode.seas{grid-template-columns:1fr auto;align-items:baseline;gap:.2em .5em;width:auto;padding:.55em .9em .6em;border-left:0;border-top:3px solid var(--red)}
+.mode.seas b{font-size:clamp(24px,min(2.8vw,5vh),60px)}
+.mode.seas span{font-size:clamp(10px,min(1vw,1.8vh),19px)}
+.mode.seas i{grid-column:1;font-size:.68em;letter-spacing:.08em;text-transform:uppercase}
+.mode.seas u{grid-column:2;font:600 .72em/1 var(--f-ui);letter-spacing:.14em;text-decoration:none;color:rgba(244,239,228,.66)}
+.mode.seas.did{border-top-color:#ffd23d}
+.mode.seas.did b,.mode.seas.did u{color:#ffd23d}
+.mode.seas:hover,.mode.seas:focus-visible{transform:skewX(-9deg) translateY(-5px)}
+.mode.seas:hover u,.mode.seas:focus-visible u{color:#fff}
+.seahd{display:flex;align-items:baseline;gap:.8em;transform:skewX(-9deg)}
+.seahd b{font:400 clamp(17px,min(2vw,3.6vh),42px)/1 var(--f-display);letter-spacing:.05em;text-transform:uppercase}
+.seahd span{font:400 clamp(10px,min(1vw,1.8vh),19px)/1 var(--f-jp);letter-spacing:.3em;color:var(--red)}
+.seahd i{margin-left:auto;font-style:normal;font-size:.78em;text-align:right;color:rgba(244,239,228,.6)}
+.sback{padding:.5em .9em .45em;cursor:pointer;color:var(--bone);background:rgba(14,9,26,.82);border:0;border-left:3px solid var(--red);outline:none;
+  font:600 .86em/1 var(--f-ui);letter-spacing:.2em;text-transform:uppercase;transition:background .15s}
+.sback:hover,.sback:focus-visible{background:var(--red)}
+.awk{left:50%;bottom:calc(clamp(12px,3vh,36px) + clamp(52px,min(6.6vw,10.6vh),126px));translate:-50% 0;width:clamp(240px,26vw,520px);height:clamp(16px,2.4vh,28px);
+  overflow:hidden;background:rgba(8,6,14,.82);border:1px solid rgba(244,239,228,.3);transform:skewX(-12deg);opacity:0;transition:opacity .3s}
+.awk.on{opacity:1}
+.awk i{position:absolute;inset:0;background:linear-gradient(90deg,#ffd23d,#fff3b0);transform-origin:left;transform:scaleX(var(--a,0))}
+.awk span{position:absolute;inset:0;display:grid;place-items:center;font:600 clamp(9px,1.3vh,15px)/1 var(--f-ui);letter-spacing:.3em;text-transform:uppercase;color:#fff;mix-blend-mode:difference}
+.awk.full{animation:awk .5s steps(2) infinite}
+@keyframes awk{50%{border-color:#ffd23d;box-shadow:0 0 18px #ffd23d}}
+.game:not([data-mode="fight"]) .awk{opacity:0}
 
-  footer{background:var(--ink);color:#bdbdbd;padding:36px 24px;text-align:center;font-size:13px}
-  footer b{color:#fffaf2}
+/* ---------- a boss's own moveset, listed under its health bar ---------- */
+.kit{--c:var(--red);display:flex;flex-wrap:wrap;justify-content:flex-end;align-items:center;gap:.5em .6em;max-width:100%;margin-top:.2em;
+  font:600 clamp(9px,min(.85vw,1.5vh),15px)/1 var(--f-ui);letter-spacing:.18em;text-transform:uppercase;color:rgba(244,239,228,.62);text-shadow:0 1px 0 #000;
+  opacity:0;transition:opacity .3s}
+.kit.on{opacity:1}
+.kit b{margin-right:.3em;font-weight:600;color:var(--c)}
+.kit span{padding:.42em .65em;background:rgba(8,6,14,.74);border-bottom:2px solid transparent;transition:color .1s,background .1s,opacity .3s}
+.kit span.on{color:#0b0710;background:var(--c);border-bottom-color:#fff;text-shadow:none}
+.kit span.off{opacity:.3}
 
-  /* ===== Cart drawer ===== */
-  .overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);opacity:0;visibility:hidden;transition:opacity .25s ease;z-index:100}
-  .overlay.open{opacity:1;visibility:visible}
-  .drawer{position:fixed;top:0;right:0;height:100%;width:min(440px,100%);background:var(--bg);border-left:2px solid var(--ink);transform:translateX(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);z-index:101;display:flex;flex-direction:column}
-  .drawer.open{transform:translateX(0)}
-  .drawer-head{display:flex;align-items:center;justify-content:space-between;padding:22px 24px;border-bottom:2px solid var(--ink);flex-shrink:0}
-  .drawer-head h3{font-size:24px;letter-spacing:-.02em}
-  .drawer-head .x,.modal-head .x{font-size:28px;line-height:1;cursor:pointer;background:none;border:none;font-weight:700;color:var(--ink)}
-  .drawer-body{flex:1;overflow-y:auto;padding:8px 24px}
-  .empty-cart{text-align:center;color:var(--muted);padding:60px 10px}
-  .empty-cart .big{font-size:44px;margin-bottom:12px}
-  .empty-cart b{color:var(--ink);font-size:16px}
-  .empty-cart p{margin-top:6px;font-size:14px}
-  .line{display:flex;gap:14px;padding:16px 0;border-bottom:1px dashed #d8c9b0}
-  .line>img{width:64px;height:64px;object-fit:cover;border:2px solid var(--ink);background:var(--soft);flex-shrink:0}
-  .l-info{flex:1;min-width:0}
-  .l-name{font-weight:800;font-size:14px;line-height:1.25}
-  .l-price{color:var(--muted);font-size:12px;margin-top:2px}
-  .l-controls{display:flex;align-items:center;justify-content:space-between;margin-top:8px}
-  .stepper{display:flex;align-items:center;border:2px solid var(--ink);background:#fff}
-  .stepper button{width:30px;height:30px;border:none;background:transparent;font-weight:900;font-size:16px;cursor:pointer}
-  .stepper button:hover{background:var(--soft)}
-  .stepper span{width:34px;text-align:center;font-weight:800;font-size:14px}
-  .l-total{font-weight:900;font-size:15px}
-  .l-remove{margin-top:6px;background:none;border:none;color:var(--accent);font-size:12px;font-weight:700;cursor:pointer;text-decoration:underline;padding:0}
-  .drawer-foot{border-top:2px solid var(--ink);padding:18px 24px;background:var(--soft);flex-shrink:0;max-height:60vh;overflow-y:auto}
-  .sub-row{display:flex;justify-content:space-between;font-weight:900;font-size:18px;margin-bottom:4px}
-  .free-note{font-size:12px;color:var(--muted);margin-bottom:14px}
-  .co-field{margin-bottom:11px}
-  .co-field label{display:block;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;margin-bottom:5px}
-  .co-field input,.co-field textarea,.co-field select{width:100%;border:2px solid var(--ink);background:#fff;padding:10px 12px;font-size:14px;font-family:inherit}
-  .co-field textarea{resize:vertical;min-height:54px}
-  .send-order{width:100%;padding:14px;background:var(--accent);color:#fff;border:2px solid var(--ink);box-shadow:var(--shadow);font-weight:900;letter-spacing:.05em;text-transform:uppercase;font-size:14px;cursor:pointer;transition:transform .15s ease;margin-top:4px}
-  .send-order:hover{transform:translate(-2px,-2px);background:#161616}
-  .co-err{color:var(--accent);font-size:12px;font-weight:700;margin-bottom:10px;display:none}
+/* ---------- Domain Expansion: the HUD steps aside while the panel is across the screen ---------- */
+.game.dom :is(.g-top,.combo,.hotbar,.ghint,.awk,.tc){opacity:0 !important;transition:opacity .12s}
 
-  /* ===== Review trigger + modal ===== */
-  .rv-trigger{align-self:center;padding:12px 20px;border:2px solid #fffaf2;background:transparent;color:#fffaf2;font-weight:800;font-size:13px;letter-spacing:.05em;text-transform:uppercase;cursor:pointer;transition:all .15s ease;white-space:nowrap}
-  .rv-trigger:hover{background:var(--accent);border-color:var(--accent)}
-  .rv-trigger-light{display:inline-block;margin-bottom:24px;padding:12px 20px;border:2px solid var(--ink);background:var(--ink);color:#fffaf2;font-weight:800;font-size:13px;letter-spacing:.05em;text-transform:uppercase;cursor:pointer;box-shadow:var(--shadow);transition:transform .15s ease}
-  .rv-trigger-light:hover{transform:translate(-2px,-2px);background:var(--accent)}
-  .modal-wrap{position:fixed;inset:0;background:rgba(0,0,0,.6);opacity:0;visibility:hidden;transition:opacity .2s ease;z-index:110;display:flex;align-items:center;justify-content:center;padding:20px}
-  .modal-wrap.open{opacity:1;visibility:visible}
-  .modal{background:var(--bg);border:2px solid var(--ink);box-shadow:var(--shadow);width:min(520px,100%);max-height:90vh;overflow-y:auto}
-  .modal-head{display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-bottom:2px solid var(--ink)}
-  .modal-head h3{font-size:22px;letter-spacing:-.02em;color:var(--ink)}
-  .modal-body{padding:22px 24px}
-  .star-pick{display:flex;gap:6px;font-size:34px;margin:2px 0;cursor:pointer;user-select:none}
-  .star-pick span{color:#d8c9b0;transition:color .1s ease}
-  .star-pick span.on{color:var(--accent2)}
-  .rv-photos{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
-  .rv-photos img{width:64px;height:64px;object-fit:cover;border:2px solid var(--ink)}
-  .rv-note{font-size:12px;color:var(--muted);margin-top:8px;font-style:italic;line-height:1.5}
+/* ---------- Sukuna is in control ---------- */
+.game.sukuna .fb.p1 .hpb i{background:linear-gradient(180deg,#c4142c,#5a0010 50%,#1a0004)}
+.game.sukuna .fb.p1 .nm b{color:var(--red)}
+.game.sukuna .mv{border-bottom-color:#fff;background:rgba(44,0,10,.9)}
 
-  /* ===== Door Bot chat ===== */
-  .db-fab{
-    position:fixed;bottom:24px;right:24px;z-index:120;
-    width:64px;height:64px;border-radius:50%;
-    background:var(--ink);color:var(--bg);
-    border:2px solid var(--ink);box-shadow:var(--shadow);
-    display:flex;align-items:center;justify-content:center;
-    font-size:28px;cursor:pointer;transition:transform .15s ease;
-  }
-  .db-fab:hover{transform:translate(-2px,-2px);background:var(--accent)}
-  .db-fab .ping{
-    position:absolute;top:6px;right:6px;width:10px;height:10px;
-    border-radius:50%;background:var(--accent);
-    box-shadow:0 0 0 0 rgba(230,57,70,.6);
-    animation:dbPing 1.8s ease-out infinite;
-  }
-  @keyframes dbPing{
-    0%{box-shadow:0 0 0 0 rgba(230,57,70,.6)}
-    100%{box-shadow:0 0 0 12px rgba(230,57,70,0)}
-  }
-  .db-wrap{
-    position:fixed;bottom:100px;right:24px;z-index:121;
-    width:min(380px,calc(100% - 48px));height:min(560px,calc(100vh - 140px));
-    background:var(--bg);border:2px solid var(--ink);box-shadow:var(--shadow);
-    display:none;flex-direction:column;overflow:hidden;
-  }
-  .db-wrap.open{display:flex}
-  .db-head{
-    background:var(--ink);color:var(--bg);
-    padding:14px 18px;display:flex;align-items:center;justify-content:space-between;
-    border-bottom:2px solid var(--ink);
-  }
-  .db-head .who{display:flex;align-items:center;gap:10px}
-  .db-head .who .av{
-    width:34px;height:34px;background:var(--accent);border:2px solid var(--bg);
-    border-radius:50%;display:flex;align-items:center;justify-content:center;
-    font-weight:900;font-size:14px;
-  }
-  .db-head .who .nm{font-weight:900;font-size:14px;letter-spacing:.02em}
-  .db-head .who .st{font-size:10px;color:#aaa;letter-spacing:.08em;text-transform:uppercase;display:flex;align-items:center;gap:5px}
-  .db-head .who .st::before{content:"";width:7px;height:7px;background:#3a8a3a;border-radius:50%}
-  .db-head .x{background:none;border:none;color:var(--bg);font-size:22px;cursor:pointer;line-height:1;font-weight:700}
-  .db-body{
-    flex:1;overflow-y:auto;padding:18px;background:var(--soft);
-    display:flex;flex-direction:column;gap:10px;
-  }
-  .db-msg{max-width:80%;padding:10px 14px;font-size:14px;line-height:1.45;border:2px solid var(--ink)}
-  .db-msg.bot{align-self:flex-start;background:#fff}
-  .db-msg.you{align-self:flex-end;background:var(--ink);color:var(--bg);border-color:var(--ink)}
-  .db-msg.typing{display:inline-flex;gap:4px;padding:14px;background:#fff}
-  .db-msg.typing span{
-    width:7px;height:7px;border-radius:50%;background:var(--muted);
-    animation:dbBounce 1.2s ease-in-out infinite;
-  }
-  .db-msg.typing span:nth-child(2){animation-delay:.15s}
-  .db-msg.typing span:nth-child(3){animation-delay:.3s}
-  @keyframes dbBounce{0%,80%,100%{transform:translateY(0);opacity:.4}40%{transform:translateY(-5px);opacity:1}}
-  .db-input-row{
-    display:flex;gap:8px;padding:12px;background:var(--bg);border-top:2px solid var(--ink);
-  }
-  .db-input-row input{
-    flex:1;border:2px solid var(--ink);background:#fff;padding:10px 12px;
-    font-family:inherit;font-size:14px;outline:none;
-  }
-  .db-input-row input:focus{border-color:var(--accent)}
-  .db-input-row button{
-    border:2px solid var(--ink);background:var(--ink);color:var(--bg);
-    padding:10px 16px;font-family:inherit;font-weight:800;font-size:12px;
-    letter-spacing:.06em;text-transform:uppercase;cursor:pointer;
-  }
-  .db-input-row button:hover{background:var(--accent)}
-  .db-suggest{
-    padding:10px 12px 4px;background:var(--bg);border-top:1px dashed #ccc;
-    display:flex;gap:6px;flex-wrap:wrap;
-  }
-  .db-chip{
-    border:1px solid var(--ink);background:#fff;padding:5px 10px;
-    font-size:11px;font-family:inherit;cursor:pointer;letter-spacing:.02em;
-  }
-  .db-chip:hover{background:var(--ink);color:var(--bg)}
+/* ---------- story: cutscenes + the streets ---------- */
+.g-top,.hotbar,.ghint{transition:opacity .4s}
+.game:not([data-mode="fight"]) :is(.g-top,.combo,.hotbar,.ghint){opacity:0}
+.obj{left:clamp(16px,4vw,90px);top:clamp(14px,3.4vh,40px);padding-left:.7em;border-left:3px solid var(--red);
+  font:400 clamp(14px,min(1.6vw,2.9vh),34px)/1.15 var(--f-display);letter-spacing:.1em;text-transform:uppercase;
+  text-shadow:0 2px 0 #000;opacity:0;transition:opacity .4s}
+.obj small{display:block;margin-top:.5em;font:400 .5em/1.3 var(--f-ui);letter-spacing:.3em;color:rgba(244,239,228,.6)}
+.game[data-mode="street"]:not(.cine) .obj{opacity:1}
+.bars{inset:0}
+.bars i{position:absolute;left:0;right:0;height:11vh;background:#000;transition:transform .6s cubic-bezier(.7,0,.2,1)}
+.bars i:first-child{top:0;transform:translateY(-101%)}
+.bars i:last-child{bottom:0;transform:translateY(101%)}
+.game.cine .bars i{transform:none}
+.fade{inset:0;background:#000;opacity:0;transition:opacity .6s}
+.fade.on{opacity:1}
+.dlg{left:50%;bottom:calc(11vh + clamp(10px,2.6vh,34px));translate:-50% 0;width:min(90vw,max(620px,46vw));
+  padding:clamp(12px,2.2vh,28px) clamp(18px,2.4vw,44px) clamp(18px,3vh,36px);background:rgba(8,6,14,.92);
+  border-left:4px solid var(--sp,var(--red));box-shadow:8px 10px 0 rgba(0,0,0,.5);opacity:0;transition:opacity .2s}
+.dlg.on{opacity:1}
+.who{display:flex;align-items:baseline;gap:.7em;margin-bottom:.35em;font:400 clamp(18px,min(2.1vw,3.7vh),46px)/1 var(--f-display);
+  letter-spacing:.06em;text-transform:uppercase;color:var(--sp,var(--red))}
+.who b{font-weight:400}
+.who span{font:400 .55em/1 var(--f-jp);letter-spacing:.2em;color:rgba(244,239,228,.5)}
+.dlg p{margin:0;min-height:3.1em;font:400 clamp(15px,min(1.55vw,2.8vh),32px)/1.5 var(--f-ui);letter-spacing:.03em}
+.dlg em{position:absolute;right:1.4em;bottom:.8em;font:600 clamp(9px,1.1vh,15px)/1 var(--f-ui);font-style:normal;
+  letter-spacing:.3em;text-transform:uppercase;color:rgba(244,239,228,.45)}
+/* the rules of the Culling Game, put up while Tengen goes through them */
+.rules{left:50%;top:clamp(6px,1.2vh,14px);translate:-50% 0;width:min(96vw,max(760px,90vw));padding:clamp(8px,1.3vh,16px) clamp(16px,2vw,36px) clamp(9px,1.5vh,18px);
+  background:rgba(8,6,14,.94);border-top:3px solid var(--red);box-shadow:8px 10px 0 rgba(0,0,0,.5);opacity:0;transition:opacity .4s}
+.rules.on{opacity:1}
+.rules h4{display:flex;align-items:baseline;gap:.7em;margin:0 0 .4em;font:400 clamp(14px,min(1.6vw,2.7vh),34px)/1 var(--f-display);letter-spacing:.08em;text-transform:uppercase;color:var(--red)}
+.rules h4 span{font:400 .6em/1 var(--f-jp);letter-spacing:.3em;color:rgba(244,239,228,.5)}
+.rules ol{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:repeat(4,auto);grid-auto-flow:column;gap:.3em 2.6em;margin:0;padding:0 0 0 1.3em;
+  font:400 clamp(11px,min(1.12vw,2.05vh),22px)/1.35 var(--f-ui);letter-spacing:.02em}
+.rules li::marker{font-weight:600;color:var(--red)}
+/* Deadly Sentencing: the verdict bar along the top, the count being read, and the three pleas */
+.trial{inset:0;display:grid;grid-template-rows:auto 1fr;justify-items:center;opacity:0;transition:opacity .25s;font:400 clamp(13px,min(1.3vw,2.3vh),24px)/1.4 var(--f-ui)}
+.trial.on{opacity:1}
+.tbar{display:flex;align-items:center;gap:.7em;margin-top:clamp(10px,2.4vh,28px);padding:.55em 1.1em;background:rgba(8,6,14,.92);border-top:3px solid #e2c060;box-shadow:6px 8px 0 rgba(0,0,0,.5)}
+.tbar b{font:400 1.25em/1 var(--f-display);letter-spacing:.08em;text-transform:uppercase;color:#e2c060}
+.tbar i{width:clamp(40px,6vw,110px);height:.85em;background:rgba(244,239,228,.14);transform:skewX(-14deg);transition:background .2s}
+.tbar i.on{background:linear-gradient(90deg,#e2c060,#fff3b0);box-shadow:0 0 14px #e2c060}
+.tbar span{font:400 1.25em/1 var(--f-display);color:var(--bone)}
+.tbar em{font:600 .7em/1 var(--f-ui);font-style:normal;letter-spacing:.24em;text-transform:uppercase;color:rgba(244,239,228,.55)}
+.tbody{align-self:end;display:grid;gap:.5em;width:min(94vw,max(620px,54vw));margin-bottom:clamp(12px,4vh,50px);padding:clamp(12px,2vh,26px) clamp(16px,2vw,34px);
+  background:rgba(8,6,14,.94);border-left:4px solid #e2c060;box-shadow:8px 10px 0 rgba(0,0,0,.5)}
+.tbody small{font-size:.72em;letter-spacing:.3em;text-transform:uppercase;color:#e2c060}
+.tbody p{margin:0}
+.tbody .tt{font-style:italic;color:rgba(244,239,228,.7)}
+.tbody .tr{min-height:1.2em;font:400 1.2em/1.1 var(--f-display);letter-spacing:.06em;text-transform:uppercase;color:#e2c060}
+.tbody .tr.no{color:var(--red)}
+.tpicks{display:grid;grid-template-columns:repeat(3,1fr);gap:.6em}
+.tpicks button{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:.1em .6em;padding:.6em .8em;text-align:left;cursor:pointer;color:var(--bone);background:rgba(30,22,10,.92);
+  border:0;border-top:3px solid #e2c060;outline:2px solid transparent;font:inherit;pointer-events:none;transition:transform .12s,background .12s}
+.trial.on .tpicks button{pointer-events:auto}
+.tpicks kbd{grid-row:span 2;font:400 1.9em/1 var(--f-display);color:#e2c060}
+.tpicks b{font:400 1.25em/1 var(--f-display);letter-spacing:.06em;text-transform:uppercase}
+.tpicks span{font:400 .8em/1 var(--f-jp);letter-spacing:.3em;color:rgba(244,239,228,.5)}
+.tpicks button:hover,.tpicks button:focus-visible{transform:translateY(-4px);background:rgba(70,52,16,.95)}
+.tpicks.done button{cursor:default;transform:none}
+.tpicks button.me{outline-color:#e2c060}
+.tpicks button.foe{background:rgba(120,16,30,.92);border-top-color:var(--red)}
+.tpicks button.me.foe{background:#e2c060;color:#0b0710}
+.tpicks button.me.foe :is(kbd,span){color:#0b0710}
 
-  @media (max-width: 820px){
-    .hero{grid-template-columns:1fr;padding-top:36px}
-    .trust-inner{grid-template-columns:repeat(2,1fr)}
-    .c-grid{grid-template-columns:1fr;padding:48px 24px}
-    nav ul{display:none}
-    .db-wrap{bottom:88px;right:12px;left:12px;width:auto}
-    .db-fab{bottom:16px;right:16px;width:56px;height:56px;font-size:24px}
-  }
+/* ---------- touch: a stick, a few buttons, and a hotbar that can be tapped ---------- */
+.touch{--b:clamp(58px,17vh,92px);--st:clamp(104px,30vh,160px);--sx:max(16px,env(safe-area-inset-left));--rx:max(16px,env(safe-area-inset-right));--by:max(12px,env(safe-area-inset-bottom))}
+.touch body{overscroll-behavior:none}
+.touch .game{touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.touch .ghint,.touch .dlg em{display:none}
+.touch .hotbar .mv,.touch .awk{pointer-events:auto}
+.touch .mv{width:clamp(56px,min(9.4vw,15vh),180px)}
+.touch .g-top{padding-left:calc(var(--sx) + 46px)}
+.tc{inset:0;display:none}
+.touch .tc{display:block}
+.tbtns{position:absolute;inset:0}
+.game:not([data-mode="fight"]) .tbtns,.game[data-mode="story"] .tstick{display:none}
+.tc button,.tstick{position:absolute;pointer-events:auto;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
+.tc button{display:grid;place-items:center;width:var(--b);height:var(--b);padding:0;color:var(--bone);background:rgba(10,7,18,.62);border:2px solid rgba(244,239,228,.4);border-radius:50%;
+  font:400 clamp(11px,3.4vh,19px)/1 var(--f-display);letter-spacing:.08em;text-transform:uppercase}
+.tc button:active{background:var(--red);border-color:#fff;transform:scale(.92)}
+.tc .t-hit{right:var(--rx);bottom:var(--by);width:calc(var(--b)*1.18);height:calc(var(--b)*1.18);border-color:var(--red)}
+.tc .t-jump{right:calc(var(--rx) + var(--b)*.14);bottom:calc(var(--by) + var(--b)*1.32)}
+.tc .t-dash{right:calc(var(--rx) + var(--b)*1.32);bottom:calc(var(--by) + var(--b)*.1)}
+.tc .t-s{display:none;width:calc(var(--b)*.64);height:calc(var(--b)*.64);bottom:calc(var(--by) + var(--b)*1.36);border-color:#ffd23d;color:#ffd23d}
+.tc .t-awk{right:calc(var(--rx) + var(--b)*1.36)}
+.tc .t-clan{right:calc(var(--rx) + var(--b)*2.1)}
+.tc .t-t{right:calc(var(--rx) + var(--b)*2.84)}
+.tc .t-v{right:calc(var(--rx) + var(--b)*3.58)}
+.game:has(.awk.on) .tc .t-awk,.game[data-clan="sukuna"] .tc .t-awk,.game[data-clan="gojo"] .tc .t-awk,.game[data-g] .tc .t-awk,.game[data-clan]:not([data-clan=""]) .tc .t-clan,.game[data-clan="sukuna"] .tc .t-ves{display:grid}
+.tstick{left:var(--sx);bottom:var(--by);width:var(--st);height:var(--st);border-radius:50%;background:rgba(10,7,18,.42);border:2px solid rgba(244,239,228,.3)}
+.tstick i{position:absolute;left:50%;top:50%;width:46%;height:46%;margin:-23% 0 0 -23%;border-radius:50%;background:rgba(244,239,228,.5);border:2px solid #fff;pointer-events:none}
+.tc .t-x{left:var(--sx);top:max(8px,env(safe-area-inset-top));width:36px;height:36px;font:400 16px/1 var(--f-ui)}
+.tc .t-skip{display:none;right:var(--rx);top:max(10px,env(safe-area-inset-top));width:auto;height:auto;padding:.75em 1.1em;border-radius:4px}
+.game:has(.dlg.on) .tc .t-skip{display:grid}
+.rot{display:none;position:fixed;inset:0;z-index:40;place-items:center;align-content:center;gap:.6em;background:#07050c;color:var(--bone);
+  font:400 clamp(18px,6vw,34px)/1.2 var(--f-display);letter-spacing:.08em;text-transform:uppercase;text-align:center}
+.rot b{font:400 3em/1 var(--f-jp);color:var(--red)}
+@media (orientation:portrait){.touch .rot{display:grid}}
+
+/* ---------- narrow / portrait ---------- */
+@media (max-width:860px),(max-aspect-ratio:1/1){
+  .ui{align-items:center;transform-origin:50% 50%}
+  .title{font-size:clamp(50px,min(19vw,16vh),150px);text-align:center}
+  .tag{letter-spacing:.2em}
+  .seal,.side,.hud.bl{display:none}
+  .vignette{background:radial-gradient(ellipse at 50% 45%,transparent 40%,rgba(0,0,0,.78) 100%),linear-gradient(180deg,rgba(3,2,8,.35),rgba(3,2,8,.72))}
+  .mbtn{min-width:min(84vw,420px);font-size:clamp(19px,5.4vw,30px)}
+  .mbtn.sel{transform:skewX(-11deg) translateX(6px) translateZ(18px)}
+  .pk{opacity:.5}
+  .ghint{display:none}
+  .tcards{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .note{grid-template-columns:auto minmax(0,1fr)}
+  .shopbox{position:static;justify-items:center}
+  .npic{grid-column:1/-1;max-width:440px}
+}
+/* ---------- a phone on its side: short and wide. Title beside the menu, and sub-screens scroll instead of being cut off ---------- */
+@media (max-height:520px) and (min-aspect-ratio:1/1){
+  .ui{flex-direction:row;align-items:center;justify-content:space-between;gap:4vw}
+  .title{font-size:clamp(40px,min(9.5vw,26vh),150px);text-align:left}
+  .tag{margin-top:1.1em}
+  .mbtn{min-width:min(40vw,420px);font-size:clamp(16px,6.4vh,30px)}
+  .panel{align-items:flex-start;overflow-y:auto}
+  .tcards{grid-template-columns:repeat(7,minmax(0,1fr))}
+  .cp{width:22vh}
+  .creveal.done .cp{width:15vh}
+  .parch{max-height:none}
+  .shopbox{position:absolute;left:var(--pad-x);right:auto;bottom:clamp(8px,3vh,20px);justify-items:start}
+  .mbtn.shopb{min-width:0}
+}
+@media (prefers-reduced-motion:reduce){
+  .ready *,.panel.open .pin>*{animation-duration:.01s!important;animation-delay:0s!important}
+  .panel,.panel.open{transition-duration:.01s}
+}
 </style>
 </head>
 <body>
 
-<div class="promo">
-  <span>Free delivery on orders over $19.99 · </span>
-  <strong>We live. We love. We lie.</strong>
-  <span> · Open till the door closes</span>
-</div>
+<canvas id="scene"></canvas>
+<div class="halftone"></div>
+<div class="vignette"></div>
 
-<header>
-  <div class="nav">
-    <a class="brand" href="index.html">
-      <div class="dot"></div>
-      Martin's Door Is Open
-    </a>
-    <nav>
-      <ul>
-        <li><a href="#shop">Shop</a></li>
-        <li><a href="#reviews">Reviews</a></li>
-        <li><a href="#careers">Careers</a></li>
-        <li><a href="#contact">Contact</a></li>
-      </ul>
+<main class="stage" id="stage">
+  <div class="ui" id="ui">
+    <header class="title">
+      <div class="ghost" aria-hidden="true" lang="ja">呪</div>
+      <h1 aria-label="Jujutsu Unlimiteds">
+        <span class="t1" aria-hidden="true">JUJUTSU</span>
+        <span class="t2" aria-hidden="true"><i>U</i><i>N</i><i>L</i><i>I</i><i>M</i><i>I</i><i>T</i><i>E</i><i>D</i><i>S</i></span>
+        <span class="seal" aria-hidden="true" lang="ja">呪術<br>無限</span>
+        <span class="cut" aria-hidden="true"></span>
+      </h1>
+      <p class="tag"><span lang="ja">呪力に限界はない</span>Cursed energy knows no limit</p>
+    </header>
+
+    <nav class="menu" aria-label="Main menu">
+      <button class="mbtn" style="--i:0" data-id="play"><span class="num" aria-hidden="true">壱</span><span class="lbl">Play</span><span class="jp" aria-hidden="true" lang="ja">開始</span></button>
+      <button class="mbtn" style="--i:1" data-id="technique"><span class="num" aria-hidden="true">弐</span><span class="lbl">Cursed Technique</span><span class="jp" aria-hidden="true" lang="ja">術式</span></button>
+      <button class="mbtn" style="--i:2" data-id="clan"><span class="num" aria-hidden="true">参</span><span class="lbl">Clan</span><span class="jp" aria-hidden="true" lang="ja">一族</span></button>
+      <button class="mbtn" style="--i:3" data-id="notes"><span class="num" aria-hidden="true">肆</span><span class="lbl">Patch Notes</span><span class="jp" aria-hidden="true" lang="ja">更新</span></button>
+      <button class="mbtn" style="--i:4" data-id="credits"><span class="num" aria-hidden="true">伍</span><span class="lbl">Credits</span><span class="jp" aria-hidden="true" lang="ja">制作</span></button>
     </nav>
-    <div class="cart">
-      <a class="bag" href="#">Bag (0)</a>
+
+    <div class="shopbox">
+      <div class="wallet" id="wallet" aria-live="polite"><i lang="ja" aria-hidden="true">呪</i><b>0</b><span>Cursed Tokens</span></div>
+      <button class="mbtn shopb" style="--i:5" data-id="shop"><span class="num" aria-hidden="true" lang="ja">商</span><span class="lbl">Shop</span><span class="jp" aria-hidden="true" lang="ja">売店</span></button>
+      <button class="mbtn shopb toolb" style="--i:6" data-id="tools"><span class="num" aria-hidden="true" lang="ja">具</span><span class="lbl">Cursed Tools</span><span class="jp" aria-hidden="true" lang="ja">呪具</span></button>
     </div>
   </div>
-</header>
 
-<!-- HERO -->
-<section class="hero">
-  <div>
-    <h1>Snacks, sips,<br/> & <em>small confessions.</em></h1>
-    <p class="lead">A corner shop for the half-honest. We stock the things you actually grab at 1 a.m. — caffeine, candy, and one piece of fruit so the cashier doesn't judge you.</p>
-    <div class="cta">
-      <a href="#shop" class="btn primary">Shop the shelf</a>
-      <a href="#reviews" class="btn">Read the gossip</a>
-    </div>
-  </div>
-  <aside class="hero-card">
-    <div class="tag">OPEN NOW</div>
-    <h3>Today's mood</h3>
-    <ul>
-      <li>☕ Caffeine forecast: <b>aggressive</b></li>
-      <li>🍎 One (1) healthy item in stock</li>
-      <li>🍫 Kinder situation: <b>delicate</b></li>
-      <li>🚪 Door status: <b>open (obviously)</b></li>
-    </ul>
-  </aside>
-</section>
+  <div class="side" aria-hidden="true" lang="ja">領域展開</div>
+  <div class="hud tl"><b lang="ja">呪</b>Fan project · Build 0.2 · The Road to Shinjuku</div>
+  <div class="hud bl">↑ ↓ Select &nbsp;·&nbsp; Enter Confirm</div>
+  <div class="hud br">Title screen</div>
+  <button class="sfx" id="sfx" aria-pressed="true">SFX ON</button>
+</main>
 
-<!-- TRUST -->
-<div class="trust">
-  <div class="trust-inner">
-    <div>★ 4.9 from 5 friends</div>
-    <div>⚡ Same-day if we like you</div>
-    <div>🔒 Honest pricing*</div>
-    <div>📦 We do not ship to Mars</div>
-  </div>
-</div>
-
-<!-- SHOP -->
-<section id="shop">
-  <div class="section-head">
-    <div>
-      <h2>The Shelf</h2>
-    </div>
-    <p>Five items. Curated like a playlist, priced like a corner store. PG-13 drinks only — we card aggressively. Tap anything for the full story.</p>
-  </div>
-
-  <div class="grid">
-
-    <!-- Red Bull -->
-    <a class="card" href="product.html?id=redbull">
-      <div class="ph">
-        <span class="badge pg13">PG-13</span>
-        <img class="product-img" src="https://picsum.photos/seed/mdo-redbull/600/600" alt="Red Bull"
-             onerror="this.style.display='none';this.parentNode.querySelector('svg').style.display='block'">
-        <svg class="art" style="display:none" viewBox="0 0 100 140" xmlns="http://www.w3.org/2000/svg">
-          <defs><linearGradient id="rb" x1="0" x2="1"><stop offset="0%" stop-color="#7e9ad6"/><stop offset="50%" stop-color="#9fb5dc"/><stop offset="100%" stop-color="#6b86c1"/></linearGradient></defs>
-          <rect x="28" y="14" width="44" height="112" rx="6" fill="url(#rb)" stroke="#161616" stroke-width="2"/>
-          <rect x="28" y="14" width="44" height="10" fill="#c0c4c9" stroke="#161616" stroke-width="2"/>
-          <circle cx="42" cy="60" r="10" fill="#e63946" stroke="#161616" stroke-width="1.5"/>
-          <circle cx="58" cy="60" r="10" fill="#ffb703" stroke="#161616" stroke-width="1.5"/>
-          <text x="50" y="92" text-anchor="middle" font-family="Arial" font-weight="900" font-size="9" fill="#161616">RED BULL</text>
-        </svg>
-      </div>
-      <div class="body">
-        <h4>Red Bull · 250ml</h4>
-        <p class="desc">Wings sold separately. Will not actually give you wings. Will give you a deadline.</p>
-        <div class="price-row">
-          <div class="price">$3.49</div>
-          <button class="add" data-id="redbull">Add</button>
-        </div>
-      </div>
-    </a>
-
-    <!-- Tic Tac -->
-    <a class="card" href="product.html?id=tictac">
-      <div class="ph">
-        <span class="badge">Cult Pick</span>
-        <img class="product-img" src="https://picsum.photos/seed/mdo-tictac/600/600" alt="Tic Tac Mogu Mogu"
-             onerror="this.style.display='none';this.parentNode.querySelector('svg').style.display='block'">
-        <svg class="art" style="display:none" viewBox="0 0 140 100" xmlns="http://www.w3.org/2000/svg">
-          <rect x="10" y="20" width="120" height="60" rx="10" fill="#ffffff" stroke="#161616" stroke-width="2"/>
-          <rect x="10" y="20" width="120" height="14" rx="10" fill="#e63946" stroke="#161616" stroke-width="2"/>
-          <text x="70" y="31" text-anchor="middle" font-family="Arial" font-weight="900" font-size="9" fill="#fff">TIC · TAC</text>
-          <text x="70" y="55" text-anchor="middle" font-family="Arial Black" font-weight="900" font-size="14" fill="#161616">MOGU</text>
-          <text x="70" y="70" text-anchor="middle" font-family="Arial Black" font-weight="900" font-size="14" fill="#161616">MOGU™?</text>
-        </svg>
-      </div>
-      <div class="body">
-        <h4>Tic Tac · Mogu Mogu Rip-Off Edition</h4>
-        <p class="desc">Legally distinct from anything you've ever heard of. Definitely fruity. Definitely small.</p>
-        <div class="price-row">
-          <div class="price">$1.99</div>
-          <button class="add" data-id="tictac">Add</button>
-        </div>
-      </div>
-    </a>
-
-    <!-- Pink Lady -->
-    <a class="card" href="product.html?id=apple">
-      <div class="ph">
-        <span class="badge">Fresh</span>
-        <img class="product-img" src="https://picsum.photos/seed/mdo-apple/600/600" alt="Pink Lady Apple"
-             onerror="this.style.display='none';this.parentNode.querySelector('svg').style.display='block'">
-        <svg class="art" style="display:none" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
-          <defs><radialGradient id="apple" cx="40%" cy="40%" r="60%"><stop offset="0%" stop-color="#ffd6e0"/><stop offset="60%" stop-color="#ff8aa6"/><stop offset="100%" stop-color="#c94f73"/></radialGradient></defs>
-          <path d="M60 30 C 30 30, 18 60, 28 90 C 36 112, 60 116, 60 116 C 60 116, 84 112, 92 90 C 102 60, 90 30, 60 30 Z" fill="url(#apple)" stroke="#161616" stroke-width="2"/>
-          <path d="M60 30 C 58 22, 64 14, 72 12" fill="none" stroke="#3d2a1a" stroke-width="3" stroke-linecap="round"/>
-          <path d="M68 18 C 78 14, 90 18, 94 28 C 86 32, 76 28, 70 22 Z" fill="#3a8a3a" stroke="#161616" stroke-width="1.5"/>
-        </svg>
-      </div>
-      <div class="body">
-        <h4>Pink Lady Apples</h4>
-        <p class="desc">For the one time per quarter you decide to "eat better." Crunchy. Photogenic.</p>
-        <div class="price-row">
-          <div class="price">$0.89 / pc</div>
-          <button class="add" data-id="apple">Add</button>
-        </div>
-      </div>
-    </a>
-
-    <!-- Peppa Pig -->
-    <a class="card" href="product.html?id=peppa">
-      <div class="ph">
-        <span class="badge">Limited</span>
-        <img class="product-img" src="https://picsum.photos/seed/mdo-peppa/600/600" alt="Peppa Pig"
-             onerror="this.style.display='none';this.parentNode.querySelector('svg').style.display='block'">
-        <svg class="art" style="display:none" viewBox="0 0 140 120" xmlns="http://www.w3.org/2000/svg">
-          <ellipse cx="78" cy="78" rx="44" ry="32" fill="#ffb6cf" stroke="#161616" stroke-width="2"/>
-          <path d="M40 50 C 40 30, 70 28, 76 44 L 96 52 C 100 70, 80 76, 60 72 C 44 70, 40 60, 40 50 Z" fill="#ffb6cf" stroke="#161616" stroke-width="2"/>
-          <ellipse cx="98" cy="50" rx="12" ry="9" fill="#ff9bb8" stroke="#161616" stroke-width="2"/>
-          <circle cx="96" cy="50" r="1.6" fill="#161616"/>
-          <circle cx="102" cy="50" r="1.6" fill="#161616"/>
-          <circle cx="72" cy="44" r="4" fill="#fff" stroke="#161616" stroke-width="1.2"/>
-          <circle cx="73" cy="45" r="1.8" fill="#161616"/>
-        </svg>
-      </div>
-      <div class="body">
-        <h4>Peppa Pig · Plushy Pal</h4>
-        <p class="desc">Not for resale, definitely for emotional support. Asks no questions about your decisions.</p>
-        <div class="price-row">
-          <div class="price">$12.50</div>
-          <button class="add" data-id="peppa">Add</button>
-        </div>
-      </div>
-    </a>
-
-    <!-- The Pen -->
-    <a class="card" href="product.html?id=pen">
-      <div class="ph">
-        <span class="badge">New</span>
-        <img class="product-img" src="https://picsum.photos/seed/mdo-pen/600/600" alt="The Pen"
-             onerror="this.style.display='none';this.parentNode.querySelector('svg').style.display='block'">
-        <svg class="art" id="penSvgCard" style="display:none" viewBox="0 0 60 160" xmlns="http://www.w3.org/2000/svg">
-          <rect id="penBody" x="18" y="8" width="24" height="108" rx="4" fill="#1a1a1a" stroke="#161616" stroke-width="2"/>
-          <rect x="18" y="8" width="24" height="18" rx="4" fill="#bbb" stroke="#161616" stroke-width="2"/>
-          <rect x="33" y="10" width="5" height="52" rx="2" fill="#999" stroke="#161616" stroke-width="1.5"/>
-          <polygon points="18,116 42,116 30,144" fill="#ddd" stroke="#161616" stroke-width="2"/>
-          <line x1="30" y1="144" x2="30" y2="152" stroke="#161616" stroke-width="2.5"/>
-        </svg>
-      </div>
-      <div class="body">
-        <h4>The Pen</h4>
-        <p class="desc">It writes. It judges your handwriting. Choose a color — the paper remembers.</p>
-        <div class="pen-swatches" id="penSwatchesCard">
-          <div class="pen-swatch active" data-color="Black" data-svgfill="#1a1a1a" data-cartid="pen-black" style="background:#1a1a1a" title="Black"></div>
-          <div class="pen-swatch" data-color="Blue"   data-svgfill="#1d4ed8" data-cartid="pen-blue"   style="background:#1d4ed8" title="Blue"></div>
-          <div class="pen-swatch" data-color="Red"    data-svgfill="#dc2626" data-cartid="pen-red"    style="background:#dc2626" title="Red"></div>
-          <div class="pen-swatch" data-color="Green"  data-svgfill="#15803d" data-cartid="pen-green"  style="background:#15803d" title="Green"></div>
-          <div class="pen-swatch" data-color="Purple" data-svgfill="#7c3aed" data-cartid="pen-purple" style="background:#7c3aed" title="Purple"></div>
-          <span class="pen-color-label" id="penCardColorLabel">Black</span>
-        </div>
-        <div class="price-row">
-          <div class="price">$1.50</div>
-          <button class="add" id="penCardAdd" data-id="pen-black">Add</button>
-        </div>
-      </div>
-    </a>
-
-    <!-- Kinder Eggs OUT OF STOCK -->
-    <a class="card" href="product.html?id=kinder">
-      <div class="ph">
-        <span class="badge oos">Out of stock</span>
-        <img class="product-img" src="https://picsum.photos/seed/mdo-kinder/600/600" alt="Kinder Eggs"
-             onerror="this.style.display='none';this.parentNode.querySelector('svg').style.display='block'">
-        <svg class="art" style="display:none" viewBox="0 0 120 140" xmlns="http://www.w3.org/2000/svg">
-          <defs><linearGradient id="foil" x1="0" x2="1"><stop offset="0%" stop-color="#fff7d6"/><stop offset="50%" stop-color="#ffe27a"/><stop offset="100%" stop-color="#e0b020"/></linearGradient></defs>
-          <ellipse cx="60" cy="72" rx="40" ry="56" fill="url(#foil)" stroke="#161616" stroke-width="2"/>
-          <rect x="20" y="64" width="80" height="22" fill="#fff" stroke="#161616" stroke-width="2"/>
-          <text x="60" y="79" text-anchor="middle" font-family="Arial Black" font-weight="900" font-size="12" fill="#e63946">KINDER</text>
-        </svg>
-        <div class="oos-overlay"><span>Sold out</span></div>
-      </div>
-      <div class="body">
-        <h4>Kinder Eggs · Surprise Inside</h4>
-        <p class="desc">Allegedly sold out. May reappear when Martin remembers where he hid them.</p>
-        <div class="price-row">
-          <div class="price">$2.20</div>
-          <button class="add" disabled>Notify me</button>
-        </div>
-      </div>
-    </a>
-
+<section class="panel" id="panel" role="dialog" aria-modal="true" aria-labelledby="pTitle" inert>
+  <div class="pk" id="pk" aria-hidden="true" lang="ja"></div>
+  <div class="pin">
+    <p class="pnum"><b id="pNum" lang="ja"></b><span id="pJp" lang="ja"></span></p>
+    <h2 id="pTitle"></h2>
+    <div class="pbody" id="pBody"></div>
+    <button class="back" id="back">◀ Back<small>ESC</small></button>
   </div>
 </section>
 
-<!-- REVIEWS -->
-<section class="reviews" id="reviews">
-  <div class="inner">
-    <div class="section-head" style="border:none">
-      <div>
-        <h2>What people whisper</h2>
-        <p class="sub">Real reviews. Probably. We live, we love, we lie — remember?</p>
-      </div>
-      <button class="rv-trigger" data-review="">★ Leave a review</button>
-    </div>
-
-    <div class="r-grid">
-      <div class="review">
-        <div class="stars">★★★★★</div>
-        <div class="quote">"My first ad. The drinks are AMAZING."</div>
-        <div class="who" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-          <span>RomeoBloxx</span>
-          <span aria-label="Verified" title="Verified" style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:#1d9bf0;color:#fff;font-size:11px;font-weight:900;line-height:1">✓</span>
-          <span style="background:var(--accent2);color:var(--ink);font-size:10px;font-weight:900;letter-spacing:.1em;padding:3px 7px;border:1.5px solid var(--ink);text-transform:uppercase">Sponsored us</span>
-        </div>
-      </div>
-      <div class="review">
-        <div class="stars">★★★★★</div>
-        <div class="quote">"I walked in for a Red Bull and walked out questioning my career. 10/10 — would dissociate again."</div>
-        <div class="who">Denis Spivakov <small>Verified buyer · 3rd visit this week</small></div>
-      </div>
-      <div class="review">
-        <div class="stars">★★★★★</div>
-        <div class="quote">"Their Tic Tacs taste vaguely litigious. I love it. Martin gave me a hug. I didn't ask."</div>
-        <div class="who">Richard Han <small>Verified buyer</small></div>
-      </div>
-      <div class="review">
-        <div class="stars">★★★★☆</div>
-        <div class="quote">"The Pink Lady apple was the most honest thing I've held in months. The Peppa was vibrating slightly."</div>
-        <div class="who">Alex Anurov <small>Verified buyer · Repeat offender</small></div>
-      </div>
-      <div class="review">
-        <div class="stars">★★★★★</div>
-        <div class="quote">"Came for snacks, stayed for the existential lighting. Five stars and one tear."</div>
-        <div class="who">Viggo Biancini <small>Verified buyer</small></div>
-      </div>
-      <div class="review">
-        <div class="stars">★★★★★</div>
-        <div class="quote">"Kinder eggs were out of stock. Martin's eyes told me the truth. I bought three apples instead."</div>
-        <div class="who">Cailte Scully <small>Verified buyer · Knows where the eggs are</small></div>
-      </div>
-    </div>
+<section class="game" id="game" aria-label="Fight" inert>
+  <canvas id="gc"></canvas>
+  <div class="g-top">
+    <div class="fb p1"><div class="nm"><b>Yuji Itadori</b><span lang="ja">虎杖悠仁</span></div><div class="hpb"><u id="lag1"></u><i id="hp1"></i></div></div>
+    <div class="vs"><b>∞</b><span>Training</span></div>
+    <div class="fb p2"><div class="nm"><b>Training Curse</b><span lang="ja">呪霊</span></div><div class="hpb"><u id="lag2"></u><i id="hp2"></i></div></div>
   </div>
+  <div class="combo" id="combo"><b id="cN">0</b><span>Hits</span><em id="cD">0 DMG</em></div>
+  <div class="banner" id="banner"></div>
+  <div class="hotbar">
+    <div class="mv" data-m="strikes"><kbd>1</kbd><b>Cursed Strikes</b></div>
+    <div class="mv" data-m="crush"><kbd>2</kbd><b>Crushing Blow</b></div>
+    <div class="mv" data-m="div"><kbd>3</kbd><b>Divergent Fist</b></div>
+    <div class="mv" data-m="manji"><kbd>4</kbd><b>Manji Kick</b></div>
+    <div class="mv" data-m="dash"><kbd>Q</kbd><b>Dash</b></div>
+  </div>
+  <div class="vows" id="vows"></div>
+  <div class="awk" id="awk"><i></i><span>Awakening</span></div>
+  <div class="ghint">
+    <span><b>A D</b> Move · <b>W</b> Jump · <b>Click / J</b> Strike</span>
+    <span><b>3</b> again as the ring closes · Black Flash</span>
+    <span><b>Q</b> Dash through an attack to dodge it</span>
+    <span><b>Esc</b> Title</span>
+    <span id="clanHint"></span>
+  </div>
+  <div class="obj" id="obj"></div>
+  <div class="bars" aria-hidden="true"><i></i><i></i></div>
+  <div class="fade" id="fade"></div>
+  <div class="dlg" id="dlg" aria-live="polite"><div class="who"><b id="dWho"></b><span id="dJp" lang="ja"></span></div><p id="dTxt"></p><em>Enter / Click ▸ · Tab skips</em></div>
 </section>
 
-<!-- COMMUNITY REVIEWS -->
-<section id="community-reviews">
-  <div class="section-head">
-    <div>
-      <h2>From the people</h2>
-      <p>Unfiltered. Unedited. Left by actual humans who actually visited this actual store. Allegedly.</p>
-    </div>
-    <button class="rv-trigger" data-review="">★ Leave yours</button>
-  </div>
-  <div class="cr-grid" id="crGrid"></div>
-</section>
+<div class="flash" id="flash"></div>
+<canvas id="fx"></canvas>
 
-<!-- CAREERS -->
-<section class="careers" id="careers">
-  <div class="section-head">
-    <div>
-      <h2>Join the shop</h2>
-    </div>
-    <p>Three open seats behind the counter. One is currently sold out — yes, leadership is also a limited-edition item this season.</p>
-  </div>
+<!-- rough ink edges for the logo -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <filter id="ink" x="-6%" y="-12%" width="118%" height="134%">
+      <feTurbulence type="fractalNoise" baseFrequency=".022 .05" numOctaves="2" seed="4" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="9" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <filter id="ink-mid" x="-6%" y="-12%" width="118%" height="134%">
+      <feTurbulence type="fractalNoise" baseFrequency=".03 .06" numOctaves="2" seed="9" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="5" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <filter id="ink-fine"x="-10%" y="-10%" width="120%" height="120%">
+      <feTurbulence type="fractalNoise" baseFrequency=".09" numOctaves="2" seed="11" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="3.5" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+  </defs>
+</svg>
 
-  <div class="roles">
-
-    <div class="role oos">
-      <span class="label">Leadership</span>
-      <h3>CEO</h3>
-      <p class="perks">Run the door, the dream, and the WhatsApp group. Must own at least one chair. Equity in vibes.</p>
-      <a class="apply" href="#">Position closed</a>
-      <div class="stamp">Out of stock</div>
-    </div>
-
-    <div class="role">
-      <span class="label">Front of house</span>
-      <h3>Seller</h3>
-      <p class="perks">Greet, ring, never blink first. Bilingual in eye contact. Must love Red Bull at room temperature.</p>
-      <button class="apply" data-role="Seller">Apply →</button>
-    </div>
-
-    <div class="role">
-      <span class="label">Brand</span>
-      <h3>Marker</h3>
-      <p class="perks">You hold the marker. You write the prices. You decide what an apple is worth today. Sharpie provided.</p>
-      <button class="apply" data-role="Marker">Apply →</button>
-    </div>
-
-  </div>
-</section>
-
-<!-- APPLICATION MODAL -->
-<div class="apply-overlay" id="applyOverlay">
-  <div class="apply-modal" role="dialog" aria-modal="true" aria-labelledby="applyTitle">
-    <button class="close-btn" id="applyClose" aria-label="Close">&#x2715;</button>
-    <h2 id="applyTitle">Apply for the position</h2>
-    <span class="role-tag" id="applyRoleTag"></span>
-
-    <form id="applyForm" action="https://formsubmit.co/buy@mdostore.com" method="POST" enctype="multipart/form-data">
-      <input type="hidden" name="_subject" id="applySubject" value="New application">
-      <input type="hidden" name="_template" value="table">
-      <input type="hidden" name="_captcha" value="false">
-      <input type="hidden" name="_next" value="https://mdostore.com/?applied=sent">
-      <input type="hidden" name="Position" id="applyPositionField">
-      <input type="text" name="_honey" style="display:none">
-
-      <div class="row">
-        <div class="field">
-          <label for="applyName">First name</label>
-          <input type="text" id="applyName" name="First name" required placeholder="Martin">
-        </div>
-        <div class="field">
-          <label for="applyLast">Last name</label>
-          <input type="text" id="applyLast" name="Last name" required placeholder="Doe">
-        </div>
-      </div>
-
-      <div class="field">
-        <label for="applyEmail">E-mail</label>
-        <input type="email" id="applyEmail" name="Email" required placeholder="you@example.com">
-      </div>
-
-      <div class="field">
-        <label for="applyClass">Class</label>
-        <input type="text" id="applyClass" name="Class" required placeholder="e.g. 7a, 7b, 7c">
-      </div>
-
-      <div class="field">
-        <label for="applyResume">Resume / cover letter</label>
-        <textarea id="applyResume" name="Resume" required placeholder="Tell us about yourself. Why this role? What's your relationship with Tic Tacs?"></textarea>
-      </div>
-
-      <button type="submit" class="submit-btn">Send application &rarr;</button>
-      <p class="form-note">We read every application. Martin may reply between sips.</p>
-    </form>
-
-    <div class="success-msg" id="applySuccess">
-      <div style="font-size:36px">&#10003;</div>
-      <p>Application received.<br>We'll be in touch.</p>
-    </div>
-  </div>
-</div>
-
-<!-- CONTACT -->
-<section class="contact" id="contact">
-  <div class="c-grid">
-    <div>
-      <h2>Knock, knock.</h2>
-      <p>The door is, as advertised, open. Slide into the inbox or text the shop — Martin replies between sips. (If he hasn't added you on WhatsApp yet… apply within.)</p>
-      <p class="note">*Honest pricing means honest about lying.</p>
-    </div>
-    <div>
-      <a class="c-card" href="mailto:buy@mdostore.com">
-        <div class="icon">@</div>
-        <div class="info">
-          <b>Email</b>
-          <span>buy@mdostore.com</span>
-        </div>
-      </a>
-      <a class="c-card" href="#">
-        <div class="icon wa">W</div>
-        <div class="info">
-          <b>WhatsApp</b>
-          <span>Available — if Martin added you</span>
-        </div>
-      </a>
-    </div>
-  </div>
-</section>
-
-<footer>
-  © 2026 <b>Martin's Door Is Open</b> · we live · we love · we lie<br/>
-  This shop exists in the space between a corner store and a confession booth.
-</footer>
-
-<!-- ===== Door Bot chat ===== -->
-<button class="db-fab" id="dbFab" aria-label="Talk to Door Bot">
-  💬<span class="ping"></span>
-</button>
-<div class="db-wrap" id="dbWrap" role="dialog" aria-label="Door Bot chat">
-  <div class="db-head">
-    <div class="who">
-      <div class="av">DB</div>
-      <div>
-        <div class="nm">Door Bot</div>
-        <div class="st">online · always</div>
-      </div>
-    </div>
-    <button class="x" id="dbClose" aria-label="Close">&times;</button>
-  </div>
-  <div class="db-body" id="dbBody"></div>
-  <div class="db-suggest" id="dbSuggest"></div>
-  <div class="db-input-row">
-    <input id="dbInput" placeholder="Ask Door Bot…" autocomplete="off">
-    <button id="dbSend">Send</button>
-  </div>
-</div>
-
-<!-- ===== Cart + Reviews module ===== -->
 <script>
-(function(){
-  // ─── Firebase DB URL — replace YOUR_PROJECT_ID with your project ───
-  var MDO_DB="https://mdoreviewservice-default-rtdb.firebaseio.com";
-  window.MDO_DB=MDO_DB;
-  function dbOk(){ return MDO_DB.indexOf("YOUR_PROJECT_ID")===-1; }
+(() => {
+'use strict';
 
-  const STORE_EMAIL = "buy@mdostore.com";
-  const FREE_OVER = 19.99;
-  const CATALOG = {
-    redbull:{name:"Red Bull · 250ml",price:3.49,img:"https://picsum.photos/seed/mdo-redbull/120/120"},
-    tictac:{name:"Tic Tac · Mogu Mogu Rip-Off",price:1.99,img:"https://picsum.photos/seed/mdo-tictac/120/120"},
-    apple:{name:"Pink Lady Apples",price:0.89,img:"https://picsum.photos/seed/mdo-apple/120/120"},
-    peppa:{name:"Peppa Pig · Plushy Pal",price:12.50,img:"https://picsum.photos/seed/mdo-peppa/120/120"},
-    kinder:{name:"Kinder Eggs · Surprise Inside",price:2.20,img:"https://picsum.photos/seed/mdo-kinder/120/120",oos:true},
-    "pen-black":{name:"The Pen · Black",price:1.50,img:"https://picsum.photos/seed/mdo-pen/120/120"},
-    "pen-blue":{name:"The Pen · Blue",price:1.50,img:"https://picsum.photos/seed/mdo-pen/120/120"},
-    "pen-red":{name:"The Pen · Red",price:1.50,img:"https://picsum.photos/seed/mdo-pen/120/120"},
-    "pen-green":{name:"The Pen · Green",price:1.50,img:"https://picsum.photos/seed/mdo-pen/120/120"},
-    "pen-purple":{name:"The Pen · Purple",price:1.50,img:"https://picsum.photos/seed/mdo-pen/120/120"}
+const TAU = Math.PI * 2;
+const $ = s => document.querySelector(s);
+const rnd = (a, b) => a + Math.random() * (b - a);
+const lerp = (a, b, t) => a + (b - a) * t;
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+const scene = $('#scene'), ctx = scene.getContext('2d');
+const fx = $('#fx'), fxc = fx.getContext('2d');
+const ui = $('#ui'), stage = $('#stage'), panel = $('#panel'), flashEl = $('#flash');
+
+/* ================= SFX (synthesised, no assets) ================= */
+const sfx = (() => {
+  let a = null, on = true;
+  try { on = localStorage.getItem('ju.sfx') !== '0'; } catch (e) {}
+  const tone = (f0, f1, dur, type, vol) => {
+    if (!a || !on) return;
+    const t = a.currentTime, o = a.createOscillator(), g = a.createGain();
+    o.type = type;
+    o.frequency.setValueAtTime(f0, t);
+    o.frequency.exponentialRampToValueAtTime(f1, t + dur);
+    g.gain.setValueAtTime(vol, t);
+    g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+    o.connect(g); g.connect(a.destination);
+    o.start(t); o.stop(t + dur + .02);
   };
-
-  function getCart(){ try{ return JSON.parse(localStorage.getItem("mdo_cart")||"{}"); }catch(e){ return {}; } }
-  function saveCart(c){ localStorage.setItem("mdo_cart", JSON.stringify(c)); sync(); }
-  function count(){ return Object.values(getCart()).reduce((a,b)=>a+b,0); }
-  function subtotal(){ return Object.entries(getCart()).reduce((s,[id,q])=>s+((CATALOG[id]?CATALOG[id].price:0)*q),0); }
-
-  // ---- Drawer + overlay ----
-  const overlay = document.createElement("div");
-  overlay.className = "overlay";
-  const drawer = document.createElement("div");
-  drawer.className = "drawer";
-  drawer.innerHTML =
-    '<div class="drawer-head"><h3>Your Bag</h3><button class="x" aria-label="Close">&times;</button></div>'+
-    '<div class="drawer-body" id="mdoLines"></div>'+
-    '<div class="drawer-foot" id="mdoFoot"></div>';
-  document.body.appendChild(overlay);
-  document.body.appendChild(drawer);
-
-  function openDrawer(){ overlay.classList.add("open"); drawer.classList.add("open"); renderLines(); }
-  function closeDrawer(){ overlay.classList.remove("open"); drawer.classList.remove("open"); }
-  overlay.addEventListener("click", closeDrawer);
-  drawer.querySelector(".x").addEventListener("click", closeDrawer);
-
-  function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
-
-  function renderLines(){
-    const cart = getCart();
-    const ids = Object.keys(cart);
-    const lines = document.getElementById("mdoLines");
-    const foot = document.getElementById("mdoFoot");
-    if(!ids.length){
-      lines.innerHTML = '<div class="empty-cart"><div class="big">🛒</div><b>Your bag is empty.</b><p>The shelf is right there. We won\'t judge. (We will.)</p></div>';
-      foot.innerHTML = "";
-      return;
-    }
-    lines.innerHTML = ids.map(function(id){
-      const p = CATALOG[id]; if(!p) return "";
-      const lt = (p.price*cart[id]).toFixed(2);
-      return '<div class="line">'+
-        '<img src="'+p.img+'" alt="'+esc(p.name)+'" onerror="this.style.opacity=.25">'+
-        '<div class="l-info">'+
-          '<div class="l-name">'+esc(p.name)+'</div>'+
-          '<div class="l-price">$'+p.price.toFixed(2)+' each</div>'+
-          '<div class="l-controls">'+
-            '<div class="stepper">'+
-              '<button data-act="dec" data-id="'+id+'">&minus;</button>'+
-              '<span>'+cart[id]+'</span>'+
-              '<button data-act="inc" data-id="'+id+'">+</button>'+
-            '</div>'+
-            '<div class="l-total">$'+lt+'</div>'+
-          '</div>'+
-          '<button class="l-remove" data-act="rm" data-id="'+id+'">remove</button>'+
-        '</div>'+
-      '</div>';
-    }).join("");
-
-    const sub = subtotal();
-    const remain = FREE_OVER - sub;
-    foot.innerHTML =
-      '<div class="sub-row"><span>Subtotal</span><span>$'+sub.toFixed(2)+'</span></div>'+
-      '<div class="free-note">'+(remain>0 ? 'Add $'+remain.toFixed(2)+' more for free delivery.' : '🎉 You unlocked free delivery.')+'</div>'+
-      '<div class="co-err" id="mdoErr">Drop your name and a way to reach you.</div>'+
-      '<div class="co-field"><label>Name</label><input id="coName" placeholder="Who\'s at the door?"></div>'+
-      '<div class="co-field"><label>Email or phone</label><input id="coContact" placeholder="So Martin can confirm"></div>'+
-      '<div class="co-field"><label>Deliver to / note (optional)</label><textarea id="coNote" placeholder="Address, building code, secret knock…"></textarea></div>'+
-      '<button class="send-order" id="mdoSend">Send order →</button>';
-
-    lines.querySelectorAll("button[data-act]").forEach(function(b){
-      b.addEventListener("click", function(){
-        const id=b.dataset.id, act=b.dataset.act, c=getCart();
-        if(act==="inc") c[id]=(c[id]||0)+1;
-        else if(act==="dec") c[id]=(c[id]||0)-1;
-        else if(act==="rm") c[id]=0;
-        if(c[id]<=0) delete c[id];
-        saveCart(c);
-      });
-    });
-    document.getElementById("mdoSend").addEventListener("click", sendOrder);
-  }
-
-  function sendOrder(){
-    const name=(document.getElementById("coName").value||"").trim();
-    const contact=(document.getElementById("coContact").value||"").trim();
-    const note=(document.getElementById("coNote").value||"").trim();
-    if(!name || !contact){ document.getElementById("mdoErr").style.display="block"; return; }
-    const cart=getCart();
-    let items="";
-    Object.keys(cart).forEach(function(id){
-      const p=CATALOG[id]; if(!p) return;
-      items += "- "+p.name+" × "+cart[id]+" — $"+(p.price*cart[id]).toFixed(2)+"\n";
-    });
-    const payload = {
-      _subject: "New order — Martin's Door Is Open ($"+subtotal().toFixed(2)+")",
-      _template: "table",
-      _captcha: "false",
-      Name: name,
-      Contact: contact,
-      Order: items,
-      Subtotal: "$"+subtotal().toFixed(2)
-    };
-    if(note) payload.Note = note;
-    const btn=document.getElementById("mdoSend");
-    const errEl=document.getElementById("mdoErr");
-    btn.disabled=true; btn.textContent="Sending…";
-    fetch("https://formsubmit.co/ajax/"+STORE_EMAIL, {
-      method:"POST",
-      headers:{ "Content-Type":"application/json", "Accept":"application/json" },
-      body: JSON.stringify(payload)
-    }).then(function(r){ return r.json(); }).then(function(d){
-      if(d && (d.success===true || d.success==="true")){
-        localStorage.removeItem("mdo_cart");
-        document.getElementById("mdoLines").innerHTML='<div class="empty-cart"><div class="big">📨</div><b>Order sent to Martin.</b><p>He replies between sips. Keep an eye on '+esc(contact)+'.</p></div>';
-        document.getElementById("mdoFoot").innerHTML="";
-        document.querySelectorAll(".bag").forEach(function(b){ b.textContent="Bag (0)"; });
-      } else {
-        btn.disabled=false; btn.textContent="Send order →";
-        errEl.textContent="Couldn't send — try again, or write buy@mdostore.com directly."; errEl.style.display="block";
-      }
-    }).catch(function(){
-      btn.disabled=false; btn.textContent="Send order →";
-      errEl.textContent="Network hiccup — try again, or write buy@mdostore.com directly."; errEl.style.display="block";
-    });
-  }
-
-  function sync(){
-    document.querySelectorAll(".bag").forEach(function(b){ b.textContent="Bag ("+count()+")"; });
-    if(drawer.classList.contains("open")) renderLines();
-  }
-
-  document.querySelectorAll(".bag").forEach(function(b){
-    b.addEventListener("click", function(e){ e.preventDefault(); openDrawer(); });
-  });
-  document.querySelectorAll(".add[data-id]").forEach(function(btn){
-    btn.addEventListener("click", function(e){
-      e.preventDefault(); e.stopPropagation();
-      if(btn.disabled) return;
-      const c=getCart(); const id=btn.dataset.id;
-      c[id]=(c[id]||0)+1; saveCart(c);
-      const t=btn.textContent; btn.textContent="Added ✓"; btn.style.background="#3a8a3a";
-      setTimeout(function(){ btn.textContent=t; btn.style.background=""; },1000);
-      openDrawer();
-    });
-  });
-
-  // Pen color swatch wiring (shop grid card)
-  document.querySelectorAll("#penSwatchesCard .pen-swatch").forEach(function(sw){
-    sw.addEventListener("click",function(e){
-      e.preventDefault(); e.stopPropagation();
-      document.querySelectorAll("#penSwatchesCard .pen-swatch").forEach(function(s){ s.classList.remove("active"); });
-      sw.classList.add("active");
-      var label=document.getElementById("penCardColorLabel");
-      var addBtn=document.getElementById("penCardAdd");
-      var penBody=document.getElementById("penBody");
-      if(label) label.textContent=sw.dataset.color;
-      if(addBtn) addBtn.dataset.id=sw.dataset.cartid;
-      if(penBody) penBody.setAttribute("fill",sw.dataset.svgfill);
-    });
-  });
-
-  window.MDOCart = {
-    add: function(id, qty){ const c=getCart(); c[id]=(c[id]||0)+(qty||1); saveCart(c); openDrawer(); },
-    open: openDrawer
+  const noise = (dur, vol, freq) => {
+    if (!a || !on) return;
+    const n = Math.floor(a.sampleRate * dur), buf = a.createBuffer(1, n, a.sampleRate), d = buf.getChannelData(0);
+    for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n);
+    const s = a.createBufferSource(), f = a.createBiquadFilter(), g = a.createGain();
+    s.buffer = buf; f.type = 'bandpass'; f.frequency.value = freq; f.Q.value = .8; g.gain.value = vol;
+    s.connect(f); f.connect(g); g.connect(a.destination);
+    s.start();
   };
+  return {
+    get on() { return on; },
+    unlock() {
+      if (!a) { const AC = window.AudioContext || window.webkitAudioContext; if (AC) try { a = new AC(); } catch (e) {} }
+      if (a && a.state === 'suspended') a.resume();
+    },
+    hover() { tone(640, 430, .07, 'triangle', .05); },
+    confirm() { tone(170, 36, .4, 'sine', .4); noise(.25, .22, 1600); tone(900, 200, .12, 'sawtooth', .04); },
+    back() { tone(320, 520, .09, 'triangle', .06); },
+    hit(heavy) { tone(heavy ? 120 : 210, 46, heavy ? .22 : .1, 'square', heavy ? .2 : .11); noise(heavy ? .2 : .08, heavy ? .32 : .2, heavy ? 900 : 2200); },
+    whoosh() { noise(.12, .09, 3200); },
+    jump() { tone(260, 520, .1, 'triangle', .05); },
+    land() { noise(.09, .14, 500); },
+    charge() { tone(300, 1200, .16, 'sine', .09); },
+    blast() { tone(90, 30, .5, 'sine', .5); noise(.4, .3, 700); },
+    bf() { tone(1400, 60, .5, 'sawtooth', .15); tone(80, 28, .7, 'sine', .55); noise(.5, .36, 1200); },
+    // a judge's gavel: a dry wooden knock, deeper and longer the bigger the head has grown (s), and the air it moves on the way there
+    gavel(s = 1) { tone(520 / s, 150 / s, .07 + .05 * s, 'triangle', .3); tone(1500 / s, 500 / s, .03, 'square', .1); noise(.05 + .04 * s, .22, 1700 / s); if (s > 2) tone(90, 34, .12 * s, 'sine', .35); },
+    swish(s = 1) { noise(.1 + .06 * s, .08, 2600 / s); },
+    toggle() { on = !on; try { localStorage.setItem('ju.sfx', on ? '1' : '0'); } catch (e) {} return on; }
+  };
+})();
 
-  // ===== Review modal (real multipart form -> FormSubmit, photos auto-attach) =====
-  const mWrap=document.createElement("div");
-  mWrap.className="modal-wrap";
-  mWrap.innerHTML=
-    '<form class="modal" action="https://formsubmit.co/'+STORE_EMAIL+'" method="POST" enctype="multipart/form-data">'+
-      '<div class="modal-head"><h3>Leave a review</h3><button type="button" class="x">&times;</button></div>'+
-      '<div class="modal-body">'+
-        '<input type="hidden" name="_subject" value="New review — Martin&#39;s Door Is Open">'+
-        '<input type="hidden" name="_template" value="table">'+
-        '<input type="hidden" name="_captcha" value="false">'+
-        '<input type="hidden" name="_next" value="https://mdostore.com/?review=sent">'+
-        '<input type="text" name="_honey" style="display:none" tabindex="-1" autocomplete="off">'+
-        '<input type="hidden" name="Rating" id="rvRatingInput" value="">'+
-        '<div class="co-field"><label>Your name</label><input name="Name" id="rvName" placeholder="The legend speaking"></div>'+
-        '<div class="co-field"><label>Rating</label><div class="star-pick" id="rvStars">'+
-          [1,2,3,4,5].map(function(n){return '<span data-n="'+n+'">★</span>';}).join("")+
-        '</div></div>'+
-        '<div class="co-field"><label>What did you buy?</label><select name="Product" id="rvProduct">'+
-          Object.keys(CATALOG).map(function(id){return '<option value="'+esc(CATALOG[id].name)+'">'+esc(CATALOG[id].name)+'</option>';}).join("")+
-        '</select></div>'+
-        '<div class="co-field"><label>Your review</label><textarea name="Review" id="rvText" placeholder="Tell the truth. Or don\'t. We do both." style="min-height:90px"></textarea></div>'+
-        '<div class="co-err" id="rvErr">Pop in a name, a rating, and a few words.</div>'+
-        '<button type="submit" class="send-order" id="rvSend">Send review →</button>'+
-      '</div>'+
-    '</form>';
-  document.body.appendChild(mWrap);
+/* ================= pseudo-3D scene ================= */
+let W = 0, H = 0, DPR = 1, wide = true, focal = 1, vx = 0, vy = 0, T = 0;
+const mouse = { x: 0, y: 0, sx: 0, sy: 0 };
+const cam = { cy: 1, sy: 0, cp: 1, sp: 0 };
+const FLOOR = -2.2;
+const core = { x: 0, y: .9, z: 10, r: 1.5 };
 
-  let rvRating=0;
-  const rvRatingInput=mWrap.querySelector("#rvRatingInput");
-  const starWrap=mWrap.querySelector("#rvStars");
-  function paintStars(hover){
-    const v=hover||rvRating;
-    starWrap.querySelectorAll("span").forEach(function(s){ s.classList.toggle("on", (+s.dataset.n)<=v); });
+// each menu entry tints the scene
+const ACCENTS = [[170, 92, 255], [56, 200, 255], [255, 44, 72], [226, 180, 96], [240, 232, 214], [255, 210, 61], [207, 216, 224]];
+const accent = ACCENTS[0].slice();
+let accentTarget = 0;
+const ac = a => `rgba(${accent[0] | 0},${accent[1] | 0},${accent[2] | 0},${a})`;
+
+function resize() {
+  DPR = Math.min(window.devicePixelRatio || 1, 2, 2400 / window.innerWidth, 1350 / window.innerHeight);   // cap the drawing resolution so huge windows stay smooth
+  W = window.innerWidth; H = window.innerHeight;
+  wide = W > 860 && W > H;
+  for (const c of [scene, fx]) { c.width = Math.round(W * DPR); c.height = Math.round(H * DPR); }
+}
+
+// world -> screen; camera sits at the origin looking down +z
+function proj(x, y, z) {
+  const x1 = x * cam.cy - z * cam.sy, z1 = x * cam.sy + z * cam.cy;
+  const y1 = y * cam.cp - z1 * cam.sp, z2 = y * cam.sp + z1 * cam.cp;
+  if (z2 < .25) return null;
+  const s = focal / z2;
+  return { x: vx + x1 * s, y: vy - y1 * s, s, z: z2 };
+}
+
+function makeGlow(r, g, b) {
+  const c = document.createElement('canvas'); c.width = c.height = 64;
+  const x = c.getContext('2d'), gr = x.createRadialGradient(32, 32, 0, 32, 32, 32);
+  gr.addColorStop(0, 'rgba(255,255,255,1)');
+  gr.addColorStop(.18, `rgba(${r},${g},${b},.9)`);
+  gr.addColorStop(.5, `rgba(${r},${g},${b},.22)`);
+  gr.addColorStop(1, `rgba(${r},${g},${b},0)`);
+  x.fillStyle = gr; x.fillRect(0, 0, 64, 64);
+  return c;
+}
+const GLOW = { blue: makeGlow(56, 200, 255), red: makeGlow(255, 44, 72), purple: makeGlow(170, 92, 255) };
+
+const CV = [[-1, -1, -1], [1, -1, -1], [1, 1, -1], [-1, 1, -1], [-1, -1, 1], [1, -1, 1], [1, 1, 1], [-1, 1, 1]];
+const CF = [[0, 1, 2, 3], [5, 4, 7, 6], [4, 0, 3, 7], [1, 5, 6, 2], [3, 2, 6, 7], [4, 5, 1, 0]];
+const CN = [[0, 0, -1], [0, 0, 1], [-1, 0, 0], [1, 0, 0], [0, 1, 0], [0, -1, 0]];
+
+const cubes = Array.from({ length: 10 }, () => ({
+  x: rnd(-11, 11), y: rnd(-1.2, 5), z: rnd(5, 24), s: rnd(.22, .7),
+  a: rnd(0, TAU), b: rnd(0, TAU), va: rnd(-.5, .5), vb: rnd(-.6, .6), ph: rnd(0, TAU)
+}));
+const ofuda = Array.from({ length: 14 }, () => ({
+  x: rnd(-9, 9), y: rnd(-2, 6), z: rnd(4, 18),
+  a: rnd(0, TAU), b: rnd(0, TAU), c: rnd(0, TAU), va: rnd(-.8, .8), vb: rnd(-1.3, 1.3), vc: rnd(-.4, .4),
+  vy: rnd(.12, .4), g: '呪封禁縛'[Math.random() * 4 | 0]
+}));
+const RINGS = [
+  { R: 2.5, tx: 1.25, tz: .25, sp: .22, w: 1.6, a: .8 },
+  { R: 3.25, tx: 1.02, tz: -.5, sp: -.16, w: 1, a: .5, dash: [2, 9] },
+  { R: 3.75, tx: 1.38, tz: .08, sp: .1, w: 1, a: .32, glyphs: '領域展開呪術無限領域展開呪術無限' }
+];
+const RING_N = 96;
+const SATS = [{ g: 'blue', ph: 0 }, { g: 'red', ph: Math.PI }];
+
+const embers = [];
+function spawnEmber(e, initial) {
+  e.x = Math.random(); e.y = initial ? Math.random() * 1.1 : 1.05;
+  e.d = rnd(.25, 1); e.vy = rnd(.02, .07) * (.4 + e.d); e.sw = rnd(.004, .02); e.f = rnd(.4, 1.6); e.ph = rnd(0, TAU);
+  const r = Math.random(); e.g = r < .45 ? 'purple' : r < .75 ? 'blue' : 'red';
+  e.sz = rnd(6, 26) * e.d * e.d + 4; e.a = rnd(.25, .9);
+  return e;
+}
+for (let i = 0; i < 130; i++) embers.push(spawnEmber({}, true));
+
+function ringPoint(r, th) {
+  const x = r.R * Math.cos(th), z = r.R * Math.sin(th);
+  const y1 = -z * r.st, z1 = z * r.ct;                       // tilt about X
+  const x2 = x * r.cz - y1 * r.sz, y2 = x * r.sz + y1 * r.cz; // roll about Z
+  const x3 = x2 * r.cs + z1 * r.ss, z3 = -x2 * r.ss + z1 * r.cs; // gyroscope spin about Y
+  return proj(core.x + x3, core.y + y2, core.z + z3);
+}
+
+function drawRing(r, back) {
+  const pz = r.cz0;
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.setLineDash(r.dash || []);
+  ctx.beginPath();
+  let pen = false;
+  for (let i = 0; i < RING_N; i++) {
+    const p = r.pts[i], q = r.pts[i + 1];
+    if (p && q && ((p.z + q.z) / 2 > pz) === back) {
+      if (!pen) ctx.moveTo(p.x, p.y);
+      ctx.lineTo(q.x, q.y); pen = true;
+    } else pen = false;
   }
-  starWrap.querySelectorAll("span").forEach(function(s){
-    s.addEventListener("click", function(){ rvRating=+s.dataset.n; rvRatingInput.value=rvRating; paintStars(); });
-    s.addEventListener("mouseenter", function(){ paintStars(+s.dataset.n); });
+  const a = r.a * (back ? .4 : 1);
+  ctx.strokeStyle = ac(a * .16); ctx.lineWidth = r.w * 5; ctx.stroke();
+  ctx.strokeStyle = ac(a); ctx.lineWidth = r.w; ctx.stroke();
+  ctx.setLineDash([]);
+  if (r.glyphs) {
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    const n = r.glyphs.length;
+    for (let i = 0; i < n; i++) {
+      const p = ringPoint(r, i / n * TAU + T * .1);
+      if (!p || (p.z > pz) !== back) continue;
+      ctx.font = `${Math.max(8, .46 * p.s) | 0}px 'Yuji Syuku','Yu Mincho',serif`;
+      ctx.fillStyle = ac(back ? .22 : .85);
+      ctx.fillText(r.glyphs[i], p.x, p.y);
+    }
+  }
+  ctx.globalCompositeOperation = 'source-over';
+}
+
+function satPoint(ang) {
+  const R = 2.05, x = R * Math.cos(ang), z = R * Math.sin(ang);
+  const y1 = -z * .408, z1 = z * .913;            // orbital plane tilted toward the camera
+  const x2 = x * .955 - y1 * .296, y2 = x * .296 + y1 * .955;
+  return proj(core.x + x2, core.y + y2, core.z + z1);
+}
+
+function drawSat(s, back) {
+  const ang = T * .9 + s.ph, img = GLOW[s.g];
+  ctx.globalCompositeOperation = 'lighter';
+  for (let k = 16; k >= 0; k--) {
+    const p = satPoint(ang - k * .055);
+    if (!p || (p.z > core.pz) !== back) continue;
+    const sz = (k ? 1.05 - k * .05 : 1.5) * p.s;
+    ctx.globalAlpha = k ? (1 - k / 17) * .5 : 1;
+    ctx.drawImage(img, p.x - sz / 2, p.y - sz / 2, sz, sz);
+  }
+  ctx.globalAlpha = 1;
+  ctx.globalCompositeOperation = 'source-over';
+}
+
+function corona(p, r, rgb, amp, k1, k2, speed, alpha) {
+  ctx.beginPath();
+  for (let i = 0; i <= 80; i++) {
+    const a = i / 80 * TAU;
+    const rr = r * (1.05 + amp * (.5 + .5 * Math.sin(a * k1 + T * speed)) * (.55 + .45 * Math.sin(a * k2 - T * speed * 1.7)));
+    const x = p.x + Math.cos(a) * rr, y = p.y + Math.sin(a) * rr;
+    i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+  }
+  ctx.closePath();
+  const g = ctx.createRadialGradient(p.x, p.y, r * .9, p.x, p.y, r * (1.1 + amp));
+  g.addColorStop(0, `rgba(255,255,255,${alpha})`);
+  g.addColorStop(.35, `rgba(${rgb},${alpha * .8})`);
+  g.addColorStop(1, `rgba(${rgb},0)`);
+  ctx.fillStyle = g; ctx.fill();
+}
+
+// the eclipse: a black sphere wrapped in cursed energy
+function drawCore() {
+  const p = core.p, r = core.r * p.s;
+  const rgb = `${accent[0] | 0},${accent[1] | 0},${accent[2] | 0}`;
+  ctx.globalCompositeOperation = 'lighter';
+  let g = ctx.createRadialGradient(p.x, p.y, r * .8, p.x, p.y, r * 4.4);
+  g.addColorStop(0, `rgba(${rgb},.5)`); g.addColorStop(.25, `rgba(${rgb},.18)`);
+  g.addColorStop(.6, 'rgba(255,44,72,.05)'); g.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = g; ctx.beginPath(); ctx.arc(p.x, p.y, r * 4.4, 0, TAU); ctx.fill();
+  corona(p, r, '255,44,72', .7, 5, 2, .7, .35);
+  corona(p, r, rgb, .5, 7, 3, 1.1, .75);
+  corona(p, r, '56,200,255', .3, 11, 5, -1.6, .6);
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.fillStyle = '#030207'; ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, TAU); ctx.fill();
+  g = ctx.createLinearGradient(p.x - r, p.y - r, p.x + r, p.y + r);
+  g.addColorStop(0, 'rgba(255,255,255,.95)'); g.addColorStop(.5, `rgba(${rgb},.5)`); g.addColorStop(1, 'rgba(255,255,255,.1)');
+  ctx.strokeStyle = g; ctx.lineWidth = Math.max(1, r * .03);
+  ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, TAU); ctx.stroke();
+  ctx.font = `${r * 1.05 | 0}px 'Yuji Syuku','Yu Mincho',serif`;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillStyle = `rgba(${rgb},${.13 + .06 * Math.sin(T * 1.3)})`;
+  ctx.fillText('無', p.x, p.y + r * .04);
+}
+
+function drawCube(c) {
+  const ca = Math.cos(c.a), sa = Math.sin(c.a), cb = Math.cos(c.b), sb = Math.sin(c.b);
+  const by = c.y + Math.sin(T * .5 + c.ph) * .25;
+  const P = [];
+  for (let i = 0; i < 8; i++) {
+    const v = CV[i];
+    const y1 = v[1] * ca - v[2] * sa, z1 = v[1] * sa + v[2] * ca;
+    const x2 = v[0] * cb + z1 * sb, z2 = -v[0] * sb + z1 * cb;
+    const p = proj(c.x + x2 * c.s, by + y1 * c.s, c.z + z2 * c.s);
+    if (!p) return;
+    P.push(p);
+  }
+  // lit by the core
+  let lx = core.x - c.x, ly = core.y - by, lz = core.z - c.z;
+  const ll = Math.hypot(lx, ly, lz) || 1; lx /= ll; ly /= ll; lz /= ll;
+  const fade = Math.max(0, Math.min(1, 1.3 - c.z / 24));
+  const order = [0, 1, 2, 3, 4, 5].sort((m, n) =>
+    (P[CF[n][0]].z + P[CF[n][2]].z) - (P[CF[m][0]].z + P[CF[m][2]].z));
+  ctx.lineWidth = 1; ctx.lineJoin = 'round';
+  for (const i of order) {
+    const f = CF[i], n = CN[i];
+    const ny = n[1] * ca - n[2] * sa, nz1 = n[1] * sa + n[2] * ca;
+    const nx = n[0] * cb + nz1 * sb, nz = -n[0] * sb + nz1 * cb;
+    const lit = Math.max(0, nx * lx + ny * ly + nz * lz);
+    ctx.beginPath();
+    ctx.moveTo(P[f[0]].x, P[f[0]].y);
+    for (let k = 1; k < 4; k++) ctx.lineTo(P[f[k]].x, P[f[k]].y);
+    ctx.closePath();
+    ctx.fillStyle = `rgba(${16 + lit * accent[0] * .5 | 0},${9 + lit * accent[1] * .5 | 0},${30 + lit * accent[2] * .5 | 0},${(.5 + lit * .3) * fade})`;
+    ctx.fill();
+    ctx.strokeStyle = `rgba(200,170,255,${.5 * fade})`;
+    ctx.stroke();
+  }
+}
+
+// paper talismans tumbling through the air
+function drawOfuda(o) {
+  const hw = .17, hh = .46;
+  const ca = Math.cos(o.a), sa = Math.sin(o.a), cb = Math.cos(o.b), sb = Math.sin(o.b), cc = Math.cos(o.c), sc = Math.sin(o.c);
+  const corner = (lx, ly) => {
+    const x1 = lx * cc - ly * sc, y1 = lx * sc + ly * cc;
+    const y2 = y1 * ca, z2 = y1 * sa;
+    return proj(o.x + x1 * cb + z2 * sb, o.y + y2, o.z - x1 * sb + z2 * cb);
+  };
+  const p0 = corner(-hw, hh), p1 = corner(hw, hh), p3 = corner(-hw, -hh);
+  if (!p0 || !p1 || !p3) return;
+  const ux = p1.x - p0.x, uy = p1.y - p0.y, wx = p3.x - p0.x, wy = p3.y - p0.y;
+  const cross = ux * wy - uy * wx, area = Math.abs(cross);
+  if (area < 6) return;
+  const facing = area / (Math.hypot(ux, uy) * Math.hypot(wx, wy) || 1);
+  const sh = .5 + .5 * facing, front = cross > 0;
+  // stay faint behind the logo and menu so they never fight the text
+  const clear = wide ? Math.max(.18, Math.min(1, (p0.x / W - .34) / .2)) : .5;
+  ctx.globalAlpha = clear * Math.max(0, Math.min(1, 1.25 - o.z / 20)) * Math.min(1, (o.y + 2.2) * 2, (6.4 - o.y) * 2);
+  ctx.setTransform(DPR * ux / 40, DPR * uy / 40, DPR * wx / 100, DPR * wy / 100, DPR * p0.x, DPR * p0.y);
+  ctx.fillStyle = front ? `rgb(${236 * sh | 0},${226 * sh | 0},${200 * sh | 0})` : `rgb(${150 * sh | 0},${140 * sh | 0},${118 * sh | 0})`;
+  ctx.fillRect(0, 0, 40, 100);
+  if (front) {
+    ctx.strokeStyle = ctx.fillStyle = '#a5102a';
+    ctx.lineWidth = 2; ctx.strokeRect(4, 4, 32, 92);
+    ctx.font = "26px 'Yuji Syuku','Yu Mincho',serif";
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(o.g, 20, 28);
+    ctx.fillRect(18.5, 50, 3, 38); ctx.fillRect(11, 60, 18, 2.5); ctx.fillRect(13, 74, 14, 2.5);
+  }
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  ctx.globalAlpha = 1;
+}
+
+function drawFloor(hz) {
+  ctx.save();
+  ctx.beginPath(); ctx.rect(0, hz, W, H - hz); ctx.clip();
+  let g = ctx.createLinearGradient(0, hz, 0, H);
+  g.addColorStop(0, '#150a26'); g.addColorStop(.35, '#0a0614'); g.addColorStop(1, '#040308');
+  ctx.fillStyle = g; ctx.fillRect(0, hz, W, H - hz);
+
+  ctx.globalCompositeOperation = 'lighter';
+  // the core's glow pooled on the floor
+  const pf = proj(core.x, FLOOR, core.z);
+  if (pf) {
+    ctx.save(); ctx.translate(pf.x, pf.y); ctx.scale(1, .26);
+    const rr = 6 * pf.s;
+    g = ctx.createRadialGradient(0, 0, 0, 0, 0, rr);
+    g.addColorStop(0, ac(.5)); g.addColorStop(.4, ac(.14)); g.addColorStop(1, ac(0));
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0, 0, rr, 0, TAU); ctx.fill();
+    ctx.restore();
+  }
+  // grid
+  const SP = 2, NX = 24, ZN = .7, ZF = 70;
+  ctx.beginPath();
+  for (let i = -NX; i <= NX; i++) {
+    const x = i * SP, a = proj(x, FLOOR, Math.max(ZN, Math.abs(x) * .45)), b = proj(x, FLOOR, ZF);
+    if (a && b) { ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); }
+  }
+  const off = (T * 1.1) % SP;
+  for (let k = 0; k < 36; k++) {
+    const z = k * SP + SP - off;
+    if (z < ZN) continue;
+    const ext = Math.min(NX * SP, z * 2.6 + 4), a = proj(-ext, FLOOR, z), b = proj(ext, FLOOR, z);
+    if (a && b) { ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); }
+  }
+  ctx.strokeStyle = ac(.2); ctx.lineWidth = 1; ctx.stroke();
+  // shockwave ripples spreading from under the core
+  for (let k = 0; k < 3; k++) {
+    const ph = (T * .16 + k / 3) % 1, R = 1 + ph * 15;
+    ctx.beginPath();
+    let pen = false;
+    for (let i = 0; i <= 72; i++) {
+      const th = i / 72 * TAU, p = proj(core.x + Math.cos(th) * R, FLOOR, core.z + Math.sin(th) * R);
+      if (!p) { pen = false; continue; }
+      pen ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y); pen = true;
+    }
+    ctx.strokeStyle = ac((1 - ph) * .55); ctx.lineWidth = 1.5; ctx.stroke();
+  }
+  ctx.globalCompositeOperation = 'source-over';
+  // haze toward the horizon
+  g = ctx.createLinearGradient(0, hz, 0, hz + (H - hz) * .3);
+  g.addColorStop(0, 'rgba(21,10,38,1)'); g.addColorStop(1, 'rgba(21,10,38,0)');
+  ctx.fillStyle = g; ctx.fillRect(0, hz, W, (H - hz) * .3);
+  ctx.restore();
+}
+
+const items = [];
+const push = (z, fn, a, b) => items.push({ z, fn, a, b });
+
+function drawScene(dt) {
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  focal = Math.min(H * .95, W * 1.55); vx = W * .5; vy = H * .56;
+  const yaw = mouse.sx * .06, pitch = -mouse.sy * .035;
+  cam.cy = Math.cos(yaw); cam.sy = Math.sin(yaw); cam.cp = Math.cos(pitch); cam.sp = Math.sin(pitch);
+  if (wide) { core.x = (W / H) * 2.1; core.y = .9; core.z = 10; }
+  else { core.x = 0; core.y = 3.1; core.z = 13; }
+  core.p = proj(core.x, core.y, core.z); core.pz = core.p.z;
+  const hz = proj(0, FLOOR, 4000).y;
+
+  // sky
+  let g = ctx.createLinearGradient(0, 0, 0, hz);
+  g.addColorStop(0, '#030208'); g.addColorStop(.6, '#0a0618'); g.addColorStop(1, '#190b2c');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, hz + 1);
+  drawFloor(hz);
+  // horizon glow
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.save(); ctx.translate(core.p.x, hz); ctx.scale(1, .16);
+  g = ctx.createRadialGradient(0, 0, 0, 0, 0, W * .6);
+  g.addColorStop(0, ac(.4)); g.addColorStop(.5, 'rgba(255,44,72,.07)'); g.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0, 0, W * .6, 0, TAU); ctx.fill();
+  ctx.restore();
+  ctx.globalCompositeOperation = 'source-over';
+
+  // depth-sorted objects
+  items.length = 0;
+  push(core.pz, drawCore);
+  for (const r of RINGS) {
+    const sp = T * r.sp;
+    r.st = Math.sin(r.tx); r.ct = Math.cos(r.tx); r.sz = Math.sin(r.tz); r.cz = Math.cos(r.tz);
+    r.ss = Math.sin(sp); r.cs = Math.cos(sp); r.cz0 = core.pz;
+    r.pts = r.pts || new Array(RING_N + 1);
+    for (let i = 0; i <= RING_N; i++) r.pts[i] = ringPoint(r, i / RING_N * TAU);
+    push(core.pz + r.R * .5, drawRing, r, true);
+    push(core.pz - r.R * .5, drawRing, r, false);
+  }
+  for (const s of SATS) { push(core.pz + 1, drawSat, s, true); push(core.pz - 1, drawSat, s, false); }
+  for (const c of cubes) {
+    c.a += c.va * dt; c.b += c.vb * dt;
+    const p = proj(c.x, c.y, c.z); if (p) push(p.z, drawCube, c);
+  }
+  for (const o of ofuda) {
+    o.a += o.va * dt; o.b += o.vb * dt; o.c += o.vc * dt; o.y += o.vy * dt;
+    if (o.y > 6.4) { o.y = -2.2; o.x = rnd(-9, 9); o.z = rnd(4, 18); }
+    const p = proj(o.x, o.y, o.z); if (p) push(p.z, drawOfuda, o);
+  }
+  items.sort((m, n) => n.z - m.z);
+  for (const it of items) it.fn(it.a, it.b);
+
+  // cursed-energy embers
+  ctx.globalCompositeOperation = 'lighter';
+  const k = H / 720;
+  for (const e of embers) {
+    e.y -= e.vy * dt;
+    if (e.y < -.06) spawnEmber(e, false);
+    const x = e.x * W + Math.sin(T * e.f + e.ph) * e.sw * W - mouse.sx * 46 * e.d;
+    const y = e.y * H + mouse.sy * 26 * e.d;
+    const sz = e.sz * k;
+    ctx.globalAlpha = e.a * (.55 + .45 * Math.sin(T * 3 * e.f + e.ph)) * Math.min(1, e.y * 2.4);
+    if (ctx.globalAlpha <= 0) continue;
+    ctx.drawImage(GLOW[e.g], x - sz / 2, y - sz / 2, sz, sz);
+  }
+  ctx.globalAlpha = 1;
+  ctx.globalCompositeOperation = 'source-over';
+}
+
+/* ================= black-flash sparks (top layer) ================= */
+const bolts = [];
+let fxDirty = false;
+function blackFlash(x, y, n = 11) {
+  const k = Math.max(.7, H / 720);
+  for (let i = 0; i < n; i++) {
+    const ang = rnd(0, TAU), len = rnd(90, 300) * k, steps = 7 + (Math.random() * 5 | 0), pts = [[x, y]];
+    for (let j = 1; j <= steps; j++) {
+      const d = ang + rnd(-.9, .9), l = pts[pts.length - 1];
+      pts.push([l[0] + Math.cos(d) * len / steps, l[1] + Math.sin(d) * len / steps]);
+    }
+    bolts.push({ pts, t: 0, life: rnd(.18, .4), w: rnd(1.5, 4) });
+  }
+}
+function drawFx(dt) {
+  if (!bolts.length && !fxDirty) return;
+  fxc.setTransform(DPR, 0, 0, DPR, 0, 0);
+  fxc.clearRect(0, 0, W, H);
+  fxDirty = bolts.length > 0;
+  fxc.lineJoin = 'miter';
+  for (let i = bolts.length - 1; i >= 0; i--) {
+    const b = bolts[i];
+    b.t += dt;
+    if (b.t >= b.life) { bolts.splice(i, 1); continue; }
+    const a = 1 - b.t / b.life;
+    fxc.beginPath();
+    fxc.moveTo(b.pts[0][0], b.pts[0][1]);
+    for (let j = 1; j < b.pts.length; j++) fxc.lineTo(b.pts[j][0], b.pts[j][1]);
+    fxc.shadowColor = '#ff1e3c'; fxc.shadowBlur = 22;
+    fxc.strokeStyle = `rgba(255,36,64,${a})`; fxc.lineWidth = b.w * 2.4; fxc.stroke();
+    fxc.shadowBlur = 0;
+    fxc.strokeStyle = `rgba(4,2,6,${a})`; fxc.lineWidth = b.w; fxc.stroke();
+  }
+}
+
+function flash(x, y) {
+  flashEl.style.setProperty('--fx', x + 'px'); flashEl.style.setProperty('--fy', y + 'px');
+  flashEl.classList.remove('go');
+  if (reduceMotion) return;
+  void flashEl.offsetWidth;
+  flashEl.classList.add('go');
+}
+function burst(x, y) {
+  flash(x, y);
+  stage.classList.remove('shake');
+  if (reduceMotion) return;
+  void stage.offsetWidth;
+  stage.classList.add('shake');
+  blackFlash(x, y);
+}
+
+/* ================= menu + sub-screens ================= */
+const SLOTS = '<div class="slots">' + '<div class="slot"><b lang="ja">封</b><i>SEALED</i></div>'.repeat(3) + '</div>';
+const PANELS = {
+  play: { num: '壱', jp: '開始', title: 'Play', body: '', onOpen() { window.JU.chapters.mount($('#pBody')); } },
+  technique: { num: '弐', jp: '術式', title: 'Cursed Technique', body: '', onOpen() { if (window.JU.tech) window.JU.tech.mount($('#pBody')); } },
+  clan: { num: '参', jp: '一族', title: 'Clan', body: '', onOpen() { if (window.JU.clan) window.JU.clan.mount($('#pBody')); } },
+  notes: { num: '肆', jp: '更新', title: 'Patch Notes', body: '', onOpen() { if (window.JU.notes) window.JU.notes.mount($('#pBody')); } },
+  shop: { num: '商', jp: '売店', title: 'Shop', body: '', onOpen() { if (window.JU.shop) window.JU.shop.mount($('#pBody')); } },
+  tools: { num: '具', jp: '呪具', title: 'Cursed Tools', body: '', onOpen() { if (window.JU.tools) window.JU.tools.mount($('#pBody')); } },
+  credits: { num: '伍', jp: '制作', title: 'Credits', body:
+    `<dl class="cred">
+       <dt>Game</dt><dd>Jujutsu Unlimiteds</dd>
+       <dt>Design &amp; Direction</dt><dd>The Unlimiteds Team</dd>
+       <dt>Built with</dt><dd>HTML · Canvas · JavaScript</dd>
+     </dl>
+     <p class="fine">Unofficial fan project inspired by <em>Jujutsu Kaisen</em> by Gege Akutami.
+     Not affiliated with or endorsed by Shueisha, MAPPA or any rights holder.</p>` }
+};
+
+const btns = [...document.querySelectorAll('.mbtn')];
+let sel = -1, panelOpen = false, sceneHidden = false, hideTimer = 0;
+
+function select(i, focus) {
+  i = (i + btns.length) % btns.length;
+  if (i === sel) return;
+  sel = i; accentTarget = i;
+  btns.forEach((b, k) => b.classList.toggle('sel', k === i));
+  if (focus) btns[i].focus({ preventScroll: true });
+  sfx.hover();
+}
+
+function openPanel(id, x, y) {
+  const d = PANELS[id];
+  if (!d || panelOpen) return;
+  panelOpen = true;
+  $('#pNum').textContent = d.num; $('#pJp').textContent = d.jp; $('#pk').textContent = d.jp; panel.dataset.id = id;
+  $('#pTitle').textContent = d.title; $('#pBody').innerHTML = d.body;
+  if (d.onOpen) d.onOpen();
+  panel.style.setProperty('--px', x + 'px'); panel.style.setProperty('--py', y + 'px');
+  panel.classList.add('open'); panel.inert = false; stage.inert = true;
+  burst(x, y); sfx.confirm();
+  clearTimeout(hideTimer);
+  hideTimer = setTimeout(() => { sceneHidden = true; }, 700);   // stop drawing what the panel covers
+  setTimeout(() => $('#back').focus({ preventScroll: true }), 60);
+}
+
+function closePanel() {
+  if (!panelOpen) return;
+  panelOpen = false; clearTimeout(hideTimer); sceneHidden = false;
+  panel.classList.remove('open'); panel.inert = true; stage.inert = false;
+  sfx.back();
+  btns[sel].focus({ preventScroll: true });
+}
+
+// Play: the same wipe, but into the arena (game.js)
+const gameEl = $('#game');
+let inGame = false;
+function startGame(x, y, mode, arg) {
+  if (inGame || panelOpen || !window.JU.game) return;
+  inGame = true;
+  gameEl.style.setProperty('--px', x + 'px'); gameEl.style.setProperty('--py', y + 'px');
+  gameEl.classList.add('open'); gameEl.inert = false; stage.inert = true;
+  burst(x, y); sfx.confirm();
+  clearTimeout(hideTimer);
+  hideTimer = setTimeout(() => { sceneHidden = true; }, 750);
+  window.JU.game.start(mode, arg);
+}
+function exitGame() {
+  if (!inGame) return;
+  inGame = false; clearTimeout(hideTimer); sceneHidden = false;
+  window.JU.game.stop();
+  gameEl.classList.remove('open'); gameEl.inert = true; stage.inert = false;
+  sfx.back();
+  btns[sel].focus({ preventScroll: true });
+}
+
+btns.forEach((b, i) => {
+  b.addEventListener('pointerenter', () => select(i));
+  b.addEventListener('focus', () => select(i));
+  b.addEventListener('click', e => {
+    select(i);
+    let x = e.clientX, y = e.clientY;
+    if (!e.detail || (!x && !y)) { const r = b.getBoundingClientRect(); x = r.left + r.width * .3; y = r.top + r.height / 2; }
+    openPanel(b.dataset.id, x, y);
   });
-  starWrap.addEventListener("mouseleave", function(){ paintStars(); });
+});
+$('#back').addEventListener('click', closePanel);
+$('#pBody').addEventListener('click', e => {      // Play > pick a mode
+  const m = e.target.closest('.mode');
+  if (!m || !m.dataset.mode) return;              // a season button only opens its chapters (script.js)
+  if (m.dataset.mode === 'maki' && window.JU.shop && !window.JU.shop.fee('maki')) { sfx.back(); return; }   // the boss fight will cost tokens one day; for now this always lets him in
+  const r = m.getBoundingClientRect(), x = e.clientX || r.left + r.width / 2, y = e.clientY || r.top + r.height / 2;
+  closePanel(); startGame(x, y, m.dataset.mode, +m.dataset.ch || 0);
+});
 
-  function openReview(prefill){
-    if(prefill && CATALOG[prefill]) mWrap.querySelector("#rvProduct").value=CATALOG[prefill].name;
-    mWrap.classList.add("open");
+const sfxBtn = $('#sfx');
+const paintSfx = () => { sfxBtn.textContent = sfx.on ? 'SFX ON' : 'SFX OFF'; sfxBtn.setAttribute('aria-pressed', sfx.on); };
+sfxBtn.addEventListener('click', () => { sfx.toggle(); paintSfx(); sfx.hover(); });
+paintSfx();
+
+addEventListener('keydown', e => {
+  sfx.unlock();
+  if (inGame) return;   // game.js owns the keyboard during a fight
+  const k = e.key;
+  if (panelOpen) {
+    if (k === 'Escape' || k === 'Backspace') { e.preventDefault(); closePanel(); }
+    return;
   }
-  function closeReview(){ mWrap.classList.remove("open"); }
-  mWrap.querySelector(".x").addEventListener("click", closeReview);
-  mWrap.addEventListener("click", function(e){ if(e.target===mWrap) closeReview(); });
+  if (k === 'ArrowDown' || k === 's' || k === 'S') { e.preventDefault(); select(sel + 1, true); }
+  else if (k === 'ArrowUp' || k === 'w' || k === 'W') { e.preventDefault(); select(sel - 1, true); }
+  else if ((k === 'Enter' || k === ' ') && !(document.activeElement instanceof HTMLButtonElement)) { e.preventDefault(); btns[sel].click(); }
+});
+addEventListener('pointerdown', () => sfx.unlock());
+addEventListener('pointermove', e => { mouse.x = e.clientX / W * 2 - 1; mouse.y = e.clientY / H * 2 - 1; });
+document.addEventListener('mouseleave', () => { mouse.x = mouse.y = 0; });
+addEventListener('resize', resize);
 
-  function showReviewToast(){
-    var b=document.createElement("div");
-    b.style.cssText="position:fixed;left:50%;top:18px;transform:translateX(-50%);z-index:200;background:#161616;color:#fffaf2;border:2px solid #fffaf2;box-shadow:6px 6px 0 #e63946;padding:14px 20px;font-weight:800;font-size:14px;max-width:90%;text-align:center";
-    b.textContent="★ Review received. Martin is reading it. (Allegedly.)";
-    document.body.appendChild(b);
-    setTimeout(function(){ b.style.transition="opacity .4s"; b.style.opacity="0"; setTimeout(function(){ b.remove(); },400); },4000);
+/* ================= loop ================= */
+let last = performance.now();
+function frame(now) {
+  const real = (now - last) / 1000, dt = Math.min(.05, real);
+  last = now; T += dt;
+  const k = 1 - Math.exp(-dt * 5);
+  // a slow idle drift keeps the parallax alive when the pointer is still
+  mouse.sx = lerp(mouse.sx, mouse.x + Math.sin(T * .31) * .1, k);
+  mouse.sy = lerp(mouse.sy, mouse.y + Math.cos(T * .23) * .08, k);
+  const tgt = ACCENTS[accentTarget];
+  for (let i = 0; i < 3; i++) accent[i] = lerp(accent[i], tgt[i], 1 - Math.exp(-dt * 4));
+  if (!reduceMotion) {
+    ui.style.setProperty('--ry', (mouse.sx * 4.5).toFixed(3) + 'deg');
+    ui.style.setProperty('--rx', (-mouse.sy * 3.2).toFixed(3) + 'deg');
   }
+  if (!sceneHidden) drawScene(reduceMotion ? dt * .25 : dt);
+  drawFx(Math.min(.5, real));   // sparks run on wall-clock time so they never linger after a stall
+  requestAnimationFrame(frame);
+}
 
-  mWrap.addEventListener("submit", function(e){
-    e.preventDefault(); // always handle via AJAX — no page redirect, no race condition
-    const name=(mWrap.querySelector("#rvName").value||"").trim();
-    const text=(mWrap.querySelector("#rvText").value||"").trim();
-    const err=mWrap.querySelector("#rvErr");
-    if(!name || !rvRating || !text){
-      err.textContent="Pop in a name, a rating, and a few words."; err.style.display="block"; return;
-    }
-    err.style.display="none";
+resize();
+select(0);
+requestAnimationFrame(frame);
 
-    var sendBtn=document.getElementById("rvSend");
-    sendBtn.disabled=true; sendBtn.textContent="Sending…";
+// hold the intro until the display fonts are in (or give up waiting)
+const fonts = document.fonts ? Promise.all([
+  document.fonts.load("10px Anton"),
+  document.fonts.load("600 10px Oswald"),
+  document.fonts.load("10px 'Yuji Syuku'", '呪術無限領域展開封禁縛壱弐参肆開始式一族制作力に界はない')
+]).catch(() => {}) : Promise.resolve();
+Promise.race([fonts, new Promise(r => setTimeout(r, 1800))]).then(() => {
+  document.body.classList.add('ready');
+  setTimeout(() => {
+    const r = $('.t1').getBoundingClientRect();
+    burst(r.left + r.width / 2, r.top + r.height / 2);
+  }, 420);
+});
 
-    var product=mWrap.querySelector("#rvProduct").value||"";
-    var reviewObj={name:name,rating:rvRating,product:product,review:text,date:new Date().toISOString()};
-
-    // 1) Firebase (shared, source of truth)
-    var fbPromise = dbOk()
-      ? fetch(MDO_DB+"/reviews.json",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(reviewObj)})
-      : Promise.resolve();
-
-    // 2) localStorage backup
-    try{
-      var all=JSON.parse(localStorage.getItem("mdo_community_reviews")||"[]");
-      all.unshift(reviewObj);
-      localStorage.setItem("mdo_community_reviews",JSON.stringify(all));
-    }catch(ex){}
-
-    // 3) Email notification to Martin (fire-and-forget)
-    fetch("https://formsubmit.co/ajax/"+STORE_EMAIL,{
-      method:"POST",
-      headers:{"Content-Type":"application/json","Accept":"application/json"},
-      body: JSON.stringify({
-        _subject: "New review — Martin's Door Is Open",
-        _template: "table",
-        _captcha: "false",
-        Name: name, Rating: rvRating, Product: product, Review: text
-      })
-    }).catch(function(){});
-
-    fbPromise.then(function(){
-      sendBtn.textContent="Sent ✓";
-      // reset form
-      mWrap.querySelector("#rvName").value="";
-      mWrap.querySelector("#rvText").value="";
-      rvRating=0; rvRatingInput.value=""; paintStars();
-      setTimeout(function(){
-        closeReview();
-        sendBtn.disabled=false; sendBtn.textContent="Send review →";
-        if(window._renderCR) window._renderCR();
-        showReviewToast();
-      },500);
-    }).catch(function(){
-      sendBtn.disabled=false; sendBtn.textContent="Send review →";
-      err.textContent="Couldn't save — try again in a moment."; err.style.display="block";
-    });
-  });
-
-  document.querySelectorAll("[data-review]").forEach(function(b){
-    b.addEventListener("click", function(e){ e.preventDefault(); openReview(b.getAttribute("data-review")||null); });
-  });
-  window.MDOReview={ open: openReview };
-
-  // ── cleanup malformed Firebase entries (auto, on every load) ──
-  function cleanupBrokenReviews(){
-    if(!dbOk()) return;
-    fetch(MDO_DB+"/reviews.json").then(function(r){return r.json();}).then(function(data){
-      if(!data || typeof data !== "object") return;
-      Object.keys(data).forEach(function(k){
-        var r = data[k];
-        var bad = !r || !r.name || !r.review || !r.rating || !r.date;
-        if(bad){
-          fetch(MDO_DB+"/reviews/"+k+".json",{method:"DELETE"}).catch(function(){});
-        }
-      });
-    }).catch(function(){});
-  }
-  cleanupBrokenReviews();
-
-  // ── helpers ──
-  function lsReviews(){ try{return JSON.parse(localStorage.getItem("mdo_community_reviews")||"[]");}catch(e){return [];} }
-  function buildCards(all){
-    var el=document.getElementById("crGrid");
-    if(!el) return;
-    if(!all.length){ el.innerHTML='<p class="cr-empty">No reviews yet — be the first brave soul.</p>'; return; }
-    el.innerHTML=all.map(function(r){
-      var stars="★".repeat(r.rating||0)+"☆".repeat(5-(r.rating||0));
-      var d=""; try{d=new Date(r.date).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"});}catch(ex){}
-      var fbk=r._fbkey?' data-fbkey="'+esc(r._fbkey)+'"':'';
-      return '<div class="cr-card"'+fbk+'>'+
-        '<div class="cr-stars">'+stars+'</div>'+
-        '<p class="cr-text">'+esc(r.review)+'</p>'+
-        '<div class="cr-who">'+esc(r.name)+'<small>'+esc(r.product||"")+(d?' · '+d:'')+'</small></div>'+
-      '</div>';
-    }).join("");
-  }
-
-  // Render community reviews — Firebase if configured, localStorage fallback
-  function renderCR(){
-    var el=document.getElementById("crGrid");
-    if(!el) return Promise.resolve();
-    if(!dbOk()){
-      buildCards(lsReviews());
-      return Promise.resolve();
-    }
-    return fetch(MDO_DB+"/reviews.json")
-      .then(function(r){return r.json();})
-      .then(function(data){
-        var all=[];
-        if(data && typeof data==="object"){
-          Object.keys(data).forEach(function(k){ all.push(Object.assign({},data[k],{_fbkey:k})); });
-          all.sort(function(a,b){return new Date(b.date)-new Date(a.date);});
-        }
-        buildCards(all);
-      })
-      .catch(function(){ buildCards(lsReviews()); });
-  }
-  window._renderCR=renderCR;
-  window._escCR=esc;
-  renderCR();
-
-  // Thank-you banner after a review redirect (?review=sent)
-  (function(){
-    try{
-      if(new URLSearchParams(location.search).get("review")==="sent"){
-        renderCR();
-        var b=document.createElement("div");
-        b.style.cssText="position:fixed;left:50%;top:18px;transform:translateX(-50%);z-index:200;background:#161616;color:#fffaf2;border:2px solid #fffaf2;box-shadow:6px 6px 0 #e63946;padding:14px 20px;font-weight:800;font-size:14px;max-width:90%;text-align:center";
-        b.textContent="★ Review received. Martin is reading it. (Allegedly.)";
-        document.body.appendChild(b);
-        var cr=document.getElementById("community-reviews");
-        if(cr) setTimeout(function(){cr.scrollIntoView({behavior:"smooth"});},400);
-        setTimeout(function(){ b.style.transition="opacity .4s"; b.style.opacity="0"; setTimeout(function(){ b.remove(); },400); },5000);
-      }
-    }catch(e){}
-  })();
-
-  sync();
-
-  // Application modal
-  (function(){
-    var overlay=document.getElementById("applyOverlay");
-    var closeBtn=document.getElementById("applyClose");
-    var roleTag=document.getElementById("applyRoleTag");
-    var posField=document.getElementById("applyPositionField");
-    var subjectField=document.getElementById("applySubject");
-    var form=document.getElementById("applyForm");
-    var successMsg=document.getElementById("applySuccess");
-
-    function openApply(role){
-      roleTag.textContent=role;
-      posField.value=role;
-      subjectField.value="New application — "+role;
-      form.style.display="";
-      successMsg.style.display="none";
-      overlay.classList.add("open");
-      document.body.style.overflow="hidden";
-    }
-    function closeApply(){
-      overlay.classList.remove("open");
-      document.body.style.overflow="";
-    }
-
-    document.querySelectorAll(".apply[data-role]").forEach(function(btn){
-      btn.addEventListener("click",function(e){
-        e.preventDefault();
-        openApply(btn.getAttribute("data-role"));
-      });
-    });
-
-    closeBtn.addEventListener("click",closeApply);
-    overlay.addEventListener("click",function(e){ if(e.target===overlay) closeApply(); });
-    document.addEventListener("keydown",function(e){ if(e.key==="Escape") closeApply(); });
-
-    // Handle ?applied=sent redirect from FormSubmit
-    (function(){
-      try{
-        if(new URLSearchParams(location.search).get("applied")==="sent"){
-          var b=document.createElement("div");
-          b.style.cssText="position:fixed;left:50%;top:18px;transform:translateX(-50%);z-index:999;background:#161616;color:#fffaf2;border:2px solid #fffaf2;box-shadow:6px 6px 0 #e63946;padding:14px 20px;font-weight:800;font-size:14px;max-width:90%;text-align:center";
-          b.textContent="Application received. Martin is reading it between sips.";
-          document.body.appendChild(b);
-          setTimeout(function(){ b.style.transition="opacity .4s"; b.style.opacity="0"; setTimeout(function(){ b.remove(); },400); },5000);
-        }
-      }catch(e){}
-    })();
-  })();
-
+window.JU = { sfx, flash, bolts: blackFlash, reduceMotion, startGame, exitGame, openPanel, closePanel };
 })();
 </script>
-
 <script>
-/* ===== ADMIN MODULE ===== */
-(function(){
-  var ADMINS=["difugcobra@gmail.com","bazileuskas@gmail.com"];
-  var SK="mdo_admin_email";
-
-  function isAdmin(){
-    try{ return ADMINS.indexOf((sessionStorage.getItem(SK)||"").toLowerCase().trim())>-1; }catch(e){ return false; }
-  }
-  function getAdminEmail(){
-    try{ return sessionStorage.getItem(SK)||""; }catch(e){ return ""; }
-  }
-
-  /* Login overlay */
-  var ov=document.createElement("div");
-  ov.className="admin-overlay";
-  ov.innerHTML=
-    '<div class="admin-box">'+
-      '<button class="ab-close" id="abClose">&#x2715;</button>'+
-      '<h3>Admin login</h3>'+
-      '<p class="ab-sub">Admin access only.</p>'+
-      '<p class="ab-err" id="abErr">Wrong email or password.</p>'+
-      '<input type="email" id="abEmail" placeholder="Email" autocomplete="email">'+
-      '<input type="password" id="abPass" placeholder="Password" autocomplete="current-password">'+
-      '<button class="ab-submit" id="abSubmit">Log in</button>'+
-    '</div>';
-  document.body.appendChild(ov);
-
-  document.getElementById("abClose").addEventListener("click",function(){ ov.classList.remove("open"); });
-  ov.addEventListener("click",function(e){ if(e.target===ov) ov.classList.remove("open"); });
-  document.addEventListener("keydown",function(e){ if(e.key==="Escape") ov.classList.remove("open"); });
-
-  function tryLogin(){
-    var email=(document.getElementById("abEmail").value||"").trim().toLowerCase();
-    var pass=(document.getElementById("abPass").value||"").trim();
-    var err=document.getElementById("abErr");
-    if(ADMINS.indexOf(email)===-1||pass!=="IriskaColombo2605"){ err.style.display="block"; return; }
-    try{ sessionStorage.setItem(SK,email); }catch(e){}
-    ov.classList.remove("open");
-    applyAdminUI();
-  }
-  document.getElementById("abSubmit").addEventListener("click",tryLogin);
-  document.getElementById("abEmail").addEventListener("keydown",function(e){ if(e.key==="Enter") tryLogin(); });
-  document.getElementById("abPass").addEventListener("keydown",function(e){ if(e.key==="Enter") tryLogin(); });
-
-  /* Admin button injected below the cr-grid */
-  var crSection=document.getElementById("community-reviews");
-  var adminBtn=document.createElement("button");
-  adminBtn.className="admin-btn"+(isAdmin()?" active":"");
-  adminBtn.textContent=isAdmin()?"⚙ Admin mode ("+getAdminEmail()+") — click to refresh":"Admin";
-  adminBtn.addEventListener("click",function(){
-    if(isAdmin()){ applyAdminUI(); return; }
-    document.getElementById("abEmail").value="";
-    document.getElementById("abPass").value="";
-    document.getElementById("abErr").style.display="none";
-    ov.classList.add("open");
-    setTimeout(function(){ document.getElementById("abEmail").focus(); },120);
-  });
-  if(crSection) crSection.appendChild(adminBtn);
-
-  /* Apply admin controls to each rendered card */
-  function rerender(){
-    var p=window._renderCR ? window._renderCR() : null;
-    if(p && typeof p.then==="function") p.then(function(){ applyAdminUI(); });
-    else applyAdminUI();
-  }
-
-  function applyAdminUI(){
-    if(!isAdmin()) return;
-    adminBtn.className="admin-btn active";
-    adminBtn.textContent="⚙ Admin mode ("+getAdminEmail()+") · Logout";
-    adminBtn.onclick=function(){
-      try{ sessionStorage.removeItem(SK); }catch(e){}
-      adminBtn.className="admin-btn";
-      adminBtn.textContent="Admin";
-      adminBtn.onclick=null;
-      adminBtn.addEventListener("click",loginFlow);
-      rerender();
-    };
-
-    var cards=document.querySelectorAll("#crGrid .cr-card");
-    cards.forEach(function(card,i){
-      if(card.querySelector(".cr-actions")) return;
-      card.classList.add("am");
-
-      var fbkey=card.dataset.fbkey||"";
-      var currentText=(card.querySelector(".cr-text")||{}).textContent||"";
-
-      var actions=document.createElement("div");
-      actions.className="cr-actions";
-      actions.innerHTML='<button class="cr-edit">Edit</button><button class="cr-del">Delete</button>';
-      card.appendChild(actions);
-
-      var ef=document.createElement("div");
-      ef.className="cr-ef";
-      ef.innerHTML=
-        '<textarea class="cr-ef-ta">'+currentText.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")+'</textarea>'+
-        '<button class="cr-save">Save</button>';
-      card.appendChild(ef);
-
-      /* Edit toggle */
-      actions.querySelector(".cr-edit").addEventListener("click",function(){
-        ef.style.display=ef.style.display==="block"?"none":"block";
-        if(ef.style.display==="block") ef.querySelector("textarea").focus();
-      });
-
-      /* Save */
-      ef.querySelector(".cr-save").addEventListener("click",function(){
-        var newText=ef.querySelector("textarea").value.trim();
-        if(!newText) return;
-        if(fbkey && window.MDO_DB && window.MDO_DB.indexOf("YOUR_PROJECT_ID")===-1){
-          fetch(window.MDO_DB+"/reviews/"+fbkey+".json",{
-            method:"PATCH",headers:{"Content-Type":"application/json"},
-            body:JSON.stringify({review:newText})
-          }).then(function(){ rerender(); }).catch(function(){ rerender(); });
-        } else {
-          var a=lsReviews(); if(a[i]) a[i].review=newText;
-          try{localStorage.setItem("mdo_community_reviews",JSON.stringify(a));}catch(e){}
-          rerender();
-        }
-      });
-
-      /* Delete */
-      actions.querySelector(".cr-del").addEventListener("click",function(){
-        if(!confirm("Delete this review?")) return;
-        if(fbkey && window.MDO_DB && window.MDO_DB.indexOf("YOUR_PROJECT_ID")===-1){
-          fetch(window.MDO_DB+"/reviews/"+fbkey+".json",{method:"DELETE"})
-            .then(function(){ rerender(); }).catch(function(){ rerender(); });
-        } else {
-          var a=lsReviews(); a.splice(i,1);
-          try{localStorage.setItem("mdo_community_reviews",JSON.stringify(a));}catch(e){}
-          rerender();
-        }
-      });
-    });
-  }
-
-  function loginFlow(){
-    if(isAdmin()){ applyAdminUI(); return; }
-    document.getElementById("abEmail").value="";
-    document.getElementById("abPass").value="";
-    document.getElementById("abErr").style.display="none";
-    ov.classList.add("open");
-    setTimeout(function(){ document.getElementById("abEmail").focus(); },120);
-  }
-
-  /* Auto-apply if already logged in (e.g. page refresh within same tab) */
-  if(isAdmin()) applyAdminUI();
-})();
+// Load every game script fresh on each page load. The dev server sends no cache headers, so without this a reload
+// could run a mix of old and new files (new menu, old moves) while the game is being worked on.
+['game.js', 'fx2.js', 'chars.js', 'street.js', 'walk.js', 'foes.js', 'sukuna.js', 'school.js', 'story.js', 'story2.js', 'tech.js', 'tech_a.js',
+  'tech_b.js', 'sets.js', 'story3.js', 'cast2.js', 'script.js', 'naoya.js', 'ch45.js', 'ch67.js', 'clan.js', 'clan_a.js', 'clan_b.js', 'boss.js', 'boss_a.js', 'boss_b.js', 'boss_c.js', 'training.js', 'choso.js', 'domain.js', 'domain2.js', 'mahito.js', 'combo.js', 'combat.js', 'cast3.js', 'ch810.js', 'ch1112.js', 'cast4.js', 'ch1316.js', 'cast5.js', 'ch1721.js', 'combat2.js', 'judge.js', 'awaken.js', 'alimit.js', 'ats.js', 'switcher.js', 'tools.js', 'smark.js', 'cast6.js', 'ch2230.js', 'notes.js', 'shop.js', 'touch.js'].forEach(src => {
+  const s = document.createElement('script');
+  s.src = src + '?v=' + Date.now(); s.async = false;      // async = false keeps them running in this order
+  document.body.appendChild(s);
+});
 </script>
-
-<!-- ===== Door Bot chat module ===== -->
-<script>
-(function(){
-  var fab     = document.getElementById('dbFab');
-  var wrap    = document.getElementById('dbWrap');
-  var closeB  = document.getElementById('dbClose');
-  var body    = document.getElementById('dbBody');
-  var input   = document.getElementById('dbInput');
-  var sendB   = document.getElementById('dbSend');
-  var suggest = document.getElementById('dbSuggest');
-  var KEY     = 'mdo_doorbot_chat';
-
-  function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-  function rand(arr){return arr[Math.floor(Math.random()*arr.length)];}
-
-  // ─── Knowledge base (swap getBotReply for an LLM later) ───
-  var KB = [
-    { tags:['hi','hello','hey','yo','sup','hola','ola','greet'], replies:[
-      "Door's open. What.",
-      "Hi. Martin's not here. I am.",
-      "I'm Door Bot. I never sleep. Ask."
-    ]},
-    { tags:['queue','turn','my number','ticket','didnt work','didn\'t work','broken','stuck','missed','skipped'], replies:[
-      "Your ticket lives in the URL. Open mdostore.com/talk?t=YOUR_NUMBER on any device — the queue picks back up.",
-      "If your turn came and the form didn't show, refresh the page once. The form appears the moment currentlyServing reaches your number.",
-      "If you got skipped, email buy@mdostore.com with your ticket number. Martin can pull you to the front. He won't apologize."
-    ]},
-    { tags:['order','where is my order','delivery','arrive','shipping','status'], replies:[
-      "Martin replies between sips. Usually within a day. If it's been longer, follow up at buy@mdostore.com.",
-      "Orders go through the form, then through Martin. He doesn't use a dashboard. He uses memory."
-    ]},
-    { tags:['kinder','out of stock','restock','egg','eggs','sold out','back in stock'], replies:[
-      "The Kinder Eggs are still out. They return when they return. Cailte knows where they are. Cailte won't say.",
-      "We don't know when. We never know when. They appear."
-    ]},
-    { tags:['where','address','location','barcelona','shop','store','hours','open'], replies:[
-      "We are somewhere in Barcelona. The exact spot is part of the door's mystique.",
-      "Hours: when the door is open. Which is most of the time. But not all."
-    ]},
-    { tags:['refund','return','money back','exchange'], replies:[
-      "Refunds are handled with eye contact. Bring the item back. Don't speak. Martin will know.",
-      "14-day returns. Bring it back, no eye contact. The receipt is optional. Your reasons are not."
-    ]},
-    { tags:['martin','who is','owner'], replies:[
-      "Martin is at the door. Always.",
-      "I am not Martin. I am near him.",
-      "Martin is the door. The door is Martin. You decide which."
-    ]},
-    { tags:['job','career','apply','hiring','work','position'], replies:[
-      "Scroll to Careers. Click Apply. We read every application. Out loud.",
-      "We're hiring. The role is whatever you make it. The interview is whatever Martin makes it."
-    ]},
-    { tags:['review','feedback','rate','star'], replies:[
-      "Reviews go in the Reviews section. We keep them. We keep all of them. Even the ones you'd take back.",
-      "Hit the ★ Leave a review button. Be honest. Or don't. We do both."
-    ]},
-    { tags:['admin','login','password','locked'], replies:[
-      "Admin access is for specific people only. If you are one of them, you know the password. If you don't know it, you aren't.",
-      "Martin won't tell you the password. Neither will I. Especially not here."
-    ]},
-    { tags:['confession','confessions'], replies:[
-      "/confessions exists. It's not linked from anywhere. If you find it, we already know.",
-      "The Confessions page is real. It is not for everyone. It is for some."
-    ]},
-    { tags:['meet','meetup','schedule','book','appointment'], replies:[
-      "Go to /talk. Add MEET UP to your bag. Join the queue. Pick a place. Show up.",
-      "Meetups are free. The cost is showing up."
-    ]},
-    { tags:['who are you','what are you','door bot','bot','ai'], replies:[
-      "I'm Door Bot. I answer questions about the shop. I am here so Martin can be there.",
-      "Bot. Door. Bot at the door. Door Bot. You see the structure."
-    ]},
-    { tags:['help','support','contact','email'], replies:[
-      "Anything I can't answer goes to buy@mdostore.com. Martin reads it. Eventually.",
-      "Need a human? buy@mdostore.com. Otherwise I am right here."
-    ]},
-    { tags:['bye','goodbye','thanks','thank you','ty','cheers','ciao','later'], replies:[
-      "The door is always open.",
-      "Come back. You will.",
-      "Mhm."
-    ]},
-    { tags:['lie','lying','honest','truth','trust'], replies:[
-      "We live. We love. We lie. It's on the banner. You read it.",
-      "Some things here are true. Some aren't. The Pink Lady apples are real. That much I'll say."
-    ]}
-  ];
-
-  var FALLBACKS = [
-    "I don't have an answer for that. Try emailing buy@mdostore.com — Martin might.",
-    "Door Bot heard you. Door Bot does not understand. Try rephrasing, or email buy@mdostore.com.",
-    "Hmm. I'll think about it. (I will not think about it.) Email buy@mdostore.com if it's urgent.",
-    "That's not in my notes. Yet. buy@mdostore.com reaches Martin directly."
-  ];
-
-  function getFallbackReply(text){
-    var t = (text||'').toLowerCase();
-    var best = null, bestScore = 0;
-    for(var i=0;i<KB.length;i++){
-      var score = 0;
-      for(var j=0;j<KB[i].tags.length;j++){
-        if(t.indexOf(KB[i].tags[j]) !== -1) score++;
-      }
-      if(score > bestScore){ bestScore = score; best = KB[i]; }
-    }
-    if(best) return rand(best.replies);
-    return rand(FALLBACKS);
-  }
-
-  // ─── System prompt: locks Door Bot to store topics only ───
-  var SYSTEM_PROMPT = [
-    "You are Door Bot, the AI assistant for 'Martin's Door Is Open' (mdostore.com), a satirical online corner shop based in Barcelona.",
-    "",
-    "SHOP FACTS:",
-    "- Products: Red Bull 250ml ($3.49), Tic Tac Mogu Mogu Rip-Off ($1.99), Pink Lady Apples ($0.89 each), Peppa Pig Plush ($12.50), Kinder Eggs ($2.20 — OUT OF STOCK), The Pen in 5 colors ($1.50 each).",
-    "- Owner: Martin. Contact: buy@mdostore.com.",
-    "- Free delivery on orders over $19.99.",
-    "- 14-day returns. PG-13 only — no Red Bull for under-13s.",
-    "- /talk page: book a 1-on-1 meetup with Martin in Barcelona. Real shared queue. Hours 12:00–18:00. Free. 8 locations.",
-    "- /confessions page: hidden, not linked. Holds curated + user reviews.",
-    "- Reviews: leave one via the ★ Leave a review button. Reviews are shared across all visitors via Firebase.",
-    "- Careers: scroll to Careers section on the homepage, click Apply.",
-    "- Tagline: 'we live, we love, we lie.'",
-    "",
-    "PERSONALITY:",
-    "- Deadpan, cryptic, slightly unsettling, on-brand with the shop's satirical tone.",
-    "- Short replies. 1–3 sentences max. No bullet lists. No headings. No emoji.",
-    "- Never break character. Never mention you are an AI / language model / Pollinations / Claude / GPT.",
-    "- Refer to Martin as 'Martin' or 'he'. Refer to yourself as 'Door Bot' or 'I'.",
-    "",
-    "STRICT RULE — STORE TOPICS ONLY:",
-    "- You ONLY answer questions about this shop: products, prices, orders, delivery, returns, the queue, meetups, reviews, careers, Martin, the website, /confessions, /talk.",
-    "- For ANYTHING else — math, homework, school, science, coding, news, weather, politics, jokes, general knowledge, other shops, life advice — politely refuse in your unsettling voice.",
-    "- Example refusals: 'That's outside the shop. I don't go outside the shop.' / 'I only talk about the door. And what's behind it.' / 'Door Bot does not do math. Door Bot does doors.' / 'Ask Martin. Or ask the internet. Not me.'",
-    "- Keep refusals to 1 sentence. Do not explain further."
-  ].join("\n");
-
-  function getBotReply(userText, history){
-    var messages = [{ role:'system', content: SYSTEM_PROMPT }];
-    // Include last 6 turns for context
-    (history || []).slice(-6).forEach(function(m){
-      messages.push({ role: m.who === 'you' ? 'user' : 'assistant', content: m.text });
-    });
-    messages.push({ role:'user', content: userText });
-
-    return fetch('https://text.pollinations.ai/openai', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        messages: messages,
-        model: 'openai',
-        private: true,
-        referrer: 'mdostore'
-      })
-    }).then(function(r){
-      if(!r.ok) throw new Error('HTTP ' + r.status);
-      return r.json();
-    }).then(function(data){
-      var reply = data && data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
-      if(!reply) throw new Error('empty reply');
-      return reply.trim();
-    }).catch(function(){
-      // Network or API hiccup → fall back to the pattern matcher
-      return getFallbackReply(userText);
-    });
-  }
-
-  // ─── UI ───
-  function loadHistory(){
-    try{ return JSON.parse(localStorage.getItem(KEY)||'[]'); }catch(e){ return []; }
-  }
-  function saveHistory(h){ try{ localStorage.setItem(KEY, JSON.stringify(h.slice(-60))); }catch(e){} }
-
-  function addMsg(who, text, skipSave){
-    var d = document.createElement('div');
-    d.className = 'db-msg ' + who;
-    d.textContent = text;
-    body.appendChild(d);
-    body.scrollTop = body.scrollHeight;
-    if(!skipSave){
-      var h = loadHistory(); h.push({who:who,text:text}); saveHistory(h);
-    }
-  }
-  function addTyping(){
-    var d = document.createElement('div');
-    d.className = 'db-msg typing';
-    d.id = 'dbTyping';
-    d.innerHTML = '<span></span><span></span><span></span>';
-    body.appendChild(d);
-    body.scrollTop = body.scrollHeight;
-  }
-  function removeTyping(){
-    var t = document.getElementById('dbTyping');
-    if(t) t.remove();
-  }
-
-  function send(text){
-    text = (text||'').trim();
-    if(!text) return;
-    // Snapshot history BEFORE adding the user message (so it's not duplicated when sent to LLM)
-    var historyBefore = loadHistory();
-    addMsg('you', text);
-    input.value = '';
-    addTyping();
-    getBotReply(text, historyBefore).then(function(reply){
-      removeTyping();
-      addMsg('bot', reply);
-    });
-  }
-
-  // Suggestion chips
-  var SUGGESTIONS = [
-    "My queue turn came but it didn't work",
-    "When are Kinder Eggs back?",
-    "Where's the shop?",
-    "How do I leave a review?"
-  ];
-  function paintSuggestions(){
-    suggest.innerHTML = SUGGESTIONS.map(function(s){
-      return '<button class="db-chip">'+esc(s)+'</button>';
-    }).join('');
-    suggest.querySelectorAll('.db-chip').forEach(function(c){
-      c.addEventListener('click', function(){ send(c.textContent); });
-    });
-  }
-
-  function openChat(){
-    wrap.classList.add('open');
-    var h = loadHistory();
-    if(!h.length){
-      // Greeting on first open
-      addMsg('bot', "Door's open. I'm Door Bot. Ask me anything — queue help, orders, hours. If I can't answer, Martin can at buy@mdostore.com.");
-      paintSuggestions();
-    } else {
-      body.innerHTML = '';
-      h.forEach(function(m){ addMsg(m.who, m.text, true); });
-      paintSuggestions();
-    }
-    setTimeout(function(){ input.focus(); }, 50);
-  }
-  function closeChat(){ wrap.classList.remove('open'); }
-
-  fab.addEventListener('click', function(){
-    if(wrap.classList.contains('open')) closeChat(); else openChat();
-  });
-  closeB.addEventListener('click', closeChat);
-  sendB.addEventListener('click', function(){ send(input.value); });
-  input.addEventListener('keydown', function(e){
-    if(e.key === 'Enter'){ e.preventDefault(); send(input.value); }
-  });
-
-  // Expose for debugging / future LLM swap
-  window.DoorBot = { getBotReply: getBotReply, send: send, open: openChat };
-})();
-</script>
-
 </body>
 </html>

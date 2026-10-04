@@ -1,0 +1,270 @@
+/* JUJUTSU UNLIMITEDS — Awakened cursed techniques. The Cursed Technique screen has a second menu behind the AWAKEN CT button, with four of them.
+   Awakened Projection is built: Naoya as the cursed spirit he came back as. The other three are announced and not built yet.
+   It is meant to be earned (three Projection Frame v2, which the Maki boss drops 5% of the time); NEED is the switch for that, and it is off: free for now */
+(() => {
+'use strict';
+
+const E = JU.eng, g = E.g, P = E.P, F = E.F, cam = E.cam, H = E.hooks, POSE = E.POSE, LINE = E.LINE, TOR = E.TOR, V = JU.vfx, sfx = JU.sfx, Fi = JU.fights, keys = E.keys;
+const { rnd, lerp, clamp, ZP } = E, TAU = Math.PI * 2, { shout } = JU.tech.tk, GOLD = '#ffd23d', PINK = '#d24fb4';
+const shake = v => { cam.shake = Math.max(cam.shake, v); };
+const NEED = false, FRAMES = 3, DROP = .05;         // are the frames required yet; how many; the Maki boss's chance of dropping one
+const S = { frames: 0 };
+try { Object.assign(S, JSON.parse(localStorage.getItem('ju.awk') || '{}')); } catch (e) {}
+const save = () => { try { localStorage.setItem('ju.awk', JSON.stringify(S)); } catch (e) {} };
+
+/* ---------- how he looks now: a shell the colour of raw meat split over something darker, and a skull looking out from under the hood of it ---------- */
+const shade = (hex, f) => { const n = parseInt(hex.slice(1), 16); return `rgb(${Math.min(255, (n >> 16) * f) | 0},${Math.min(255, (n >> 8 & 255) * f) | 0},${Math.min(255, (n & 255) * f) | 0})`; };
+function poly(fill, pts) {
+  g.beginPath(); g.moveTo(pts[0], pts[1]);
+  for (let i = 2; i < pts.length; i += 2) g.lineTo(pts[i], pts[i + 1]);
+  g.closePath(); g.fillStyle = fill; g.fill(); g.lineWidth = 2.5; g.strokeStyle = LINE; g.stroke();
+}
+const seg = (...p) => { g.beginPath(); for (let i = 0; i < p.length; i += 4) { g.moveTo(p[i], p[i + 1]); g.lineTo(p[i + 2], p[i + 3]); } g.stroke(); };
+const MAG = ['#b0348f', '#d24fb4'], TIP = ['#7a2468', '#93307c'], DEEP = '#23092e';
+const SPIRIT = {
+  torso: MAG,
+  armF: [MAG[0], MAG[1], TIP[0], TIP[1], .24], armB: [shade(MAG[0], .62), shade(MAG[1], .62), shade(TIP[0], .7), shade(TIP[1], .7), .24],
+  legF: [MAG[0], MAG[1], TIP[0], TIP[1], .2], legB: [shade(MAG[0], .62), shade(MAG[1], .62), shade(TIP[0], .7), shade(TIP[1], .7), .2],
+  chest() {                                         // the split down the front, and the seams between the plates
+    g.fillStyle = DEEP; g.beginPath(); g.moveTo(3, -TOR); g.lineTo(19, -TOR); g.lineTo(15, 5); g.lineTo(7, 5); g.closePath(); g.fill();
+    g.strokeStyle = 'rgba(35,9,46,.6)'; g.lineWidth = 2; seg(-30, -54, 3, -46, 19, -46, 30, -54, -30, -26, 5, -20, 17, -20, 30, -26, -14, -TOR, -18, 5);
+  },
+  back() { poly(MAG[1], [-22, -TOR - 6, -42, -TOR + 2, -46, -TOR + 28, -30, -TOR + 38, -24, -TOR + 12]); },      // the swell of the shoulder plate
+  head() {
+    poly(MAG[1], [-9, -56, -9, -80, 13, -80, 13, -56]);                                                           // the crest, and the two studs on it
+    g.fillStyle = MAG[0]; g.fillRect(-6, -87, 5, 8); g.fillRect(5, -87, 5, 8); g.strokeRect(-6, -87, 5, 8); g.strokeRect(5, -87, 5, 8);
+    poly(MAG[0], [-28, 26, -34, -14, -24, -42, 2, -60, 24, -44, 33, -16, 30, 26, 22, 30, -20, 30]);                // the hood
+    g.fillStyle = DEEP; g.beginPath(); g.moveTo(-14, 26); g.lineTo(-18, -12); g.lineTo(-8, -34); g.lineTo(6, -42); g.lineTo(20, -34); g.lineTo(27, -12); g.lineTo(25, 26); g.closePath(); g.fill();
+    const gr = g.createLinearGradient(-12, 0, 24, 0);                                                              // and the skull inside it
+    gr.addColorStop(.2, '#8a2a72'); gr.addColorStop(.8, '#c247a4');
+    g.beginPath(); g.moveTo(-8, -26); g.quadraticCurveTo(8, -36, 22, -24); g.lineTo(24, 0); g.lineTo(19, 10); g.lineTo(18, 24); g.lineTo(0, 24); g.lineTo(-2, 10); g.lineTo(-9, 0); g.closePath();
+    g.fillStyle = gr; g.fill(); g.lineWidth = 2.5; g.strokeStyle = LINE; g.stroke();
+    g.fillStyle = '#0c0312'; g.beginPath(); g.ellipse(2, -8, 6.5, 7.5, 0, 0, TAU); g.fill(); g.beginPath(); g.ellipse(16, -8, 5.5, 7.5, 0, 0, TAU); g.fill();
+    g.fillStyle = '#fff'; g.beginPath(); g.arc(3, -8, 2.1, 0, TAU); g.fill(); g.beginPath(); g.arc(17, -8, 1.9, 0, TAU); g.fill();
+    g.fillStyle = '#0c0312'; g.beginPath(); g.moveTo(9, 0); g.lineTo(12, 7); g.lineTo(6, 7); g.closePath(); g.fill();
+    g.strokeStyle = '#0c0312'; g.lineWidth = 1.6; seg(1, 14, 17, 14, 4, 11, 4, 22, 8, 11, 8, 23, 12, 11, 12, 23, 16, 11, 16, 22);
+  }
+};
+
+/* ---------- frozen in a frame: a fight has one opponent, so one timer ---------- */
+let iceT = 0, immune = 0, top = 0, lap = null, cycle = null;   // seconds the opponent stays frozen; before it can be frozen again; of top speed left; the run; Frame Breaker's count
+function freeze(o, face, t) {
+  if (o.ko) return;
+  E.applyHit(o, face, { dmg: 3, kb: 0, stun: t, stop: .04, col: GOLD });
+  Object.assign(o, { state: 'hurt', stun: t, act: null, vx: 0, tele: 0 });          // even the ones too heavy to stagger hold still for this
+  iceT = t; immune = t + 1.6; sfx.charge();
+}
+function frame(c, k, a, n) {                        // one frame of film, stood round whatever it has caught
+  g.fillStyle = `rgba(255,236,170,${.16 * a})`; g.strokeStyle = `rgba(255,236,170,${.9 * a})`; g.lineWidth = 4;
+  g.beginPath(); g.rect(c[0] - 74 * k, c[1] - 286 * k, 148 * k, 296 * k); g.fill(); g.stroke();
+  g.fillStyle = `rgba(255,236,170,${.7 * a})`;                                         // sprocket holes down both edges
+  for (let i = 0; i < 6; i++) { g.fillRect(c[0] - 70 * k, c[1] - (270 - i * 50) * k, 9 * k, 14 * k); g.fillRect(c[0] + 61 * k, c[1] - (270 - i * 50) * k, 9 * k, 14 * k); }
+  if (!n) return;
+  g.strokeStyle = `rgba(255,255,255,${a})`; g.lineWidth = 2.5; g.beginPath();           // and the cracks, one more set each time it breaks
+  for (let i = 0; i < n * 3; i++) { const x = c[0] + (((i * 53) % 120) - 60) * k, y = c[1] - (30 + (i * 71) % 230) * k; g.moveTo(x, y); g.lineTo(x + (((i * 37) % 60) - 30) * k, y - (((i * 29) % 70) - 20) * k); }
+  g.stroke();
+}
+
+/* ---------- Top Speed: twenty-four laps round whoever he is fighting, each one quicker than the last ---------- */
+const LAPS = 24, lapTime = k => Math.max(.05, .3 * Math.pow(.86, k));
+const TOTAL = Array.from({ length: LAPS }, (_, k) => lapTime(k)).reduce((a, b) => a + b, 0), FAST = 9;
+function lapAt(t) { let k = 0; while (k < LAPS && t >= lapTime(k)) { t -= lapTime(k); k++; } return k >= LAPS ? [LAPS - 1, 1] : [k, t / lapTime(k)]; }
+// where on the oval that puts him: across the front going right, round the back going left
+function spot(r, cx, rx, z0, rz) {
+  const at = lapAt(r.t), th = Math.PI + (at[0] + at[1]) * TAU;
+  return { x: cx + Math.cos(th) * rx, z: z0 + Math.sin(th) * rz, face: Math.sin(th) < 0 ? 1 : -1, back: Math.sin(th) > 0, n: at[0] + 1 };
+}
+function runner(skin, s, y, a) { E.drawFighter({ skin, x: s.x, y, z: s.z, face: s.face, spin: 1, scale: 1, pose: POSE.dash }, a); }
+function count(c, n) {
+  g.save(); g.textAlign = 'center'; g.textBaseline = 'middle'; g.lineJoin = 'round';
+  g.font = `${Math.round(110 * c[2])}px Anton, Impact, sans-serif`; g.lineWidth = 10 * c[2]; g.strokeStyle = '#07060c'; g.strokeText(n, c[0], c[1]); g.fillStyle = GOLD; g.fillText(n, c[0], c[1]);
+  g.font = `${Math.round(34 * c[2])}px Anton, Impact, sans-serif`; g.lineWidth = 6 * c[2]; g.strokeText('/ 24', c[0] + 96 * c[2], c[1] + 26 * c[2]); g.fillStyle = '#fff'; g.fillText('/ 24', c[0] + 96 * c[2], c[1] + 26 * c[2]);
+  g.restore();
+}
+function drawLap(behind) {                          // the fight's own run: the half of each lap behind the opponent is drawn before it, the rest after
+  const r = lap, s = spot(r, r.cx, 860, ZP + 50, 200);
+  if (behind) { r.trail.push(s); if (r.trail.length > 7) r.trail.shift(); }
+  r.trail.forEach((q, i) => { if (q.back === behind) { const c = P(q.x, 0, q.z); frame(c, c[2], (i + 1) / 9, 0); runner(r.skin, q, 0, (i + 1) / 10); } });
+  if (s.back === behind) runner(r.skin, s, 0, 1);
+  if (!behind) count(F(r.cx, 385), s.n);
+}
+
+const MOVES = {
+  // 1 — one target, caught in a frame that breaks four times over
+  strikes: { name: 'Frame Breaker', cd: 7, dur: .5, glow: 'gold', run(p, m, t) {
+    p.vx = t > .06 && t < .16 ? p.face * 800 : 0; p.rate = 46; p.target = t < .3 ? POSE.jab : POSE.idle;
+    if (m.done || t < .08 || t > .24 || !E.tryHit(p, { reach: 230, dmg: 4, kb: 0, stun: 2.5, stop: .08, col: GOLD })) return;
+    const o = E.P2, face = p.face;
+    m.done = 1; sfx.charge(); shout(p, '1/24', GOLD);
+    Object.assign(o, { state: o.ko ? o.state : 'hurt', stun: 2.5, act: null, vx: 0 });
+    cycle = { o, n: 0, t: 2.5 }; iceT = Math.max(iceT, 2.5);
+    for (let i = 1; i <= 4; i++) E.after(i * .5, () => {                              // stage by stage: each time the frame gives way, and he is still in it
+      if (!cycle || cycle.o !== o || E.P2 !== o || o.ko) return;
+      cycle.n = i; sfx.hit(i === 4); V.rocks(o.x, 150, i === 4 ? 12 : 5); V.ring(o.x, o.y + 150, 150 + i * 40, GOLD, .3);
+      E.fx.push({ k: 2, x: o.x, y: o.y + 420, n: i + ' / 4', col: GOLD, t: 0, life: .5 });
+      E.applyHit(o, face, i < 4 ? { dmg: 5, kb: 0, stun: 2.5 - i * .5 + .2, stop: .05, col: GOLD } : { dmg: 10, kb: 760, lift: 480, stop: .14, heavy: 1, col: GOLD });
+      if (i === 4) { cycle = null; iceT = 0; }
+    });
+  } },
+  // 2 — the run itself. When it is over he is up to speed, and anything he so much as brushes stops dead for two seconds
+  crush: { name: 'Top Speed', cd: 18, dur: TOTAL + .5, glow: 'gold', run(p, m, t) {
+    const o = E.P2;
+    p.vx = 0; p.target = t < TOTAL ? POSE.dash : POSE.idle;
+    if (!m.c) {
+      m.c = 1; lap = { cx: clamp(o.ko ? p.x : o.x, -420, 420), t: 0, trail: [], skin: p.skin, n: 0 };
+      Fi.fight.paused = true; p.inv = Math.max(p.inv, TOTAL + 1); p.alpha = 0; E.root.classList.add('cine'); sfx.charge();
+    }
+    if (t < TOTAL) {
+      const n = lapAt(t)[0];
+      lap.t = t;
+      if (n !== lap.n) { lap.n = n; if (n < 10 || n % 3 === 0) sfx.whoosh(); shake(4 + n * .5); }
+      return;
+    }
+    if (m.e) return;
+    m.e = 1; done(p);
+    if (!o.ko && Math.abs(o.x - p.x) < 260) freeze(o, p.face, 2);
+  } },
+  // 3 — the air he pushes in front of him, let go of all at once
+  div: { name: 'Sonic Boom', cd: 6, dur: .6, glow: 'gold', run(p, m, t) {
+    p.vx = 0; p.rate = 40; p.target = t < .16 ? POSE.divWind : t < .4 ? POSE.div : POSE.idle;
+    if (t < .16 || m.s) return;
+    m.s = 1; sfx.blast(); shake(16);
+    const f = p.face, x0 = p.x + f * 90, y = p.y + 170;
+    for (let i = 0; i < 6; i++) V.ring(x0 + f * i * 150, y, 90 + i * 22, '#ffffff', .22 + i * .03);
+    V.bolt(x0, y, x0 + f * 900, y, '#ffffff', .2, 5, '#fff');
+    E.tryHit(p, { reach: 900, dmg: 14, kb: 760, lift: 300, stop: .12, heavy: 1, col: '#ffffff' });
+  } },
+  // 4 — three times the speed of sound, straight through whatever is in the way
+  manji: { name: 'Mach 3', cd: 14, dur: 1.15, glow: 'gold', run(p, m, t) {
+    p.vx = 0; p.rate = 34;
+    if (t < .5) { p.target = POSE.dash; V.mote(p.x, p.y + 120, 'gold'); if (!m.c) { m.c = 1; sfx.charge(); shout(p, 'マッハ3', GOLD); } return; }
+    p.target = t < .85 ? POSE.div : POSE.idle;
+    if (m.s) return;
+    m.s = 1; sfx.bf(); shake(34);
+    const f = p.face, x0 = p.x, hit = E.tryHit(p, { reach: 1500, dmg: 40, kb: 1150, lift: 480, stop: .22, heavy: 1, col: GOLD });
+    p.x = clamp(x0 + f * 1350, -950, 950);
+    for (let i = 0; i < 8; i++) V.ring(x0 + (p.x - x0) * i / 7, p.y + 150, 150 + i * 16, '#ffffff', .3 + i * .03);
+    V.bolt(x0, p.y + 150, p.x, p.y + 150, GOLD, .3, 7, '#fff');
+    if (hit) V.impact(.18, E.P2.x, E.P2.y + 150);
+  } }
+};
+// the run is over: he is standing in front of it again, and fast
+function done(p) {
+  const cx = lap.cx;
+  lap = null; top = FAST; Fi.fight.paused = false; E.root.classList.remove('cine');
+  p.alpha = 1; p.x = clamp(cx - 150, -950, 950); p.face = 1;
+  sfx.bf(); shake(30); E.banner('最高速', 'TOP SPEED', 'sm');
+  for (let i = 0; i < 4; i++) V.ring(cx, 160, 240 + i * 120, '#ffffff', .3 + i * .06);
+}
+
+JU.tech.add('aproj', { name: 'Awakened Projection', jp: '投射呪法', mark: '蟲', who: 'Naoya Zenin, cursed spirit', odds: 0, col: PINK, glow: 'gold', moves: MOVES,
+  awakened: true, skin: SPIRIT, as: ['Naoya Zenin', '禪院直哉'], dash: .45, dashFx: { t: .3, v: 1650, tint: 1 } });
+const DEF = JU.tech.TECH.aproj, on = () => JU.tech.active === DEF;
+
+const tick0 = H.tick, under0 = H.under, fx0 = H.fx, reset0 = H.reset, start0 = H.fightStart, ko0 = H.ko;
+H.tick = dt => {
+  tick0(dt);
+  if (iceT > 0) iceT -= dt;
+  if (immune > 0) immune -= dt;
+  if (cycle && ((cycle.t -= dt) <= 0 || cycle.o !== E.P2)) cycle = null;
+  if (lap && !(E.P1.move && E.P1.move.def === MOVES.crush)) { lap = null; Fi.fight.paused = false; E.P1.alpha = 1; E.root.classList.remove('cine'); }   // the run was cut short somehow: nothing is left hanging
+  if (top <= 0 || !on()) return;
+  const p = E.P1, o = E.P2, dir = (keys.has('d') || keys.has('arrowright') ? 1 : 0) - (keys.has('a') || keys.has('arrowleft') ? 1 : 0);
+  top -= dt;
+  if (!p.move && !p.ps && !p.dead && !(p.dashT > 0) && dir) { p.x = clamp(p.x + dir * 480 * dt, -965, 965); if (Math.random() < dt * 40) V.puff('gold', p.x - dir * 40, p.y + rnd(40, 240), -dir * 300, 0, 26, .25); }
+  if (immune <= 0 && !o.ko && o.state !== 'down' && !(o.alpha < 1) && Math.abs(o.x - p.x) < 100 && Math.abs(o.y - p.y) < 150) freeze(o, p.face, 2);   // a touch is enough
+};
+H.under = dt => { under0(dt); if (lap) drawLap(true); };
+H.fx = dt => {
+  fx0(dt);
+  if (lap) drawLap(false);
+  const o = E.P2;
+  if (iceT > 0 && !o.ko) { const c = F(o.x, o.y), k = c[2] * (o.scale || 1); frame(c, k, Math.min(1, iceT * 4), cycle ? cycle.n : 0); }
+  if (top > 0 && on()) {                              // how much of it is left, over his head
+    const p = E.P1, c = F(p.x, p.y + 330), w = 90 * c[2];
+    g.fillStyle = 'rgba(8,6,14,.7)'; g.fillRect(c[0] - w, c[1], w * 2, 7 * c[2]); g.fillStyle = GOLD; g.fillRect(c[0] - w, c[1], w * 2 * top / FAST, 7 * c[2]);
+  }
+};
+const clear = () => { iceT = immune = top = 0; lap = cycle = null; };
+H.reset = () => { reset0(); clear(); walk = null; fast = 0; E.root.classList.remove('cine'); };
+H.fightStart = (cfg, wave) => { clear(); start0(cfg, wave); };
+// what it will have to be earned with: the Maki boss gives up a Projection Frame v2 one time in twenty
+H.ko = o => {
+  const res = ko0(o), cfg = Fi.fight.cfg;
+  if (cfg && cfg.label === 'Maki fight' && o.ai && o.ai.d === Fi.DEFS.maki && Math.random() < DROP) {
+    S.frames++; save(); sfx.confirm();
+    E.fx.push({ k: 2, x: o.x, y: 420, n: `PROJECTION FRAME V2  ·  ${Math.min(S.frames, FRAMES)} / ${FRAMES}`, col: GOLD, t: 0, life: 2.4 });
+  }
+  return res;
+};
+
+/* ---------- Top Speed out on the street (Free Exploration): hold R and press 2.
+   There is nobody to circle out there, so it is a straight line: twenty-four strides down the street the way he is facing, each longer than the last ---------- */
+let walk = null, fast = 0;                          // the run, and the seconds of speed after it
+const brush = me => { for (const n of JU.street.npcs) if (!(n.frozen > 0) && Math.abs(n.x - me.x) < 90 && Math.abs(n.z - me.z) < 80) { n.frozen = 2; sfx.hover(); } };   // anybody he passes close to
+function streetKey(a) {
+  if (a !== 'crush' || !keys.has('r') || !on() || walk || fast > 0) return false;
+  const me = JU.street.me, W = JU.tokyo, dir = me.face || 1;
+  let far = 0;                                      // how much clear pavement there is ahead of him
+  while (far < 2400 && W.free(me.x + dir * (far + 40), me.z)) far += 40;
+  walk = { x0: me.x, z: me.z, dir, far, t: 0, trail: [], skin: me.skin, n: 0 }; me.alpha = 0; sfx.charge();
+  return true;
+}
+// called every step he takes out there. What it gives back multiplies how fast he walks: nothing while the run plays, a lot once it is over
+function streetTick(dt) {
+  const me = JU.street.me, W = JU.tokyo;
+  if (walk) {
+    const n = lapAt(walk.t += dt)[0], u = Math.min(1, walk.t / TOTAL);
+    if (n !== walk.n) { walk.n = n; if (n < 10 || n % 3 === 0) sfx.whoosh(); shake(3 + n * .3); }
+    me.x = walk.x0 + walk.dir * walk.far * u * u; me.face = walk.dir;                 // he really does cover the ground
+    cam.x = lerp(cam.x, clamp(me.x + walk.dir * 220, 700, W.LEN - 700), .3);           // and the camera has to keep up with him
+    brush(me);
+    if (walk.t < TOTAL) return 0;
+    walk = null; fast = FAST + 3; me.alpha = 1; sfx.bf(); shake(20); E.banner('最高速', 'TOP SPEED', 'sm');
+  }
+  if (fast <= 0) return 1;
+  fast -= dt; brush(me);
+  return 2.6;
+}
+function streetDraw() {
+  const st = JU.street, me = st.me;
+  for (const f of st.npcs.concat(st.curses)) if (f.frozen > 0) { const c = P(f.x, f.ground0 || 0, f.z); frame(c, c[2] * (f.scale || 1), Math.min(1, f.frozen * 4), 0); }
+  if (!walk) return;
+  const s = { x: me.x, z: walk.z, face: walk.dir }, y = me.ground0 || 12;
+  walk.trail.push(s); if (walk.trail.length > 9) walk.trail.shift();
+  walk.trail.forEach((q, i) => { const c = P(q.x, y, q.z); frame(c, c[2], (i + 1) / 11, 0); runner(walk.skin, q, y, (i + 1) / 12); });
+  runner(walk.skin, s, y, 1);
+  count(P(me.x, 430, walk.z), walk.n + 1);
+}
+
+/* ---------- the AWAKEN CT menu ---------- */
+const LIST = [
+  { id: 'aproj', name: 'Awakened Projection', mark: '蟲', col: PINK, what: 'Naoya, as the cursed spirit he came back as. Frame Breaker, Top Speed, Sonic Boom, Mach 3.',
+    later: () => `Later: 3 Projection Frame v2, dropped by the Maki boss (5%). You have ${S.frames}.`, open: () => !NEED || S.frames >= FRAMES },
+  { id: 'alimit', name: 'Awakened Limitless', mark: '蒼', col: '#38c8ff', what: 'Maximum: Blue, Reversal Red: MAX, 150% Hollow Purple, Unlimited Void. Two secret moves.',
+    later: () => 'Later: 150% Hollow Purple will have to be earned through a questline.', open: () => true },
+  { id: 'ats', name: 'Awakened Ten Shadows', mark: '影', col: '#8f9bff', what: 'Shiro, Rabbit Escape, Mahoraga, Max Elephant, and the domain Chimera Shadow Garden. Two meters: shikigami left, and cursed energy.',
+    later: () => 'Every exorcism adds one shikigami to call.', open: () => true },
+  { id: 'smark', name: 'Sukuna\'s Mark', mark: '印', col: '#ff2440' }
+];
+function mount(body) {
+  body.innerHTML = `<div class="awkhd"><button class="sback" id="awkback" aria-label="Back to the cursed techniques">‹ Cursed Techniques</button><b>Awakened CT</b><span lang="ja">覚醒術式</span></div>
+    <div class="acards">${LIST.map(a => { const t = JU.tech.TECH[a.id]; return t
+      ? `<button class="acard${JU.tech.equipped === a.id ? ' on' : ''}" data-awk="${a.id}" style="--c:${a.col}" aria-label="Equip ${a.name}"><b lang="ja">${a.mark}</b><h4>${a.name}</h4><p>${a.what}</p>
+          <small>${a.open() ? 'Free for now' : 'Locked'}</small>
+          <p>${a.later()}</p></button>`
+      : `<div class="acard soon" style="--c:${a.col}"><b lang="ja">${a.mark}</b><h4>${a.name}</h4><small>Coming soon</small></div>`; }).join('')}</div>
+    <p class="fine">An awakened technique is equipped in place of your ordinary one. Pick a card on the Cursed Technique screen to go back.</p>`;
+}
+document.addEventListener('click', e => {
+  const body = document.getElementById('pBody'), c = e.target.closest('[data-awk]');
+  if (e.target.closest('#awkct')) { mount(body); sfx.confirm(); return; }
+  if (e.target.closest('#awkback')) { JU.tech.mount(body); sfx.back(); return; }
+  if (!c) return;
+  const r = c.getBoundingClientRect();
+  if (!LIST.find(a => a.id === c.dataset.awk).open()) { c.classList.remove('no'); void c.offsetWidth; c.classList.add('no'); sfx.back(); return; }
+  JU.tech.equip(c.dataset.awk); mount(body); sfx.bf(); JU.flash(r.left + r.width / 2, r.top + r.height / 2);
+});
+
+JU.awakened = { LIST, SPIRIT, mount, streetKey, streetTick, streetDraw, get frames() { return S.frames; } };
+})();
