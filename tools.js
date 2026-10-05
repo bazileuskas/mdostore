@@ -68,16 +68,18 @@ const INVERSION = { name: 'Inversion Stab', cd: 12, dur: .7, run(p, m, t) {
   if (m.done || t > .34 || !E.tryHit(p, hit(450, { reach: 250, kb: 900, lift: 420, stop: .3, heavy: 1, col: GOLD }))) return;
   m.done = 1; shake(34); sfx.bf(); V.impact(.2, E.P2.x, E.P2.y + 150);
 } };
-// their own strikes: Playful Cloud is all strikes, one every fifth of a second; the spear strikes once every two seconds, and it shows
-const cloudM1 = i => Object.assign({}, M.m1[i], { dur: .2, strike: .05, pre: i % 2 ? 'hookWind' : 'crushWind', pose: i % 2 ? 'hook' : 'crush', lunge: 150, kick: 0,
-  hit: hit(7, { reach: 215, kb: i === 3 ? 420 : 40, lift: i === 3 ? 300 : 0, stun: .35, stop: .02, col: CLOUD }) });
+// their own strikes. Playful Cloud is all strikes. It used to land four or five a second and hold whatever it hit until the next one arrived, which
+// nothing got out of; now it is one every 0.3 seconds (`every`, below), and its target is free again before the next. The spear strikes once
+// every two seconds, and it shows
+const cloudM1 = i => Object.assign({}, M.m1[i], { dur: .24, strike: .05, pre: i % 2 ? 'hookWind' : 'crushWind', pose: i % 2 ? 'hook' : 'crush', lunge: 150, kick: 0,
+  hit: hit(7, { reach: 215, kb: i === 3 ? 420 : 40, lift: i === 3 ? 300 : 0, stun: .2, stop: .02, col: CLOUD }) });
 const spearM1 = i => Object.assign({}, M.m1[i], { dur: .45, strike: .12, pre: 'divWind', pose: 'jab', lunge: 420, kick: 0,
   hit: hit(30, { reach: 235, kb: 420, lift: 200, stun: .6, stop: .1, heavy: 1, col: GOLD }) });
 
 const TOOLS = {
   katana: { id: 'katana', name: 'Cursed Katana', jp: '呪刀', mark: '刀', odds: 40, col: '#cfd8e0', moves: [SLASH], what: 'Katana Slash: 70.' },
   dagger: { id: 'dagger', name: 'Dagger', jp: '短刀', mark: '短', odds: 40, col: VIOLET, moves: [STAB], what: 'Stab: 25, then 70 more as it bleeds.' },
-  cloud: { id: 'cloud', name: 'Playful Cloud', jp: '游雲', mark: '雲', odds: 19.9, col: CLOUD, moves: [], m1: cloudM1, what: 'No moves, only strikes: 7 each, one every 0.2 seconds.' },
+  cloud: { id: 'cloud', name: 'Playful Cloud', jp: '游雲', mark: '雲', odds: 19.9, col: CLOUD, moves: [], m1: cloudM1, every: .3, what: 'No moves, only strikes: 7 each, one every 0.3 seconds.' },
   spear: { id: 'spear', name: 'Inverted Spear of Heaven', jp: '天逆鉾', mark: '鉾', odds: .1, col: GOLD, moves: [INVERSION], m1: spearM1, every: 2, what: 'Inversion Stab: 450. One strike every 2 seconds, 30 each.' }
 };
 const ORDER = ['katana', 'dagger', 'cloud', 'spear'];

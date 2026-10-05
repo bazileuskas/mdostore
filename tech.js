@@ -6,7 +6,7 @@ const E = JU.eng, g = E.g, F = E.F, H = E.hooks, LINE = E.LINE, sfx = JU.sfx;
 const SLOTS = ['strikes', 'crush', 'div', 'manji'], TECH = {}, ORDER = [];
 const BASE = { cd: Object.assign({}, E.CD), names: {} };
 for (const k of SLOTS) BASE.names[k] = E.hud.mv[k].querySelector('b').textContent;
-let equipped = null, active = null, based = false, spinning = false, clock = 0, back = 0;   // based: the free Yuji card is what is equipped, and in use
+let equipped = null, active = null, based = false, spinning = false, asking = false, clock = 0, back = 0;   // based: the free Yuji card is what is equipped, and in use
 const noToji = id => { if (id && JU.clan && JU.clan.equipped === 'toji') JU.clan.equip(''); };   // and taking a technique gives the Toji clan up
 try { equipped = localStorage.getItem('ju.tech'); } catch (e) {}
 
@@ -127,13 +127,13 @@ function left(t) {
   const s = Math.floor((t.limited - Date.now()) / 1000), d = Math.floor(s / 86400), h = Math.floor(s % 86400 / 3600), two = n => String(n).padStart(2, '0');
   return s <= 0 ? 'Ended' : 'Ends in ' + (d ? d + 'd ' : '') + (d || h ? two(h) + 'h ' : '') + two(Math.floor(s % 3600 / 60)) + 'm ' + two(s % 60) + 's';
 }
-// since the public release a card equips only what he may equip: what he has rolled or bought (shop.js keeps the list, and the rules)
+// since the public release a card equips only what he may equip: what he holds in his slots (shop.js keeps them, and the rules)
 const mine = id => !JU.shop || JU.shop.allowed(id);
 const nope = el => { el.classList.remove('no'); void el.offsetWidth; el.classList.add('no'); sfx.back(); };
 const retix = no => { const el = document.getElementById('tix'); if (el && JU.shop) el.outerHTML = JU.shop.tix('ct', no); };
 function stamp() { document.querySelectorAll('.tcard.lim:not(.ea):not(.tease)').forEach(c => { const t = TECH[c.dataset.tech]; c.classList.toggle('over', !live(t) && !mine(t.id)); c.querySelector('u').textContent = left(t); }); }
 function roll() {
-  for (const id of ORDER) { const t = TECH[id]; if (t.limited && live(t) && Math.random() * 100 < t.odds) return id; }
+  for (const id of ORDER) { const t = TECH[id]; if (t.limited && live(t) && !(JU.shop && JU.shop.holds('tech', id)) && Math.random() * 100 < t.odds) return id; }      // (a limited one he holds already is not rolled twice)
   let r = Math.random() * 100;
   for (const id of ORDER) if (!TECH[id].limited && (r -= TECH[id].odds) < 0) return id;
   return ORDER.find(id => TECH[id].odds > 0 && !TECH[id].limited);
@@ -143,7 +143,7 @@ function show(fresh) {
   if (!r) return;
   r.innerHTML = t ? `<small>${fresh ? 'You rolled' : 'Equipped'}</small><b style="color:${t.col}">${t.name}</b><span lang="ja">${t.jp}</span>
     <em>${t.who} · ${t.free ? 'Free' : t.awakened ? 'Awakened' : t.early ? 'Early Access' : t.odds + '%' + (t.limited ? ' · Limited time' : '')}</em><p>${SLOTS.map((k, i) => `${i + 1} ${t.moves[k].name}`).join(' · ')}</p>`
-    : `<small>No technique yet</small><p>${JU.shop && JU.shop.PAID ? 'Roll the talisman with a CT ticket, or pick a card that is already yours.' : 'Roll the talisman, or just pick a card below.'} It is used in Free Exploration.</p>`;
+    : `<small>No technique yet</small><p>${JU.shop && JU.shop.PAID ? 'Roll the talisman with a CT ticket: what it lands on goes into the slot you have selected.' : 'Roll the talisman, or just pick a card below.'} It is used in Free Exploration.</p>`;
   document.querySelectorAll('.tcard[data-tech]').forEach(c => { c.classList.toggle('on', c.dataset.tech === equipped); c.classList.toggle('lock', !mine(c.dataset.tech)); });
   stamp();
 }
@@ -151,7 +151,7 @@ function mount(body) {
   body.innerHTML = `<div class="roll"><button class="paper" id="paper" aria-label="Roll a cursed technique"><b lang="ja">封</b><i>Click to roll</i></button>
     <div class="rres" id="rres" aria-live="polite"></div>
     ${JU.awakened ? '<button class="awkct" id="awkct" aria-label="Awakened cursed techniques"><span lang="ja">覚醒</span>Awaken CT</button>' : ''}</div>
-    ${JU.shop ? JU.shop.tix('ct') : ''}
+    ${JU.shop ? JU.shop.row('tech') + JU.shop.tix('ct') : ''}
     ${ORDER.filter(id => TECH[id].limited).map(id => { const t = TECH[id]; return `<button class="tcard lim${mine(id) ? '' : ' lock'}" data-tech="${id}" style="--c:${t.col}" aria-label="Equip ${t.name}, limited time"><b lang="ja">${t.mark || t.jp[0]}</b><span><small>Limited time</small>${t.name}</span><i>${t.who} · ${t.odds}%</i><u></u></button>`; }).join('')}
     ${ORDER.filter(id => TECH[id].early).map(id => { const t = TECH[id]; return `<button class="tcard lim ea${mine(id) ? '' : ' lock'}" data-tech="${id}" style="--c:${t.col}" aria-label="Equip ${t.name}, early access"><b lang="ja">${t.mark || t.jp[0]}</b><span><small>Early Access</small>${t.name}</span><i>${t.who}</i><u>$2.99</u></button>`; }).join('')}
     ${TEASE ? `<button class="tcard lim tease" id="tease" style="--c:#d9c9ff" aria-label="A character still to come. Press for a hint"><b lang="ja">？</b><span><small>Next character</small>? ? ?</span><i>${HINTS[hintAt]}</i><u>Soon</u></button>` : ''}
@@ -168,9 +168,39 @@ function sealed(t) {
   r.innerHTML = `<small>Sealed · not yours yet</small><b style="color:${t.col}">${t.name}</b><span lang="ja">${t.jp}</span><p>${how}</p>`;
   clearTimeout(back); back = setTimeout(() => show(false), 3400);
 }
+// the row of slots, drawn again after something in it has changed
+const rerow = () => { const el = document.getElementById('hold'); if (el && JU.shop) el.outerHTML = JU.shop.row('tech'); };
+// something said in the box beside the talisman, for a moment
+function say(head, text) {
+  const r = document.getElementById('rres');
+  if (!r) return;
+  r.innerHTML = `<small>${head}</small><p>${text}</p>`;
+  clearTimeout(back); back = setTimeout(() => show(false), 4200);
+}
+// The talisman pressed. A roll goes into the slot that is selected, in place of what is there, so first: may that slot be spun at all, and
+// does what is in it have to be asked about (shop.js: JU.shop.plan)
 function spin(paper) {
-  if (spinning) return;
-  if (JU.shop && !JU.shop.take('ct')) { nope(paper); retix(true); return; }      // no ticket, no roll
+  if (spinning || asking) return;
+  const plan = JU.shop ? JU.shop.plan('tech') : {};
+  if (plan.stop) { nope(paper); say('It cannot be spun off', plan.stop); return; }      // the slot selected holds a limited one
+  if (plan.ea) {                                    // a free slot: spinning it off gives it up, and nothing is rolled
+    asking = true;
+    JU.shop.ask(plan.ask).then(yes => {
+      asking = false;
+      if (!yes) return;
+      const t = TECH[plan.slot.id], body = document.getElementById('pBody');
+      JU.shop.giveUp('tech', plan.slot.key); sfx.back();
+      if (body && document.getElementById('paper')) mount(body);
+      say('Spun off', `${t.name} is gone, and its slot with it.`);
+    });
+    return;
+  }
+  if (JU.shop && !JU.shop.has('ct')) { nope(paper); retix(true); return; }      // no ticket, no roll
+  if (plan.ask) { asking = true; JU.shop.ask(plan.ask).then(yes => { asking = false; if (yes) go(paper); }); return; }      // something rare is in that slot: asked twice
+  go(paper);
+}
+function go(paper) {
+  if (spinning || (JU.shop && !JU.shop.take('ct'))) return;
   spinning = true; clearTimeout(back); retix();
   const result = roll(), faces = ORDER.filter(id => live(TECH[id]) && !TECH[id].early && !TECH[id].awakened && !TECH[id].free), t0 = performance.now(), dur = JU.reduceMotion ? 300 : 3000, turns = 10, face = paper.querySelector('b'), sub = paper.querySelector('i');
   let lastHalf = -1;
@@ -187,28 +217,44 @@ function spin(paper) {
     if (u < 1) { requestAnimationFrame(step); return; }
     const t = TECH[result], r = paper.getBoundingClientRect(), x = r.left + r.width / 2, y = r.top + r.height / 2;
     equipped = result; try { localStorage.setItem('ju.tech', result); } catch (err) {} noToji(result);
-    if (JU.shop) JU.shop.grant('tech', result);      // what it lands on is his from now on
+    const at = JU.shop ? JU.shop.place('tech', result) : null;      // into the slot that was selected, or a slot of its own if it is a limited one
     face.textContent = t.mark || t.jp[0]; sub.textContent = t.name; paper.style.setProperty('--c', t.col);
     paper.style.transform = ''; paper.classList.remove('spin', 'back'); paper.classList.add('got');
     JU.flash(x, y); JU.bolts(x, y, t.odds <= 5 ? 26 : t.odds <= 10 ? 16 : 9);
     if (t.odds <= 10) sfx.bf(); else sfx.confirm();
     show(true); spinning = false;
+    if (at) {                                     // and where it went, and what it cost him
+      const lb = document.querySelector('#rres small'), lost = TECH[at.lost];
+      rerow(); if (lb) lb.textContent = 'You rolled · ' + (at.key[0] === 'l' ? 'it has a slot of its own' : 'slot ' + (+at.key.slice(1) + 1) + (lost ? ', in place of ' + lost.name : ''));
+    }
   })(t0);
 }
 document.addEventListener('click', e => {
-  const p = e.target.closest('#paper'), c = e.target.closest('.tcard'), ts = e.target.closest('#tease');
+  const p = e.target.closest('#paper'), c = e.target.closest('.tcard'), ts = e.target.closest('#tease'), sl = e.target.closest('.hslot[data-kind="tech"]');
   if (ts) { hintAt = (hintAt + 1) % HINTS.length; ts.querySelector('i').textContent = HINTS[hintAt]; ts.classList.remove('no'); void ts.offsetWidth; ts.classList.add('no'); sfx.hover(); return; }
   if (p) { spin(p); return; }
-  if (!c || spinning) return;
+  if (spinning || asking) return;
+  if (sl) {                                         // a slot: the next roll goes there, and what it holds is what he fights with
+    JU.shop.pick('tech', sl.dataset.slot);
+    if (TECH[sl.dataset.id]) wear(TECH[sl.dataset.id], sl); else { sfx.hover(); clearTimeout(back); show(false); rerow(); }
+    return;
+  }
+  if (!c) return;
   if (!mine(c.dataset.tech)) { nope(c); sealed(TECH[c.dataset.tech]); return; }   // not his: not rolled, not bought, or early access
   if (!live(TECH[c.dataset.tech]) && JU.shop && !JU.shop.owns('tech', c.dataset.tech)) return;   // a limited technique that has left cannot be picked up any more
-  // a card equips its technique on the spot
+  // a card equips its technique on the spot, and the slot that holds it is the one selected
+  const held = JU.shop && JU.shop.slotsOf('tech').find(s => s.id === c.dataset.tech);
+  if (held) JU.shop.pick('tech', held.key);
+  wear(TECH[c.dataset.tech], c);
+});
+// a technique put on, from its slot or from its card
+function wear(t, el) {
+  const paper = document.getElementById('paper'), r = el.getBoundingClientRect();
   clearTimeout(back);
-  const t = TECH[c.dataset.tech], paper = document.getElementById('paper'), r = c.getBoundingClientRect();
   equipped = t.id; try { localStorage.setItem('ju.tech', t.id); } catch (err) {} noToji(t.id);
   if (paper) { paper.querySelector('b').textContent = t.mark || t.jp[0]; paper.querySelector('i').textContent = t.name; paper.style.setProperty('--c', t.col); }
-  show(false); sfx.confirm(); JU.flash(r.left + r.width / 2, r.top + r.height / 2);
-});
+  show(false); rerow(); sfx.confirm(); JU.flash(r.left + r.width / 2, r.top + r.height / 2);
+}
 
 JU.tech = {
   add, TECH, ORDER, SLOTS, mount, apply, revert, roll, charge, tk: { sprite, orb, beam, shout, dot, near },

@@ -138,6 +138,12 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 .ain>b{display:block;margin:.2em 0 .3em;overflow:hidden;text-overflow:ellipsis;font:400 1.7em/1.05 var(--f-display);letter-spacing:.04em}
 .ain p{margin:.3em 0 0}
 .abody.no{animation:nope .3s}
+.aseal.alt{color:var(--ink);background:none;border:2px solid var(--ink);box-shadow:none;transform:none}
+.aseal.alt b{color:var(--seal)}
+.aseal.alt:hover,.aseal.alt:focus-visible{transform:scale(1.04);background:rgba(43,26,16,.12)}
+.alink{display:block;margin-top:.9em;padding:0 0 .1em;cursor:pointer;color:rgba(43,26,16,.82);background:none;border:0;border-bottom:1px dashed rgba(43,26,16,.6);outline:none;font:600 .8em/1.3 var(--f-ui);letter-spacing:.06em}
+.alink:hover,.alink:focus-visible{color:var(--seal);border-bottom-color:var(--seal)}
+.ascroll.test .ahead b{background:#34558a}
 @keyframes nope{20%{translate:-8px 0}45%{translate:7px 0}70%{translate:-4px 0}}
 .side{position:absolute;right:clamp(10px,2.2vw,36px);top:50%;translate:0 -50%;writing-mode:vertical-rl;pointer-events:none;
   font:400 clamp(26px,4.6vh,54px)/1 var(--f-jp);letter-spacing:.5em;color:transparent;-webkit-text-stroke:1px rgba(244,239,228,.2);opacity:0}
@@ -334,6 +340,30 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 .formb.lock:hover,.formb.lock:focus-visible{transform:none}
 .acard.lock{opacity:.62}
 .acard.lock small{color:#ff8a98}
+/* the slots he holds things in: three of each kind, and one more for every limited or early-access thing (shop.js). The gold outline is the one
+   selected, where the next spin lands; the filled one holds what he has equipped */
+.hold{margin:0 0 .8em}
+.pocket.hslot{position:relative;flex:1 1 10.5em;min-width:0;max-width:17em}
+.hslot i{font:600 .66em/1.2 var(--f-ui);font-style:normal;letter-spacing:.14em;text-transform:uppercase;color:rgba(244,239,228,.5)}
+.hslot.empty b{color:rgba(244,239,228,.38)}
+.hslot.eq{background:rgba(44,28,66,.95);background:linear-gradient(100deg,color-mix(in srgb,var(--c) 36%,#0e091a),rgba(14,9,26,.9) 82%)}
+.hslot.eq::after{content:"Equipped";position:absolute;right:.6em;top:.55em;padding:.22em .5em .16em;font:600 .58em/1 var(--f-ui);letter-spacing:.18em;text-transform:uppercase;color:#0b0710;background:var(--c)}
+.hslot.lim{border-left-width:7px;border-left-style:double}
+.hslot.lim small{color:#ffd23d}
+.hslot.ea small{color:#7de0b0}
+/* a question that has to be answered before something is lost */
+.askov{position:fixed;inset:0;z-index:30;display:grid;place-items:center;padding:4vmin;background:rgba(3,2,8,.86)}
+.ask{position:relative;display:grid;gap:.5em;width:min(100%,30em);padding:1.4em 1.6em 1.5em;overflow:hidden;color:var(--bone);background:#120b1d;border-left:5px solid var(--red);box-shadow:10px 12px 0 rgba(0,0,0,.55);
+  font:400 clamp(14px,min(1.3vw,2.3vh),24px)/1.5 var(--f-ui);letter-spacing:.03em}
+.ask>b{position:absolute;right:.2em;top:.05em;font:400 4.2em/1 var(--f-jp);color:rgba(255,36,64,.16);pointer-events:none}
+.ask small{font:600 .72em/1 var(--f-ui);letter-spacing:.3em;text-transform:uppercase;color:var(--red)}
+.ask h3{margin:0;font:400 1.9em/1 var(--f-display);letter-spacing:.04em;text-transform:uppercase}
+.ask p{margin:0;color:rgba(244,239,228,.8)}
+.askb{display:flex;flex-wrap:wrap;gap:.7em;margin-top:.7em}
+.askb button{padding:.6em 1.2em .52em;cursor:pointer;border:0;outline:2px solid transparent;font:400 1.15em/1 var(--f-display);letter-spacing:.07em;text-transform:uppercase;transition:transform .12s,outline-color .12s}
+.askb .keep{color:#0b0710;background:var(--bone)}
+.askb .go{color:#fff;background:#8a0018}
+.askb button:hover,.askb button:focus-visible{transform:translateY(-3px);outline-color:#ffd23d}
 .pbody .tix{display:flex;align-items:center;gap:.3em .8em;max-width:none;margin:-.2em 0 1em;font:600 .78em/1.2 var(--f-ui);letter-spacing:.18em;text-transform:uppercase;color:rgba(244,239,228,.62)}
 .tix b{min-width:1.9em;padding:.3em .55em .25em;text-align:center;font:400 1.5em/1 var(--f-display);letter-spacing:.04em;color:#0b0710;background:#ffd23d}
 .tix.out{color:#ff8a98}
@@ -847,7 +877,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
   </div>
 
   <div class="side" aria-hidden="true" lang="ja">領域展開</div>
-  <div class="hud tl"><b lang="ja">呪</b>Fan project · Build 0.3 · Public Release</div>
+  <div class="hud tl"><b lang="ja">呪</b>Fan project · Build 0.3v1 · Three Slots</div>
   <div class="hud bl">↑ ↓ Select &nbsp;·&nbsp; Enter Confirm</div>
   <div class="hud br">Title screen</div>
   <div class="acct" id="acct">

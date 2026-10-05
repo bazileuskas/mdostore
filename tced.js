@@ -307,7 +307,7 @@ H.fightStart = (cfg, wave) => {
 Object.assign(JU.awakened.LIST.find(a => a.id === 'tced'), {
   what: 'Ryu Ishigori with nothing held back, and no heat to mind. Volley, Downpour, Repulse, and Granite Blast at full power (900).',
   later: () => 'Needs Cursed Cannon, which is Early Access. Early Access is not on sale yet.',
-  open: () => dev() || !JU.shop || JU.shop.early });
+  open: () => dev() || !JU.shop || JU.shop.holds('tech', 'cannon') });
 
 JU.tced = { MOVES, SHOTS, SHOT, DROPS, DROP, BURST, TURNED, FULL, CHARGE, HOLD, get state() { return { insert: !!insert }; } };
 })();

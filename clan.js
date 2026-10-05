@@ -5,7 +5,7 @@
 const E = JU.eng, H = E.hooks, Fi = JU.fights, sfx = JU.sfx, lerp = E.lerp;
 const CLAN = {}, ORDER = [], NONE = {};
 const st = { host: null };                       // host: a body that is not his own (Kenjaku's, or Sukuna's vessel)
-let equipped = null, active = null, rolling = false, back = 0;
+let equipped = null, active = null, rolling = false, asking = false, back = 0;
 try { equipped = localStorage.getItem('ju.clan'); } catch (e) {}
 
 // hp / ce / dmg / crit / m1s / tool are fractions: .1 = +10%. "Cursed energy" scales technique damage.
@@ -86,12 +86,13 @@ const left = c => {                                // to the second, the way a l
 };
 setInterval(() => document.querySelectorAll('.ccard.lim').forEach(el => { const c = CLAN[el.dataset.clan], u = el.querySelector('u'); if (c && u) { u.textContent = left(c); el.classList.toggle('over', !live(c) && !mine(c.id)); } }), 1000);
 const roll = () => {
-  for (const id of ORDER) { const c = CLAN[id]; if (c.limited && live(c) && Math.random() * 100 < c.odds) return id; }
+  for (const id of ORDER) { const c = CLAN[id]; if (c.limited && live(c) && !(JU.shop && JU.shop.holds('clan', id)) && Math.random() * 100 < c.odds) return id; }      // (a limited one he holds already is not drawn twice)
   let r = Math.random() * 100;
   for (const id of ORDER) if (!CLAN[id].limited && (r -= CLAN[id].odds) < 0) return id;
   return ORDER[0];
 };
-// since the public release a card equips only a clan he has drawn or bought (shop.js keeps the list)
+// since the public release a card equips only a clan he holds in one of his slots (shop.js keeps them)
+const rerow = () => { const el = document.getElementById('hold'); if (el && JU.shop) el.outerHTML = JU.shop.row('clan'); };
 const mine = id => !JU.shop || JU.shop.owns('clan', id);
 const nope = el => { el.classList.remove('no'); void el.offsetWidth; el.classList.add('no'); sfx.back(); };
 const retix = no => { const el = document.getElementById('tix'); if (el && JU.shop) el.outerHTML = JU.shop.tix('cl', no); };
@@ -100,13 +101,13 @@ function show() {
   const c = CLAN[equipped], r = document.getElementById('cres');
   if (!r) return;
   r.innerHTML = c ? `<small>Your clan · ${c.odds}%${c.grade ? ' · ' + c.grade : ''}${c.limited ? ' · Limited time' : ''}</small><b style="color:${c.col}">${c.name}</b><span lang="ja">${c.jp}</span>${c.id === 'toji' ? '' : `<em>Outside the story you fight as Yuji ${c.name}</em>`}${stats(c)}`
-    : `<small>No clan yet</small><p>${JU.shop && JU.shop.PAID ? 'Pick one of the three talismans to draw your bloodline: a draw uses a clan roll. A clan you have drawn before can be taken straight from its card.' : 'Pick one of the three talismans to draw your bloodline, or take a clan straight from the cards.'} Clans are used in Free Exploration.</p>`;
+    : `<small>No clan yet</small><p>${JU.shop && JU.shop.PAID ? 'Pick one of the three talismans to draw your bloodline: a draw uses a clan roll, and what it lands on goes into the slot you have selected.' : 'Pick one of the three talismans to draw your bloodline, or take a clan straight from the cards.'} Clans are used in Free Exploration.</p>`;
   document.querySelectorAll('.ccard').forEach(k => { k.classList.toggle('on', k.dataset.clan === equipped); k.classList.toggle('lock', !mine(k.dataset.clan)); });
 }
 function mount(body) {
   body.innerHTML = `<div class="roll papers">${[0, 1, 2].map(() => '<button class="paper cpaper" aria-label="Draw a clan"><b lang="ja">封</b><i>Draw</i></button>').join('')}
       <div class="rres" id="cres" aria-live="polite"></div></div>
-    ${JU.shop ? JU.shop.tix('cl') : ''}
+    ${JU.shop ? JU.shop.row('clan') + JU.shop.tix('cl') : ''}
     ${ORDER.filter(id => CLAN[id].limited).map(id => { const c = CLAN[id]; return `<button class="ccard lim${live(c) || mine(id) ? '' : ' over'}${mine(id) ? '' : ' lock'}" data-clan="${id}" style="--c:${c.col}" aria-label="Take the ${c.name} clan, limited time"><b lang="ja">${c.jp[0]}</b><span><small>Limited time${c.grade ? ' · ' + c.grade : ''}</small>${c.name} clan</span><i>${c.odds}%</i><u>${left(c)}</u></button>`; }).join('')}
     <div class="tcards">${ORDER.filter(id => !CLAN[id].limited).map(id => { const c = CLAN[id]; return `<button class="ccard${mine(id) ? '' : ' lock'}" data-clan="${id}" style="--c:${c.col}" aria-label="Take the ${c.name} clan${mine(id) ? '' : ', not yours yet'}"><b lang="ja">${c.jp[0]}</b><span>${c.name}</span><i>${c.odds}%</i></button>`; }).join('')}</div>`;
   show();
@@ -121,9 +122,37 @@ function sealed(c) {
   r.innerHTML = `<small>Sealed · not yours yet</small><b style="color:${c.col}">${c.name}</b><span lang="ja">${c.jp}</span><p>${how}</p>`;
   clearTimeout(back); back = setTimeout(show, 3400);
 }
+// something said in the box beside the talismans, for a moment
+function say(head, text) {
+  const r = document.getElementById('cres');
+  if (!r) return;
+  r.innerHTML = `<small>${head}</small><p>${text}</p>`;
+  clearTimeout(back); back = setTimeout(show, 4200);
+}
+// A talisman pressed. A draw goes into the slot that is selected, in place of what is there, so first: may that slot be spun at all, and
+// does what is in it have to be asked about (shop.js: JU.shop.plan)
 function cinema(src) {
-  if (rolling) return;
-  if (JU.shop && !JU.shop.take('cl')) { nope(src); retix(true); return; }      // no clan roll, no draw
+  if (rolling || asking) return;
+  const plan = JU.shop ? JU.shop.plan('clan') : {};
+  if (plan.stop) { nope(src); say('It cannot be spun off', plan.stop); return; }      // the slot selected holds a limited one
+  if (plan.ea) {                                    // a free slot: spinning it off gives it up, and nothing is drawn
+    asking = true;
+    JU.shop.ask(plan.ask).then(yes => {
+      asking = false;
+      if (!yes) return;
+      const c = CLAN[plan.slot.id], body = document.getElementById('pBody');
+      JU.shop.giveUp('clan', plan.slot.key); sfx.back();
+      if (body && document.getElementById('cres')) mount(body);
+      say('Spun off', `The ${c.name} clan is gone, and its slot with it.`);
+    });
+    return;
+  }
+  if (JU.shop && !JU.shop.has('cl')) { nope(src); retix(true); return; }      // no clan roll, no draw
+  if (plan.ask) { asking = true; JU.shop.ask(plan.ask).then(yes => { asking = false; if (yes) draw(src); }); return; }      // something rare is in that slot: asked twice
+  draw(src);
+}
+function draw(src) {
+  if (rolling || (JU.shop && !JU.shop.take('cl'))) return;
   rolling = true; clearTimeout(back); retix();
   const result = roll(), c = CLAN[result], r0 = src.getBoundingClientRect(), rare = c.odds <= 1;
   const ov = document.createElement('div');
@@ -137,15 +166,15 @@ function cinema(src) {
   src.style.visibility = 'hidden';
   requestAnimationFrame(() => ov.classList.add('in'));
   const land = () => {
-    if (JU.shop) JU.shop.grant('clan', result);       // what it lands on is his from now on
+    const at = JU.shop ? JU.shop.place('clan', result) : null, lost = at && CLAN[at.lost];       // into the slot that was selected, or a slot of its own if it is a limited one
     equip(result);
     face.textContent = c.jp[0]; sub.textContent = c.name; ov.style.setProperty('--c', c.col);
     cp.style.transform = ''; cp.classList.remove('back'); cp.classList.add('got'); ov.classList.add('done');
-    info.innerHTML = `<small>${c.odds}% · clan</small><b>${c.name}</b><span lang="ja">${c.jp}</span>${stats(c)}<em>Click to continue</em>`;
+    info.innerHTML = `<small>${c.odds}% · clan${at ? ' · ' + (at.key[0] === 'l' ? 'it has a slot of its own' : 'slot ' + (+at.key.slice(1) + 1) + (lost ? ', in place of ' + lost.name : '')) : ''}</small><b>${c.name}</b><span lang="ja">${c.jp}</span>${stats(c)}<em>Click to continue</em>`;
     JU.flash(cx, cy); JU.bolts(cx, cy, rare ? 44 : c.odds <= 5 ? 26 : c.odds <= 10 ? 16 : 9);
     if (c.odds <= 10) sfx.bf(); else sfx.confirm();
     const onKey = e => { if (e.key === 'Enter' || e.key === 'Escape' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); close(); } };
-    const close = () => { removeEventListener('keydown', onKey, true); ov.remove(); src.style.visibility = ''; rolling = false; show(); };
+    const close = () => { removeEventListener('keydown', onKey, true); ov.remove(); src.style.visibility = ''; rolling = false; show(); rerow(); };
     setTimeout(() => { ov.addEventListener('click', close); addEventListener('keydown', onKey, true); }, 600);
   };
   (function step(now) {
@@ -169,10 +198,17 @@ function cinema(src) {
   })(t0);
 }
 document.addEventListener('click', e => {
-  const p = e.target.closest('.cpaper'), k = e.target.closest('.ccard');
+  const p = e.target.closest('.cpaper'), k = e.target.closest('.ccard'), sl = e.target.closest('.hslot[data-kind="clan"]');
   if (p) cinema(p);
+  else if (rolling || asking) return;
+  else if (sl) {                                     // a slot: the next draw goes there, and the clan it holds is the one he carries
+    const r = sl.getBoundingClientRect();
+    JU.shop.pick('clan', sl.dataset.slot); clearTimeout(back);
+    if (CLAN[sl.dataset.id]) { equip(sl.dataset.id); sfx.confirm(); JU.flash(r.left + r.width / 2, r.top + r.height / 2); } else sfx.hover();
+    show(); rerow();
+  }
   else if (k && !rolling && !mine(k.dataset.clan)) { nope(k); sealed(CLAN[k.dataset.clan]); }      // not his: never drawn, never bought
-  else if (k && !rolling && (live(CLAN[k.dataset.clan]) || (JU.shop && JU.shop.owns('clan', k.dataset.clan)))) { const r = k.getBoundingClientRect(); clearTimeout(back); equip(k.dataset.clan); show(); sfx.confirm(); JU.flash(r.left + r.width / 2, r.top + r.height / 2); }
+  else if (k && !rolling && (live(CLAN[k.dataset.clan]) || (JU.shop && JU.shop.owns('clan', k.dataset.clan)))) { const r = k.getBoundingClientRect(), held = JU.shop && JU.shop.slotsOf('clan').find(s => s.id === k.dataset.clan); clearTimeout(back); if (held) JU.shop.pick('clan', held.key); equip(k.dataset.clan); show(); rerow(); sfx.confirm(); JU.flash(r.left + r.width / 2, r.top + r.height / 2); }
 });
 
 JU.clan = {

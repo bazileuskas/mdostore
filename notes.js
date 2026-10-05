@@ -5,6 +5,14 @@
 // Newest first. v = the build, jp = the seal stamped beside it, pic = notes/<pic>.jpg, cap = what the picture shows.
 // A new update goes at the top of this list.
 const NOTES = [
+  { v: '0.3v1', name: 'Three Slots', jp: '枠', date: '5 Oct 2026', pic: 'slots', cap: 'Three slots, one more for a limited technique, and a free one for Early Access', items: [
+    'Three slots for cursed techniques, and three for clans. Press a slot to select it: what it holds is what you fight with, and the next roll or draw lands there, in place of what was in it',
+    'Spinning off anything as rare as 10% is asked about twice first',
+    'A limited technique or clan never goes into the three. It gets a slot of its own (a fourth, a fifth, as many as you hold), it cannot be spun off, and it is never rolled a second time',
+    'An Early Access technique sits in a free slot of its own, and keeps it when its character is released in full. That one can be spun off, but the slot goes with it, and nothing is rolled in its place',
+    'The Daily Shop puts what you buy into an empty slot if you have one. If you have not, it says what would be replaced, and asks before it does it',
+    'Saves from before this keep what they held: limited ones in slots of their own, and of the rest the one that was equipped and then the rarest go into the three',
+    'Playful Cloud is slower: one strike every 0.3 seconds, down from four or five a second, and whatever it hits is free again before the next one lands'] },
   { v: '0.3', name: 'Public Release', jp: '公', date: '5 Oct 2026', pic: 'tced', cap: 'Granite Blast at full power', items: [
     'The game is out. From here on a spin uses a ticket of its own kind: a CT ticket for the technique talisman, a clan roll for a clan draw, and a new one, the cursed tool spin, for the reel. Each is 10 Cursed Tokens in the Shop',
     'What a spin lands on is yours to keep. A card now equips only what you own: the rest are shown sealed, and pressing one says how it is come by',
