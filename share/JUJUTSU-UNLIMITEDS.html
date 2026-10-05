@@ -1916,12 +1916,15 @@ window.JU = { sfx, flash, bolts: blackFlash, reduceMotion, startGame, exitGame, 
    everybody before the public release.
    The team's account can also flip to a TEST ACCOUNT and back without the password being typed again: the same sign-in, playing by the
    public's rules (nothing unlocked), with a save of its own. It is there so that what players get can be tried without logging out.
+   And it has a SECOND ACCOUNT, TheUnlimitedsTeam2: the same sign-in under another name, with everything unlocked as well and a save of
+   its own (begun as a copy of the first one's). Switching between the two asks for no password either; in a browser where nobody is signed
+   in, the second name with the team's password goes straight to it. It is there so that two of the team can be on one server at once.
    None of this is security against somebody who opens the developer tools. A game that runs entirely in the browser cannot keep anything
    from the person running it; what this does is keep honest players honest. */
 (() => {
 'use strict';
 
-const sfx = JU.sfx, TEAM = 'TheUnlimitedsTeam', GUEST = '_guest', ROUNDS = 120000;
+const sfx = JU.sfx, TEAM = 'TheUnlimitedsTeam', TEAM2 = 'TheUnlimitedsTeam2', GUEST = '_guest', ROUNDS = 120000;
 const TEAM_SALT = '9ccc5ca0f18acfc6', TEAM_V = '353497485db0c38d6701a02f4965022b8ca9ebd8c795d4887103df9112005a09';
 const NAME = /^[A-Za-z0-9][A-Za-z0-9_]{2,19}$/, MINPW = 6;
 const OWN = /^ju\.(sfx$|accounts$|session$|save\.)/;       // these are not part of anybody's progress
@@ -1975,14 +1978,17 @@ const write = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); retu
 const drop = k => { try { localStorage.removeItem(k); } catch (e) {} };
 const accounts = read('ju.accounts', {});
 const has = id => Object.prototype.hasOwnProperty.call(accounts, id);
-const rec = name => { const id = String(name).toLowerCase(); return id === TEAM.toLowerCase() ? { name: TEAM, salt: TEAM_SALT, v: TEAM_V, team: true } : has(id) ? accounts[id] : null; };
-const TEST = TEAM.toLowerCase() + '.test';                 // where the test account's save is kept (no name a player can register has a dot in it)
-let me = null, test = false;                               // the account signed in, or nobody; and whether the team's account is being its test account
+const isTwo = name => String(name).toLowerCase() === TEAM2.toLowerCase();
+const rec = name => { const id = String(name).toLowerCase(); return id === TEAM.toLowerCase() || isTwo(id) ? { name: TEAM, salt: TEAM_SALT, v: TEAM_V, team: true } : has(id) ? accounts[id] : null; };
+const TEST = TEAM.toLowerCase() + '.test', TWO = TEAM.toLowerCase() + '.2';      // where the test account's save is kept, and the second account's (no name a player can register has a dot in it)
+let me = null, test = false, two = false;                  // the account signed in, or nobody; whether the team's account is being its test account; and whether it is its second one
 {
   const s = read('ju.session', null), r = s && typeof s.n === 'string' && typeof s.k === 'string' ? rec(s.n) : null;
-  if (r && proof(s.k) === r.v) { me = r; test = !!(r.team && s.test); } else if (s) drop('ju.session');
+  if (r && proof(s.k) === r.v) { me = r; test = !!(r.team && s.test); two = !!(r.team && s.two); } else if (s) drop('ju.session');
 }
-const slot = () => (me ? (test ? TEST : me.name.toLowerCase()) : GUEST);
+const home = () => (two ? TWO : me.name.toLowerCase());     // whichever of the team's two this is, or a player's own
+const called = () => (two ? TEAM2 : me.name);
+const slot = () => (me ? (test ? TEST : home()) : GUEST);
 
 // everything the game has saved, under whoever is leaving; and whatever is kept for whoever is arriving, in its place
 function liveKeys() {
@@ -2011,7 +2017,7 @@ async function sign(text) {
   return hex(new Uint8Array(await crypto.subtle.sign({ name: 'Ed25519' }, key, enc(text))));
 }
 
-JU.account = Object.freeze({ TEAM, get name() { return me ? me.name : ''; }, get dev() { return !!(me && me.team && !test); }, get test() { return test; }, get team() { return !!(me && me.team); }, get signedIn() { return !!me; }, sign });
+JU.account = Object.freeze({ TEAM, TEAM2, get name() { return me ? called() : ''; }, get two() { return two; }, get dev() { return !!(me && me.team && !test); }, get test() { return test; }, get team() { return !!(me && me.team); }, get signedIn() { return !!me; }, sign });
 
 /* ---------- the scroll ---------- */
 const box = document.getElementById('ascroll');
@@ -2029,13 +2035,14 @@ function fail(text) { say(text); sfx.back(); body.classList.remove('no'); void b
 function paint(note) {
   const team = !!(me && me.team && !test);
   box.classList.toggle('in', !!me); box.classList.toggle('team', team); box.classList.toggle('test', test);
-  head.innerHTML = `<b lang="ja" aria-hidden="true">${test ? '試' : team ? '無' : me ? '印' : '巻'}</b><span><small>${me ? (test ? 'Test account' : team ? 'Team account' : 'Signed in') : 'Account'}</small>${me ? (test ? 'Plays as a player' : esc(me.name)) : 'Log in · Register'}</span><u aria-hidden="true"></u>`;
+  head.innerHTML = `<b lang="ja" aria-hidden="true">${test ? '試' : team ? '無' : me ? '印' : '巻'}</b><span><small>${me ? (test ? 'Test account' : team ? 'Team account' : 'Signed in') : 'Account'}</small>${me ? (test ? 'Plays as a player' : esc(called())) : 'Log in · Register'}</span><u aria-hidden="true"></u>`;
   if (me) {
-    body.innerHTML = `<div class="ain"><small>${test ? 'The test account' : team ? 'The team’s account' : 'Signed in as'}</small><b>${test ? 'Plays as a player' : esc(me.name)}</b>
+    body.innerHTML = `<div class="ain"><small>${test ? 'The test account' : team ? 'The team’s account' : 'Signed in as'}</small><b>${test ? 'Plays as a player' : esc(called())}</b>
       <p>${test ? 'Nothing is unlocked here: tickets, slots and locks are what the public gets. It has a save of its own, and going back asks for no password.'
         : team ? 'Everything is unlocked for this account: every technique, clan and tool, and spins that use nothing up.' : 'Your techniques, clans, tickets and story are kept with this account.'}</p>
       <p class="amsg ok" id="amsg" aria-live="polite">${note || ''}</p>
-      ${me.team ? `<button class="aseal alt" id="aflip" type="button"><b lang="ja" aria-hidden="true">${test ? '無' : '試'}</b><span>${test ? 'Back to the team account' : 'Switch to the test account'}</span></button>` : ''}
+      ${team ? `<button class="aseal alt" id="ahop" type="button"><b lang="ja" aria-hidden="true">${two ? '壱' : '弐'}</b><span>Switch to ${two ? TEAM : TEAM2}</span></button>` : ''}
+      ${me.team ? `<button class="aseal alt" id="aflip" type="button"><b lang="ja" aria-hidden="true">${test ? '無' : '試'}</b><span>${test ? 'Back to ' + (two ? TEAM2 : 'the team account') : 'Switch to the test account'}</span></button>` : ''}
       ${me.team ? `<form class="acast" id="acast"><label>Announce to every player<textarea id="atext" maxlength="160" rows="2" placeholder="Shown at the top of everybody’s screen"></textarea></label>
         <button class="aseal alt" type="submit"><b lang="ja" aria-hidden="true">告</b><span>Send to everyone</span></button></form>` : ''}
       <button class="aseal" id="aout" type="button"><b lang="ja" aria-hidden="true">去</b><span>Log out</span></button>
@@ -2078,8 +2085,9 @@ function login(name, pass) {
   if (!r) return fail('No account by that name in this browser.');
   const k = stretch(r.salt, pass);
   if (proof(k) !== r.v) return fail('Wrong password.');
-  try { swap(r.name.toLowerCase(), false); } catch (e) { return fail('This browser is not keeping saves.'); }
-  write('ju.session', { n: r.name, k }); hello('in'); location.reload();
+  const to2 = !!r.team && isTwo(name);
+  try { swap(to2 ? TWO : r.name.toLowerCase(), false); } catch (e) { return fail('This browser is not keeping saves.'); }
+  write('ju.session', to2 ? { n: r.name, k, two: true } : { n: r.name, k }); hello('in'); location.reload();
 }
 function logout() {
   try { swap(GUEST, true); } catch (e) {}
@@ -2089,8 +2097,15 @@ function logout() {
 function flip() {
   const s = read('ju.session', null);
   if (!me || !me.team || !s) return;
-  try { swap(test ? me.name.toLowerCase() : TEST, !test); } catch (e) { return; }      // (the test account's first time: it starts as a new player would)
+  try { swap(test ? home() : TEST, !test); } catch (e) { return; }      // (the test account's first time: it starts as a new player would)
   s.test = !test; write('ju.session', s); hello(test ? 'team' : 'test'); location.reload();
+}
+// and between the team's two accounts. The second one's first time, it starts from where the first one is: a copy, which is then its own
+function hop() {
+  const s = read('ju.session', null);
+  if (!me || !me.team || test || !s) return;
+  try { swap(two ? me.name.toLowerCase() : TWO, false); } catch (e) { return; }
+  s.two = !two; write('ju.session', s); hello(two ? 'team' : 'two'); location.reload();
 }
 // the test account from nothing again: its save is wiped, and it starts as a new player would
 function restart() {
@@ -2116,6 +2131,7 @@ box.addEventListener('click', e => {
   const t = e.target.closest('[data-tab]');
   if (e.target.closest('#ahead')) { open(!box.classList.contains('open')); return; }
   if (t && !busy) { tab = t.dataset.tab; const n = $('#aname').value; sfx.hover(); paint(); $('#aname').value = n; $('#aname').focus({ preventScroll: true }); return; }
+  if (e.target.closest('#ahop')) { sfx.confirm(); hop(); return; }
   if (e.target.closest('#aflip')) { sfx.confirm(); flip(); return; }
   const fr = e.target.closest('#afresh');
   if (fr) { if (fr.dataset.sure) restart(); else { fr.dataset.sure = 1; fr.textContent = 'Sure? Press again: its save is wiped'; sfx.hover(); } return; }      // (asked twice: it cannot be undone)
@@ -2139,7 +2155,7 @@ document.addEventListener('pointerdown', e => { if (box.classList.contains('open
 addEventListener('storage', e => { if (e.key === 'ju.session') location.reload(); });       // signed in or out in another tab: this one follows
 
 let note = '';
-try { const v = sessionStorage.getItem('ju.hello'); sessionStorage.removeItem('ju.hello'); note = v === 'in' && me ? 'Signed in.' : v === 'out' && !me ? 'Logged out. Your progress stays with your account.' : v === 'test' && test ? 'This is the test account.' : v === 'team' && me && !test ? 'Back on the team account.' : v === 'fresh' && test ? 'The test account starts over.' : ''; } catch (e) {}
+try { const v = sessionStorage.getItem('ju.hello'); sessionStorage.removeItem('ju.hello'); note = v === 'in' && me ? 'Signed in.' : v === 'out' && !me ? 'Logged out. Your progress stays with your account.' : v === 'test' && test ? 'This is the test account.' : v === 'two' && two && !test ? 'This is ' + TEAM2 + '. Everything is unlocked here too.' : v === 'team' && me && !test ? 'Back on ' + (two ? TEAM2 : 'the team account') + '.' : v === 'fresh' && test ? 'The test account starts over.' : ''; } catch (e) {}
 paint(note);
 if (note) { open(true, true); shut = setTimeout(() => open(false, true), 5200); }
 })();
