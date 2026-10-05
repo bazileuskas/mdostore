@@ -122,16 +122,18 @@ M.hear('duel', (p, m) => {
 });
 M.hear('gone', p => { const d = D; if (!d || d.pid !== p.id) return; if (d.phase === 'fight') finish(true, `${d.name} left the server.`); else if (d.phase !== 'over') over(`${d.name} left the server.`); });
 
-box.addEventListener('pointerdown', e => e.stopPropagation());
-box.addEventListener('click', e => {
+// (the board is redrawn when the other one chooses. A mouse press counts at once, so a redraw between press and release cannot lose it)
+box.addEventListener('pointerdown', e => { e.stopPropagation(); if (e.pointerType === 'mouse' && e.button === 0) act(e); });
+box.addEventListener('click', act);
+function act(e) {
   const b = e.target.closest('button'), d = D;
-  if (!b || !d) return;
+  if (!b || !d || b.disabled) return;
   if (b.dataset.id !== undefined) { choose(b.dataset.id); return; }
   const a = b.dataset.d;
   if (a === 'yes' && d.phase === 'asked') { if (!free()) { say(d.pid, { a: 'busy' }); over(''); return; } say(d.pid, { a: 'yes' }); draft(); }
   else if (a === 'no') { say(d.pid, { a: 'no' }); over(''); sfx.back(); }
   else if (a === 'quit') { say(d.pid, { a: 'quit' }); over(''); sfx.back(); }
-});
+}
 addEventListener('keydown', e => {                  // while the board is up the keys are its own. Escape leaves the duel, not the game
   const d = D;
   if (!d || d.phase === 'fight' || d.phase === 'over' || e.target instanceof HTMLInputElement) return;

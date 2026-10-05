@@ -204,6 +204,11 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 .dc.me.them{outline-color:#fff}
 .dbox footer{display:flex;flex-wrap:wrap;align-items:center;gap:.5em 1.6em;color:rgba(244,239,228,.7)}
 .dbox footer button{margin-left:auto}
+/* (everything laid over the canvas ignores the pointer unless it says otherwise: these are things to press) */
+.game>.mp{z-index:6;pointer-events:auto}
+.game>.dtoast{z-index:9}
+.game>.duel{z-index:8;pointer-events:auto}
+.game>.duel.small{pointer-events:none}
 @media (max-height:480px){.dbox{gap:.4em;padding:.6em 1em .7em}.dbox header b{font-size:1.5em}.dstep{font-size:1em}.dgrid{grid-template-columns:repeat(8,minmax(0,1fr));gap:.35em}.dc{padding:.3em .2em}.dc b{font-size:1.3em}.dc span{font-size:.7em}.dc small{min-height:0;font-size:.6em}}
 .acast{margin:.8em 0 .2em;padding-top:.7em;border-top:1px dashed rgba(43,26,16,.45)}
 .acast label{display:grid;gap:.3em;font:600 .72em/1 var(--f-ui);letter-spacing:.24em;text-transform:uppercase;color:rgba(43,26,16,.75)}
@@ -16998,16 +17003,18 @@ M.hear('duel', (p, m) => {
 });
 M.hear('gone', p => { const d = D; if (!d || d.pid !== p.id) return; if (d.phase === 'fight') finish(true, `${d.name} left the server.`); else if (d.phase !== 'over') over(`${d.name} left the server.`); });
 
-box.addEventListener('pointerdown', e => e.stopPropagation());
-box.addEventListener('click', e => {
+// (the board is redrawn when the other one chooses. A mouse press counts at once, so a redraw between press and release cannot lose it)
+box.addEventListener('pointerdown', e => { e.stopPropagation(); if (e.pointerType === 'mouse' && e.button === 0) act(e); });
+box.addEventListener('click', act);
+function act(e) {
   const b = e.target.closest('button'), d = D;
-  if (!b || !d) return;
+  if (!b || !d || b.disabled) return;
   if (b.dataset.id !== undefined) { choose(b.dataset.id); return; }
   const a = b.dataset.d;
   if (a === 'yes' && d.phase === 'asked') { if (!free()) { say(d.pid, { a: 'busy' }); over(''); return; } say(d.pid, { a: 'yes' }); draft(); }
   else if (a === 'no') { say(d.pid, { a: 'no' }); over(''); sfx.back(); }
   else if (a === 'quit') { say(d.pid, { a: 'quit' }); over(''); sfx.back(); }
-});
+}
 addEventListener('keydown', e => {                  // while the board is up the keys are its own. Escape leaves the duel, not the game
   const d = D;
   if (!d || d.phase === 'fight' || d.phase === 'over' || e.target instanceof HTMLInputElement) return;
