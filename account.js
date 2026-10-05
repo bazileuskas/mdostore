@@ -91,8 +91,18 @@ function swap(to, fresh) {
   for (const k in next || {}) if (k.startsWith('ju.') && !OWN.test(k) && typeof next[k] === 'string') localStorage.setItem(k, next[k]);
 }
 const hello = v => { try { sessionStorage.setItem('ju.hello', v); } catch (e) {} };
+// The team's announcements are signed, so that nobody else can make one (announce.js checks them against the public half of this key).
+// The key is made from the sign-in each time it is wanted: it is kept nowhere, and only the team's account can make it
+async function sign(text) {
+  const s = read('ju.session', null);
+  if (!me || !me.team || !s) throw new Error('Only the team’s account can announce.');
+  const der = new Uint8Array(48);
+  der.set([0x30, 0x2e, 0x02, 0x01, 0x00, 0x30, 0x05, 0x06, 0x03, 0x2b, 0x65, 0x70, 0x04, 0x22, 0x04, 0x20]); der.set(sha256(enc('ju-announce:' + s.k)), 16);
+  const key = await crypto.subtle.importKey('pkcs8', der, { name: 'Ed25519' }, false, ['sign']);
+  return hex(new Uint8Array(await crypto.subtle.sign({ name: 'Ed25519' }, key, enc(text))));
+}
 
-JU.account = Object.freeze({ TEAM, get name() { return me ? me.name : ''; }, get dev() { return !!(me && me.team && !test); }, get test() { return test; }, get signedIn() { return !!me; } });
+JU.account = Object.freeze({ TEAM, get name() { return me ? me.name : ''; }, get dev() { return !!(me && me.team && !test); }, get test() { return test; }, get team() { return !!(me && me.team); }, get signedIn() { return !!me; }, sign });
 
 /* ---------- the scroll ---------- */
 const box = document.getElementById('ascroll');
@@ -117,6 +127,8 @@ function paint(note) {
         : team ? 'Everything is unlocked for this account: every technique, clan and tool, and spins that use nothing up.' : 'Your techniques, clans, tickets and story are kept with this account.'}</p>
       <p class="amsg ok" id="amsg" aria-live="polite">${note || ''}</p>
       ${me.team ? `<button class="aseal alt" id="aflip" type="button"><b lang="ja" aria-hidden="true">${test ? '無' : '試'}</b><span>${test ? 'Back to the team account' : 'Switch to the test account'}</span></button>` : ''}
+      ${me.team ? `<form class="acast" id="acast"><label>Announce to every player<textarea id="atext" maxlength="160" rows="2" placeholder="Shown at the top of everybody’s screen"></textarea></label>
+        <button class="aseal alt" type="submit"><b lang="ja" aria-hidden="true">告</b><span>Send to everyone</span></button></form>` : ''}
       <button class="aseal" id="aout" type="button"><b lang="ja" aria-hidden="true">去</b><span>Log out</span></button>
       ${test ? '<button class="alink" id="afresh" type="button">Start the test account over</button>' : ''}
       <p class="afine">${me.team ? 'This account signs in from any browser. What it has played is kept in the browser it was played in.' : 'Kept in this browser only.'}</p></div>`;
@@ -200,7 +212,15 @@ box.addEventListener('click', e => {
   if (fr) { if (fr.dataset.sure) restart(); else { fr.dataset.sure = 1; fr.textContent = 'Sure? Press again: its save is wiped'; sfx.hover(); } return; }      // (asked twice: it cannot be undone)
   if (e.target.closest('#aout')) { sfx.back(); logout(); }
 });
-box.addEventListener('submit', e => { e.preventDefault(); submit(); });
+// the team's word to everybody: signed here, sent and shown by announce.js
+function cast() {
+  const t = $('#atext'), text = t.value.trim();
+  if (!text || busy) return;
+  if (!JU.announce) return fail('Announcements are not loaded.');
+  busy = true; say('Sending…', true);
+  JU.announce.send(text).then(() => { busy = false; t.value = ''; say('Sent to every player.', true); }, err => { busy = false; fail((err && err.message) || 'It could not be sent.'); });
+}
+box.addEventListener('submit', e => { e.preventDefault(); if (e.target.id === 'acast') cast(); else submit(); });
 box.addEventListener('keydown', e => {                     // typing a name must not walk the menu behind it
   e.stopPropagation();
   if (e.key === 'Escape') { open(false); head.focus({ preventScroll: true }); }
