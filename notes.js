@@ -5,6 +5,18 @@
 // Newest first. v = the build, jp = the seal stamped beside it, pic = notes/<pic>.jpg, cap = what the picture shows.
 // A new update goes at the top of this list.
 const NOTES = [
+  { v: '0.3', name: 'Public Release', jp: '公', date: '5 Oct 2026', pic: 'tced', cap: 'Granite Blast at full power', items: [
+    'The game is out. From here on a spin uses a ticket of its own kind: a CT ticket for the technique talisman, a clan roll for a clan draw, and a new one, the cursed tool spin, for the reel. Each is 10 Cursed Tokens in the Shop',
+    'What a spin lands on is yours to keep. A card now equips only what you own: the rest are shown sealed, and pressing one says how it is come by',
+    'Whatever you had equipped when this update arrived (your technique, your clan, the tools in your pockets) counts as yours',
+    'Accounts. The scroll in the top right corner unrolls into Log in and Register, and SFX has moved to its left. An account has a save of its own: techniques, clans, tickets, tokens, story. Accounts are kept in the browser they are made in, and do not follow you to another device',
+    'Awakened techniques are earned now. Awakened Projection: three Projection Frame v2 from the Maki boss, who gives one up 5% of the time. Sukuna\'s Mark: the Sukuna clan, 150 Black Flashes as Sukuna, 500 curses exorcised. Awakened Limitless and Awakened Ten Shadows: the technique each is the awakening of',
+    'The Maki fight costs 50 Cursed Tokens a go',
+    'Early Access techniques and the Dagger of the Demonly Holdings are sealed until they can be had: Early Access is not on sale yet, and the dagger\'s questline is not built',
+    'A new awakened technique: True Cursed Energy Discharge. Ryu Ishigori with nothing held back, and no heat to mind. It is Cursed Cannon awakened, so it asks for Cursed Cannon',
+    'Volley (1): ten quick beams, 14 each. Downpour (2): eight more, thrown up to come down out of the sky wherever it is standing by then, 26 each, and he is free to move while they fall',
+    'Repulse (3): a burst all round him, 110. Hit him while he gathers it and the hit is turned aside, the burst comes at once, and it is worth 176',
+    'Max Granite Blast (4): 900, and wide enough to be seen from above'] },
   { v: '0.2v6', name: 'Early Access: Cursed Cannon', jp: '砲', date: '5 Oct 2026', pic: 'cannon', cap: 'Granite Blast, held the full three seconds', items: [
     'A new early-access character: Ryu Ishigori, with Cursed Cannon. It is on the Cursed Technique screen and in the Shop\'s Early Access tab',
     'Granite Blast (1), a second between them, out of the front of his hair. Let go at once it does 45. Held 1.4 seconds, 80. Held the full 3, anything from 120 to 145, and it goes whether he lets go or not',

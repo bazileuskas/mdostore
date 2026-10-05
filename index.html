@@ -93,10 +93,52 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 .hud.tl{left:var(--pad-x);top:clamp(16px,3.4vh,34px)}
 .hud.bl{left:var(--pad-x);bottom:clamp(14px,3.2vh,30px)}
 .hud.br{right:clamp(16px,3vw,44px);bottom:clamp(14px,3.2vh,30px)}
-.sfx{position:absolute;right:clamp(16px,3vw,44px);top:clamp(12px,2.8vh,28px);padding:7px 12px 6px;cursor:pointer;
+.sfx{margin-top:clamp(9px,1.7vh,19px);padding:7px 12px 6px;cursor:pointer;white-space:nowrap;
   background:rgba(5,4,10,.4);border:1px solid rgba(244,239,228,.22);color:rgba(244,239,228,.6);
-  font:400 clamp(11px,1.25vh,18px)/1 var(--f-ui);letter-spacing:.28em;opacity:0;transition:color .15s,border-color .15s}
+  font:400 clamp(11px,1.25vh,18px)/1 var(--f-ui);letter-spacing:.28em;transition:color .15s,border-color .15s}
 .sfx:hover,.sfx:focus-visible{color:#fff;border-color:var(--red);outline:none}
+/* the account, top right, across from the title: a scroll, rolled up until it is wanted. The SFX switch sits to its left (account.js) */
+.acct{position:absolute;right:clamp(16px,3vw,44px);top:clamp(10px,2.2vh,24px);z-index:3;display:flex;align-items:flex-start;gap:clamp(8px,1vw,18px);opacity:0}
+.ascroll{--ink:#2b1a10;--seal:#a5102a;--edge:clamp(7px,.7vw,12px);position:relative;width:clamp(232px,20vw,390px);padding:0 var(--edge);
+  font:400 clamp(11px,min(1vw,1.85vh),19px)/1.35 var(--f-ui);letter-spacing:.03em;color:var(--ink);filter:drop-shadow(0 8px 12px rgba(0,0,0,.55))}
+.ascroll .rod{height:clamp(9px,1.5vh,16px);box-shadow:none}
+.ascroll .rod::before,.ascroll .rod::after{width:clamp(9px,1vw,16px)}
+.ahead,.abody{background:radial-gradient(60% 90% at 12% 20%,rgba(120,78,30,.2),transparent 70%),radial-gradient(50% 70% at 90% 70%,rgba(120,78,30,.22),transparent 70%),
+    repeating-linear-gradient(0deg,rgba(96,62,22,.05) 0 1px,transparent 1px 5px),linear-gradient(90deg,#b49b68 0%,#e2d3ad 6%,#efe4c8 50%,#e2d3ad 94%,#b49b68 100%)}
+.ahead{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:.75em;width:100%;padding:.55em .9em .5em .7em;cursor:pointer;text-align:left;color:var(--ink);
+  border:0;outline:none;font:inherit;box-shadow:inset 0 9px 10px -8px rgba(60,34,10,.7),inset 0 -9px 10px -8px rgba(60,34,10,.7);transition:filter .15s}
+.ahead b{display:grid;place-items:center;width:1.75em;aspect-ratio:1;font:400 1.3em/1 var(--f-jp);color:#f4e9d0;background:var(--seal);border-radius:4px;transform:rotate(-6deg);filter:url(#ink-fine)}
+.ahead span{display:block;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font:400 1.3em/1.05 var(--f-display);letter-spacing:.05em}
+.ahead small{display:block;margin-bottom:.35em;font:600 .5em/1 var(--f-ui);letter-spacing:.3em;text-transform:uppercase;color:var(--seal)}
+.ahead u{width:.5em;height:.5em;margin:0 .2em .25em;border-right:2px solid var(--ink);border-bottom:2px solid var(--ink);transform:rotate(45deg);transition:transform .3s}
+.ahead:hover,.ahead:focus-visible{filter:brightness(1.08)}
+.ahead:focus-visible{outline:2px solid var(--seal);outline-offset:-4px}
+.ascroll.open .ahead u{transform:translateY(.3em) rotate(225deg)}
+.ascroll.team .ahead b{color:#3a1206;background:radial-gradient(circle at 35% 30%,#ffe9a0,#ffd23d 45%,#b07d10)}
+.abody{max-height:0;overflow:hidden;transition:max-height .55s cubic-bezier(.2,.8,.2,1);scrollbar-width:thin;scrollbar-color:#8a6a3c transparent}
+.ascroll.open .abody{max-height:min(38em,calc(100vh - 7.5em));overflow-y:auto}
+.aform,.ain{padding:.2em 1em 1.1em;border-top:3px double rgba(43,26,16,.5)}
+.atabs{display:flex;gap:1.3em;margin:.8em 0 0}
+.atabs button{padding:0 0 .25em;cursor:pointer;color:rgba(43,26,16,.45);background:none;border:0;border-bottom:2px solid transparent;outline:none;
+  font:400 1.35em/1 var(--f-display);letter-spacing:.06em;text-transform:uppercase;transition:color .15s}
+.atabs button.on{color:var(--ink);border-bottom-color:var(--seal)}
+.atabs button:hover,.atabs button:focus-visible{color:var(--ink)}
+.aform label{display:grid;gap:.2em;margin-top:.8em;font:600 .72em/1 var(--f-ui);letter-spacing:.24em;text-transform:uppercase;color:rgba(43,26,16,.75)}
+.aform input{width:100%;padding:.3em .15em .25em;font:400 max(16px,1.55em)/1.2 var(--f-ui);letter-spacing:.04em;text-transform:none;color:var(--ink);background:none;
+  border:0;border-bottom:2px solid rgba(43,26,16,.55);border-radius:0;outline:none;user-select:text;-webkit-user-select:text}
+.aform input:focus{border-bottom-color:var(--seal);background:rgba(165,16,42,.07)}
+.amsg{min-height:1.35em;margin:.7em 0 0;font:600 .9em/1.35 var(--f-ui);color:var(--seal)}
+.amsg.ok{color:#2f5a2a}
+.aseal{display:flex;align-items:center;gap:.6em;margin-top:.55em;padding:.4em 1em .36em .5em;cursor:pointer;color:#f4e9d0;background:var(--seal);border:0;border-radius:4px;outline:none;
+  font:400 1.3em/1 var(--f-display);letter-spacing:.08em;text-transform:uppercase;transform:rotate(-1.5deg);box-shadow:2px 3px 0 rgba(43,26,16,.35);transition:transform .15s,background .15s}
+.aseal b{font:400 1.15em/1 var(--f-jp)}
+.aseal:hover,.aseal:focus-visible{transform:rotate(0deg) scale(1.05);background:#c8102e}
+.afine{margin:.9em 0 0;font:italic 400 .82em/1.35 var(--f-ui);color:rgba(43,26,16,.72)}
+.ain small{display:block;margin-top:.85em;font:600 .72em/1 var(--f-ui);letter-spacing:.24em;text-transform:uppercase;color:var(--seal)}
+.ain>b{display:block;margin:.2em 0 .3em;overflow:hidden;text-overflow:ellipsis;font:400 1.7em/1.05 var(--f-display);letter-spacing:.04em}
+.ain p{margin:.3em 0 0}
+.abody.no{animation:nope .3s}
+@keyframes nope{20%{translate:-8px 0}45%{translate:7px 0}70%{translate:-4px 0}}
 .side{position:absolute;right:clamp(10px,2.2vw,36px);top:50%;translate:0 -50%;writing-mode:vertical-rl;pointer-events:none;
   font:400 clamp(26px,4.6vh,54px)/1 var(--f-jp);letter-spacing:.5em;color:transparent;-webkit-text-stroke:1px rgba(244,239,228,.2);opacity:0}
 
@@ -108,7 +150,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 .ready .cut{animation:cut 1s cubic-bezier(.7,0,.2,1) .9s both}
 .ready .tag{animation:fade .6s ease-out 1.1s both}
 .ready .mbtn{animation:slidein .45s cubic-bezier(.2,.9,.2,1) calc(1.05s + var(--i)*.08s) both}
-.ready .hud,.ready .sfx,.ready .side{animation:fade .8s ease-out 1.6s both}
+.ready .hud,.ready .acct,.ready .side{animation:fade .8s ease-out 1.6s both}
 @keyframes fade{from{opacity:0}to{opacity:1}}
 @keyframes slam{0%{opacity:0;transform:translateZ(46px) scale(2.6)}55%{opacity:1}100%{opacity:1;transform:translateZ(46px) scale(1)}}
 @keyframes wipe{0%{opacity:1;clip-path:inset(-30% 100% -30% -6%)}100%{opacity:1;clip-path:inset(-30% -6% -30% -6%)}}
@@ -281,6 +323,25 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 .tcard.lim.tease i{max-width:22em;font-style:italic;font-weight:400;letter-spacing:.03em;text-transform:none;text-align:right;color:rgba(244,239,228,.62)}
 .tcard.lim.tease u{color:#0b0710;background:var(--c);animation:none}
 .tcard.no{animation:shake .3s}
+/* since the public release a card equips only what has been rolled or bought: the rest are shown sealed */
+.tcard.lock,.ccard.lock,.wcard.lock{position:relative;opacity:.5}
+.tcard.lock b,.ccard.lock b,.wcard.lock b{filter:grayscale(.85)}
+.tcard.lock::after,.ccard.lock::after,.wcard.lock::after{content:"封";position:absolute;right:.4em;top:.3em;font:400 clamp(11px,1.5vh,18px)/1 var(--f-jp);color:rgba(244,239,228,.8)}
+.tcard.lim.lock::after,.ccard.lim.lock::after{right:auto;left:.35em;top:.25em}
+.tcard.lock:hover,.tcard.lock:focus-visible,.ccard.lock:hover,.ccard.lock:focus-visible,.wcard.lock:hover,.wcard.lock:focus-visible{transform:none}
+.tcard.lock.no,.ccard.no,.wcard.no,.paper.no,.spinb.no,.formb.no,.mode.no,.tix.no{animation:nope .3s}
+.formb.lock{opacity:.6}
+.formb.lock:hover,.formb.lock:focus-visible{transform:none}
+.acard.lock{opacity:.62}
+.acard.lock small{color:#ff8a98}
+.pbody .tix{display:flex;align-items:center;gap:.3em .8em;max-width:none;margin:-.2em 0 1em;font:600 .78em/1.2 var(--f-ui);letter-spacing:.18em;text-transform:uppercase;color:rgba(244,239,228,.62)}
+.tix b{min-width:1.9em;padding:.3em .55em .25em;text-align:center;font:400 1.5em/1 var(--f-display);letter-spacing:.04em;color:#0b0710;background:#ffd23d}
+.tix.out{color:#ff8a98}
+.tix.out b{color:#fff;background:var(--red)}
+.buy button.mine{padding-left:.9em;color:#06140c;background:#7de0b0}
+.acards.a5{grid-template-columns:repeat(5,minmax(0,1fr));max-width:min(100%,78em)}
+.acards.a5 .acard h4{font-size:clamp(13px,min(1.4vw,2.5vh),28px)}
+.acards.a5 .acard>b{font-size:clamp(26px,min(3vw,5.4vh),60px)}
 /* a limited clan: the same banner a limited technique gets */
 .ccard.lim{grid-template-columns:auto 1fr auto auto;justify-items:start;align-items:center;gap:0 1.1em;width:100%;max-width:min(100%,60em);margin:0 0 clamp(6px,.8vw,14px);
   padding:.5em 1.1em .45em;text-align:left;border-top:0;border-left:4px solid var(--c);background:linear-gradient(100deg,rgba(120,130,150,.5),rgba(14,9,26,.86) 64%)}
@@ -367,7 +428,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 .acard.soon{opacity:.5;cursor:default}
 .acard.soon:hover{transform:none;background:rgba(14,9,26,.82)}
 .acard.no{animation:shake .3s}
-@media (max-width:820px){.acards{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:820px){.acards,.acards.a5{grid-template-columns:repeat(2,minmax(0,1fr))}}
 
 /* ---------- Clan: three talismans, the draw, and a card per clan ---------- */
 .papers{flex-wrap:wrap}
@@ -706,6 +767,8 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
   .title{font-size:clamp(50px,min(19vw,16vh),150px);text-align:center}
   .tag{letter-spacing:.2em}
   .seal,.side,.hud.bl{display:none}
+  .ascroll{width:clamp(180px,46vw,250px)}
+  .hud.tl{max-width:38vw;line-height:1.5}
   .vignette{background:radial-gradient(ellipse at 50% 45%,transparent 40%,rgba(0,0,0,.78) 100%),linear-gradient(180deg,rgba(3,2,8,.35),rgba(3,2,8,.72))}
   .mbtn{min-width:min(84vw,420px);font-size:clamp(19px,5.4vw,30px)}
   .mbtn.sel{transform:skewX(-11deg) translateX(6px) translateZ(18px)}
@@ -733,6 +796,15 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
   .parch{max-height:none}
   .shopbox{position:absolute;left:var(--pad-x);right:auto;bottom:clamp(8px,3vh,20px);justify-items:start}
   .mbtn.shopb{min-width:0}
+  .acct{top:5px}
+  .sfx{margin-top:5px}
+  .ascroll{width:clamp(170px,27vw,230px);font-size:10px}
+  .ascroll .rod{height:7px}
+  .ahead{padding:.35em .8em .3em .6em}
+}
+/* too narrow for the build label and the account to share the top edge: the label goes to the bottom, where there is room */
+@media (max-width:560px){
+  .hud.tl{top:auto;bottom:clamp(14px,3.2vh,30px);max-width:56vw}
 }
 @media (prefers-reduced-motion:reduce){
   .ready *,.panel.open .pin>*{animation-duration:.01s!important;animation-delay:0s!important}
@@ -775,10 +847,13 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
   </div>
 
   <div class="side" aria-hidden="true" lang="ja">領域展開</div>
-  <div class="hud tl"><b lang="ja">呪</b>Fan project · Build 0.2v6 · Early Access: Cursed Cannon</div>
+  <div class="hud tl"><b lang="ja">呪</b>Fan project · Build 0.3 · Public Release</div>
   <div class="hud bl">↑ ↓ Select &nbsp;·&nbsp; Enter Confirm</div>
   <div class="hud br">Title screen</div>
-  <button class="sfx" id="sfx" aria-pressed="true">SFX ON</button>
+  <div class="acct" id="acct">
+    <button class="sfx" id="sfx" aria-pressed="true">SFX ON</button>
+    <div class="ascroll" id="ascroll" role="group" aria-label="Account"></div>
+  </div>
 </main>
 
 <section class="panel" id="panel" role="dialog" aria-modal="true" aria-labelledby="pTitle" inert>
@@ -1024,6 +1099,11 @@ const sfx = (() => {
       voice({ f: [150, 30], dur: .5 * s, vol: .6, wet: .35 });
       voice({ type: 'noise', dur: .4 * s, vol: .35, attack: .01, filt: ['bandpass', 3800, 600], q: 1.5, wet: .4 });
       if (tier > 1) { voice({ f: [70, 20], dur: 1.6, vol: .7, wet: .5 }); voice({ type: 'noise', dur: 1.2, vol: .4, filt: ['lowpass', 2400, 80], wet: .6 }); }
+    },
+    zap() { voice({ type: 'noise', dur: .04, vol: .28, filt: ['highpass', 3000] }); voice({ f: [2500, 520], dur: .09, vol: .13, type: 'sawtooth', filt: ['lowpass', 6200, 1200] }); voice({ f: [230, 60], dur: .12, vol: .24 }); },      // one of a volley
+    roar(dur = 1.4) {                              // a blast that is held: the air going, for as long as it lasts
+      voice({ type: 'noise', dur, vol: .42, attack: .04, filt: ['lowpass', 3400, 300], wet: .5 }); voice({ f: [92, 34], dur, vol: .6, attack: .03, wet: .4 });
+      voice({ f: [940, 240], dur, vol: .11, type: 'sawtooth', attack: .05, filt: ['bandpass', 1800, 500], q: 2, wet: .3 });
     },
     steam() { voice({ type: 'noise', dur: .7, vol: .22, attack: .03, filt: ['highpass', 4200], wet: .2 }); voice({ type: 'noise', dur: .5, vol: .12, attack: .1, filt: ['bandpass', 1800, 5200], q: 3 }); },
     comb() { voice({ type: 'noise', dur: .12, vol: .14, attack: .02, filt: ['bandpass', 2600, 5200], q: 6 }); },
@@ -1611,7 +1691,7 @@ $('#back').addEventListener('click', closePanel);
 $('#pBody').addEventListener('click', e => {      // Play > pick a mode
   const m = e.target.closest('.mode');
   if (!m || !m.dataset.mode) return;              // a season button only opens its chapters (script.js)
-  if (m.dataset.mode === 'maki' && window.JU.shop && !window.JU.shop.fee('maki')) { sfx.back(); return; }   // the boss fight will cost tokens one day; for now this always lets him in
+  if (m.dataset.mode === 'maki' && window.JU.shop && !window.JU.shop.fee('maki')) { sfx.back(); m.classList.remove('no'); void m.offsetWidth; m.classList.add('no'); return; }   // the boss fight costs tokens, and he has not got them
   const r = m.getBoundingClientRect(), x = e.clientX || r.left + r.width / 2, y = e.clientY || r.top + r.height / 2;
   closePanel(); startGame(x, y, m.dataset.mode, +m.dataset.ch || 0);
 });
@@ -1624,6 +1704,7 @@ paintSfx();
 addEventListener('keydown', e => {
   sfx.unlock();
   if (inGame) return;   // game.js owns the keyboard during a fight
+  if (e.target instanceof HTMLInputElement) return;   // a name being typed on the account scroll
   const k = e.key;
   if (panelOpen) {
     if (k === 'Escape' || k === 'Backspace') { e.preventDefault(); closePanel(); }
@@ -1682,8 +1763,8 @@ window.JU = { sfx, flash, bolts: blackFlash, reduceMotion, startGame, exitGame, 
 <script>
 // Load every game script fresh on each page load. The dev server sends no cache headers, so without this a reload
 // could run a mix of old and new files (new menu, old moves) while the game is being worked on.
-['game.js', 'fx2.js', 'chars.js', 'street.js', 'walk.js', 'foes.js', 'cuts.js', 'sukuna.js', 'school.js', 'story.js', 'story2.js', 'tech.js', 'tech_a.js',
-  'tech_b.js', 'sets.js', 'story3.js', 'cast2.js', 'script.js', 'naoya.js', 'ch45.js', 'ch67.js', 'clan.js', 'clan_a.js', 'clan_b.js', 'boss.js', 'boss_a.js', 'boss_b.js', 'boss_c.js', 'training.js', 'choso.js', 'domain.js', 'domain2.js', 'mahito.js', 'combo.js', 'combat.js', 'cast3.js', 'ch810.js', 'ch1112.js', 'cast4.js', 'ch1316.js', 'cast5.js', 'ch1721.js', 'combat2.js', 'judge.js', 'awaken.js', 'alimit.js', 'ats.js', 'switcher.js', 'tools.js', 'smark.js', 'cast6.js', 'ch2230.js', 'plants.js', 'clash.js', 'block.js', 'cannon.js', 'notes.js', 'shop.js', 'touch.js'].forEach(src => {
+['account.js', 'game.js', 'fx2.js', 'chars.js', 'street.js', 'walk.js', 'foes.js', 'cuts.js', 'sukuna.js', 'school.js', 'story.js', 'story2.js', 'tech.js', 'tech_a.js',
+  'tech_b.js', 'sets.js', 'story3.js', 'cast2.js', 'script.js', 'naoya.js', 'ch45.js', 'ch67.js', 'clan.js', 'clan_a.js', 'clan_b.js', 'boss.js', 'boss_a.js', 'boss_b.js', 'boss_c.js', 'training.js', 'choso.js', 'domain.js', 'domain2.js', 'mahito.js', 'combo.js', 'combat.js', 'cast3.js', 'ch810.js', 'ch1112.js', 'cast4.js', 'ch1316.js', 'cast5.js', 'ch1721.js', 'combat2.js', 'judge.js', 'awaken.js', 'alimit.js', 'ats.js', 'switcher.js', 'tools.js', 'smark.js', 'cast6.js', 'ch2230.js', 'plants.js', 'clash.js', 'block.js', 'cannon.js', 'tced.js', 'notes.js', 'shop.js', 'touch.js'].forEach(src => {
   const s = document.createElement('script');
   s.src = src + '?v=' + Date.now(); s.async = false;      // async = false keeps them running in this order
   document.body.appendChild(s);

@@ -9,7 +9,9 @@ const E = JU.eng, g = E.g, F = E.F, cam = E.cam, H = E.hooks, POSE = E.POSE, LIN
 const { rnd, clamp } = E, TAU = Math.PI * 2, { shout } = JU.tech.tk, SLOTS = JU.tech.SLOTS;
 const STEEL = '#e8f0ff', DEMON = '#c2182b', GOLD = '#e2c060', VIOLET = '#c77dff', CLOUD = '#ff5a6e';
 const ENDS = Date.parse('2026-10-11T12:00:00Z');   // when the Toji clan leaves the draw: seven days after it arrived. Move the date to run it again
-const DEMON_QUEST = false;                          // the Dagger of the Demonly Holdings is meant to be earned through a questline. Off: the form is simply there
+// The Dagger of the Demonly Holdings is meant to be earned through a questline, and that is not built. Until the public release the form was
+// simply there for everybody. Now it is there for whoever has it (JU.shop.demon: the team's account; one day the questline, or the pack that holds it)
+const demonOk = () => !JU.shop || JU.shop.demon;
 const TOJI_TOOL = 3, COUNTER = 3, COUNTER_CD = 20, DEMON_TIME = 10;   // +200% tool damage; Deadly Counter's seconds and its wait; how long the demonic katana stays
 const shake = v => { cam.shake = Math.max(cam.shake, v); };
 
@@ -249,18 +251,32 @@ const count = () => (C.equipped === 'toji' ? 3 : 1);
 const roll = () => { let r = Math.random() * 100; for (const id of ORDER) if ((r -= TOOLS[id].odds) < 0) return id; return ORDER[0]; };
 const tile = id => { const t = TOOLS[id]; return `<i class="tile" style="--c:${t.col}"><b lang="ja">${t.mark}</b><span>${t.name}</span></i>`; };
 function put(id) { S.slots[pick] = id; if (pick >= count()) pick = 0; save(); }
+// since the public release a card gives him only a tool he has spun or bought (shop.js keeps the list), and a spin uses a cursed tool spin
+const mine = id => !JU.shop || JU.shop.owns('tool', id);
+const nope = el => { el.classList.remove('no'); void el.offsetWidth; el.classList.add('no'); sfx.back(); };
+const retix = no => { const el = document.getElementById('tix'); if (el && JU.shop) el.outerHTML = JU.shop.tix('tl', no); };
+// and what is in his pockets has to be his: called when the page loads (shop.js)
+function check(owns, demon) {
+  let ch = false;
+  S.slots = S.slots.map(id => (id && !owns(id) ? (ch = true, null) : id));
+  if (S.demon && !demon) { S.demon = false; ch = true; }
+  if (ch) save();
+}
 function mount(body) {
   const n = count(), where = ['In hand', 'Cursed spirit, round the neck', 'Waist'];
   if (pick >= n) pick = 0;
   body.innerHTML = `<div class="reelbox"><div class="reel"><div class="strip" id="strip">${ORDER.concat(ORDER, ORDER).map(tile).join('')}</div><u></u></div>
       <button class="spinb" id="spinb">Spin<span lang="ja">回</span></button><div class="rres" id="tres" aria-live="polite"></div></div>
+    ${JU.shop ? JU.shop.tix('tl') : ''}
     <div class="pockets">${Array.from({ length: n }, (_, i) => { const t = TOOLS[S.slots[i]]; return `<button class="pocket${i === pick ? ' on' : ''}" data-pocket="${i}" style="--c:${t ? t.col : '#555'}" aria-label="${where[i]}: ${t ? nameOf(t) : 'empty'}"><small>${n > 1 ? where[i] : 'Your cursed tool'}</small><b>${t ? nameOf(t) : 'Empty'}</b></button>`; }).join('')}</div>
-    <div class="tcards wcards">${ORDER.map(id => { const t = TOOLS[id]; return `<button class="wcard${S.slots.slice(0, n).includes(id) ? ' on' : ''}" data-tool="${id}" style="--c:${t.col}" aria-label="Take the ${t.name}"><b lang="ja">${t.mark}</b><span>${t.name}</span><i>${t.odds}%</i><p>${t.what}</p></button>`; }).join('')}</div>
-    <button class="formb${S.demon ? ' on' : ''}" id="formb"><b>${S.demon ? DEMONLY.name : 'Dagger'}</b><small>The dagger's form · click to change${DEMON_QUEST ? '' : ' · a questline later, free for now'}</small><p>${S.demon ? DEMONLY.what : TOOLS.dagger.what}</p></button>
-    <p class="fine">${n > 1 ? 'The Toji clan carries three: pick a pocket, then spin or take a card to fill it. In a fight, T switches between them.' : 'You carry one cursed tool. It is used in place of a cursed technique, in Free Exploration and Training: its moves are on the first keys when no technique is equipped. The Toji clan carries three.'} Spins are free for now.</p>`;
+    <div class="tcards wcards">${ORDER.map(id => { const t = TOOLS[id]; return `<button class="wcard${S.slots.slice(0, n).includes(id) ? ' on' : ''}${mine(id) ? '' : ' lock'}" data-tool="${id}" style="--c:${t.col}" aria-label="Take the ${t.name}${mine(id) ? '' : ', not yours yet'}"><b lang="ja">${t.mark}</b><span>${t.name}</span><i>${t.odds}%</i><p>${t.what}</p></button>`; }).join('')}</div>
+    <button class="formb${S.demon ? ' on' : ''}${demonOk() ? '' : ' lock'}" id="formb"><b>${S.demon ? DEMONLY.name : demonOk() ? 'Dagger' : DEMONLY.name}</b><small>${demonOk() ? 'The dagger’s form · click to change' : 'The dagger’s other form · sealed · a questline to come'}</small><p>${S.demon || !demonOk() ? DEMONLY.what : TOOLS.dagger.what}</p></button>
+    <p class="fine">${n > 1 ? 'The Toji clan carries three: pick a pocket, then spin or take a card to fill it. In a fight, T switches between them.' : 'You carry one cursed tool. It is used in place of a cursed technique, in Free Exploration and Training: its moves are on the first keys when no technique is equipped. The Toji clan carries three.'}${JU.shop && JU.shop.PAID ? ' A spin uses a cursed tool spin, and what it lands on is yours: after that its card puts it in your pocket.' : ''}</p>`;
 }
 function spin() {
   if (spinning) return;
+  if (JU.shop && !JU.shop.take('tl')) { nope(document.getElementById('spinb')); retix(true); return; }      // no cursed tool spin, no spin
+  retix();
   const strip = document.getElementById('strip'), res = document.getElementById('tres'), id = roll(), seq = Array.from({ length: 30 }, roll), dur = JU.reduceMotion ? 300 : 3200;
   seq[26] = id; spinning = true; res.innerHTML = '';
   strip.style.transition = 'none'; strip.style.transform = 'translateX(0)'; strip.innerHTML = seq.map(tile).join('');
@@ -270,7 +286,7 @@ function spin() {
   const tick = setInterval(() => sfx.hover(), 110);
   setTimeout(() => {
     const t = TOOLS[id], body = document.getElementById('pBody'), r = strip.parentNode.getBoundingClientRect();
-    clearInterval(tick); spinning = false; put(id);
+    clearInterval(tick); spinning = false; if (JU.shop) JU.shop.grant('tool', id); put(id);
     JU.flash(r.left + r.width / 2, r.top + r.height / 2); if (t.odds <= 1) { sfx.bf(); JU.bolts(r.left + r.width / 2, r.top + r.height / 2, 30); } else sfx.confirm();
     if (body && document.getElementById('strip')) { mount(body); document.getElementById('strip').innerHTML = [id, id, id].map(tile).join(''); document.getElementById('tres').innerHTML = `<small>You spun · ${t.odds}%</small><b style="color:${t.col}">${t.name}</b><span lang="ja">${t.jp}</span><p>${t.what}</p>`; }
   }, dur + 120);
@@ -279,12 +295,17 @@ document.addEventListener('click', e => {
   const body = document.getElementById('pBody'), k = e.target.closest('[data-tool]'), pk = e.target.closest('[data-pocket]');
   if (e.target.closest('#spinb')) { spin(); return; }
   if (spinning) return;
-  if (e.target.closest('#formb')) { S.demon = !S.demon; save(); sfx.confirm(); mount(body); return; }
+  if (e.target.closest('#formb')) { if (!demonOk()) { nope(e.target.closest('#formb')); return; } S.demon = !S.demon; save(); sfx.confirm(); mount(body); return; }
   if (pk) { pick = +pk.dataset.pocket; sfx.hover(); mount(body); return; }
   if (!k) return;
+  if (!mine(k.dataset.tool)) {                      // not his: he has not spun it
+    const t = TOOLS[k.dataset.tool], res = document.getElementById('tres');
+    nope(k); if (res) res.innerHTML = `<small>Sealed · not yours yet</small><b style="color:${t.col}">${t.name}</b><span lang="ja">${t.jp}</span><p>Spin the reel for it (${t.odds}%).</p>`;
+    return;
+  }
   const r = k.getBoundingClientRect();
   put(k.dataset.tool); sfx.confirm(); JU.flash(r.left + r.width / 2, r.top + r.height / 2); mount(body);
 });
 
-JU.tools = { TOOLS, ORDER, mount, apply, roll, ENDS, TOJI, get state() { return { live, slots: S.slots.slice(), cur: S.cur, demon: S.demon, dc, dcCd, purg, demonT, m1cd, dots: dots.length, held: held() && held().id }; } };
+JU.tools = { TOOLS, ORDER, mount, apply, roll, check, ENDS, TOJI, get state() { return { live, slots: S.slots.slice(), cur: S.cur, demon: S.demon, dc, dcCd, purg, demonT, m1cd, dots: dots.length, held: held() && held().id }; } };
 })();

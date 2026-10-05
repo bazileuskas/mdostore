@@ -205,7 +205,7 @@ function mount(body) {
       <button class="mode" data-mode="free"><b>Free Exploration</b><span lang="ja">自由探索</span><i>Roam Tokyo and exorcise the curses you run into.</i></button>
       <button class="mode" data-mode="training"><b>Training</b><span lang="ja">修練</span><i>A training curse that never fights back. Test your technique and clan on it.</i></button>
       ${naoya ? `<button class="mode" data-mode="maki" style="border-left-color:#ffd23d"><b>Maki Fight</b><span lang="ja" style="color:#ffd23d">真希</span>
-        <i>Naoya against Maki Zenin, up in the mountains. Here because Projection Sorcery is equipped.</i></button>` : ''}
+        <i>Naoya against Maki Zenin, up in the mountains. Here because Projection Sorcery is equipped.${JU.shop && JU.shop.PAID ? ` Costs ${JU.shop.FEES.maki} Cursed Tokens a go: you have ${JU.shop.tokens}.` : ''}</i></button>` : ''}
     </div>
   </div>`;
 }

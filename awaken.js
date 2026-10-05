@@ -1,13 +1,15 @@
 /* JUJUTSU UNLIMITEDS — Awakened cursed techniques. The Cursed Technique screen has a second menu behind the AWAKEN CT button, with four of them.
    Awakened Projection is built: Naoya as the cursed spirit he came back as. The other three are announced and not built yet.
-   It is meant to be earned (three Projection Frame v2, which the Maki boss drops 5% of the time); NEED is the switch for that, and it is off: free for now */
+   It is earned: three Projection Frame v2, which the Maki boss drops 5% of the time. NEED is the switch for that, on since the public release.
+   The team's account (account.js) has every one of them regardless */
 (() => {
 'use strict';
 
 const E = JU.eng, g = E.g, P = E.P, F = E.F, cam = E.cam, H = E.hooks, POSE = E.POSE, LINE = E.LINE, TOR = E.TOR, V = JU.vfx, sfx = JU.sfx, Fi = JU.fights, keys = E.keys;
 const { rnd, lerp, clamp, ZP } = E, TAU = Math.PI * 2, { shout } = JU.tech.tk, GOLD = '#ffd23d', PINK = '#d24fb4';
 const shake = v => { cam.shake = Math.max(cam.shake, v); };
-const NEED = false, FRAMES = 3, DROP = .05;         // are the frames required yet; how many; the Maki boss's chance of dropping one
+const NEED = true, FRAMES = 3, DROP = .05;          // are the frames required; how many; the Maki boss's chance of dropping one
+const dev = () => !!(JU.account && JU.account.dev), has = id => !JU.shop || JU.shop.owns('tech', id);
 const S = { frames: 0 };
 try { Object.assign(S, JSON.parse(localStorage.getItem('ju.awk') || '{}')); } catch (e) {}
 const save = () => { try { localStorage.setItem('ju.awk', JSON.stringify(S)); } catch (e) {} };
@@ -365,19 +367,20 @@ function streetDraw() {
 /* ---------- the AWAKEN CT menu ---------- */
 const LIST = [
   { id: 'aproj', name: 'Awakened Projection', mark: '蟲', col: PINK, what: 'Naoya, as the cursed spirit he came back as. Frame Breaker, Top Speed, Sonic Boom, Mach 3.',
-    later: () => `Later: 3 Projection Frame v2, dropped by the Maki boss (5%). You have ${S.frames}.`, open: () => !NEED || S.frames >= FRAMES },
+    later: () => `Needs 3 Projection Frame v2, dropped by the Maki boss (5%). You have ${Math.min(S.frames, FRAMES)}.`, open: () => dev() || !NEED || S.frames >= FRAMES },
   { id: 'alimit', name: 'Awakened Limitless', mark: '蒼', col: '#38c8ff', what: 'Maximum: Blue, Reversal Red: MAX, 150% Hollow Purple, Unlimited Void. Two secret moves.',
-    later: () => 'Later: 150% Hollow Purple will have to be earned through a questline.', open: () => true },
+    later: () => 'Needs Limitless: roll it, or buy it in the Daily Shop.', open: () => dev() || has('limitless') },
   { id: 'ats', name: 'Awakened Ten Shadows', mark: '影', col: '#8f9bff', what: 'Shiro, Rabbit Escape, Mahoraga, Max Elephant, and the domain Chimera Shadow Garden. Two meters: shikigami left, and cursed energy.',
-    later: () => 'Every exorcism adds one shikigami to call.', open: () => true },
-  { id: 'smark', name: 'Sukuna\'s Mark', mark: '印', col: '#ff2440' }
+    later: () => 'Needs Ten Shadows: roll it first.', note: 'Every exorcism adds one shikigami to call.', open: () => dev() || has('ten') },
+  { id: 'smark', name: 'Sukuna\'s Mark', mark: '印', col: '#ff2440' },
+  { id: 'tced', name: 'True Cursed Energy Discharge', mark: '轟', col: '#7fe9ff' }      // tced.js fills this one in
 ];
 function mount(body) {
   body.innerHTML = `<div class="awkhd"><button class="sback" id="awkback" aria-label="Back to the cursed techniques">‹ Cursed Techniques</button><b>Awakened CT</b><span lang="ja">覚醒術式</span></div>
-    <div class="acards">${LIST.map(a => { const t = JU.tech.TECH[a.id]; return t
-      ? `<button class="acard${JU.tech.equipped === a.id ? ' on' : ''}" data-awk="${a.id}" style="--c:${a.col}" aria-label="Equip ${a.name}"><b lang="ja">${a.mark}</b><h4>${a.name}</h4><p>${a.what}</p>
-          <small>${a.open() ? 'Free for now' : 'Locked'}</small>
-          <p>${a.later()}</p></button>`
+    <div class="acards a${LIST.length}">${LIST.map(a => { const t = JU.tech.TECH[a.id]; return t && a.open
+      ? `<button class="acard${JU.tech.equipped === a.id ? ' on' : ''}${a.open() ? '' : ' lock'}" data-awk="${a.id}" style="--c:${a.col}" aria-label="Equip ${a.name}"><b lang="ja">${a.mark}</b><h4>${a.name}</h4><p>${a.what}</p>
+          <small>${dev() ? 'Unlocked · team account' : a.open() ? 'Unlocked' : 'Locked'}</small>
+          <p>${a.open() ? a.note || '' : a.later()}</p></button>`
       : `<div class="acard soon" style="--c:${a.col}"><b lang="ja">${a.mark}</b><h4>${a.name}</h4><small>Coming soon</small></div>`; }).join('')}</div>
     <p class="fine">An awakened technique is equipped in place of your ordinary one. Pick a card on the Cursed Technique screen to go back.</p>`;
 }

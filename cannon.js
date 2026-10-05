@@ -254,5 +254,6 @@ H.fightStart = (cfg, wave) => {
   if (on() && !JU.clan.body()) E.P1.scale = SIZE;
 };
 
-JU.cannon = { MOVES, LIMIT, UNDER, DECAY, COMB_T, get state() { return { heat, under, over: over(), worth: +worth().toFixed(3), brawl: brawl && { out: +brawl.out.toFixed(1), cost: +brawl.cost.toFixed(1) } }; }, set heat(v) { heat = v; }, toggle };
+JU.cannon = { MOVES, LIMIT, UNDER, DECAY, COMB_T, kit: { SIZE, AIM, RECOIL, muzzle, line, beam },      // (kit: what its awakened form borrows, tced.js)
+  get state() { return { heat, under, over: over(), worth: +worth().toFixed(3), brawl: brawl && { out: +brawl.out.toFixed(1), cost: +brawl.cost.toFixed(1) } }; }, set heat(v) { heat = v; }, toggle };
 })();

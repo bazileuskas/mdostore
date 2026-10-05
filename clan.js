@@ -5,7 +5,7 @@
 const E = JU.eng, H = E.hooks, Fi = JU.fights, sfx = JU.sfx, lerp = E.lerp;
 const CLAN = {}, ORDER = [], NONE = {};
 const st = { host: null };                       // host: a body that is not his own (Kenjaku's, or Sukuna's vessel)
-let equipped = null, active = null, rolling = false;
+let equipped = null, active = null, rolling = false, back = 0;
 try { equipped = localStorage.getItem('ju.clan'); } catch (e) {}
 
 // hp / ce / dmg / crit / m1s / tool are fractions: .1 = +10%. "Cursed energy" scales technique damage.
@@ -74,6 +74,7 @@ function revert() { if (active && X().end) X().end(); active = null; st.host = n
 function equip(id) {
   equipped = id; try { localStorage.setItem('ju.clan', id); } catch (e) {}
   if (id === 'toji' && JU.tech.equipped) JU.tech.equip('');   // the Toji clan has no cursed energy: taking it puts the technique down
+  if (JU.shop && JU.shop.check) JU.shop.check();              // and anything that needed the clan he had goes with it
 }
 
 /* ---------- the Clan screen ---------- */
@@ -83,33 +84,47 @@ const left = c => {                                // to the second, the way a l
   const s = Math.floor((c.limited - Date.now()) / 1000), d = Math.floor(s / 86400), h = Math.floor(s % 86400 / 3600), two = n => String(n).padStart(2, '0');
   return s <= 0 ? 'Ended' : 'Ends in ' + (d ? d + 'd ' : '') + (d || h ? two(h) + 'h ' : '') + two(Math.floor(s % 3600 / 60)) + 'm ' + two(s % 60) + 's';
 };
-setInterval(() => document.querySelectorAll('.ccard.lim').forEach(el => { const c = CLAN[el.dataset.clan], u = el.querySelector('u'); if (c && u) { u.textContent = left(c); el.classList.toggle('over', !live(c)); } }), 1000);
+setInterval(() => document.querySelectorAll('.ccard.lim').forEach(el => { const c = CLAN[el.dataset.clan], u = el.querySelector('u'); if (c && u) { u.textContent = left(c); el.classList.toggle('over', !live(c) && !mine(c.id)); } }), 1000);
 const roll = () => {
   for (const id of ORDER) { const c = CLAN[id]; if (c.limited && live(c) && Math.random() * 100 < c.odds) return id; }
   let r = Math.random() * 100;
   for (const id of ORDER) if (!CLAN[id].limited && (r -= CLAN[id].odds) < 0) return id;
   return ORDER[0];
 };
+// since the public release a card equips only a clan he has drawn or bought (shop.js keeps the list)
+const mine = id => !JU.shop || JU.shop.owns('clan', id);
+const nope = el => { el.classList.remove('no'); void el.offsetWidth; el.classList.add('no'); sfx.back(); };
+const retix = no => { const el = document.getElementById('tix'); if (el && JU.shop) el.outerHTML = JU.shop.tix('cl', no); };
 const stats = c => `<ul>${c.lines.map(l => `<li>${l}</li>`).join('')}${c.ability ? `<li class="ab">${c.ability}</li>` : ''}</ul>`;
 function show() {
   const c = CLAN[equipped], r = document.getElementById('cres');
   if (!r) return;
   r.innerHTML = c ? `<small>Your clan · ${c.odds}%${c.grade ? ' · ' + c.grade : ''}${c.limited ? ' · Limited time' : ''}</small><b style="color:${c.col}">${c.name}</b><span lang="ja">${c.jp}</span>${c.id === 'toji' ? '' : `<em>Outside the story you fight as Yuji ${c.name}</em>`}${stats(c)}`
-    : '<small>No clan yet</small><p>Pick one of the three talismans to draw your bloodline, or take a clan straight from the cards. Clans are used in Free Exploration.</p>';
-  document.querySelectorAll('.ccard').forEach(k => k.classList.toggle('on', k.dataset.clan === equipped));
+    : `<small>No clan yet</small><p>${JU.shop && JU.shop.PAID ? 'Pick one of the three talismans to draw your bloodline: a draw uses a clan roll. A clan you have drawn before can be taken straight from its card.' : 'Pick one of the three talismans to draw your bloodline, or take a clan straight from the cards.'} Clans are used in Free Exploration.</p>`;
+  document.querySelectorAll('.ccard').forEach(k => { k.classList.toggle('on', k.dataset.clan === equipped); k.classList.toggle('lock', !mine(k.dataset.clan)); });
 }
 function mount(body) {
   body.innerHTML = `<div class="roll papers">${[0, 1, 2].map(() => '<button class="paper cpaper" aria-label="Draw a clan"><b lang="ja">封</b><i>Draw</i></button>').join('')}
       <div class="rres" id="cres" aria-live="polite"></div></div>
-    ${ORDER.filter(id => CLAN[id].limited).map(id => { const c = CLAN[id]; return `<button class="ccard lim${live(c) ? '' : ' over'}" data-clan="${id}" style="--c:${c.col}" aria-label="Take the ${c.name} clan, limited time"><b lang="ja">${c.jp[0]}</b><span><small>Limited time${c.grade ? ' · ' + c.grade : ''}</small>${c.name} clan</span><i>${c.odds}%</i><u>${left(c)}</u></button>`; }).join('')}
-    <div class="tcards">${ORDER.filter(id => !CLAN[id].limited).map(id => { const c = CLAN[id]; return `<button class="ccard" data-clan="${id}" style="--c:${c.col}" aria-label="Take the ${c.name} clan"><b lang="ja">${c.jp[0]}</b><span>${c.name}</span><i>${c.odds}%</i></button>`; }).join('')}</div>`;
+    ${JU.shop ? JU.shop.tix('cl') : ''}
+    ${ORDER.filter(id => CLAN[id].limited).map(id => { const c = CLAN[id]; return `<button class="ccard lim${live(c) || mine(id) ? '' : ' over'}${mine(id) ? '' : ' lock'}" data-clan="${id}" style="--c:${c.col}" aria-label="Take the ${c.name} clan, limited time"><b lang="ja">${c.jp[0]}</b><span><small>Limited time${c.grade ? ' · ' + c.grade : ''}</small>${c.name} clan</span><i>${c.odds}%</i><u>${left(c)}</u></button>`; }).join('')}
+    <div class="tcards">${ORDER.filter(id => !CLAN[id].limited).map(id => { const c = CLAN[id]; return `<button class="ccard${mine(id) ? '' : ' lock'}" data-clan="${id}" style="--c:${c.col}" aria-label="Take the ${c.name} clan${mine(id) ? '' : ', not yours yet'}"><b lang="ja">${c.jp[0]}</b><span>${c.name}</span><i>${c.odds}%</i></button>`; }).join('')}</div>`;
   show();
 }
 
 // the draw: the chosen talisman flies to the middle of the screen, spins through every bloodline, and lands
+// a card that is not his: it says how it is come by, and then the screen goes back to the clan he has
+function sealed(c) {
+  const r = document.getElementById('cres');
+  if (!r) return;
+  const how = c.limited ? (live(c) ? `Here for a limited time: draw it from a talisman (${c.odds}%) before it leaves.` : 'Its time is over. It cannot be drawn any more.') : `Draw it from a talisman (${c.odds}%)${c.odds <= 10 ? ', or look for it in the Daily Shop' : ''}.`;
+  r.innerHTML = `<small>Sealed · not yours yet</small><b style="color:${c.col}">${c.name}</b><span lang="ja">${c.jp}</span><p>${how}</p>`;
+  clearTimeout(back); back = setTimeout(show, 3400);
+}
 function cinema(src) {
-  if (rolling || (JU.shop && !JU.shop.take('cl'))) return;
-  rolling = true;
+  if (rolling) return;
+  if (JU.shop && !JU.shop.take('cl')) { nope(src); retix(true); return; }      // no clan roll, no draw
+  rolling = true; clearTimeout(back); retix();
   const result = roll(), c = CLAN[result], r0 = src.getBoundingClientRect(), rare = c.odds <= 1;
   const ov = document.createElement('div');
   ov.className = 'creveal';
@@ -122,6 +137,7 @@ function cinema(src) {
   src.style.visibility = 'hidden';
   requestAnimationFrame(() => ov.classList.add('in'));
   const land = () => {
+    if (JU.shop) JU.shop.grant('clan', result);       // what it lands on is his from now on
     equip(result);
     face.textContent = c.jp[0]; sub.textContent = c.name; ov.style.setProperty('--c', c.col);
     cp.style.transform = ''; cp.classList.remove('back'); cp.classList.add('got'); ov.classList.add('done');
@@ -155,7 +171,8 @@ function cinema(src) {
 document.addEventListener('click', e => {
   const p = e.target.closest('.cpaper'), k = e.target.closest('.ccard');
   if (p) cinema(p);
-  else if (k && !rolling && live(CLAN[k.dataset.clan])) { const r = k.getBoundingClientRect(); equip(k.dataset.clan); show(); sfx.confirm(); JU.flash(r.left + r.width / 2, r.top + r.height / 2); }
+  else if (k && !rolling && !mine(k.dataset.clan)) { nope(k); sealed(CLAN[k.dataset.clan]); }      // not his: never drawn, never bought
+  else if (k && !rolling && (live(CLAN[k.dataset.clan]) || (JU.shop && JU.shop.owns('clan', k.dataset.clan)))) { const r = k.getBoundingClientRect(); clearTimeout(back); equip(k.dataset.clan); show(); sfx.confirm(); JU.flash(r.left + r.width / 2, r.top + r.height / 2); }
 });
 
 JU.clan = {

@@ -6,7 +6,7 @@
 
 const E = JU.eng, g = E.g, P = E.P, F = E.F, box = E.box, cam = E.cam, H = E.hooks, POSE = E.POSE, V = JU.vfx, sfx = JU.sfx, Fi = JU.fights, keys = E.keys;
 const { rnd, clamp, ease, ZP } = E, TAU = Math.PI * 2, { shout, orb } = JU.tech.tk, RED = '#ff2440', FIRE = '#ff8c50';
-const NEED = false, WANT = { bf: 150, kills: 500 };  // are the requirements on yet, and what they are
+const NEED = true, WANT = { bf: 150, kills: 500 };  // are the requirements on yet, and what they are
 const S = { bf: 0, kills: 0 };
 try { Object.assign(S, JSON.parse(localStorage.getItem('ju.mark') || '{}')); } catch (e) {}
 const save = () => { try { localStorage.setItem('ju.mark', JSON.stringify(S)); } catch (e) {} };
@@ -194,11 +194,11 @@ H.fightStart = (cfg, wave) => { if (!wave) clear(); start0(cfg, wave); };
 H.ko = o => { const res = ko0(o), cfg = Fi.fight.cfg; if (cfg && !cfg.dummy) { S.kills++; save(); } return res; };
 H.bf = o => { bf0(o); const cfg = Fi.fight.cfg; if (JU.clan.active && JU.clan.active.id === 'sukuna' && !(cfg && cfg.dummy)) { S.bf++; save(); } };
 
-const open = () => !NEED || (JU.clan.equipped === 'sukuna' && S.bf >= WANT.bf && S.kills >= WANT.kills);
+const open = () => !!(JU.account && JU.account.dev) || !NEED || (JU.clan.equipped === 'sukuna' && S.bf >= WANT.bf && S.kills >= WANT.kills);      // (the team's account has it regardless)
 // its card on the Awaken CT screen
 Object.assign(JU.awakened.LIST.find(a => a.id === 'smark'), { open,
   what: 'Deadly Cleave (666), Shrine Cleave (500), 500% Fuga (700), Shinjutsu Shrine (3000). 1 + R: a 0.2 second shrine (150).',
-  later: () => `Later: the Sukuna clan, ${WANT.bf} Black Flashes as Sukuna (you have ${S.bf}) and ${WANT.kills} curses exorcised (you have ${S.kills}).` });
+  later: () => `Needs the Sukuna clan, ${WANT.bf} Black Flashes as Sukuna (you have ${Math.min(S.bf, WANT.bf)}) and ${WANT.kills} curses exorcised (you have ${Math.min(S.kills, WANT.kills)}).` });
 
 JU.smark = { MOVES, NEED, WANT, open, get progress() { return { bf: S.bf, kills: S.kills }; },
   get state() { return { shrine: shrine && { t: shrine.t, done: shrine.done, dealt: shrine.dealt, open: shrine.open }, arrow: !!arrow, quick, quickCd }; } };
