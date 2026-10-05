@@ -148,7 +148,7 @@ function begin() {
   const d = D, mine = T.TECH[d.picks.me], his = T.TECH[d.picks.them];
   if (E.root.dataset.mode !== 'street') { say(d.pid, { a: 'quit' }); over(''); return; }
   d.phase = 'fight'; shut0(); hold(false);
-  JU.clan.revert(); T.revert(); T.apply(d.picks.me);               // the technique and nothing else: with one in use no tool is held either (tools.js)
+  JU.clan.revert(); if (JU.tools) JU.tools.off(); T.revert(); T.apply(d.picks.me);      // the technique and nothing else. The tools go away first: put away afterwards, they would take the hotbar's names and cooldowns back to his bare hands'
   Fi.DEFS.pvp = { name: d.name, jp: his.name, skin: his.skin || E.YUJI, hp: HP, scale: his.scale || 1, speed: 0, range: 1e9, gap: [9, 9], atk: [], human: true };
   S.fight({ stay: true, cfg: { foes: ['pvp'], stage: E.SHRINE, label: '1 v 1', p1x: d.host ? -230 : 230, win: null, pvp: d, onLose: () => finish(false) } });
   Fi.nm.p1.textContent = M.myName(); Fi.nm.p1j.textContent = mine.name; Fi.nm.p2.textContent = d.name; Fi.nm.p2j.textContent = his.name;

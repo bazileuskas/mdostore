@@ -13378,6 +13378,8 @@ H.reset = () => {
 H.fightStart = (cfg, wave) => { if (!wave) clear(); start0(cfg, wave); if (live) dress(); };
 // Free Exploration and Training call this after the technique and the clan have been put on
 function apply() { live = true; if (!TOOLS[S.slots[S.cur]]) S.cur = Math.max(0, S.slots.findIndex(x => TOOLS[x])); dress(); }
+// and a duel puts them away before the technique goes on (pvp.js): the hotbar is given back first, so nothing of the technique's is written over later
+function off() { live = false; clear(); if (dressed) { for (const k of SLOTS) { E.hud.mv[k].querySelector('b').textContent = BASE.names[k]; E.CD[k] = BASE.cd[k]; } dressed = false; } strip.classList.remove('on'); }
 
 /* ---------- the Cursed Tools screen: the reel, the pockets, the four cards ---------- */
 let spinning = false, pick = 0;                     // which pocket the next tool goes into
@@ -13441,7 +13443,7 @@ document.addEventListener('click', e => {
   put(k.dataset.tool); sfx.confirm(); JU.flash(r.left + r.width / 2, r.top + r.height / 2); mount(body);
 });
 
-JU.tools = { TOOLS, ORDER, mount, apply, roll, check, ENDS, TOJI, get state() { return { live, slots: S.slots.slice(), cur: S.cur, demon: S.demon, dc, dcCd, purg, demonT, m1cd, dots: dots.length, held: held() && held().id }; } };
+JU.tools = { TOOLS, ORDER, mount, apply, off, roll, check, ENDS, TOJI, get state() { return { live, slots: S.slots.slice(), cur: S.cur, demon: S.demon, dc, dcCd, purg, demonT, m1cd, dots: dots.length, held: held() && held().id }; } };
 })();
 </script>
 <script>
@@ -17029,7 +17031,7 @@ function begin() {
   const d = D, mine = T.TECH[d.picks.me], his = T.TECH[d.picks.them];
   if (E.root.dataset.mode !== 'street') { say(d.pid, { a: 'quit' }); over(''); return; }
   d.phase = 'fight'; shut0(); hold(false);
-  JU.clan.revert(); T.revert(); T.apply(d.picks.me);               // the technique and nothing else: with one in use no tool is held either (tools.js)
+  JU.clan.revert(); if (JU.tools) JU.tools.off(); T.revert(); T.apply(d.picks.me);      // the technique and nothing else. The tools go away first: put away afterwards, they would take the hotbar's names and cooldowns back to his bare hands'
   Fi.DEFS.pvp = { name: d.name, jp: his.name, skin: his.skin || E.YUJI, hp: HP, scale: his.scale || 1, speed: 0, range: 1e9, gap: [9, 9], atk: [], human: true };
   S.fight({ stay: true, cfg: { foes: ['pvp'], stage: E.SHRINE, label: '1 v 1', p1x: d.host ? -230 : 230, win: null, pvp: d, onLose: () => finish(false) } });
   Fi.nm.p1.textContent = M.myName(); Fi.nm.p1j.textContent = mine.name; Fi.nm.p2.textContent = d.name; Fi.nm.p2j.textContent = his.name;

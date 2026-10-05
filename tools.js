@@ -246,6 +246,8 @@ H.reset = () => {
 H.fightStart = (cfg, wave) => { if (!wave) clear(); start0(cfg, wave); if (live) dress(); };
 // Free Exploration and Training call this after the technique and the clan have been put on
 function apply() { live = true; if (!TOOLS[S.slots[S.cur]]) S.cur = Math.max(0, S.slots.findIndex(x => TOOLS[x])); dress(); }
+// and a duel puts them away before the technique goes on (pvp.js): the hotbar is given back first, so nothing of the technique's is written over later
+function off() { live = false; clear(); if (dressed) { for (const k of SLOTS) { E.hud.mv[k].querySelector('b').textContent = BASE.names[k]; E.CD[k] = BASE.cd[k]; } dressed = false; } strip.classList.remove('on'); }
 
 /* ---------- the Cursed Tools screen: the reel, the pockets, the four cards ---------- */
 let spinning = false, pick = 0;                     // which pocket the next tool goes into
@@ -309,5 +311,5 @@ document.addEventListener('click', e => {
   put(k.dataset.tool); sfx.confirm(); JU.flash(r.left + r.width / 2, r.top + r.height / 2); mount(body);
 });
 
-JU.tools = { TOOLS, ORDER, mount, apply, roll, check, ENDS, TOJI, get state() { return { live, slots: S.slots.slice(), cur: S.cur, demon: S.demon, dc, dcCd, purg, demonT, m1cd, dots: dots.length, held: held() && held().id }; } };
+JU.tools = { TOOLS, ORDER, mount, apply, off, roll, check, ENDS, TOJI, get state() { return { live, slots: S.slots.slice(), cur: S.cur, demon: S.demon, dc, dcCd, purg, demonT, m1cd, dots: dots.length, held: held() && held().id }; } };
 })();
