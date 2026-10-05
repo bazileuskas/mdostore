@@ -121,9 +121,9 @@ JU.tech.add('ats', { name: 'Awakened Ten Shadows', jp: '十種影法術', mark: 
   awakened: true, awkName: 'Domain',
   awaken(p) {
     p.inv = Math.max(p.inv, 1);
-    D.open({ who: p, tone: 'purple', reveal() {
+    D.open({ who: p, tone: 'purple', kind: 'garden', reveal() {
       garden = true; D.raise('garden', { who: p, dur: 9 });
-      E.after(.25, () => E.banner('嵌合暗翳庭', 'CHIMERA SHADOW GARDEN', 'xs'));
+      E.after(.25, () => { if (!D.clashing) E.banner('嵌合暗翳庭', 'CHIMERA SHADOW GARDEN', 'xs'); });
     } });
   } });
 const DEF = JU.tech.TECH.ats, on = () => JU.tech.active === DEF;

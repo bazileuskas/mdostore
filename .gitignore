@@ -1,0 +1,4 @@
+__pycache__/
+*.pyc
+# the picture as it was supplied: the game shows the enlarged copy beside it
+img/*-original.*

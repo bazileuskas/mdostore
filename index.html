@@ -118,8 +118,8 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 @keyframes shake{0%,100%{transform:none}15%{transform:translate(-9px,5px)}30%{transform:translate(8px,-6px)}45%{transform:translate(-6px,-3px)}60%{transform:translate(5px,4px)}80%{transform:translate(-2px,1px)}}
 
 /* ---------- sub-screen (opens with a domain-style wipe) ---------- */
-.panel{position:fixed;inset:0;z-index:10;display:flex;align-items:center;overflow:hidden;
-  padding:clamp(24px,6vh,70px) var(--pad-x);
+.panel{position:fixed;inset:0;z-index:10;display:flex;align-items:flex-start;overflow:hidden auto;scrollbar-width:thin;scrollbar-color:#5a1020 transparent;
+  padding:clamp(14px,3.4vh,70px) var(--pad-x);
   background:radial-gradient(90% 120% at 82% 40%,#3a0714 0%,#12050a 42%,#040205 100%);
   clip-path:circle(0px at var(--px,50%) var(--py,50%));visibility:hidden;
   transition:clip-path .6s cubic-bezier(.75,0,.2,1),visibility 0s .6s}
@@ -130,7 +130,10 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
   -webkit-mask-image:linear-gradient(300deg,#000 0%,transparent 45%);mask-image:linear-gradient(300deg,#000 0%,transparent 45%)}
 .pk{position:absolute;right:clamp(10px,5vw,90px);top:50%;translate:0 -50%;writing-mode:vertical-rl;white-space:nowrap;
   font:400 min(38vh,26vw)/1 var(--f-jp);color:transparent;-webkit-text-stroke:2px rgba(255,36,64,.3);pointer-events:none}
-.pin{position:relative;max-width:min(max(640px,44vw),100%)}
+/* a sub-screen sits in the middle of the window when it fits. When it is taller than the window it starts at the top and the panel scrolls,
+   so that neither its title nor its Back button is ever off the screen */
+.pin{position:relative;margin-block:auto;max-width:min(max(640px,44vw),100%)}
+.panel[data-id="technique"] .pin{max-width:min(max(736px,50.5vw),100%)}   /* room for eight technique cards in a row */
 .pnum{display:flex;align-items:center;gap:.7em;margin:0 0 .6em;font:400 clamp(20px,min(2.4vw,4.2vh),54px)/1 var(--f-jp);color:var(--red)}
 .pnum::after{content:"";width:90px;height:2px;background:var(--red)}
 .pnum span{font-size:.6em;letter-spacing:.4em;color:rgba(244,239,228,.55)}
@@ -241,6 +244,8 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 .rres em{font-size:.8em;font-style:normal;letter-spacing:.2em;text-transform:uppercase;color:rgba(244,239,228,.6)}
 .rres p{margin:.4em 0 0;max-width:40ch;font-size:.9em}
 .tcards{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:clamp(6px,.8vw,14px);max-width:min(100%,60em);margin:0 0 1.3em}
+.tcards.t8{grid-template-columns:repeat(8,minmax(0,1fr))}
+.tcards.t8 .tcard span{font-size:clamp(9px,min(.88vw,1.6vh),17px);letter-spacing:.02em}   /* eight across: the longest name still has to fit its card */
 .tcard{--c:#a5102a;display:grid;justify-items:center;align-content:center;gap:.4em;padding:.75em .3em .65em;cursor:pointer;color:var(--bone);
   background:rgba(14,9,26,.82);border:0;border-top:3px solid var(--c);outline:none;font:inherit;transition:transform .16s cubic-bezier(.2,.9,.25,1.3),background .15s}
 .tcard b{font:400 clamp(22px,min(2.8vw,5vh),54px)/1 var(--f-jp);color:var(--c)}
@@ -254,19 +259,27 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 .tcard.lim b{color:var(--bone)}
 .tcard.lim span{display:grid;gap:.3em;text-align:left;font-size:clamp(15px,min(1.7vw,3vh),34px)}
 .tcard.lim small{font:600 .42em/1 var(--f-ui);letter-spacing:.34em;color:#ffd23d}
-.tcard.lim u{padding:.5em .8em;font:600 .78em/1 var(--f-ui);letter-spacing:.2em;text-decoration:none;text-transform:uppercase;white-space:nowrap;color:#0b0710;background:#ffd23d;animation:lim 1.6s ease-in-out infinite}
+.tcard.lim u{padding:.5em .8em;font:600 .78em/1 var(--f-ui);letter-spacing:.2em;text-decoration:none;text-transform:uppercase;white-space:nowrap;font-variant-numeric:tabular-nums;color:#0b0710;background:#ffd23d;animation:lim 1.6s ease-in-out infinite}
 .tcard.lim:hover,.tcard.lim:focus-visible{transform:translateX(8px);background:linear-gradient(100deg,rgba(200,16,42,.75),rgba(44,28,66,.92) 64%)}
 .tcard.lim.on{background:var(--c)}
 .tcard.lim.on small{color:#0b0710}
 .tcard.lim.over{opacity:.45;cursor:default}
 .tcard.lim.over u{background:rgba(244,239,228,.45);animation:none}
 @keyframes lim{50%{box-shadow:0 0 18px #ffd23d}}
-/* an early-access technique: the same banner in its own colours, with its price where a limited one shows its time left */
+/* an early-access technique: the same banner in its own colours, with its price where a limited one shows its countdown */
 .tcard.lim.ea{background:linear-gradient(100deg,rgba(150,118,30,.5),rgba(14,9,26,.86) 64%)}
 .tcard.lim.ea:hover,.tcard.lim.ea:focus-visible{background:linear-gradient(100deg,rgba(210,170,50,.62),rgba(44,28,66,.92) 64%)}
 .tcard.lim.ea small{color:#7de0b0}
 .tcard.lim.ea u{color:#06140c;background:#7de0b0;animation:none}
 .tcard.lim.ea.on small{color:#0b0710}
+/* somebody new is on the way: a card that says so, and not who */
+.tcard.lim.tease{border-left-style:dashed;cursor:help;background:linear-gradient(100deg,rgba(74,60,120,.5),rgba(14,9,26,.86) 64%)}
+.tcard.lim.tease:hover,.tcard.lim.tease:focus-visible{background:linear-gradient(100deg,rgba(120,100,190,.6),rgba(44,28,66,.92) 64%)}
+.tcard.lim.tease b{color:var(--c)}
+.tcard.lim.tease span{letter-spacing:.34em;color:rgba(244,239,228,.9)}
+.tcard.lim.tease small{color:var(--c)}
+.tcard.lim.tease i{max-width:22em;font-style:italic;font-weight:400;letter-spacing:.03em;text-transform:none;text-align:right;color:rgba(244,239,228,.62)}
+.tcard.lim.tease u{color:#0b0710;background:var(--c);animation:none}
 .tcard.no{animation:shake .3s}
 /* a limited clan: the same banner a limited technique gets */
 .ccard.lim{grid-template-columns:auto 1fr auto auto;justify-items:start;align-items:center;gap:0 1.1em;width:100%;max-width:min(100%,60em);margin:0 0 clamp(6px,.8vw,14px);
@@ -274,7 +287,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 .ccard.lim b{color:var(--bone)}
 .ccard.lim span{display:grid;gap:.3em;text-align:left;font-size:clamp(15px,min(1.7vw,3vh),34px)}
 .ccard.lim small{font:600 .42em/1 var(--f-ui);letter-spacing:.34em;color:#ffd23d}
-.ccard.lim u{padding:.5em .8em;font:600 .78em/1 var(--f-ui);letter-spacing:.2em;text-decoration:none;text-transform:uppercase;white-space:nowrap;color:#0b0710;background:#ffd23d;animation:lim 1.6s ease-in-out infinite}
+.ccard.lim u{padding:.5em .8em;font:600 .78em/1 var(--f-ui);letter-spacing:.2em;text-decoration:none;text-transform:uppercase;white-space:nowrap;font-variant-numeric:tabular-nums;color:#0b0710;background:#ffd23d;animation:lim 1.6s ease-in-out infinite}
 .ccard.lim:hover,.ccard.lim:focus-visible{transform:translateX(8px)}
 .ccard.lim.on{background:var(--c)}
 .ccard.lim.on small{color:#0b0710}
@@ -477,6 +490,19 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 .stab.ea{border-bottom-color:rgba(125,224,176,.5)}
 .stab.ea.on{background:#7de0b0}
 .good.ea small{color:#7de0b0}
+/* a pack: a picture, what is in it, and its price in real money */
+.stab.god{border-bottom-color:rgba(255,36,64,.6)}
+.stab.god.on{background:#ff2440;color:#fff}
+.good.pack{grid-column:1/-1;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:.4em 1.4em;align-items:start}
+.good.pack>*{grid-column:2}
+.good.pack .ppic{grid-column:1;grid-row:1/span 6;align-self:start;aspect-ratio:16/9;overflow:hidden;outline:1px solid rgba(255,255,255,.16)}
+.good.pack .ppic svg,.good.pack .ppic img{display:block;width:100%;height:100%;object-fit:cover;object-position:50% 20%}
+.good.pack small{color:#ffd23d}
+.plist{margin:.25em 0 0;padding:0;list-style:none;display:grid;gap:.12em;font-size:.88em;color:rgba(244,239,228,.72)}
+.plist li::before{content:"◆";margin-right:.6em;font-size:.62em;vertical-align:.2em;color:var(--c)}
+.plist b{font-weight:600;color:var(--bone)}
+.buy button.cash.god{color:#fff;background:#c8102e}
+.buy button.cash.god:hover,.buy button.cash.god:focus-visible{background:#ff2440}
 .buy button.cash{padding-left:.9em;color:#06140c;background:#7de0b0}
 .buy button.cash:hover,.buy button.cash:focus-visible{background:#b6f2d6}
 .goods{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,14em),1fr));gap:clamp(8px,1vw,18px)}
@@ -632,6 +658,9 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 .tpicks button.foe{background:rgba(120,16,30,.92);border-top-color:var(--red)}
 .tpicks button.me.foe{background:#e2c060;color:#0b0710}
 .tpicks button.me.foe :is(kbd,span){color:#0b0710}
+.trial.on .tpicks button.out{opacity:.3;pointer-events:none;border-top-color:rgba(244,239,228,.3)}
+.tpicks button.out b{text-decoration:line-through}
+.tpicks button.out span{letter-spacing:.14em;text-transform:uppercase}
 
 /* ---------- touch: a stick, a few buttons, and a hotbar that can be tapped ---------- */
 .touch{--b:clamp(58px,17vh,92px);--st:clamp(104px,30vh,160px);--sx:max(16px,env(safe-area-inset-left));--rx:max(16px,env(safe-area-inset-right));--by:max(12px,env(safe-area-inset-bottom))}
@@ -652,8 +681,11 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 .tc .t-hit{right:var(--rx);bottom:var(--by);width:calc(var(--b)*1.18);height:calc(var(--b)*1.18);border-color:var(--red)}
 .tc .t-jump{right:calc(var(--rx) + var(--b)*.14);bottom:calc(var(--by) + var(--b)*1.32)}
 .tc .t-dash{right:calc(var(--rx) + var(--b)*1.32);bottom:calc(var(--by) + var(--b)*.1)}
+.tc .t-block{right:calc(var(--rx) + var(--b)*2.46);bottom:calc(var(--by) + var(--b)*.1);border-color:#bfe6ff;color:#bfe6ff}
 .tc .t-s{display:none;width:calc(var(--b)*.64);height:calc(var(--b)*.64);bottom:calc(var(--by) + var(--b)*1.36);border-color:#ffd23d;color:#ffd23d}
 .tc .t-awk{right:calc(var(--rx) + var(--b)*1.36)}
+.tc .t-alt{right:calc(var(--rx) + var(--b)*1.36);bottom:calc(var(--by) + var(--b)*2.12);width:calc(var(--b)*.7);border-color:#7fe9ff;color:#7fe9ff;font-size:.8em}
+.game[data-tech="cannon"] .tc .t-alt{display:grid}
 .tc .t-clan{right:calc(var(--rx) + var(--b)*2.1)}
 .tc .t-t{right:calc(var(--rx) + var(--b)*2.84)}
 .tc .t-v{right:calc(var(--rx) + var(--b)*3.58)}
@@ -679,9 +711,12 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
   .mbtn.sel{transform:skewX(-11deg) translateX(6px) translateZ(18px)}
   .pk{opacity:.5}
   .ghint{display:none}
-  .tcards{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .tcards,.tcards.t8{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .tcards.t8 .tcard span{font-size:clamp(10px,min(1.05vw,1.9vh),20px);letter-spacing:.05em}
   .note{grid-template-columns:auto minmax(0,1fr)}
   .shopbox{position:static;justify-items:center}
+  .good.pack{grid-template-columns:minmax(0,1fr)}
+  .good.pack>*,.good.pack .ppic{grid-column:1;grid-row:auto}
   .npic{grid-column:1/-1;max-width:440px}
 }
 /* ---------- a phone on its side: short and wide. Title beside the menu, and sub-screens scroll instead of being cut off ---------- */
@@ -692,6 +727,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
   .mbtn{min-width:min(40vw,420px);font-size:clamp(16px,6.4vh,30px)}
   .panel{align-items:flex-start;overflow-y:auto}
   .tcards{grid-template-columns:repeat(7,minmax(0,1fr))}
+  .tcards.t8{grid-template-columns:repeat(8,minmax(0,1fr))}
   .cp{width:22vh}
   .creveal.done .cp{width:15vh}
   .parch{max-height:none}
@@ -739,7 +775,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
   </div>
 
   <div class="side" aria-hidden="true" lang="ja">領域展開</div>
-  <div class="hud tl"><b lang="ja">呪</b>Fan project · Build 0.2 · The Road to Shinjuku</div>
+  <div class="hud tl"><b lang="ja">呪</b>Fan project · Build 0.2v6 · Early Access: Cursed Cannon</div>
   <div class="hud bl">↑ ↓ Select &nbsp;·&nbsp; Enter Confirm</div>
   <div class="hud br">Title screen</div>
   <button class="sfx" id="sfx" aria-pressed="true">SFX ON</button>
@@ -777,8 +813,10 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
     <span><b>A D</b> Move · <b>W</b> Jump · <b>Click / J</b> Strike</span>
     <span><b>3</b> again as the ring closes · Black Flash</span>
     <span><b>Q</b> Dash through an attack to dodge it</span>
+    <span><b>F</b> Hold to block · a heavy blow breaks it</span>
     <span><b>Esc</b> Title</span>
     <span id="clanHint"></span>
+    <span id="techHint"></span>
   </div>
   <div class="obj" id="obj"></div>
   <div class="bars" aria-hidden="true"><i></i><i></i></div>
@@ -845,12 +883,68 @@ const sfx = (() => {
     s.connect(f); f.connect(g); g.connect(a.destination);
     s.start();
   };
+  /* ----- the fuller set (0.2v3): every sound below is built here out of oscillators and noise. Nothing is recorded, nothing is taken from the anime ----- */
+  let hall = null, hiss = null;
+  // a room for the sounds that want one: a second and a half of fading noise to convolve with. A courtroom has an echo
+  const room = () => {
+    if (hall) return hall;
+    const n = Math.floor(a.sampleRate * 1.6), buf = a.createBuffer(2, n, a.sampleRate), cv = a.createConvolver(), out = a.createGain();
+    for (let c = 0; c < 2; c++) { const d = buf.getChannelData(c); for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 2.6); }
+    cv.buffer = buf; out.gain.value = .5; cv.connect(out); out.connect(a.destination);
+    return (hall = cv);
+  };
+  // one voice. o: { type ('noise', or an oscillator's), f: [from, to], dur, vol, at (seconds from now), attack, filt: [kind, from, to], q, wet (how much of it goes to the room) }
+  const voice = o => {
+    if (!a || !on) return;
+    const t = a.currentTime + (o.at || 0), dur = o.dur, env = a.createGain();
+    let src, node;
+    if (o.type === 'noise') {
+      if (!hiss) { const n = a.sampleRate * 2, d = (hiss = a.createBuffer(1, n, a.sampleRate)).getChannelData(0); for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1; }
+      src = a.createBufferSource(); src.buffer = hiss; src.loop = true;
+    } else {
+      src = a.createOscillator(); src.type = o.type || 'sine';
+      src.frequency.setValueAtTime(o.f[0], t);
+      if (o.f[1] !== o.f[0]) src.frequency.exponentialRampToValueAtTime(Math.max(1, o.f[1]), t + dur);
+    }
+    node = src;
+    if (o.filt) {
+      const f = a.createBiquadFilter();
+      f.type = o.filt[0]; f.Q.value = o.q || .8; f.frequency.setValueAtTime(o.filt[1], t);
+      if (o.filt[2]) f.frequency.exponentialRampToValueAtTime(o.filt[2], t + dur);
+      node.connect(f); node = f;
+    }
+    env.gain.setValueAtTime(.0001, t); env.gain.exponentialRampToValueAtTime(o.vol, t + (o.attack || .003)); env.gain.exponentialRampToValueAtTime(.0001, t + dur);
+    node.connect(env); env.connect(a.destination);
+    if (o.wet) { const w = a.createGain(); w.gain.value = o.wet; env.connect(w); w.connect(room()); }
+    if (o.type === 'noise') src.start(t, Math.random()); else src.start(t);
+    src.stop(t + dur + .05);
+  };
+  // a sound file of the player's own, if one with that name has been put in sounds/ (the one-file build carries them in window.JU_SOUNDS).
+  // It is played instead of the built sound. No file: false, and the built sound plays
+  const clips = {};
+  const load = name => {
+    if (clips[name]) return clips[name];
+    const c = clips[name] = { el: null, ok: false };
+    try {
+      c.el = new Audio((window.JU_SOUNDS && window.JU_SOUNDS[name]) || 'sounds/' + name + '.mp3'); c.el.preload = 'auto';
+      c.el.addEventListener('canplaythrough', () => { c.ok = true; }, { once: true });
+      c.el.addEventListener('error', () => { c.ok = false; });
+    } catch (e) {}
+    return c;
+  };
+  const clip = name => {
+    const c = load(name);
+    if (!c.ok || !on) return false;
+    try { const n = c.el.cloneNode(); n.volume = .85; const pl = n.play(); if (pl && pl.catch) pl.catch(() => {}); } catch (e) {}
+    return true;
+  };
   return {
     get on() { return on; },
     unlock() {
       if (!a) { const AC = window.AudioContext || window.webkitAudioContext; if (AC) try { a = new AC(); } catch (e) {} }
       if (a && a.state === 'suspended') a.resume();
     },
+    preload(names) { names.forEach(load); },
     hover() { tone(640, 430, .07, 'triangle', .05); },
     confirm() { tone(170, 36, .4, 'sine', .4); noise(.25, .22, 1600); tone(900, 200, .12, 'sawtooth', .04); },
     back() { tone(320, 520, .09, 'triangle', .06); },
@@ -861,9 +955,153 @@ const sfx = (() => {
     charge() { tone(300, 1200, .16, 'sine', .09); },
     blast() { tone(90, 30, .5, 'sine', .5); noise(.4, .3, 700); },
     bf() { tone(1400, 60, .5, 'sawtooth', .15); tone(80, 28, .7, 'sine', .55); noise(.5, .36, 1200); },
-    // a judge's gavel: a dry wooden knock, deeper and longer the bigger the head has grown (s), and the air it moves on the way there
-    gavel(s = 1) { tone(520 / s, 150 / s, .07 + .05 * s, 'triangle', .3); tone(1500 / s, 500 / s, .03, 'square', .1); noise(.05 + .04 * s, .22, 1700 / s); if (s > 2) tone(90, 34, .12 * s, 'sine', .35); },
-    swish(s = 1) { noise(.1 + .06 * s, .08, 2600 / s); },
+    // a judge's gavel. Wood on wood: the crack of it, the block ringing at the pitches a wooden bar rings at, the bench under the block,
+    // and the room answering. The bigger the head has grown (s), the lower and longer all of it is
+    gavel(s = 1) {
+      if (clip(s > 2 ? 'gavel-heavy' : 'gavel')) return;
+      const f = 640 / Math.sqrt(s), big = Math.min(1, (s - 1) / 3);
+      voice({ type: 'noise', dur: .014 + .008 * s, vol: .5, filt: ['highpass', 2600 / s], wet: .3 });
+      voice({ f: [f, f * .74], dur: .09 + .05 * s, vol: .4, wet: .5 });
+      voice({ f: [f * 2.76, f * 2.5], dur: .05 + .02 * s, vol: .15, wet: .4 });
+      voice({ f: [f * 5.4, f * 4.8], dur: .03, vol: .06, type: 'triangle' });
+      voice({ f: [190 / Math.sqrt(s), 58], dur: .12 + .09 * s, vol: .28 + .25 * big, wet: .35 });
+      if (s > 2) voice({ type: 'noise', dur: .3 + .1 * s, vol: .12 + .25 * big, filt: ['lowpass', 900, 120], wet: .5 });
+    },
+    // the air a gavel moves on the way there: a breath that rises and is gone, lower for a bigger head
+    swish(s = 1) {
+      const k = Math.sqrt(s);
+      voice({ type: 'noise', dur: .13 + .06 * s, vol: .17, attack: .04 + .015 * s, filt: ['bandpass', 520 / k, 2700 / k], q: 1.4 });
+      if (s > 1.5) voice({ f: [170 / k, 60], dur: .16 + .04 * s, vol: .1, attack: .05 });
+    },
+    // a cut: the air parted, and a thin ring of steel on the end of it. Bigger (s) is lower and longer
+    cut(s = 1) {
+      const k = Math.sqrt(s);
+      voice({ type: 'noise', dur: .09 + .05 * s, vol: .3, attack: .004, filt: ['bandpass', 7200 / k, 900 / k], q: 2.4, wet: .25 });
+      voice({ f: [2600 / k, 1500 / k], dur: .12 + .06 * s, vol: .05, wet: .5 });
+      if (s > 1.4) voice({ f: [150, 44], dur: .2 * s, vol: .3, wet: .3 });
+    },
+    // Fuga landing: the air taken, and then all of it given back at once
+    fuga() {
+      voice({ f: [120, 26], dur: 1.2, vol: .7, wet: .4 });
+      voice({ type: 'noise', dur: 1.1, vol: .45, filt: ['lowpass', 2600, 110], wet: .6 });
+      voice({ type: 'noise', dur: .5, vol: .3, attack: .02, filt: ['bandpass', 500, 3000], q: 1.2 });
+      for (let i = 0; i < 6; i++) voice({ type: 'noise', at: .15 + Math.random() * .7, dur: .04 + Math.random() * .06, vol: .1, filt: ['bandpass', 900 + Math.random() * 2400], q: 4 });
+    },
+    // blood. A heartbeat while it is gathered (u: how far along), the needle of it let go (pow: how much of a full one), the wave, and a wet hit
+    beat(u = 0) { voice({ f: [72 + 50 * u, 46], dur: .16, vol: .3 }); voice({ f: [92 + 60 * u, 50], at: .13, dur: .14, vol: .2 }); },
+    pierce(pow = .5) {
+      voice({ type: 'noise', dur: .08, vol: .5, filt: ['highpass', 3200] });
+      voice({ f: [3000, 400], dur: .25 + .2 * pow, vol: .15, type: 'sawtooth', filt: ['bandpass', 5000, 900], q: 3 });
+      voice({ f: [140, 36], dur: .5 + .4 * pow, vol: .5, wet: .3 });
+      voice({ type: 'noise', dur: .3, vol: .2, attack: .01, filt: ['bandpass', 6000, 1500], q: 5 });
+    },
+    wave() {
+      voice({ f: [80, 22], dur: 1.8, vol: .75, wet: .5 });
+      voice({ type: 'noise', dur: 1.6, vol: .5, attack: .12, filt: ['lowpass', 700, 2600], q: .7, wet: .5 });
+      voice({ type: 'noise', dur: 1.2, vol: .25, attack: .3, filt: ['bandpass', 300, 1400], q: 2 });
+      voice({ f: [220, 70], dur: .9, vol: .2, type: 'sawtooth', filt: ['lowpass', 1200, 200] });
+    },
+    splat() { voice({ type: 'noise', dur: .07, vol: .25, filt: ['lowpass', 1800, 300] }); voice({ f: [220, 70], dur: .09, vol: .18 }); },
+    // a blow stopped on his guard: short, dull, with a knock on top of it. And the guard going
+    block() {
+      if (clip('block')) return;
+      voice({ type: 'noise', dur: .018, vol: .45, filt: ['highpass', 2200] });
+      voice({ f: [880, 520], dur: .045, vol: .16, type: 'triangle' });
+      voice({ f: [250, 130], dur: .09, vol: .4, wet: .15 });
+    },
+    guardBreak() {
+      if (clip('guard-break')) return;
+      voice({ type: 'noise', dur: .16, vol: .5, filt: ['highpass', 1800], wet: .3 });
+      voice({ f: [1400, 240], dur: .22, vol: .2, type: 'sawtooth', filt: ['lowpass', 4000, 500] });
+      voice({ f: [150, 44], dur: .4, vol: .55, wet: .3 });
+      for (let i = 0; i < 4; i++) voice({ type: 'noise', at: .04 + Math.random() * .2, dur: .03, vol: .14, filt: ['bandpass', 2500 + Math.random() * 3500], q: 5 });
+    },
+    // Granite Blast: everything he has, let out in a straight line (tier 0 let go at once, 1 held, 2 all of it). His hair venting. The comb through it
+    cannon(tier = 0) {
+      const s = 1 + tier * .6;
+      voice({ type: 'noise', dur: .06, vol: .5, filt: ['highpass', 2600] });
+      voice({ f: [1900 / s, 160], dur: .22 * s, vol: .2, type: 'sawtooth', filt: ['lowpass', 5200, 500] });
+      voice({ f: [150, 30], dur: .5 * s, vol: .6, wet: .35 });
+      voice({ type: 'noise', dur: .4 * s, vol: .35, attack: .01, filt: ['bandpass', 3800, 600], q: 1.5, wet: .4 });
+      if (tier > 1) { voice({ f: [70, 20], dur: 1.6, vol: .7, wet: .5 }); voice({ type: 'noise', dur: 1.2, vol: .4, filt: ['lowpass', 2400, 80], wet: .6 }); }
+    },
+    steam() { voice({ type: 'noise', dur: .7, vol: .22, attack: .03, filt: ['highpass', 4200], wet: .2 }); voice({ type: 'noise', dur: .5, vol: .12, attack: .1, filt: ['bandpass', 1800, 5200], q: 3 }); },
+    comb() { voice({ type: 'noise', dur: .12, vol: .14, attack: .02, filt: ['bandpass', 2600, 5200], q: 6 }); },
+    // the handle let out into a staff
+    rod() { voice({ f: [240, 1900], dur: .14, vol: .07, type: 'sawtooth', filt: ['bandpass', 600, 3200], q: 2 }); voice({ type: 'noise', dur: .16, vol: .1, attack: .03, filt: ['bandpass', 1200, 5200], q: 2 }); },
+    // something the size of a house put down on the floor (s: 1 a heavy blow, 2 the giant), and what it broke coming back down afterwards
+    slam(s = 1) {
+      if (clip('gavel-slam')) return;
+      const d = Math.sqrt(s);
+      voice({ f: [140, 26], dur: .9 * d, vol: .7, wet: .4 });
+      voice({ f: [70, 22], dur: 1.1 * d, vol: .45, type: 'triangle' });
+      voice({ type: 'noise', dur: .7 * d, vol: .5, filt: ['lowpass', 2200, 90], wet: .6 });
+      voice({ type: 'noise', dur: .05, vol: .55, filt: ['highpass', 1800], wet: .4 });
+      voice({ f: [310, 200], dur: .3, vol: .3, wet: .6 });
+      for (let i = 0; i < 7; i++) voice({ type: 'noise', at: .12 + Math.random() * .6 * d, dur: .03 + Math.random() * .05, vol: .11, filt: ['bandpass', 700 + Math.random() * 2600], q: 3 });
+    },
+    // something being gathered, for as long as it takes (seconds)
+    rise(dur = .6) { voice({ f: [70, 520], dur, vol: .13, type: 'sawtooth', attack: dur * .8, filt: ['lowpass', 300, 3600] }); voice({ type: 'noise', dur, vol: .07, attack: dur * .85, filt: ['bandpass', 400, 5000], q: 2.5 }); },
+    // the court convenes: three raps in a big room, and the room itself, low
+    court() {
+      if (clip('court')) return;
+      for (const at of [0, .34, .68]) {
+        voice({ type: 'noise', at, dur: .02, vol: .5, filt: ['highpass', 1600], wet: .8 });
+        voice({ f: [420, 300], at, dur: .16, vol: .42, wet: .9 });
+        voice({ f: [150, 55], at, dur: .26, vol: .4, wet: .6 });
+      }
+      voice({ f: [55, 55], dur: 2.4, vol: .2, type: 'sawtooth', attack: .5, filt: ['lowpass', 260, 120], wet: .5 });
+      voice({ f: [82.4, 82.4], dur: 2.4, vol: .15, type: 'sawtooth', attack: .7, filt: ['lowpass', 300, 140], wet: .5 });
+    },
+    // a plea called right (a rap, and a bell over it) or wrong
+    plea(ok) {
+      if (!ok) { voice({ f: [150, 88], dur: .3, vol: .22, type: 'square', filt: ['lowpass', 520] }); return; }
+      this.gavel(2);
+      voice({ f: [1318.5, 1318.5], dur: .55, vol: .11, wet: .6 }); voice({ f: [1975.5, 1975.5], dur: .42, vol: .06, wet: .6 });
+    },
+    // the verdict: guilty (the gavel, and a low chord that stays) or not
+    verdict(guilty) {
+      if (!guilty) { voice({ f: [392, 370], dur: .5, vol: .12, type: 'triangle', wet: .5 }); voice({ f: [294, 262], at: .28, dur: .7, vol: .12, type: 'triangle', wet: .5 }); return; }
+      this.slam(1);
+      for (const f of [73.4, 110, 146.8, 174.6]) voice({ f: [f, f], at: .1, dur: 1.9, vol: .12, type: 'sawtooth', attack: .12, filt: ['lowpass', 900, 220], wet: .6 });
+    },
+    // the Executioner's Sword, given: light, if light made a sound
+    sword() {
+      if (clip('sword')) return;
+      [1760, 2637, 3520, 5274].forEach((f, i) => voice({ f: [f * .5, f], at: i * .05, dur: 1.3 - i * .12, vol: .07 - i * .012, attack: .25, wet: .9 }));
+      voice({ type: 'noise', dur: 1.2, vol: .05, attack: .5, filt: ['highpass', 6000], wet: .8 });
+      voice({ f: [110, 220], dur: 1.1, vol: .13, type: 'triangle', attack: .4, wet: .4 });
+    },
+    // a ring starting to close (i: which of the three), and how well it was caught (0 to 1)
+    tick(i = 0) { voice({ f: [330 + i * 110, 330 + i * 110], dur: .1, vol: .07, type: 'triangle' }); },
+    tap(acc) {
+      if (acc > .9) { [2093, 3136, 4186].forEach((f, i) => voice({ f: [f, f], dur: .6 - i * .1, vol: .1 - i * .02, wet: .8 })); voice({ type: 'noise', dur: .02, vol: .3, filt: ['highpass', 5000] }); }
+      else if (acc > .5) { voice({ f: [1568, 1568], dur: .3, vol: .1, wet: .6 }); voice({ type: 'noise', dur: .015, vol: .2, filt: ['highpass', 4000] }); }
+      else voice({ f: [170, 80], dur: .22, vol: .2, type: 'square', filt: ['lowpass', 420] });
+    },
+    // the sentence carried out: the blade through the air, the light of it ringing on, and the floor
+    execute() {
+      if (clip('execute')) return;
+      voice({ type: 'noise', dur: .22, vol: .5, attack: .005, filt: ['bandpass', 9000, 700], q: 3, wet: .5 });
+      [1245, 1865, 2794, 3729].forEach((f, i) => voice({ f: [f, f * .995], at: .03, dur: 1.4 - i * .2, vol: .09 - i * .015, wet: .9 }));
+      voice({ f: [120, 24], at: .08, dur: 1.2, vol: .7, wet: .5 });
+      voice({ type: 'noise', at: .08, dur: .9, vol: .4, filt: ['lowpass', 1600, 80], wet: .7 });
+    },
+    // Limitless at full output. Blue: something low that pulls. Red: a crack, and whatever it hit. Purple: nothing left where it went
+    blue() { voice({ f: [64, 150], dur: 1.2, vol: .3, attack: .2 }); voice({ type: 'noise', dur: 1.2, vol: .12, attack: .5, filt: ['bandpass', 300, 1900], q: 4 }); voice({ f: [880, 440], dur: .9, vol: .05, attack: .1, wet: .6 }); },
+    red() {
+      voice({ type: 'noise', dur: .05, vol: .6, filt: ['highpass', 3000] });
+      voice({ f: [2400, 120], dur: .22, vol: .22, type: 'sawtooth', filt: ['lowpass', 5200, 400] });
+      voice({ f: [110, 30], dur: .6, vol: .6, wet: .4 });
+      voice({ type: 'noise', dur: .5, vol: .32, filt: ['lowpass', 1800, 100], wet: .6 });
+    },
+    purple() {
+      voice({ f: [90, 20], dur: 1.6, vol: .75, wet: .5 });
+      voice({ f: [45, 18], dur: 1.9, vol: .5, type: 'triangle' });
+      voice({ type: 'noise', dur: 1.3, vol: .5, filt: ['lowpass', 3000, 70], wet: .7 });
+      voice({ type: 'noise', dur: .08, vol: .6, filt: ['highpass', 2400], wet: .5 });
+      [932, 1397, 2093].forEach((f, i) => voice({ f: [f, f * .5], dur: 1.2 - i * .2, vol: .07 - i * .015, attack: .02, wet: .9 }));
+    },
     toggle() { on = !on; try { localStorage.setItem('ju.sfx', on ? '1' : '0'); } catch (e) {} return on; }
   };
 })();
@@ -1320,6 +1558,7 @@ function openPanel(id, x, y) {
   $('#pNum').textContent = d.num; $('#pJp').textContent = d.jp; $('#pk').textContent = d.jp; panel.dataset.id = id;
   $('#pTitle').textContent = d.title; $('#pBody').innerHTML = d.body;
   if (d.onOpen) d.onOpen();
+  panel.scrollTop = 0;
   panel.style.setProperty('--px', x + 'px'); panel.style.setProperty('--py', y + 'px');
   panel.classList.add('open'); panel.inert = false; stage.inert = true;
   burst(x, y); sfx.confirm();
@@ -1443,8 +1682,8 @@ window.JU = { sfx, flash, bolts: blackFlash, reduceMotion, startGame, exitGame, 
 <script>
 // Load every game script fresh on each page load. The dev server sends no cache headers, so without this a reload
 // could run a mix of old and new files (new menu, old moves) while the game is being worked on.
-['game.js', 'fx2.js', 'chars.js', 'street.js', 'walk.js', 'foes.js', 'sukuna.js', 'school.js', 'story.js', 'story2.js', 'tech.js', 'tech_a.js',
-  'tech_b.js', 'sets.js', 'story3.js', 'cast2.js', 'script.js', 'naoya.js', 'ch45.js', 'ch67.js', 'clan.js', 'clan_a.js', 'clan_b.js', 'boss.js', 'boss_a.js', 'boss_b.js', 'boss_c.js', 'training.js', 'choso.js', 'domain.js', 'domain2.js', 'mahito.js', 'combo.js', 'combat.js', 'cast3.js', 'ch810.js', 'ch1112.js', 'cast4.js', 'ch1316.js', 'cast5.js', 'ch1721.js', 'combat2.js', 'judge.js', 'awaken.js', 'alimit.js', 'ats.js', 'switcher.js', 'tools.js', 'smark.js', 'cast6.js', 'ch2230.js', 'notes.js', 'shop.js', 'touch.js'].forEach(src => {
+['game.js', 'fx2.js', 'chars.js', 'street.js', 'walk.js', 'foes.js', 'cuts.js', 'sukuna.js', 'school.js', 'story.js', 'story2.js', 'tech.js', 'tech_a.js',
+  'tech_b.js', 'sets.js', 'story3.js', 'cast2.js', 'script.js', 'naoya.js', 'ch45.js', 'ch67.js', 'clan.js', 'clan_a.js', 'clan_b.js', 'boss.js', 'boss_a.js', 'boss_b.js', 'boss_c.js', 'training.js', 'choso.js', 'domain.js', 'domain2.js', 'mahito.js', 'combo.js', 'combat.js', 'cast3.js', 'ch810.js', 'ch1112.js', 'cast4.js', 'ch1316.js', 'cast5.js', 'ch1721.js', 'combat2.js', 'judge.js', 'awaken.js', 'alimit.js', 'ats.js', 'switcher.js', 'tools.js', 'smark.js', 'cast6.js', 'ch2230.js', 'plants.js', 'clash.js', 'block.js', 'cannon.js', 'notes.js', 'shop.js', 'touch.js'].forEach(src => {
   const s = document.createElement('script');
   s.src = src + '?v=' + Date.now(); s.async = false;      // async = false keeps them running in this order
   document.body.appendChild(s);

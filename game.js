@@ -581,7 +581,7 @@ function runBasic(p, m, t) {
   if (t < d.strike) { p.target = POSE[d.pre]; if (p.ground) p.vx = p.face * d.lunge * .4; return; }
   p.target = t < d.strike + .13 ? POSE[d.pose] : POSE.idle;
   if (p.ground) p.vx = t < d.strike + .07 ? p.face * d.lunge : 0;
-  if (!m.sw) { m.sw = 1; sfx.whoosh(); swing(p, d.kick ? 140 : 170, d.kick ? 110 : 78, 'rgba(255,255,255,.9)'); }
+  if (!m.sw) { m.sw = 1; sfx.whoosh(); swing(p, d.kick ? 140 : 170, d.kick ? 110 : 78, d.sw || 'rgba(255,255,255,.9)'); }      // (sw: a strike that is not a bare hand may leave its own colour in the air)
   if (!m.done && t < d.strike + .09 && tryHit(p, d.hit)) m.done = 1;
   if (m.i < 3 && t > d.strike + .08 && take('m1')) startM1(m.i + 1);
 }
@@ -701,9 +701,13 @@ function updatePlayer(dt) {
     } else if (p.ground && (tryStart('strikes') || tryStart('crush') || tryStart('div') || tryStart('manji'))) { /* started */ }
     else if (take('m1')) startM1(p.chain);
   }
+  const fy = hooks.floor ? hooks.floor(p) : 0;     // the highest thing under his feet: the floor, unless a technique has grown something to stand on
+  if (p.ground && p.plat && fy < p.y - 1) p.ground = false;   // he has walked off the end of it, or it has gone
+  p.ground0 = fy;
   if (!p.ground) {
+    p.plat = false;
     p.vy -= GRAV * dt; p.y += p.vy * dt;
-    if (p.y <= 0) { p.y = 0; p.vy = 0; p.ground = true; addDust(p.x); sfx.land(); }
+    if (p.y <= fy && p.vy <= 0) { p.y = fy; p.vy = 0; p.ground = true; p.plat = fy > 0; addDust(p.x); sfx.land(); }
   }
   const edge = hooks.bound ? hooks.bound() : BOUND;   // something may have made the arena bigger for him
   p.x = clamp(p.x + p.vx * dt, -edge, edge);
@@ -716,14 +720,16 @@ function updateFoe(dt) {
   const o = P2, p = P1;
   o.lastHit += dt; o.rate = 16;
   if (o.inv > 0) o.inv -= dt;
+  const fk = hooks.foeRate ? hooks.foeRate(o) : 1;   // slowed: it thinks, walks and swings at this share of its usual speed
   if (o.state === 'idle') {
     o.face = p.x >= o.x ? 1 : -1; o.vx *= Math.exp(-dt * 12);
     const s = Math.sin(T * 2.6 + 1);
     IDLE2[0] = .07 + .012 * s; IDLE2[2] = 1.15 + .06 * s; IDLE2[3] = .62 + .06 * s;
     o.target = IDLE2;
-    if (hooks.foeIdle) hooks.foeIdle(o, p, dt);
+    if (hooks.foePre && hooks.foePre(o, p, dt)) { /* something is holding it where it stands */ }
+    else if (hooks.foeIdle) { hooks.foeIdle(o, p, dt * fk); if (fk !== 1) o.vx *= fk; }
   } else if (o.state === 'act') {                // mid-attack: foes.js runs it
-    hooks.foeAct(o, p, dt);
+    hooks.foeAct(o, p, dt * fk);
   } else if (o.state === 'hurt') {
     o.vx *= Math.exp(-dt * 7); o.target = POSE.hurt; o.rate = 32;
     if ((o.stun -= dt) <= 0) o.state = 'idle';
@@ -764,7 +770,7 @@ function update(dt, real) {
     updatePlayer(dt); updateFoe(dt);
     // bodies can't overlap (a dash slips through)
     const dx = P2.x - P1.x, min = 39 + 39 * (P2.scale || 1);
-    if (P1.ground && P2.ground && P2.state !== 'down' && P1.dashT <= 0 && Math.abs(dx) < min) {
+    if (P1.ground && P2.ground && P2.state !== 'down' && P1.dashT <= 0 && Math.abs(dx) < min && Math.abs(P1.y - P2.y) < 120) {
       const s = dx >= 0 ? 1 : -1, push = min - Math.abs(dx);
       P1.x = clamp(P1.x - s * push * .7, -BOUND, BOUND); P2.x = clamp(P2.x + s * push * .3, -BOUND, BOUND);
     }
@@ -789,14 +795,17 @@ function update(dt, real) {
 
 /* ================= render ================= */
 function shadow(f) {
-  const k = clamp(1 - f.y / 520, .3, 1), q = P(f.x, f.ground0 || 0, f.z || ZP), r = k * q[2] * (f.scale || 1);
+  const g0 = f.ground0 || 0, k = clamp(1 - (f.y - g0) / 520, .3, 1), q = P(f.x, g0, f.z || ZP), r = k * q[2] * (f.scale || 1);
   g.fillStyle = `rgba(0,0,0,${.5 * k * (f.alpha === undefined ? 1 : f.alpha)})`;
   g.beginPath(); g.ellipse(q[0], q[1] + 5 * q[2], 64 * r, 13 * r, 0, 0, TAU); g.fill();
 }
 function drawBody(f) {
-  if (f.flash > 0) g.filter = 'brightness(2.6) saturate(.2)';
+  const rim = hooks.rim ? hooks.rim(f) : null;      // a technique may light the edge of him ({ col, blur }) or wash all of him one colour ({ filter })
+  if (f.flash > 0) g.filter = 'brightness(2.6) saturate(.2)'; else if (rim && rim.filter) g.filter = rim.filter;
+  if (rim && rim.col) { g.shadowColor = rim.col; g.shadowBlur = rim.blur * DPR * S * cam.zoom; }
   drawFighter(f, f.alpha);
-  if (f.flash > 0) g.filter = 'none';
+  if (rim && rim.col) { g.shadowBlur = 0; g.shadowColor = 'rgba(0,0,0,0)'; }
+  if (f.flash > 0 || (rim && rim.filter)) g.filter = 'none';
 }
 
 function render(fdt, extra) {
@@ -877,12 +886,12 @@ function frame(now) {
 }
 
 /* ================= input ================= */
-const KEYMAP = { tab: 'skip', x: 'skip', g: 'awk', r: 'clan', t: 'takeover', v: 'vow', enter: 'ok', e: 'ok', j: 'm1', '1': 'strikes', '2': 'crush', '3': 'div', '4': 'manji', q: 'dash', shift: 'dash', w: 'jump', arrowup: 'jump', ' ': 'jump' };
+const KEYMAP = { tab: 'skip', x: 'skip', g: 'awk', r: 'clan', t: 'takeover', v: 'vow', c: 'alt', enter: 'ok', e: 'ok', j: 'm1', '1': 'strikes', '2': 'crush', '3': 'div', '4': 'manji', q: 'dash', shift: 'dash', w: 'jump', arrowup: 'jump', ' ': 'jump' };
 function press(a) {
   if (performance.now() < armAt) return;
   if (scene) { if (scene.press) scene.press(a); return; }
   if (hooks.press && hooks.press(a, false)) return;
-  if (a === 'skip') return;
+  if (a === 'skip' || a === 'alt') return;          // (alt: the right mouse button. A technique that wants it has taken it by now)
   if (a === 'awk') { if (hooks.awaken) hooks.awaken(P1); return; }
   if (a === 'div' && P1.move && P1.move.def === MOVES.div) { MOVES.div.again(P1.move); return; }
   buf[a] = .18;
@@ -899,7 +908,7 @@ addEventListener('keydown', e => {
 addEventListener('keyup', e => keys.delete(e.key.toLowerCase()));
 addEventListener('blur', () => keys.clear());
 addEventListener('resize', () => { if (running) resize(); });
-root.addEventListener('pointerdown', e => { if (running && e.button === 0) press('m1'); });
+root.addEventListener('pointerdown', e => { if (running && e.button === 0) press('m1'); else if (running && e.button === 2) press('alt'); });
 root.addEventListener('contextmenu', e => e.preventDefault());
 
 /* ================= lifecycle ================= */

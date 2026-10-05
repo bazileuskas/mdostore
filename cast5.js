@@ -236,12 +236,12 @@ B.kit('haba', { tech: 'Rotor', col: '#9fd8ff', every: [2.4, 4], moves: [
 // Higuruma: a gavel that is whatever size and shape he needs. And, once the court has passed sentence, the Executioner's Sword
 function gavel(x, t) {                              // the head of it, coming down the size of a car
   const y = lerp(760, 0, Math.min(1, t / .55) ** 2), c = F(x, y), k = c[2];
-  g.globalAlpha = t > .8 ? Math.max(0, 1 - (t - .8) / .2) : 1;
-  g.fillStyle = '#3a2a1c'; g.strokeStyle = LINE; g.lineWidth = 3; g.lineJoin = 'round';
-  g.beginPath(); g.rect(c[0] - 22 * k, c[1] - 1000 * k, 44 * k, 820 * k); g.fill(); g.stroke();
-  g.fillStyle = '#5a4028'; g.beginPath(); g.rect(c[0] - 150 * k, c[1] - 190 * k, 300 * k, 190 * k); g.fill(); g.stroke();
-  g.fillStyle = GOLD; g.fillRect(c[0] - 150 * k, c[1] - 150 * k, 300 * k, 16 * k); g.fillRect(c[0] - 150 * k, c[1] - 56 * k, 300 * k, 16 * k);
-  g.globalAlpha = 1;
+  g.save(); g.globalAlpha = t > .8 ? Math.max(0, 1 - (t - .8) / .2) : 1;
+  g.fillStyle = '#6a2217'; g.strokeStyle = LINE; g.lineWidth = 3; g.lineJoin = 'round';
+  g.beginPath(); g.rect(c[0] - 22 * k, c[1] - 1000 * k, 44 * k, 860 * k); g.fill(); g.stroke();
+  g.translate(c[0], c[1] - 82 * k); g.rotate(Math.PI / 2);     // the same head the player's gavel has (judge.js), lying across the end of its handle
+  JU.judge.head(164 * k, 380 * k, 4);
+  g.restore();
 }
 const SMASH = { name: 'Gavel', cd: 6, max: 900, wind: .45, pre: 'crushWind', dur: .7, run(o, p, A, t) {
   o.rate = 30; o.vx = 0; o.target = t < .5 ? POSE.crushWind : POSE.crush;
@@ -437,19 +437,53 @@ const theatre = {
     }
   }
 };
-function judgeman() {                               // a judge who cannot be argued with: eyes sewn shut, the scales held out in front of him
-  const T = E.T, z = ZP + 430, b = P(0, 0, z), k = b[2] * .72, x = b[0], y = b[1], tilt = Math.sin(T * .8) * .08;
-  g.fillStyle = '#060608'; g.beginPath(); g.moveTo(x - 250 * k, y); g.lineTo(x - 150 * k, y - 470 * k); g.lineTo(x + 150 * k, y - 470 * k); g.lineTo(x + 250 * k, y); g.closePath(); g.fill();
-  g.fillStyle = '#d9d2c0'; g.beginPath(); g.ellipse(x, y - 540 * k, 86 * k, 104 * k, 0, 0, TAU); g.fill();
-  g.strokeStyle = '#060608'; g.lineWidth = 5 * k; g.beginPath();
-  for (const s of [-1, 1]) { g.moveTo(x + s * 54 * k, y - 562 * k); g.lineTo(x + s * 18 * k, y - 556 * k); for (let i = 0; i < 3; i++) { g.moveTo(x + s * (26 + i * 10) * k, y - 572 * k); g.lineTo(x + s * (26 + i * 10) * k, y - 546 * k); } }
-  g.moveTo(x - 30 * k, y - 486 * k); g.lineTo(x + 30 * k, y - 486 * k); g.stroke();
-  g.fillStyle = '#060608'; g.fillRect(x - 96 * k, y - 664 * k, 192 * k, 46 * k);                    // the cap
-  g.save(); g.translate(x, y - 380 * k); g.rotate(tilt);                                            // the scales
-  g.strokeStyle = GOLD; g.lineWidth = 7 * k; g.beginPath(); g.moveTo(-330 * k, 0); g.lineTo(330 * k, 0); g.moveTo(0, -40 * k); g.lineTo(0, 30 * k); g.stroke();
-  g.lineWidth = 3 * k;
-  for (const s of [-1, 1]) { g.beginPath(); g.moveTo(s * 330 * k, 0); g.lineTo(s * 380 * k, 130 * k); g.moveTo(s * 330 * k, 0); g.lineTo(s * 280 * k, 130 * k); g.stroke(); g.fillStyle = GOLD; g.beginPath(); g.ellipse(s * 330 * k, 134 * k, 66 * k, 14 * k, 0, 0, TAU); g.fill(); }
+let jaw = 0;                                        // the moment until which his mouth is open: he is saying something
+// A judge who cannot be argued with. Not a man in a robe any more but what he is: a dark mass the shape of a pair of scales, hung in the air,
+// with a long white mask for a face, its eyes sewn shut, and a pan on three chains at either end of him
+function judgeman() {
+  const T = E.T, z = ZP + 430, b = P(0, 96 + Math.sin(T * 1.1) * 14, z), k = b[2] * .7, x = b[0], y = b[1], tilt = Math.sin(T * .8) * .07, W = 430 * k, H = 520 * k;
+  lit(() => E.glow(E.GLOW.white, x, y - H * .7, 1000 * k, .13));
+  g.save(); g.translate(x, y);
+  g.fillStyle = '#050507'; g.beginPath();           // broad across the top like the beam of a balance, and falling away to a point
+  g.moveTo(-W, -H * .98); g.quadraticCurveTo(-W * .5, -H * 1.14, 0, -H * 1.1); g.quadraticCurveTo(W * .5, -H * 1.14, W, -H * .98);
+  g.quadraticCurveTo(W * .8, -H * .58, W * .32, -H * .3); g.quadraticCurveTo(W * .1, -H * .12, 0, 0);
+  g.quadraticCurveTo(-W * .1, -H * .12, -W * .32, -H * .3); g.quadraticCurveTo(-W * .8, -H * .58, -W, -H * .98);
+  g.closePath(); g.fill();
+  g.strokeStyle = 'rgba(214,208,192,.3)'; g.lineWidth = 1.2; g.beginPath();                          // fine pale lines combed out across the top of it
+  for (let i = -11; i <= 11; i++) { const u = i / 12; g.moveTo(u * W * .42, -H * (1.09 - Math.abs(u) * .03)); g.quadraticCurveTo(u * W * .78, -H * .99, u * W * 1.02, -H * (.88 - Math.abs(u) * .12)); }
+  g.stroke();
+  g.strokeStyle = 'rgba(214,208,192,.16)'; g.beginPath();                                            // and folds lower down, running in to the point
+  for (const u of [-.5, -.2, .2, .5]) { g.moveTo(u * W * .9, -H * .62); g.quadraticCurveTo(u * W * .4, -H * .3, 0, -H * .03); }
+  g.stroke();
+  g.strokeStyle = '#d9d2c0'; g.lineWidth = 2 * k; seg(0, 0, 0, 44 * k);                              // the plumb hanging from it
+  g.fillStyle = '#d9d2c0'; g.beginPath(); g.moveTo(-7 * k, 44 * k); g.lineTo(7 * k, 44 * k); g.lineTo(0, 72 * k); g.closePath(); g.fill();
+  const fy = -H * .82, fw = 60 * k, fh = 88 * k, fg = g.createLinearGradient(-fw, 0, fw, 0);         // the face
+  fg.addColorStop(0, '#bdb6a6'); fg.addColorStop(.45, '#f1ede2'); fg.addColorStop(1, '#cfc8b8');
+  g.fillStyle = fg; g.beginPath(); g.ellipse(0, fy, fw, fh, 0, 0, TAU); g.fill(); g.lineWidth = 2; g.strokeStyle = '#050507'; g.stroke();
+  g.strokeStyle = 'rgba(60,50,45,.5)'; g.lineWidth = 1.6 * k; seg(0, fy - 8 * k, -4 * k, fy + 22 * k, -4 * k, fy + 22 * k, 5 * k, fy + 24 * k);
+  g.strokeStyle = '#17100f'; g.lineWidth = 2.4 * k; g.lineCap = 'round';
+  for (const s of [-1, 1]) {                        // eyes sewn shut
+    const ex = s * 25 * k, ey = fy - 10 * k;
+    g.fillStyle = 'rgba(40,20,20,.28)'; g.beginPath(); g.ellipse(ex, ey + 12 * k, 14 * k, 7 * k, 0, 0, TAU); g.fill();
+    g.beginPath(); g.moveTo(ex - 15 * k, ey + 2 * k); g.quadraticCurveTo(ex, ey + 7 * k, ex + 15 * k, ey + 2 * k); g.stroke();
+    g.beginPath(); for (let i = -2; i <= 2; i++) { g.moveTo(ex + i * 6 * k - 2 * k, ey - 6 * k); g.lineTo(ex + i * 6 * k + 2 * k, ey + 12 * k); } g.stroke();
+  }
+  g.lineCap = 'butt';
+  if (jaw > T) {                                    // pronouncing
+    g.fillStyle = '#17070a'; g.beginPath(); g.ellipse(0, fy + 50 * k, 20 * k, (16 + 6 * Math.sin(T * 22)) * k, 0, 0, TAU); g.fill();
+    g.fillStyle = '#e9e2d2'; g.fillRect(-13 * k, fy + 37 * k, 26 * k, 5 * k);
+  } else {                                          // full lips, shut
+    g.fillStyle = '#6a3a38'; g.beginPath(); g.ellipse(0, fy + 48 * k, 17 * k, 6.5 * k, 0, 0, TAU); g.fill();
+    g.strokeStyle = '#17100f'; g.lineWidth = 1.5 * k; seg(-17 * k, fy + 48 * k, 17 * k, fy + 48 * k);
+  }
   g.restore();
+  for (const s of [-1, 1]) {                        // the pans, never quite level
+    const tx = x + s * W * .97, ty = y - H * .97, py = ty + (210 + s * tilt * 420) * k;
+    g.strokeStyle = '#cfc7ae'; g.lineWidth = 1.6 * k + .6; seg(tx, ty, tx - 62 * k, py, tx, ty, tx + 62 * k, py, tx, ty, tx, py + 10 * k);
+    g.fillStyle = '#8f8560'; g.beginPath(); g.ellipse(tx, py + 12 * k, 74 * k, 20 * k, 0, 0, Math.PI); g.fill();
+    g.fillStyle = '#efe6c4'; g.beginPath(); g.ellipse(tx, py + 6 * k, 76 * k, 15 * k, 0, 0, TAU); g.fill(); g.lineWidth = 1.5; g.strokeStyle = '#3a3220'; g.stroke();
+    lit(() => E.glow(E.GLOW.gold, tx, py, 190 * k, .22));
+  }
 }
 const court = {
   sky() {
@@ -487,5 +521,5 @@ Object.assign(JU.story.WHO, {
   kogane: ['Kogane', 'コガネ', '#b9c3cc']
 });
 
-JU.cast5 = { OGI, MAI, HEI, PANDA, HAKARI, HABA, HIGURUMA, pit, garage, theatre, court };
+JU.cast5 = { OGI, MAI, HEI, PANDA, HAKARI, HABA, HIGURUMA, pit, garage, theatre, court, speak(sec) { jaw = E.T + sec; } };   // speak: Judgeman's mouth opens for that long
 })();

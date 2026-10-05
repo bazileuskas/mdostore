@@ -93,7 +93,10 @@ const TRANS = {
       });
       V.slash(p.x + p.face * 150, p.y + 170, p.face > 0 ? -.5 : Math.PI + .5, 340, TEAL, 12);
     }
-    if (t > .14 && t < .26 && !m.done && E.tryHit(p, { reach: 290, dmg: 10, kb: 440, stun: .5, stop: .09, heavy: 1, col: TEAL })) m.done = 1;
+    if (t > .14 && t < .26 && !m.done && E.tryHit(p, { reach: 290, dmg: 10, kb: 440, stun: p === E.P1 ? .768 : .5, stop: .09, heavy: 1, col: TEAL })) {
+      m.done = 1;
+      if (p === E.P1 && JU.combat2) JU.combat2.stun(E.P2);       // in his hands it leaves what it cuts unable to do anything for 0.768 of a second
+    }
   } },
   crush: { name: 'Body Repel', cd: 5, dur: .7, run(p, m, t) {
     p.vx = 0; p.rate = 34; p.target = t < .25 ? POSE.divWind : t < .5 ? POSE.div : POSE.idle;
@@ -149,53 +152,10 @@ const TRANS = {
 const GREEN = '#7ddc6a';
 let lastM1 = -9;
 const PLANTS = {
-  strikes: { name: 'Root Spikes', cd: 4, dur: .7, run(p, m, t) {
-    p.vx = 0; p.rate = 30; p.target = t < .2 ? POSE.crushWind : t < .5 ? POSE.crush : POSE.idle;
-    if (t > .2 && !m.s) {
-      m.s = 1; sfx.blast(); shake(12);
-      const x0 = p.x, f = p.face;
-      V.custom(.8, u => {                       // roots spear up out of the floor one after another
-        for (let i = 0; i < 7; i++) {
-          const d = u * 3 - i * .16, h = d <= 0 ? 0 : Math.min(1, d * 5) * (u > .7 ? (1 - u) / .3 : 1) * (150 + (i % 3) * 50), x = x0 + f * (130 + i * 95);
-          if (h <= 0) continue;
-          const a = F(x - 26, 0), b = F(x + 26, 0), c = F(x + f * 16, h);
-          g.beginPath(); g.moveTo(a[0], a[1]); g.lineTo(c[0], c[1]); g.lineTo(b[0], b[1]); g.closePath();
-          g.fillStyle = i % 2 ? '#5d4a2e' : '#6f5a38'; g.fill(); g.lineWidth = 3; g.strokeStyle = LINE; g.stroke();
-        }
-      });
-      E.after(.12, () => E.tryHit(p, { reach: 760, dmg: 12, kb: 200, lift: 640, stop: .1, heavy: 1, col: GREEN }));
-    }
-  } },
-  crush: { name: 'Cursed Buds', cd: 6, dur: .6, run(p, m, t) {
-    p.vx = 0; p.rate = 34; p.target = t < .4 ? POSE.jab : POSE.idle;
-    if (t > .15 && !m.s) {
-      m.s = 1; sfx.whoosh();
-      const o = near(p, 820), f = p.face, x0 = p.x + f * 70;
-      V.custom(.22, u => { for (let i = 0; i < 3; i++) orb(x0 + f * 760 * u, p.y + 130 + i * 40 + Math.sin(u * 9 + i) * 14, 9, 'green', '#2e6b2a'); });
-      if (o && E.tryHit(p, { reach: 820, dmg: 6, kb: 80, stun: .6, stop: .05, col: GREEN }))
-        dot(o, f, 4, .4, { dmg: 3, kb: 0, stun: .3, col: GREEN }, () => {   // the buds feed on its cursed energy, and he gets it
-          p.hp = Math.min(p.max, p.hp + 4); V.puff('green', o.x, o.y + 150, (p.x - o.x) * 2.4, 0, 40, .4); V.ring(p.x, p.y + 150, 60, GREEN, .25);
-        });
-    }
-  } },
-  div: { name: 'Flower Field', cd: 12, dur: .9, run(p, m, t) {
-    p.vx = 0; p.rate = 26; p.target = t < .6 ? POSE.manjiWind : POSE.idle;
-    if (t > .3 && !m.s) {
-      m.s = 1; sfx.charge(); shout(p, '花畑', '#ff9ec4');
-      const x0 = p.x, o = E.P2, FL = Array.from({ length: 46 }, () => [rnd(-760, 760), rnd(-170, 330), rnd(0, 6), Math.random() < .5]);
-      V.custom(4.5, u => {                      // the whole floor comes up in flowers
-        const a = Math.min(1, u * 12) * Math.min(1, (1 - u) * 5);
-        for (const fl of FL) {
-          const q = E.P(x0 + fl[0], 0, E.ZP + fl[1]), s = (9 + 3 * Math.sin(E.T * 3 + fl[2])) * q[2] * a;
-          g.fillStyle = fl[3] ? '#ff9ec4' : '#fff3a8';
-          for (let i = 0; i < 5; i++) { const an = i * 1.2566 + fl[2]; g.beginPath(); g.arc(q[0] + Math.cos(an) * s, q[1] - s + Math.sin(an) * s * .5, s * .7, 0, 6.283); g.fill(); }
-          g.fillStyle = '#ffd23d'; g.beginPath(); g.arc(q[0], q[1] - s, s * .5, 0, 6.283); g.fill();
-        }
-      }, 0, true);
-      if (o.ai && !o.ko) { o.ai.t = 4.5; if (o.state === 'act') { o.state = 'idle'; o.act = null; o.tele = 0; } }   // it forgets it was fighting
-      for (let i = 1; i <= 5; i++) E.after(i * .7, () => { p.hp = Math.min(p.max, p.hp + 4); V.ring(p.x, p.y + 150, 70, '#ff9ec4', .3); });
-    }
-  } },
+  // Root Spikes, Cursed Buds and Flower Field were reworked in update 0.2v1: plants.js gives these three their bodies
+  strikes: { name: 'Root Spikes', cd: 6, dur: .85, run() {} },
+  crush: { name: 'Cursed Buds', cd: 7, dur: .6, run() {} },
+  div: { name: 'Flower Field', cd: 15, dur: .9, run() {} },
   manji: { name: 'Solar Beam', cd: 12, dur: 1.3, run(p, m, t) {
     p.vx = 0; p.rate = 26;
     if (t < .7) { p.target = POSE.divWind; const w = E.hand(p, false); V.mote(w[0], w[1] + 60, 'gold'); if (!m.c) { m.c = 1; sfx.charge(); } return; }
@@ -208,7 +168,7 @@ const PLANTS = {
   } }
 };
 
-JU.tech.add('ten', { name: 'Ten Shadows', jp: '十種影法術', mark: '影', who: 'Megumi Fushiguro', odds: 40, col: INDIGO, glow: 'indigo', moves: TEN });
+JU.tech.add('ten', { name: 'Ten Shadows', jp: '十種影法術', mark: '影', who: 'Megumi Fushiguro', odds: 37, col: INDIGO, glow: 'indigo', moves: TEN });
 JU.tech.add('trans', { name: 'Transfiguration', jp: '無為転変', mark: '魂', who: 'Mahito', odds: 20, col: TEAL, glow: 'teal', moves: TRANS });
 JU.tech.add('plants', { name: 'Disaster Plants', jp: '呪いの花', mark: '花', who: 'Hanami', odds: 20, col: GREEN, glow: 'green', moves: PLANTS,
   // one basic attack a second, but each lands twice as hard

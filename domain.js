@@ -2,7 +2,9 @@
    A slanted panel snaps across the screen with the caster in close-up between the words DOMAIN and EXPANSION, a shock runs out
    from where they stand, the panel shuts, and then the barrier closes in from the edges of the screen until everything is white.
    The fight is frozen for all of it. JU.domain.open({ who, tone, skin, reveal, done }) plays it: `skin` is who the close-up shows
-   (the caster as they are, unless given), and `reveal` runs under the white-out. */
+   (the caster as they are, unless given), and `reveal` runs under the white-out.
+   Two domains opened against each other get a frame each: `vs: { who, tone, skin }` puts the second caster's under the first, with a sliver
+   of the fight showing between the two. (`kind`, when given, says which domain is about to be raised: see clash.js) */
 (() => {
 'use strict';
 
@@ -24,20 +26,24 @@ const TONES = {
 };
 let on = null, lastT = 0;
 
+// one caster's frame: who is in it, which way they face, and the sky behind them
+const frame = (o, p) => ({ who: p, face: p.face, tone: TONES[o.tone] || TONES.blue,
+  port: { skin: o.skin || p.skin, x: 0, y: 0, face: p.face, spin: 1, scale: 1, pose: SIGN },
+  clouds: Array.from({ length: 16 }, () => [rnd(-1, 1), rnd(-1, 1), rnd(.5, 1.3), rnd(0, TAU), Math.random() < .6]),
+  lines: Array.from({ length: 12 }, () => [Math.random(), rnd(-1, 1), rnd(.5, 1.6)]) });
+
 function open(o) {
   if (on) return false;
   const p = o.who;
-  on = { t: 0, who: p, face: p.face, tone: TONES[o.tone] || TONES.blue, reveal: o.reveal, done: o.done, shown: false,
-    port: { skin: o.skin || p.skin, x: 0, y: 0, face: p.face, spin: 1, scale: 1, pose: SIGN },
-    clouds: Array.from({ length: 16 }, () => [rnd(-1, 1), rnd(-1, 1), rnd(.5, 1.3), rnd(0, TAU), Math.random() < .6]),
-    lines: Array.from({ length: 12 }, () => [Math.random(), rnd(-1, 1), rnd(.5, 1.6)]),
+  on = { t: 0, who: p, frames: [frame(o, p)], reveal: o.reveal, done: o.done, shown: false,
     fog: Array.from({ length: 26 }, (_, i) => [i % 2 ? 1 : -1, Math.random(), rnd(.7, 1.3), rnd(0, .3)]) };
+  if (o.vs) on.frames.push(frame(o.vs, o.vs.who));
   lastT = E.T;
-  p.pose = SIGN.slice(); p.target = SIGN; p.vx = 0;
+  for (const f of on.frames) { f.who.pose = SIGN.slice(); f.who.target = SIGN; f.who.vx = 0; }
   E.stop(.1); E.zoomIn(T_FOG);
   root.classList.add('dom');
   sfx.bf(); sfx.charge();
-  if (!JU.reduceMotion) cam.shake = Math.max(cam.shake, 16);
+  if (!JU.reduceMotion) cam.shake = Math.max(cam.shake, o.vs ? 26 : 16);
   return true;
 }
 
@@ -64,10 +70,11 @@ function portrait(d, t, H0) {
   g.restore();
 }
 
-function panel(d, t, h, H0, VW, VH) {
+// one frame, centred on cy. top / bottom: whether DOMAIN sits on its upper edge and EXPANSION on its lower one
+function panel(d, t, h, H0, VW, VH, cy, top, bottom) {
   const tone = d.tone, L = VW;
   g.save();
-  g.translate(VW / 2, VH * .37); g.rotate(TILT);
+  g.translate(VW / 2, cy); g.rotate(TILT);
   g.save();
   g.beginPath(); g.rect(-L, -h, L * 2, h * 2); g.clip();
   const gr = g.createLinearGradient(-VW / 2, 0, VW / 2, 0);
@@ -92,17 +99,17 @@ function panel(d, t, h, H0, VW, VH) {
   g.restore();
   g.fillStyle = '#fff'; g.fillRect(-L, -h - 3, L * 2, 5); g.fillRect(-L, h - 2, L * 2, 5);
   const ta = Math.min(1, t / .05) * (1 - clamp((t - .72) / .36, 0, 1));
-  if (ta > 0) { word('DOMAIN', -VW * .17, -h + 4, ta, VH); word('EXPANSION', VW * .15, h - 6, ta, VH); }
+  if (ta > 0) { if (top) word('DOMAIN', -VW * .17, -h + 4, ta, VH); if (bottom) word('EXPANSION', VW * .15, h - 6, ta, VH); }
   g.restore();
 }
 
 function draw() {
-  const d = on, VW = E.VW, VH = E.VH, H0 = VH * .19, t = (d.t += E.T - lastT);
+  const d = on, VW = E.VW, VH = E.VH, two = d.frames.length > 1, H0 = VH * (two ? .14 : .19), t = (d.t += E.T - lastT);
   lastT = E.T;
   if (t < T_BACK) E.stop(.05);                      // the fight holds its breath until the domain is up
   g.save();
-  if (t < .3) {                                     // the shock: a dome of force thrown out from where the caster stands
-    const p = d.who, c = F(p.x, p.y + 150), gy = E.GY - 120, sx = VW / 2 + (c[0] - VW / 2) * cam.zoom, sy = gy + (c[1] - gy) * cam.zoom - cam.lift;
+  if (t < .3) for (const fr of d.frames) {          // the shock: a dome of force thrown out from where each caster stands
+    const p = fr.who, c = F(p.x, p.y + 150), gy = E.GY - 120, sx = VW / 2 + (c[0] - VW / 2) * cam.zoom, sy = gy + (c[1] - gy) * cam.zoom - cam.lift;
     const u = t / .3, r = ease(u) * VW * .95, a = 1 - u;
     g.globalCompositeOperation = 'lighter'; E.glow(E.GLOW.white, sx, sy - 60, 1100 * (1 - u * .5), a); g.globalCompositeOperation = 'source-over';
     g.fillStyle = `rgba(255,255,255,${.16 * a})`; g.beginPath(); g.arc(sx, sy + 150, r, Math.PI, TAU); g.fill();
@@ -111,7 +118,10 @@ function draw() {
     g.beginPath(); g.ellipse(sx, sy + 150, r, r * .22, 0, 0, TAU); g.stroke();
   }
   const h = H0 * Math.min(1, t / .04) * (t > T_HOLD ? 1 - ease(clamp((t - T_HOLD) / (T_SHUT - T_HOLD), 0, 1)) : 1);
-  if (t < T_SHUT && h > .5) panel(d, t, h, H0, VW, VH);
+  if (t < T_SHUT && h > .5) {
+    if (two) { panel(d.frames[0], t, h, H0, VW, VH, VH * .225, true, false); panel(d.frames[1], t, h, H0, VW, VH, VH * .525, false, true); }   // one above the other, a sliver of the fight between them
+    else panel(d.frames[0], t, h, H0, VW, VH, VH * .37, true, true);
+  }
   if (t >= T_FOG) {                                 // the barrier closing in from both sides, and the white it leaves behind
     const u = clamp((t - T_FOG) / (T_WHITE - T_FOG), 0, 1), back = 1 - clamp((t - T_BACK) / (T_END - T_BACK), 0, 1);
     if (t < T_WHITE) for (const b of d.fog) {
@@ -131,5 +141,6 @@ H.post = dt => { post0(dt); if (on) draw(); };
 H.reset = () => { reset0(); on = null; root.classList.remove('dom'); };
 
 JU.domain = { open, SIGN, TONES, T: { shut: T_SHUT, white: T_WHITE },
-  get busy() { return !!on; }, get time() { return on ? on.t : -1; }, get who() { return on ? on.who : null; } };
+  get busy() { return !!on; }, get time() { return on ? on.t : -1; }, get who() { return on ? on.who : null; },
+  get vs() { return on && on.frames[1] ? on.frames[1].who : null; } };   // the second caster, when two are opening at once
 })();

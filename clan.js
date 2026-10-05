@@ -45,7 +45,9 @@ H.fightStart = (cfg, wave) => {
   const p = E.P1, hs = st.host;
   if (!wave) { p.max = Math.round((hs ? hs.hp : 100) * (1 + (active.hp || 0))); p.hp = p.max; }
   p.skin = hs ? hs.skin : E.YUJI; p.scale = hs ? hs.scale : undefined;
-  Fi.nm.p1.textContent = hs ? hs.name : 'Yuji Itadori'; Fi.nm.p1j.textContent = hs ? hs.jp : '虎杖悠仁';
+  // outside the story he carries his clan's name, not his own: Yuji Gojo, Yuji Fushiguro. (A clan is only ever in play outside the story;
+  // a body that is not his, or a technique that makes him somebody else, puts its own name up after this)
+  Fi.nm.p1.textContent = hs ? hs.name : 'Yuji ' + active.name; Fi.nm.p1j.textContent = hs ? hs.jp : active.jp + '悠仁';
   if (X().start) X().start(p, cfg);
 };
 H.press = (a, inScene) => {                      // R = clan ability, T / V belong to Sukuna's vessel
@@ -77,7 +79,11 @@ function equip(id) {
 /* ---------- the Clan screen ---------- */
 // a limited clan (def.limited = the moment it leaves) is drawn for first, at its own odds, for as long as it is here
 const live = c => !c.limited || Date.now() < c.limited;
-const left = c => { const h = (c.limited - Date.now()) / 36e5; return h <= 0 ? 'Ended' : 'Ends in ' + (h >= 24 ? Math.ceil(h / 24) + 'd' : Math.ceil(h) + 'h'); };
+const left = c => {                                // to the second, the way a limited technique counts down
+  const s = Math.floor((c.limited - Date.now()) / 1000), d = Math.floor(s / 86400), h = Math.floor(s % 86400 / 3600), two = n => String(n).padStart(2, '0');
+  return s <= 0 ? 'Ended' : 'Ends in ' + (d ? d + 'd ' : '') + (d || h ? two(h) + 'h ' : '') + two(Math.floor(s % 3600 / 60)) + 'm ' + two(s % 60) + 's';
+};
+setInterval(() => document.querySelectorAll('.ccard.lim').forEach(el => { const c = CLAN[el.dataset.clan], u = el.querySelector('u'); if (c && u) { u.textContent = left(c); el.classList.toggle('over', !live(c)); } }), 1000);
 const roll = () => {
   for (const id of ORDER) { const c = CLAN[id]; if (c.limited && live(c) && Math.random() * 100 < c.odds) return id; }
   let r = Math.random() * 100;
@@ -88,7 +94,7 @@ const stats = c => `<ul>${c.lines.map(l => `<li>${l}</li>`).join('')}${c.ability
 function show() {
   const c = CLAN[equipped], r = document.getElementById('cres');
   if (!r) return;
-  r.innerHTML = c ? `<small>Your clan · ${c.odds}%${c.grade ? ' · ' + c.grade : ''}${c.limited ? ' · Limited time' : ''}</small><b style="color:${c.col}">${c.name}</b><span lang="ja">${c.jp}</span>${stats(c)}`
+  r.innerHTML = c ? `<small>Your clan · ${c.odds}%${c.grade ? ' · ' + c.grade : ''}${c.limited ? ' · Limited time' : ''}</small><b style="color:${c.col}">${c.name}</b><span lang="ja">${c.jp}</span>${c.id === 'toji' ? '' : `<em>Outside the story you fight as Yuji ${c.name}</em>`}${stats(c)}`
     : '<small>No clan yet</small><p>Pick one of the three talismans to draw your bloodline, or take a clan straight from the cards. Clans are used in Free Exploration.</p>';
   document.querySelectorAll('.ccard').forEach(k => k.classList.toggle('on', k.dataset.clan === equipped));
 }

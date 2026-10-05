@@ -54,15 +54,85 @@ function freeze(o, face, t) {
   Object.assign(o, { state: 'hurt', stun: t, act: null, vx: 0, tele: 0 });          // even the ones too heavy to stagger hold still for this
   iceT = t; immune = t + 1.6; sfx.charge();
 }
-function frame(c, k, a, n) {                        // one frame of film, stood round whatever it has caught
-  g.fillStyle = `rgba(255,236,170,${.16 * a})`; g.strokeStyle = `rgba(255,236,170,${.9 * a})`; g.lineWidth = 4;
-  g.beginPath(); g.rect(c[0] - 74 * k, c[1] - 286 * k, 148 * k, 296 * k); g.fill(); g.stroke();
-  g.fillStyle = `rgba(255,236,170,${.7 * a})`;                                         // sprocket holes down both edges
-  for (let i = 0; i < 6; i++) { g.fillRect(c[0] - 70 * k, c[1] - (270 - i * 50) * k, 9 * k, 14 * k); g.fillRect(c[0] + 61 * k, c[1] - (270 - i * 50) * k, 9 * k, 14 * k); }
-  if (!n) return;
-  g.strokeStyle = `rgba(255,255,255,${a})`; g.lineWidth = 2.5; g.beginPath();           // and the cracks, one more set each time it breaks
-  for (let i = 0; i < n * 3; i++) { const x = c[0] + (((i * 53) % 120) - 60) * k, y = c[1] - (30 + (i * 71) % 230) * k; g.moveTo(x, y); g.lineTo(x + (((i * 37) % 60) - 30) * k, y - (((i * 29) % 70) - 20) * k); }
-  g.stroke();
+// one frame, stood round whatever it has caught. It used to be drawn as film; this is what the technique really makes: a pane like a sheet of glass,
+// with its target pressed flat inside it. n: how many times it has been cracked. tag: the number in its corner
+function frame(c, k, a, n, tag) {
+  if (a <= 0) return;
+  const w = 152 * k, h = 300 * k, x = c[0] - w / 2, y = c[1] - 290 * k, r = 12 * k, gr = g.createLinearGradient(x, y, x + w, y + h);
+  g.save(); g.globalAlpha = Math.min(1, a);
+  gr.addColorStop(0, 'rgba(235,245,255,.36)'); gr.addColorStop(.5, 'rgba(170,205,245,.15)'); gr.addColorStop(1, 'rgba(235,245,255,.32)');
+  g.beginPath(); g.roundRect(x, y, w, h, r); g.fillStyle = gr; g.fill();
+  g.lineWidth = 3.5 * k + 1; g.strokeStyle = 'rgba(255,255,255,.95)'; g.stroke();
+  g.lineWidth = 1.5; g.strokeStyle = 'rgba(255,220,130,.85)'; g.beginPath(); g.roundRect(x + 6 * k, y + 6 * k, w - 12 * k, h - 12 * k, r * .6); g.stroke();   // the gold of his technique, just inside the edge
+  g.save(); g.beginPath(); g.roundRect(x, y, w, h, r); g.clip();                                  // light lying across the face of it
+  g.fillStyle = 'rgba(255,255,255,.2)'; g.beginPath(); g.moveTo(x + w * .08, y + h); g.lineTo(x + w * .5, y); g.lineTo(x + w * .68, y); g.lineTo(x + w * .26, y + h); g.closePath(); g.fill();
+  g.fillStyle = 'rgba(255,255,255,.11)'; g.beginPath(); g.moveTo(x + w * .6, y + h); g.lineTo(x + w * .92, y); g.lineTo(x + w * 1.04, y); g.lineTo(x + w * .72, y + h); g.closePath(); g.fill();
+  g.restore();
+  if (tag) { g.font = `${Math.max(9, Math.round(22 * k))}px Anton, Impact, sans-serif`; g.textAlign = 'right'; g.textBaseline = 'top'; g.fillStyle = 'rgba(255,255,255,.9)'; g.fillText(tag, x + w - 10 * k, y + 9 * k); }
+  if (n) {                                          // and the cracks: one more star of them each time it is hit
+    g.strokeStyle = 'rgba(255,255,255,.95)'; g.lineWidth = 2; g.lineJoin = 'miter'; g.beginPath();
+    for (let j = 0; j < n; j++) {
+      const cx = c[0] + ((j * 61) % 90 - 45) * k, cy = c[1] - (64 + (j * 97) % 180) * k;
+      for (let i = 0; i < 6; i++) { const an = i * 1.05 + j * 1.7, L = (28 + (i * 37 + j * 11) % 44) * k * (1 + j * .14); g.moveTo(cx, cy); g.lineTo(cx + Math.cos(an) * L * .5 + 5 * k, cy + Math.sin(an) * L * .5); g.lineTo(cx + Math.cos(an + .3) * L, cy + Math.sin(an + .3) * L); }
+    }
+    g.stroke();
+  }
+  g.restore();
+}
+// bits of a pane coming away, each with some weight to it
+function shards(x, y, n, pow) {
+  const bits = Array.from({ length: n }, () => { const a = rnd(0, TAU), v = rnd(.3, 1) * pow; return { x: x + rnd(-56, 56), y: y + rnd(-120, 120), vx: Math.cos(a) * v, vy: Math.sin(a) * v + pow * .4, r: rnd(0, TAU), vr: rnd(-12, 12), s: rnd(9, 30), q: [rnd(.4, 1), rnd(.4, 1), rnd(.5, 1)] }; });
+  V.custom(1.15, (u, dt) => {
+    for (const b of bits) {
+      b.vy -= 2300 * dt; b.x += b.vx * dt; b.y += b.vy * dt; b.r += b.vr * dt;
+      if (b.y < 5) { b.y = 5; b.vy *= -.3; b.vx *= .5; b.vr *= .4; }
+      const c = F(b.x, b.y), z = b.s * c[2];
+      g.save(); g.translate(c[0], c[1]); g.rotate(b.r); g.globalAlpha = Math.min(1, (1 - u) * 2.4);
+      g.beginPath(); g.moveTo(-z * b.q[0], z * .5); g.lineTo(z * b.q[1], z * .3); g.lineTo(-z * .1, -z * b.q[2]); g.closePath();
+      g.fillStyle = 'rgba(214,234,255,.5)'; g.fill(); g.strokeStyle = 'rgba(255,255,255,.95)'; g.lineWidth = 1.5; g.stroke();
+      g.restore();
+    }
+    g.globalAlpha = 1;
+  });
+}
+// a stroke of ink laid along the line he is moving on: the way his speed is drawn
+function ink(x0, x1, y, w, a, col) {
+  if (a <= 0) return;
+  const A = F(x0, y), Z = F(x1, y), k = A[2], mx = (A[0] + Z[0]) / 2;
+  g.globalAlpha = Math.min(1, a); g.fillStyle = col || '#0a0810';
+  g.beginPath(); g.moveTo(A[0], A[1]); g.quadraticCurveTo(mx, A[1] - w * k, Z[0], Z[1]); g.quadraticCurveTo(mx, A[1] + w * k * .55, A[0], A[1]); g.fill();
+  g.globalAlpha = 1;
+}
+// the disc of cloud that stands round something going through the sound barrier. u: how far it has opened
+function cone(x, y, f, u, size) {
+  if (u <= 0 || u >= 1) return;
+  const c = F(x + f * 70 * u, y), k = c[2], r = size * (.22 + .78 * (1 - (1 - u) * (1 - u))) * k;
+  g.save();
+  g.globalAlpha = (1 - u) * .22; g.fillStyle = '#fff'; g.beginPath(); g.ellipse(c[0], c[1], r * .3, r, 0, 0, TAU); g.fill();
+  g.globalAlpha = (1 - u) * .95; g.strokeStyle = '#fff'; g.lineWidth = (12 * (1 - u) + 2) * k; g.beginPath(); g.ellipse(c[0], c[1], r * .3, r, 0, 0, TAU); g.stroke();
+  g.strokeStyle = '#0a0810'; g.lineWidth = 2; g.beginPath(); g.ellipse(c[0] - f * 8 * k, c[1], r * .3, r * 1.02, 0, 0, TAU); g.stroke();
+  g.restore();
+}
+// where it lands: a white disc, and ink thrown out of it in every direction
+function splat(x, y) {
+  const rays = Array.from({ length: 14 }, (_, i) => [i / 14 * TAU + rnd(-.15, .15), rnd(140, 330), rnd(8, 22)]);
+  V.custom(.34, u => {
+    const c = F(x, y), k = c[2], e = 1 - (1 - u) * (1 - u), a = 1 - u;
+    g.globalAlpha = a * .8; g.fillStyle = '#fff'; g.beginPath(); g.arc(c[0], c[1], 150 * e * k, 0, TAU); g.fill();
+    g.globalAlpha = a; g.fillStyle = '#0a0810';
+    for (const r of rays) {
+      const r0 = 60 * e * k, r1 = r[1] * e * k, w = r[2] * (1 - u) * k, cs = Math.cos(r[0]), sn = Math.sin(r[0]);
+      g.beginPath(); g.moveTo(c[0] + cs * r0 - sn * w, c[1] + sn * r0 + cs * w); g.lineTo(c[0] + cs * r1, c[1] + sn * r1); g.lineTo(c[0] + cs * r0 + sn * w, c[1] + sn * r0 - cs * w); g.closePath(); g.fill();
+    }
+    g.globalAlpha = 1;
+  });
+}
+// one frame of him, standing somewhere he is not any more
+function echo(skin, sc, x, y, face, pose, a, tag) {
+  if (a <= 0) return;
+  const c = F(x, y);
+  frame(c, c[2] * (sc || 1), a * .8, 0, tag);
+  E.drawFighter({ skin, x, y, face, spin: 1, scale: sc, pose }, a * .6);
 }
 
 /* ---------- Top Speed: twenty-four laps round whoever he is fighting, each one quicker than the last ---------- */
@@ -90,20 +160,25 @@ function drawLap(behind) {                          // the fight's own run: the 
 }
 
 const MOVES = {
-  // 1 — one target, caught in a frame that breaks four times over
+  // 1 — one target, shut in a frame. Four more frames of him arrive one after another to break it, and it gives a little further each time
   strikes: { name: 'Frame Breaker', cd: 7, dur: .5, glow: 'gold', run(p, m, t) {
     p.vx = t > .06 && t < .16 ? p.face * 800 : 0; p.rate = 46; p.target = t < .3 ? POSE.jab : POSE.idle;
     if (m.done || t < .08 || t > .24 || !E.tryHit(p, { reach: 230, dmg: 4, kb: 0, stun: 2.5, stop: .08, col: GOLD })) return;
-    const o = E.P2, face = p.face;
+    const o = E.P2, face = p.face, skin = p.skin, sc = p.scale, HITS = [POSE.cross, POSE.hook, POSE.kick, POSE.crush];
     m.done = 1; sfx.charge(); shout(p, '1/24', GOLD);
     Object.assign(o, { state: o.ko ? o.state : 'hurt', stun: 2.5, act: null, vx: 0 });
     cycle = { o, n: 0, t: 2.5 }; iceT = Math.max(iceT, 2.5);
-    for (let i = 1; i <= 4; i++) E.after(i * .5, () => {                              // stage by stage: each time the frame gives way, and he is still in it
+    V.ring(o.x, o.y + 160, 230, '#ffffff', .25);
+    for (let i = 1; i <= 4; i++) E.after(i * .5, () => {                              // stage by stage
       if (!cycle || cycle.o !== o || E.P2 !== o || o.ko) return;
-      cycle.n = i; sfx.hit(i === 4); V.rocks(o.x, 150, i === 4 ? 12 : 5); V.ring(o.x, o.y + 150, 150 + i * 40, GOLD, .3);
+      const side = i % 2 ? -1 : 1, hy = o.y + 160 * (o.scale || 1), gx = o.x + side * 170, last = i === 4;
+      cycle.n = i; sfx.hit(last); sfx.whoosh();
+      V.custom(.26, u => echo(skin, sc, gx - side * 46 * u, o.y, -side, HITS[i - 1], 1 - u, i * 6 + '/24'));       // a frame of him, there for an instant, hitting it
+      V.slash(o.x + side * 40, hy + rnd(-40, 40), side > 0 ? Math.PI - .3 : .3, 300, '#ffffff', 12);
+      shards(o.x, hy, last ? 36 : 10, last ? 950 : 520); V.ring(o.x, hy, 150 + i * 40, '#ffffff', .3);
       E.fx.push({ k: 2, x: o.x, y: o.y + 420, n: i + ' / 4', col: GOLD, t: 0, life: .5 });
-      E.applyHit(o, face, i < 4 ? { dmg: 5, kb: 0, stun: 2.5 - i * .5 + .2, stop: .05, col: GOLD } : { dmg: 10, kb: 760, lift: 480, stop: .14, heavy: 1, col: GOLD });
-      if (i === 4) { cycle = null; iceT = 0; }
+      E.applyHit(o, face, last ? { dmg: 10, kb: 760, lift: 480, stop: .14, heavy: 1, col: GOLD } : { dmg: 5, kb: 0, stun: 2.5 - i * .5 + .2, stop: .05, col: GOLD });
+      if (last) { cycle = null; iceT = 0; shake(26); V.impact(.12, o.x, hy); splat(o.x, hy); }
     });
   } },
   // 2 — the run itself. When it is over he is up to speed, and anything he so much as brushes stops dead for two seconds
@@ -124,28 +199,74 @@ const MOVES = {
     m.e = 1; done(p);
     if (!o.ko && Math.abs(o.x - p.x) < 260) freeze(o, p.face, 2);
   } },
-  // 3 — the air he pushes in front of him, let go of all at once
-  div: { name: 'Sonic Boom', cd: 6, dur: .6, glow: 'gold', run(p, m, t) {
-    p.vx = 0; p.rate = 40; p.target = t < .16 ? POSE.divWind : t < .4 ? POSE.div : POSE.idle;
-    if (t < .16 || m.s) return;
-    m.s = 1; sfx.blast(); shake(16);
-    const f = p.face, x0 = p.x + f * 90, y = p.y + 170;
-    for (let i = 0; i < 6; i++) V.ring(x0 + f * i * 150, y, 90 + i * 22, '#ffffff', .22 + i * .03);
-    V.bolt(x0, y, x0 + f * 900, y, '#ffffff', .2, 5, '#fff');
-    E.tryHit(p, { reach: 900, dmg: 14, kb: 760, lift: 300, stop: .12, heavy: 1, col: '#ffffff' });
-  } },
-  // 4 — three times the speed of sound, straight through whatever is in the way
-  manji: { name: 'Mach 3', cd: 14, dur: 1.15, glow: 'gold', run(p, m, t) {
-    p.vx = 0; p.rate = 34;
-    if (t < .5) { p.target = POSE.dash; V.mote(p.x, p.y + 120, 'gold'); if (!m.c) { m.c = 1; sfx.charge(); shout(p, 'マッハ3', GOLD); } return; }
-    p.target = t < .85 ? POSE.div : POSE.idle;
+  // 3 — the air he pushes in front of him, let go of all at once: a wall of it, and three rings left standing where it went through
+  div: { name: 'Sonic Boom', cd: 6, dur: .7, glow: 'gold', run(p, m, t) {
+    p.vx = 0; p.rate = 40; p.target = t < .2 ? POSE.divWind : t < .46 ? POSE.div : POSE.idle;
+    if (t < .2) { const w = E.hand(p, false); V.mote(w[0], w[1], 'white'); if (!m.c) { m.c = 1; sfx.charge(); } return; }
     if (m.s) return;
-    m.s = 1; sfx.bf(); shake(34);
-    const f = p.face, x0 = p.x, hit = E.tryHit(p, { reach: 1500, dmg: 40, kb: 1150, lift: 480, stop: .22, heavy: 1, col: GOLD });
-    p.x = clamp(x0 + f * 1350, -950, 950);
-    for (let i = 0; i < 8; i++) V.ring(x0 + (p.x - x0) * i / 7, p.y + 150, 150 + i * 16, '#ffffff', .3 + i * .03);
-    V.bolt(x0, p.y + 150, p.x, p.y + 150, GOLD, .3, 7, '#fff');
-    if (hit) V.impact(.18, E.P2.x, E.P2.y + 150);
+    m.s = 1; sfx.blast(); sfx.bf(); shake(22);
+    const f = p.face, x0 = p.x + f * 90, y = p.y + 170, SPD = 2600, FAR = 900, o = E.P2;
+    const L = Array.from({ length: 14 }, () => [rnd(-120, 140), rnd(140, 430), rnd(.4, 1), rnd(0, .25)]);      // the streaks behind it: height, length, weight, how far back each one starts
+    V.custom(.56, u => {
+      const t2 = u * .56, d = Math.min(FAR, t2 * SPD), x = x0 + f * d, a = t2 < .38 ? 1 : 1 - (t2 - .38) / .18, c = F(x, y), k = c[2];
+      for (const q of [0, 250, 520]) if (d > q) cone(x0 + f * q, y, f, (d - q) / 760, 240);
+      for (const q of L) { const x1 = x0 + f * Math.max(0, d - q[3] * 800); ink(x1 - f * q[1] * (.3 + d / FAR), x1, y + q[0], 10 * q[2], a * .85); ink(x1 - f * q[1] * .45, x1, y + q[0], 3 * q[2], a, '#fff'); }
+      g.globalAlpha = Math.max(0, a); g.fillStyle = '#fff'; g.strokeStyle = '#0a0810'; g.lineWidth = 4; g.lineJoin = 'round';    // the front itself, bowed forward
+      g.beginPath(); g.moveTo(c[0] - f * 34 * k, c[1] - 200 * k); g.quadraticCurveTo(c[0] + f * 120 * k, c[1], c[0] - f * 34 * k, c[1] + 160 * k); g.quadraticCurveTo(c[0] + f * 44 * k, c[1], c[0] - f * 34 * k, c[1] - 200 * k); g.fill(); g.stroke();
+      g.globalAlpha = 1;
+      if (d < FAR && Math.random() < .8) { E.addDust(x); V.rocks(x, 0, 1); }
+    });
+    V.crack(x0 + f * 40, 210);
+    E.after(clamp((o.x - x0) * f, 0, FAR) / SPD, () => {                              // it lands when the front gets there, not before
+      if (!E.tryHit(p, { reach: 990, dmg: 14, kb: 760, lift: 300, stop: .12, heavy: 1, col: '#ffffff' })) return;
+      const q = E.P2; V.impact(.1, q.x, q.y + 150); splat(q.x, q.y + 160);
+    });
+  } },
+  // 4 — three times the speed of sound. The frames line up at his back, he is gone, and the sound of it gets there after he does
+  manji: { name: 'Mach 3', cd: 14, dur: 1.3, glow: 'gold', run(p, m, t) {
+    p.vx = 0; p.rate = 34;
+    if (t < .6) {
+      const n = t < .2 ? 1 : t < .4 ? 2 : 3, f = p.face;
+      p.target = POSE.dash;
+      if (!m.c) {
+        const skin = p.skin, sc = p.scale, x0 = p.x, y0 = p.y;
+        m.c = 1; p.inv = Math.max(p.inv, .9); sfx.charge(); E.zoomIn(.6);
+        V.custom(.6, u => {                         // the next second of him, drawn in advance: frame after frame of it stacking up behind him
+          for (let i = 7; i >= 1; i--) echo(skin, sc, x0 - f * i * 38, y0, f, POSE.dash, clamp(u * 9 - i, 0, 1) * (1 - u * .3) * (.75 - i * .07), String(24 - i));
+          const c = F(x0, y0 + 30);
+          g.globalCompositeOperation = 'lighter'; E.glow(E.GLOW.gold, c[0], c[1], (260 + 420 * u) * c[2], .3 + .4 * u); g.globalCompositeOperation = 'source-over';
+          for (let i = 0; i < 6; i++) { const q = (u * 3 + i * .37) % 1; ink(x0 - f * (760 - 620 * q), x0 - f * (560 - 620 * q), y0 + 60 + i * 44, 7, (1 - q) * .7 * u); }     // the air already being dragged in after him
+        });
+      }
+      if (n !== m.n) {
+        m.n = n; shout(p, 'MACH ' + n, n === 3 ? '#ffffff' : GOLD); sfx.whoosh(); shake(6 + n * 5); V.ring(p.x, p.y + 30, 120 + n * 80, GOLD, .25); E.addDust(p.x - f * 60);
+        if (n === 3) { V.crack(p.x, 280); V.rocks(p.x, 0, 8); E.slow(.18); }
+      }
+      V.mote(p.x, p.y + 120, 'gold');
+      return;
+    }
+    p.target = t < .95 ? POSE.div : POSE.idle;
+    if (m.s) return;
+    m.s = 1;
+    const f = p.face, x0 = p.x, y = p.y, o = E.P2, skin = p.skin, sc = p.scale;
+    const hit = E.tryHit(p, { reach: 1500, dmg: 28, kb: 600, lift: 380, stop: .2, heavy: 1, col: GOLD }), x1 = clamp(x0 + f * 1350, -950, 950);
+    p.x = x1; sfx.bf(); sfx.blast(); shake(40); V.split(f > 0 ? .05 : -.05);
+    V.custom(.75, u => { for (let i = 0; i <= 9; i++) echo(skin, sc, x0 + (x1 - x0) * i / 9, y, f, POSE.dash, 1 - u * 1.7 - (9 - i) * .05, String(i + 15)); });   // every frame he went through, still hanging where he was for it
+    V.custom(.3, u => {                               // and the smear of him across the lot
+      const a = 1 - u, th = 150 * (1 - u * .7);
+      ink(x0, x1, y + 170, th, a * .9, '#b0348f'); ink(x0 + (x1 - x0) * .08, x1, y + 170, th * .55, a, GOLD); ink(x0 + (x1 - x0) * .2, x1, y + 170, th * .2, a, '#fff');
+      for (let i = 0; i < 7; i++) ink(x0 + (x1 - x0) * i * .09, x1 - (x1 - x0) * i * .04, y + 40 + i * 48, 9, a * .8);
+    });
+    V.custom(.62, u => { for (const q of [.22, .5, .78]) cone(x0 + (x1 - x0) * q, y + 165, f, u * 1.5 - (q - .22) * .6, 340); });     // three of them: one for each time he broke it
+    for (let i = 1; i < 8; i++) { const x = x0 + (x1 - x0) * i / 8; V.crack(x, 140 + (i % 3) * 50); V.rocks(x, 0, 4); E.addDust(x); }
+    if (!hit) return;
+    V.impact(.22, o.x, o.y + 150); splat(o.x, o.y + 160);
+    E.after(.22, () => {                              // the sound, arriving late
+      if (o.ko || o !== E.P2) return;
+      sfx.blast(); shake(30); E.fx.push({ k: 2, x: o.x, y: o.y + 420, n: 'BOOM', col: '#ffffff', t: 0, life: .7 });
+      for (let i = 0; i < 4; i++) V.ring(o.x, o.y + 150, 200 + i * 120, '#ffffff', .3 + i * .06);
+      E.applyHit(o, f, { dmg: 12, kb: 900, lift: 420, stop: .14, heavy: 1, col: '#ffffff' });
+    });
   } }
 };
 // the run is over: he is standing in front of it again, and fast
@@ -179,7 +300,11 @@ H.fx = dt => {
   fx0(dt);
   if (lap) drawLap(false);
   const o = E.P2;
-  if (iceT > 0 && !o.ko) { const c = F(o.x, o.y), k = c[2] * (o.scale || 1); frame(c, k, Math.min(1, iceT * 4), cycle ? cycle.n : 0); }
+  if (iceT > 0 && !o.ko) {
+    const c = F(o.x, o.y), k = c[2] * (o.scale || 1), a = Math.min(1, iceT * 4);
+    if (cycle) for (let i = 2; i >= 1; i--) frame([c[0] - i * 10 * k, c[1] - i * 8 * k], k, a * .35, 0);      // the frames stacked up behind this one
+    frame(c, k, a, cycle ? cycle.n : 0, cycle ? cycle.n * 6 + 1 + '/24' : '1/24');
+  }
   if (top > 0 && on()) {                              // how much of it is left, over his head
     const p = E.P1, c = F(p.x, p.y + 330), w = 90 * c[2];
     g.fillStyle = 'rgba(8,6,14,.7)'; g.fillRect(c[0] - w, c[1], w * 2, 7 * c[2]); g.fillStyle = GOLD; g.fillRect(c[0] - w, c[1], w * 2 * top / FAST, 7 * c[2]);

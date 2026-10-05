@@ -16,7 +16,8 @@ const CHOKE = { name: 'Choke Hold', dur: 2, run(p, m, t) {
   if (t < 1.7 && !o.ko) Object.assign(o, { x: p.x + p.face * 112, y: 62, vx: 0, vy: 0, ground: true, state: 'hurt', stun: .5, face: -p.face });   // held off the floor
   if (n !== m.n && n < 8 && !o.ko) {
     m.n = n; sfx.hit(false);
-    for (let i = 0; i < 2; i++) V.slash(o.x + rnd(-30, 30), o.y + 215 * (o.scale || 1) + rnd(-30, 30), rnd(0, TAU), 190, RED, 8);
+    for (let i = 0; i < 2; i++) JU.cut.slice(o.x + rnd(-30, 30), o.y + 215 * (o.scale || 1) + rnd(-30, 30), rnd(-1.4, 1.4), 190, { shift: 5, w: .8, delay: i * .03 });
+    JU.cut.ink(o.x, o.y + 215 * (o.scale || 1), -p.face, 4, .7);
     E.applyHit(o, p.face, { dmg: 10 / (o.dr || 1), kb: 0, stun: .5, stop: .03, col: RED, fixed: 1 });
   }
   if (t >= 1.7 && !m.drop) { m.drop = 1; if (!o.ko) Object.assign(o, { ground: false, state: 'air', vy: 200, vx: p.face * 500 }); }
@@ -28,16 +29,16 @@ const DOMAIN = { name: 'Malevolent Shrine', dur: 4.4, glow: 'red', run(p, m, t) 
   p.vx = 0; p.rate = 16; p.target = t < 4 ? JU.domain.SIGN : POSE.idle;
   if (!m.c) {                                     // the opening plays with the fight frozen, and nothing can interrupt him once it has begun
     m.c = 1; p.inv = 5;                           // the close-up is his own face, unless he is wearing a vessel
-    JU.domain.open({ who: p, tone: 'red', skin: vessel() ? null : JU.sukuna.SUKUNA,
+    JU.domain.open({ who: p, tone: 'red', skin: vessel() ? null : JU.sukuna.SUKUNA, kind: 'shrine',
       reveal() {
         JU.domain.raise('shrine', { who: p, dur: 8.5, cancel() { if (p.move && p.move.def === DOMAIN) E.endMove(p); p.inv = 0; } });   // it stands a while after the cutting stops, so he can fight inside it. G lets it go early
-        cam.shake = 24; E.after(.25, () => E.banner('伏魔御廚子', 'MALEVOLENT SHRINE', 'sm'));
+        cam.shake = 24; E.after(.25, () => { if (!JU.domain.clashing) E.banner('伏魔御廚子', 'MALEVOLENT SHRINE', 'sm'); });
       } });
   }
   if (t > .7 && n !== m.n && n < 15) {            // everything inside is cut, over and over
     m.n = n;
-    for (let i = 0; i < 5; i++) V.slash(cam.x + rnd(-700, 700), rnd(40, 420), rnd(0, TAU), rnd(260, 560), RED, 9, i * .03);
-    if (!o.ko && o.state !== 'down') E.applyHit(o, p.face, { dmg: 7, kb: 40, stun: .5, stop: .02, col: RED });
+    JU.cut.storm(cam.x, 3, n % 5 === 4); sfx.cut(n % 5 === 4 ? 1.6 : .9);           // the air, the floor and whatever is standing on it
+    if (!o.ko && o.state !== 'down') { E.applyHit(o, p.face, { dmg: 7, kb: 40, stun: .5, stop: .02, col: RED }); JU.cut.dice(o, 2, 300, n % 5 === 4); if (n % 5 === 4) JU.cut.frame(.1, o.x, o.y + 160); }
   }
 } };
 const awaken0 = H.awaken, tickAll0 = H.tick, startAll0 = H.fightStart, own = () => !!K.active && K.active.id === 'sukuna';

@@ -117,9 +117,11 @@ H.reset = () => { reset0(); music.stop(); };
 Object.assign(T, { awkStart: 0, awkHits: false, awkName: 'Domain',
   awaken(p) {
     p.inv = Math.max(p.inv, 1);
-    D.open({ who: p, tone: 'teal', skin: JU.cast2.MAHITO, reveal() {
+    D.open({ who: p, tone: 'teal', skin: JU.cast2.MAHITO, kind: 'perfection', reveal() {
       D.raise('perfection', { who: p, dur: 9 }); music.start();
-      E.after(.25, () => E.banner('自閉円頓裹', 'SELF-EMBODIMENT OF PERFECTION', 'xs'));
+      E.after(.25, () => { if (!D.clashing) E.banner('自閉円頓裹', 'SELF-EMBODIMENT OF PERFECTION', 'xs'); });
     } });
   } });
+
+JU.perfection = { music };                          // Mahito plays the same thing when the domain is his (clash.js)
 })();

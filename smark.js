@@ -12,7 +12,7 @@ try { Object.assign(S, JSON.parse(localStorage.getItem('ju.mark') || '{}')); } c
 const save = () => { try { localStorage.setItem('ju.mark', JSON.stringify(S)); } catch (e) {} };
 const shake = v => { cam.shake = Math.max(cam.shake, v); };
 const exact = (o, n) => n / (o.dr || 1);
-const cut = (o, n = 1, w) => { for (let i = 0; i < n; i++) V.slash(o.x + rnd(-110, 110), o.y + rnd(60, 290) * (o.scale || 1), rnd(0, TAU), rnd(220, 460), RED, w || rnd(4, 10), i * .01); };
+const cut = (o, n = 1, w) => { for (let i = 0; i < n; i++) JU.cut.slice(o.x + rnd(-110, 110), o.y + rnd(60, 290) * (o.scale || 1), rnd(-1.4, 1.4), rnd(220, 460), { shift: w ? 11 : 6, w: w ? 1.3 : .8, delay: i * .012 }); if (w) JU.cut.ink(o.x, o.y + 170 * (o.scale || 1), Math.random() < .5 ? -1 : 1, 8); };   // (0.2v4: a cut parts what it goes through, cuts.js)
 // damage that does not stagger: the stated amount, and a proper death if that is what it comes to
 function chip(o, n) { o.lastHit = 0; o.flash = .04; if (o.hp - n <= 0) E.applyHit(o, 1, { dmg: 999999, kb: 0, stun: .4, fixed: 1, col: RED }); else o.hp -= n; }
 
@@ -155,7 +155,7 @@ H.tick = dt => {
         if (s.numT <= 0) { s.numT = s.open ? .07 : 0; E.addNum(o.x + rnd(-60, 60), o.y + rnd(200, 300) * (o.scale || 1), s.per, '#ffd27a'); sfx.whoosh(); }
       }
     }
-    if (s.open && Math.random() < dt * 30) V.slash(cam.x + rnd(-800, 800), rnd(30, 430), rnd(0, TAU), rnd(200, 520), RED, rnd(3, 7));      // it is cutting at everything, not only at him
+    if (s.open && Math.random() < dt * 9) JU.cut.slice(cam.x + rnd(-800, 800), rnd(30, 430), rnd(-1.4, 1.4), rnd(200, 520), { shift: 5, w: .7 });      // it is cutting at everything, not only at him
     if (s.t >= s.dur || p.dead) shrine = null;
   }
 };

@@ -33,7 +33,7 @@ function encounter(c) {
     setObj('Free exploration', `Curses exorcised: ${st.done}`);
     E.setScene(scene);
   };
-  JU.fights.start({ foes: [c.kind], stage: JU.stages.street(x0), label: 'Free exploration', p1x: -200, onWin: () => back(true), onFlee: () => back(false) });
+  JU.fights.start({ foes: [c.kind], stage: JU.stages.street(x0), label: 'Free exploration', wild: true, p1x: -200, onWin: () => back(true), onFlee: () => back(false) });   // wild: out here a special grade may open its domain
 }
 
 function start(opts) {

@@ -48,14 +48,18 @@ const URO = skin({ t: '#2b2540', t2: '#3d3559', h: PALE[0], h2: PALE[1], l: '#2b
     g.fillStyle = LINE; eye(5, 1, 3.4, 1.8); eye(17, 1, 3, 1.8);
     g.strokeStyle = LINE; g.lineWidth = 2.4; seg(0, -3, 9, -6, 13, -6, 21, -3); g.lineWidth = 2; seg(9, 15, 16, 14);
   } });
-const ISHIGORI = skin({ t: TAN[0], t2: TAN[1], a: '#3a2c22', a2: '#4d3b2e', h: TAN[0], h2: TAN[1], l: '#22252e', l2: '#30343f', s: '#0c0c10', s2: '#15151b',
-  chest() {                                         // a jacket hung open over nothing
-    g.fillStyle = '#3a2c22'; g.fillRect(-30, -TOR, 20, TOR); g.fillRect(24, -TOR, 6, TOR);
+const FUR = '#f1ece2';
+const ISHIGORI = skin({ t: TAN[0], t2: TAN[1], a: '#1c1b22', a2: '#2b2933', h: TAN[0], h2: TAN[1], l: '#22252e', l2: '#30343f', s: '#0c0c10', s2: '#15151b',
+  chest() {                                         // a black jacket hung open over nothing, fur down the edges of it, and a tag on a chain
+    g.fillStyle = '#1c1b22'; g.fillRect(-30, -TOR, 20, TOR); g.fillRect(24, -TOR, 6, TOR);
+    g.fillStyle = FUR; g.fillRect(-12, -TOR, 6, 46); g.fillRect(19, -TOR, 6, 40);
     g.strokeStyle = 'rgba(80,40,30,.4)'; g.lineWidth = 2; seg(2, -58, 20, -58, 4, -40, 20, -40, 11, -64, 11, -22);
+    g.strokeStyle = '#8f98a3'; g.lineWidth = 1.5; seg(1, -TOR, 9, -50, 20, -TOR, 12, -50); g.fillStyle = '#c9d2dc'; g.fillRect(7, -51, 7, 10);
   },
-  head() {                                          // a pompadour that arrives a moment before he does
+  head() {                                          // a pompadour that arrives a moment before he does, over a collar of fur
+    poly(FUR, [-36, 30, -42, 14, -32, 18, -36, 4, -24, 14, -22, 28, -6, 34, 10, 30, 24, 34, 34, 22, 40, 30, 30, 40, -20, 40]);
     E.headBase(TAN[0], TAN[1]);
-    poly('#1a1418', [-27, 0, -28, -22, -12, -40, 18, -48, 44, -40, 50, -26, 38, -16, 22, -15, -8, -14, -16, 0]);
+    poly('#1a1826', [-27, 0, -28, -22, -12, -40, 18, -48, 44, -40, 50, -26, 38, -16, 22, -15, -8, -14, -16, 0]);
     g.fillStyle = LINE; eye(5, 2, 3.2, 1.8); eye(17, 2, 2.8, 1.8);
     g.strokeStyle = LINE; g.lineWidth = 2.6; seg(0, -3, 9, -4, 13, -4, 21, -3);
     g.lineWidth = 2.2; g.lineCap = 'round'; g.beginPath(); g.arc(12, 10, 7.5, .2, 2.6); g.stroke(); g.lineCap = 'butt';
@@ -193,11 +197,11 @@ B.kit('uro', { tech: 'Sky Manipulation', col: '#b9a8ff', glow: 'purple', every: 
   quake('Sky Fold', { a: { dmg: 11, kb: 420, lift: 380 }, col: '#b9a8ff', pre: 'hookWind', pose: 'hook' })
 ] });
 // Ishigori: more cursed energy output than anyone, let out in a straight line
-B.kit('ishigori', { tech: 'Granite Blast', col: '#ffb060', glow: 'fire', every: [2.4, 3.8], moves: [
-  flat('Granite Blast', { cd: 6, min: 300, wind: .6, pre: 'divWind', pose: 'div', speed: 2000, r: 46, y: 160, trail: 'fire', a: { dmg: 15, kb: 700, lift: 420 }, draw(s) {
+B.kit('ishigori', { tech: 'Granite Blast', col: '#7fe9ff', glow: 'blue', every: [2.4, 3.8], moves: [
+  flat('Granite Blast', { cd: 6, min: 300, wind: .6, pre: 'divWind', pose: 'div', speed: 2000, r: 46, y: 160, trail: 'blue', a: { dmg: 15, kb: 700, lift: 420 }, draw(s) {
     const c = F(s.x, s.y), k = c[2], d = Math.sign(s.vx);
-    lit(() => { E.glow(E.GLOW.fire, c[0], c[1], 360 * k, 1); E.glow(E.GLOW.fire, c[0] - d * 150 * k, c[1], 280 * k, .7); });
-    g.fillStyle = '#fff3d0'; g.beginPath(); g.ellipse(c[0], c[1], 70 * k, 36 * k, 0, 0, TAU); g.fill();
+    lit(() => { E.glow(E.GLOW.blue, c[0], c[1], 360 * k, 1); E.glow(E.GLOW.blue, c[0] - d * 150 * k, c[1], 280 * k, .7); });
+    g.fillStyle = '#eafcff'; g.beginPath(); g.ellipse(c[0], c[1], 70 * k, 36 * k, 0, 0, TAU); g.fill();
   } }),
   rush('Dessert', { cd: 5, pre: 'crushWind', pose: 'crush', a: { dmg: 15, kb: 760, lift: 600 }, speed: 1200, fx(o) { V.crack(o.x + o.face * 140, 240); V.ring(o.x + o.face * 120, 160, 260, '#ffb060', .3); } })
 ] });

@@ -35,12 +35,13 @@ function apply(id) {
   if (!t) return;
   if (t.base) { revert(); based = true; return; }   // nothing to put on: his own moves are the technique
   based = false; active = t; label(t.moves); E.CD.dash = t.dash || BASE.cd.dash; JU.sukuna.style = t.id === 'shrine';
+  hintEl.innerHTML = t.hint || ''; E.root.dataset.tech = t.id;      // a technique with something to explain says it under the controls
   awk = t.awaken ? (t.awkStart === undefined ? 50 : t.awkStart) : 0; bar(); awkEl.classList.toggle('on', !!t.awaken);
 }
 function revert() {
   based = false;
   if (!active) return;
-  active = null; label(null); E.CD.dash = BASE.cd.dash; JU.sukuna.style = false;
+  active = null; label(null); E.CD.dash = BASE.cd.dash; JU.sukuna.style = false; hintEl.innerHTML = ''; E.root.dataset.tech = '';
   awkEl.classList.remove('on', 'full');
 }
 
@@ -59,7 +60,7 @@ H.under = dt => {                              // the technique's colour pooling
 };
 
 // awakening: the bar fills as his hits land; G spends it
-const hit0 = H.hit, awkEl = document.getElementById('awk');
+const hit0 = H.hit, awkEl = document.getElementById('awk'), hintEl = document.getElementById('techHint');
 let awk = 0;
 const bar = () => {
   const nm = (active && active.awkName) || 'Awakening';
@@ -114,14 +115,19 @@ const dot = (o, face, n, every, h, each) => { for (let i = 1; i <= n; i++) E.aft
 const near = (p, range) => { const o = E.P2, d = (o.x - p.x) * p.face; return d > -30 && d < range && !o.ko && o.state !== 'down' ? o : null; };
 
 /* ---------- the roll (Cursed Technique screen on the title menu) ---------- */
+// a card for whoever is coming next. It says that somebody is, and gives a different hint each time it is pressed
+const HINTS = ['A ring on a chain, and a promise made at eleven.', 'He is never the only one in the room.', 'He carries a sword he would rather not have to use.', 'Show him a thing once.'];
+let hintAt = 0;
+const TEASE = false;                                // the card is put away for now (the user's call, 0.2v6). true brings it back
 // a limited technique (def.limited = the moment it leaves) is rolled for first, at its own odds, for as long as it is here.
 // If it does not come up, the usual table decides
 const live = t => !t.limited || Date.now() < t.limited;
+// how long it has left, to the second: "Ends in 6d 00h 37m 12s". The days are dropped when there are none, and then the hours
 function left(t) {
-  const ms = t.limited - Date.now(), h = ms / 36e5;
-  return ms <= 0 ? 'Ended' : 'Ends in ' + (h >= 24 ? Math.ceil(h / 24) + 'd' : h >= 1 ? Math.ceil(h) + 'h' : Math.ceil(ms / 6e4) + 'm');
+  const s = Math.floor((t.limited - Date.now()) / 1000), d = Math.floor(s / 86400), h = Math.floor(s % 86400 / 3600), two = n => String(n).padStart(2, '0');
+  return s <= 0 ? 'Ended' : 'Ends in ' + (d ? d + 'd ' : '') + (d || h ? two(h) + 'h ' : '') + two(Math.floor(s % 3600 / 60)) + 'm ' + two(s % 60) + 's';
 }
-function stamp() { document.querySelectorAll('.tcard.lim:not(.ea)').forEach(c => { const t = TECH[c.dataset.tech]; c.classList.toggle('over', !live(t)); c.querySelector('u').textContent = left(t); }); }
+function stamp() { document.querySelectorAll('.tcard.lim:not(.ea):not(.tease)').forEach(c => { const t = TECH[c.dataset.tech]; c.classList.toggle('over', !live(t)); c.querySelector('u').textContent = left(t); }); }
 function roll() {
   for (const id of ORDER) { const t = TECH[id]; if (t.limited && live(t) && Math.random() * 100 < t.odds) return id; }
   let r = Math.random() * 100;
@@ -143,9 +149,10 @@ function mount(body) {
     ${JU.awakened ? '<button class="awkct" id="awkct" aria-label="Awakened cursed techniques"><span lang="ja">覚醒</span>Awaken CT</button>' : ''}</div>
     ${ORDER.filter(id => TECH[id].limited).map(id => { const t = TECH[id]; return `<button class="tcard lim" data-tech="${id}" style="--c:${t.col}" aria-label="Equip ${t.name}, limited time"><b lang="ja">${t.mark || t.jp[0]}</b><span><small>Limited time</small>${t.name}</span><i>${t.who} · ${t.odds}%</i><u></u></button>`; }).join('')}
     ${ORDER.filter(id => TECH[id].early).map(id => { const t = TECH[id]; return `<button class="tcard lim ea" data-tech="${id}" style="--c:${t.col}" aria-label="Equip ${t.name}, early access"><b lang="ja">${t.mark || t.jp[0]}</b><span><small>Early Access</small>${t.name}</span><i>${t.who}</i><u>$2.99</u></button>`; }).join('')}
-    <div class="tcards">${ORDER.filter(id => !TECH[id].limited && !TECH[id].early && !TECH[id].awakened).map(id => { const t = TECH[id]; return `<button class="tcard" data-tech="${id}" style="--c:${t.col}" aria-label="Equip ${t.name}"><b lang="ja">${t.mark || t.jp[0]}</b><span>${t.name}</span><i>${t.free ? 'Free' : t.odds + '%'}</i></button>`; }).join('')}</div>`;
+    ${TEASE ? `<button class="tcard lim tease" id="tease" style="--c:#d9c9ff" aria-label="A character still to come. Press for a hint"><b lang="ja">？</b><span><small>Next character</small>? ? ?</span><i>${HINTS[hintAt]}</i><u>Soon</u></button>` : ''}
+    <div class="tcards t8">${ORDER.filter(id => !TECH[id].limited && !TECH[id].early && !TECH[id].awakened).map(id => { const t = TECH[id]; return `<button class="tcard" data-tech="${id}" style="--c:${t.col}" aria-label="Equip ${t.name}"><b lang="ja">${t.mark || t.jp[0]}</b><span>${t.name}</span><i>${t.free ? 'Free' : t.odds + '%'}</i></button>`; }).join('')}</div>`;
   show(false);
-  clearInterval(clock); clock = setInterval(() => { if (document.querySelector('.tcard.lim')) stamp(); else clearInterval(clock); }, 30000);
+  clearInterval(clock); clock = setInterval(() => { if (document.querySelector('.tcard.lim')) stamp(); else clearInterval(clock); }, 1000);
 }
 function spin(paper) {
   if (spinning || (JU.shop && !JU.shop.take('ct'))) return;
@@ -173,7 +180,8 @@ function spin(paper) {
   })(t0);
 }
 document.addEventListener('click', e => {
-  const p = e.target.closest('#paper'), c = e.target.closest('.tcard');
+  const p = e.target.closest('#paper'), c = e.target.closest('.tcard'), ts = e.target.closest('#tease');
+  if (ts) { hintAt = (hintAt + 1) % HINTS.length; ts.querySelector('i').textContent = HINTS[hintAt]; ts.classList.remove('no'); void ts.offsetWidth; ts.classList.add('no'); sfx.hover(); return; }
   if (p) { spin(p); return; }
   if (!c || spinning || !live(TECH[c.dataset.tech])) return;   // a limited technique that has left cannot be picked up any more
   if (TECH[c.dataset.tech].early && JU.shop && !JU.shop.early) { c.classList.remove('no'); void c.offsetWidth; c.classList.add('no'); sfx.back(); return; }   // early access, and not bought

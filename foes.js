@@ -93,10 +93,10 @@ function lose() {
 // the player takes a hit. Dashing through it dodges.
 function hurt(face, a, mul = 1) {
   const p = E.P1;
-  if (H.guard && H.guard(face, a)) return false;
+  if (H.guard && H.guard(face, a, mul)) return false;
   if (p.dashT > 0 || p.inv > 0 || p.dead || p.ps === 'down' || p.ps === 'up' || fight.paused) return false;
   if (p.move) E.endMove(p);
-  const dmg = Math.round(a.dmg * mul);
+  const dmg = Math.round(a.dmg * mul * (H.foePower ? H.foePower(a) : 1));     // something may have weakened it, or put more behind its hits
   p.hp = Math.max(fight.floor, p.hp - dmg); p.flash = .1; p.face = -face; p.vx = face * a.kb;
   if (a.lift) { p.vy = a.lift; p.ground = false; p.y = Math.max(p.y, 1); p.ps = 'air'; } else { p.ps = 'hurt'; p.stun = a.stun || .4; }
   E.stop(.08); cam.shake = Math.max(cam.shake, a.lift ? 20 : 11); cam.kick -= face * .04;

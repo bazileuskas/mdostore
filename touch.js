@@ -14,8 +14,8 @@ ui.className = 'tc';
 ui.innerHTML = `<div class="tstick"><i></i></div>
   <div class="tbtns">
     <button class="t-s t-awk" data-a="awk" aria-label="Awakening">G</button><button class="t-s t-clan" data-a="clan" aria-label="Clan ability">R</button>
-    <button class="t-s t-ves t-t" data-a="takeover" aria-label="Take over">T</button><button class="t-s t-ves t-v" data-a="vow" aria-label="Binding vow">V</button>
-    <button class="t-dash" data-a="dash">Dash</button><button class="t-jump" data-a="jump">Jump</button><button class="t-hit" data-a="m1">Strike</button>
+    <button class="t-s t-alt" data-a="alt" aria-label="Underheat">Heat</button><button class="t-s t-ves t-t" data-a="takeover" aria-label="Take over">T</button><button class="t-s t-ves t-v" data-a="vow" aria-label="Binding vow">V</button>
+    <button class="t-block" data-hold="block">Block</button><button class="t-dash" data-a="dash">Dash</button><button class="t-jump" data-a="jump">Jump</button><button class="t-hit" data-a="m1">Strike</button>
   </div>
   <button class="t-x" data-x="1" aria-label="Back to the title">✕</button><button class="t-skip" data-a="skip">Skip ▸▸</button>`;
 root.appendChild(ui);
@@ -29,10 +29,14 @@ ui.addEventListener('pointerdown', e => {
   e.stopPropagation();
   if (!b) return;
   e.preventDefault();
-  if (b.dataset.x) JU.exitGame(); else press(b.dataset.a);
+  if (b.dataset.x) JU.exitGame(); else if (b.dataset.hold) flag('hold:' + b.dataset.hold, true); else press(b.dataset.a);      // (hold: a button that is held down, like Block, is a key that is down)
 });
+for (const up of ['pointerup', 'pointercancel', 'pointerout']) ui.addEventListener(up, e => { const b = e.target.closest && e.target.closest('[data-hold]'); if (b) flag('hold:' + b.dataset.hold, false); });
 ui.addEventListener('pointermove', e => e.stopPropagation());
-root.querySelectorAll('.hotbar .mv').forEach(el => el.addEventListener('pointerdown', e => { e.stopPropagation(); press(el.dataset.m); }));
+root.querySelectorAll('.hotbar .mv').forEach(el => {
+  el.addEventListener('pointerdown', e => { e.stopPropagation(); flag('hold:' + el.dataset.m, true); press(el.dataset.m); });      // (held: a move that is held, like Piercing Blood, asks for this)
+  for (const up of ['pointerup', 'pointercancel', 'pointerleave']) el.addEventListener(up, () => flag('hold:' + el.dataset.m, false));
+});
 document.getElementById('awk').addEventListener('pointerdown', e => { e.stopPropagation(); press('awk'); });
 
 /* ---------- the stick: left and right in a fight (up jumps), all four ways on the street, and pushed right out it runs ---------- */

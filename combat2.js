@@ -110,7 +110,7 @@ const AIRBLADE = { name: 'Blade Arm', dur: 1.6, glow: 'teal', run(p, m, t) {
   const o = E.P2;
   p.rate = 44;
   if (dive(p, m, t, .14, POSE.crush, 1500,
-    () => { if (E.tryHit(p, { reach: 230, dmg: 18, kb: 200, stun: .9, stop: .14, heavy: 1, col: TEAL })) { m.done = 1; spike(p, o); V.slash(o.x, o.y + 170, p.face > 0 ? -1.2 : Math.PI + 1.2, 380, TEAL, 14); } },
+    () => { if (E.tryHit(p, { reach: 230, dmg: 18, kb: 200, stun: .9, stop: .14, heavy: 1, col: TEAL })) { m.done = 1; spike(p, o); stun(o, true); V.slash(o.x, o.y + 170, p.face > 0 ? -1.2 : Math.PI + 1.2, 380, TEAL, 14); } },
     () => { const x = p.x + p.face * 80; crater(x, 260); V.ring(x, 40, 240, TEAL, .35); })) return;
   if (t < .14) { p.target = POSE.crushWind; p.vy = Math.max(p.vy, 60); p.vx *= .85; }
 } };
@@ -146,8 +146,17 @@ function air(p, k, def) {
   return true;
 }
 
+/* ---------- Blade Arm leaves what it cuts unable to do anything for 0.768 of a second, on the floor or out of the air ---------- */
+const STUN = .768;
+let dazed = null;                                   // { o, t }: held where it stands. With `down`: it is on its way to the floor, and that is how long it lies there
+function stun(o, fallen) {
+  if (o.ko) return;
+  dazed = fallen && !o.poise ? { o, t: 3, down: true, set: false } : { o, t: STUN };
+  if (!dazed.down && o.state === 'act') { o.state = 'idle'; o.act = null; o.tele = 0; }      // even the ones too heavy to stagger stop what they were doing
+}
+
 /* ---------- wiring ---------- */
-const m10 = H.m1, press0 = H.press, tick0 = H.tick, fx0 = H.fx, reset0 = H.reset, start0 = H.fightStart, nj0 = H.noJump, pow0 = H.power;
+const m10 = H.m1, press0 = H.press, tick0 = H.tick, fx0 = H.fx, reset0 = H.reset, start0 = H.fightStart, nj0 = H.noJump, pow0 = H.power, pre0 = H.foePre;
 H.m1 = i => {
   const p = E.P1;
   if (i === 0 && !p.ground && p.vy > 0 && held() && E.T - jumpAt < .1) { p.vy = -2600; armed = true; }   // jump and the first strike pressed together: he stays down, and the hold counts
@@ -159,6 +168,12 @@ H.m1 = i => {
   return false;
 };
 H.noJump = p => (armed && held()) || (nj0 ? nj0(p) : false);       // held through the chain, jump does not jump
+H.foePre = (o, p, dt) => {
+  if (pre0 && pre0(o, p, dt)) return true;
+  if (!dazed || dazed.down || dazed.o !== o) return false;
+  o.vx *= Math.exp(-dt * 10); o.target = POSE.hurt; o.rate = 30;    // seeing stars
+  return true;
+};
 H.press = (a, inScene) => {
   if (!inScene) {
     const p = E.P1, m = p.move;
@@ -184,6 +199,11 @@ H.tick = dt => {
   if (!held()) armed = false;
   if (follow && ((follow.t -= dt) <= 0 || follow.o.ko || follow.o !== E.P2 || E.P1.dead)) follow = null;
   if (lastUp && E.T - lastUp.at > .4) lastUp = null;
+  if (dazed) {
+    const o = dazed.o;
+    if (o !== E.P2 || o.ko || (dazed.t -= dt) <= 0) dazed = null;
+    else if (dazed.down) { if (o.state === 'down') { if (!dazed.set) { dazed.set = true; o.stun = STUN; } } else if (dazed.set) dazed = null; }
+  }
 };
 H.fx = dt => {
   fx0(dt);
@@ -199,6 +219,14 @@ H.fx = dt => {
     g.strokeStyle = INK; g.lineWidth = 4; g.globalAlpha = .55 + .45 * Math.sin(E.T * 30);
     g.beginPath(); g.arc(c[0], c[1], (56 + 60 * follow.t / 1.6) * c[2], 0, TAU); g.stroke(); g.globalAlpha = 1;
   }
+  if (dazed && dazed.o === E.P2 && !E.P2.ko && (!dazed.down || dazed.set)) {       // stars going round its head for as long as it lasts
+    const o = E.P2, s = o.scale || 1, top = o.state === 'down' ? o.y + 90 : o.y + 305 * s;
+    g.fillStyle = '#ffe066';
+    for (let i = 0; i < 3; i++) {
+      const a = E.T * 5 + i * 2.094, c = F(o.x + Math.cos(a) * 46 * s, top + Math.sin(a * 2) * 5), r = 9 * c[2] * (.7 + .3 * Math.sin(a));
+      g.beginPath(); for (let j = 0; j < 8; j++) { const q = j * Math.PI / 4, rr = j % 2 ? r * .42 : r; g.lineTo(c[0] + Math.cos(q) * rr, c[1] + Math.sin(q) * rr); } g.closePath(); g.fill();
+    }
+  }
 };
 // a fight the story has not finished with cannot be ended early by one enormous hit: it is left on its last point of health
 H.power = (h, o) => {
@@ -206,9 +234,9 @@ H.power = (h, o) => {
   if (o !== E.P2 || !f.cfg || !(JU.chapters.pending || (f.low && !f.lowDone))) return k;
   return Math.min(k, Math.max(0, (o.hp - 1) / (h.dmg * (o.dr || 1))));
 };
-const clear = () => { armed = false; follow = lastUp = null; jumpAt = preBF = -1e9; };
+const clear = () => { armed = false; follow = lastUp = dazed = null; jumpAt = preBF = -1e9; };
 H.reset = () => { reset0(); clear(); };
 H.fightStart = (cfg, wave) => { clear(); start0(cfg, wave); };
 
-JU.combat2 = { UPPER, SLAM, DROP, AIRBLADE, AIRMACH, get follow() { return follow; } };
+JU.combat2 = { UPPER, SLAM, DROP, AIRBLADE, AIRMACH, STUN, stun, get follow() { return follow; }, get dazed() { return dazed && { t: dazed.t, down: !!dazed.down, set: !!dazed.set }; } };
 })();

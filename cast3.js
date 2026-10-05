@@ -122,7 +122,7 @@ const BLOOD = JU.tech.TECH.blood.moves, aimed = (o, p) => { const d = (p.x - o.x
 B.kit('choso', { tech: 'Blood Manipulation', col: '#e0203c', glow: 'red', scale: .8, moves: [
   { of: BLOOD.strikes, cd: 5, min: 200, max: 780, wind: .45, pre: 'hookWind' },
   { of: BLOOD.div, cd: 8, max: 760, wind: .4, pre: 'divWind', spot: [aimed, 250], then(o, p, c) { B.mark(c.spot, 250, .65, '#e0203c'); } },
-  { of: BLOOD.manji, cd: 12, min: 300, wind: .3, pre: 'divWind', scale: .7 }
+  { of: BLOOD.manji, cd: 12, min: 300, wind: .3, pre: 'divWind', scale: .7, dur: 1.2 }
 ] });
 
 // Mahoraga adapts: every turn of the wheel and it takes less from whatever is hitting it. Finish it before it has turned too far

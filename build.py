@@ -28,6 +28,11 @@ for name in names:
 # the patch-notes pictures travel inside the page too, as data the scroll reads from window.JU_PICS
 pics = {os.path.splitext(os.path.basename(p))[0]: 'data:image/jpeg;base64,' + base64.b64encode(open(p, 'rb').read()).decode('ascii')
         for p in sorted(glob.glob(os.path.join(HERE, 'notes', '*.jpg')))}
+# ...and so do the pictures the game itself shows (img/): the same table, under their own names
+for p in sorted(glob.glob(os.path.join(HERE, 'img', '*'))):
+    name, ext = os.path.splitext(os.path.basename(p))
+    if ext.lower() in ('.jpg', '.jpeg', '.png') and not name.endswith('-original'):
+        pics[name] = 'data:image/%s;base64,' % ('png' if ext.lower() == '.png' else 'jpeg') + base64.b64encode(open(p, 'rb').read()).decode('ascii')
 blocks.insert(0, '<script>window.JU_PICS = {%s};</script>' % ','.join('"%s":"%s"' % kv for kv in pics.items()))
 # and any sound files the game has been given (the Black Flash voice line, the music for a domain), read from window.JU_SOUNDS
 sounds = {os.path.splitext(os.path.basename(p))[0]: 'data:audio/mpeg;base64,' + base64.b64encode(open(p, 'rb').read()).decode('ascii')

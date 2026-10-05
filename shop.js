@@ -79,13 +79,30 @@ function early() {
     </div>`; }).join('')}</div>
     <p class="fine">Early Access is not on sale yet, so this button does nothing for now.${EARLY_OPEN ? ' Until it is, the technique can be equipped from the Cursed Technique screen.' : ''}</p>`;
 }
+/* ---------- packs: several things at once, for real money. Like Early Access, nothing is on sale yet: the button is there and does nothing ---------- */
+// the picture on the Heian Era God pack is one the user supplied (img/heian-sukuna.jpg; the one-file build carries it in window.JU_PICS)
+const HEIAN = `<img src="${(window.JU_PICS && window.JU_PICS['heian-sukuna']) || 'img/heian-sukuna.jpg'}" alt="Sukuna as he was in the Heian era, four-armed, his hands at the sign of his domain">`;
+const PACK_PRICE = '$12.99';
+const PACKS = [{ id: 'heian', name: 'Heian Era God', tag: 'God Pack · Ryomen Sukuna', price: PACK_PRICE, col: '#ff2440', pic: HEIAN,
+  line: 'Everything the King of Curses had at his height, a thousand years ago, in one pack.',
+  holds: [['Shrine', 'cursed technique'], ['Sukuna\'s Mark', 'awakened cursed technique'], ['Sukuna', 'clan'], ['Dagger of the Demonly Holdings', 'cursed tool'],
+          ['50', 'Clan spins'], ['75', 'CT spins'], ['30', 'Cursed Tool spins']] }];
+function packs() {
+  return `<div class="goods">${PACKS.map(k => `<div class="good pack" style="--c:${k.col}">
+      <div class="ppic">${k.pic}</div>
+      <small>${k.tag}</small><h4>${k.name}</h4><p>${k.line}</p>
+      <ul class="plist">${k.holds.map(h => `<li><b>${h[0]}</b> ${h[1]}</li>`).join('')}</ul>
+      <div class="buy"><button class="cash god" data-pack="${k.id}" aria-label="${k.name} pack, ${k.price}">${k.price} · ${k.name} pack</button></div>
+    </div>`).join('')}</div>
+    <p class="fine">Packs are not on sale yet, so this button does nothing for now.</p>`;
+}
 function draw() {
   if (!home || !home.isConnected) return;
-  const TABS = [['tickets', 'Tickets'], ['daily', 'Daily Shop'], ['early', 'Early Access']];
+  const TABS = [['tickets', 'Tickets'], ['daily', 'Daily Shop'], ['packs', 'Packs'], ['early', 'Early Access']];
   home.innerHTML = `<div class="shop">
     <div class="purse">${coin}<b id="shTok">${S.t}</b><span>Cursed Tokens</span><em>Beat a curse: +${WIN} · Beat a boss: +${BOSS}</em></div>
-    <div class="stabs">${TABS.map(t => `<button class="stab${tab === t[0] ? ' on' : ''}${t[0] === 'early' ? ' ea' : ''}" data-tab="${t[0]}">${t[1]}</button>`).join('')}</div>
-    ${tab === 'daily' ? daily() : tab === 'early' ? early() : tickets()}
+    <div class="stabs">${TABS.map(t => `<button class="stab${tab === t[0] ? ' on' : ''}${t[0] === 'early' ? ' ea' : t[0] === 'packs' ? ' god' : ''}" data-tab="${t[0]}">${t[1]}</button>`).join('')}</div>
+    ${tab === 'daily' ? daily() : tab === 'early' ? early() : tab === 'packs' ? packs() : tickets()}
   </div>`;
 }
 function mount(body) {
@@ -129,6 +146,6 @@ function fee(kind) {
   S.t -= FEES[kind]; save();
   return true;
 }
-JU.shop = { mount, take, earn, offers, fee, PAID, get tokens() { return S.t; }, get owned() { return { ct: S.ct, cl: S.cl }; },
+JU.shop = { mount, take, earn, offers, fee, PAID, PACKS, get tokens() { return S.t; }, get owned() { return { ct: S.ct, cl: S.cl }; },
   get early() { return EARLY_OPEN || !!S.ea; } };  // may the early-access technique be equipped?
 })();
