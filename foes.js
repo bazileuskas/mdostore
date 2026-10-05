@@ -104,6 +104,7 @@ function hurt(face, a, mul = 1) {
   E.addSpark(p.x + face * 20, p.y + 150, '#ff5a6e', a.lift ? 130 : 80); E.addNum(p.x, p.y + 270, a.exact ? +(a.shown || dmg).toFixed(1) : dmg, '#ff5a6e');
   V.ring(p.x, p.y + 150, a.lift ? 170 : 90, '#ff2440'); if (a.lift) V.rocks(p.x, 0, 6);
   sfx.hit(!!a.lift);
+  if (H.struck) H.struck(p, face, a, dmg);          // what the blow throws off him, in the colours of whoever landed it (bossfx.js)
   if (fight.low && !fight.lowDone && p.hp <= p.max * fight.low.at) { fight.lowDone = true; fight.low.fn(); }
   else if (p.hp <= 0) lose();
   return true;

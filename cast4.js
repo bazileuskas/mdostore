@@ -4,7 +4,7 @@
 'use strict';
 
 const E = JU.eng, g = E.g, P = E.P, box = E.box, quad = E.quad, F = E.F, cam = E.cam, POSE = E.POSE, LINE = E.LINE, TOR = E.TOR, V = JU.vfx, sfx = JU.sfx, Fi = JU.fights, B = JU.boss, X = JU.cast2;
-const { lerp, clamp, ZP } = E, TAU = Math.PI * 2, { sprite } = JU.tech.tk;
+const { lerp, clamp, ZP, rnd } = E, TAU = Math.PI * 2, { sprite } = JU.tech.tk, Z = JU.bossfx;      // (Z: the Boss VFX update's pieces)
 const shade = (hex, f) => { const n = parseInt(hex.slice(1), 16); return `rgb(${Math.min(255, (n >> 16) * f) | 0},${Math.min(255, (n >> 8 & 255) * f) | 0},${Math.min(255, (n & 255) * f) | 0})`; };
 function skin(o) {
   const a = o.a || o.t, a2 = o.a2 || o.t2;
@@ -102,6 +102,15 @@ function fist(x, t) {                               // one arm of hers, coming d
   g.beginPath(); g.rect(c[0] - 62 * k, c[1] - 1100 * k, 124 * k, 960 * k); g.fill(); g.stroke();
   g.beginPath(); g.rect(c[0] - 106 * k, c[1] - 150 * k, 212 * k, 150 * k); g.fill(); g.stroke();
   g.fillStyle = '#16070c'; for (let i = 0; i < 4; i++) g.fillRect(c[0] + (-94 + i * 50) * k, c[1] - 28 * k, 36 * k, 28 * k);
+  // (Boss VFX update) the arm has a shape now: shadow down one side of it, the joints of the fingers, and her own light along its edge
+  const sh = g.createLinearGradient(c[0] - 62 * k, 0, c[0] + 62 * k, 0); sh.addColorStop(0, 'rgba(40,20,60,.55)'); sh.addColorStop(.45, 'rgba(40,20,60,0)'); sh.addColorStop(1, 'rgba(40,20,60,.3)');
+  g.fillStyle = sh; g.fillRect(c[0] - 62 * k, c[1] - 1100 * k, 124 * k, 960 * k); g.fillRect(c[0] - 106 * k, c[1] - 150 * k, 212 * k, 150 * k);
+  g.strokeStyle = 'rgba(60,30,80,.5)'; g.lineWidth = 2 * k; g.beginPath();
+  for (let i = 1; i < 4; i++) { g.moveTo(c[0] + (-106 + i * 53) * k, c[1] - 150 * k); g.lineTo(c[0] + (-106 + i * 53) * k, c[1] - 30 * k); }
+  for (let j = 0; j < 6; j++) { g.moveTo(c[0] - 62 * k, c[1] - (240 + j * 130) * k); g.lineTo(c[0] - 20 * k, c[1] - (228 + j * 130) * k); }
+  g.stroke();
+  const al = g.globalAlpha;
+  Z.lite(() => { g.strokeStyle = `rgba(201,160,255,${.8 * al})`; g.lineWidth = 5 * k; g.strokeRect(c[0] - 106 * k, c[1] - 150 * k, 212 * k, 150 * k); g.beginPath(); g.moveTo(c[0] - 62 * k, c[1] - 150 * k); g.lineTo(c[0] - 62 * k, c[1] - 1100 * k); g.moveTo(c[0] + 62 * k, c[1] - 150 * k); g.lineTo(c[0] + 62 * k, c[1] - 1100 * k); g.stroke(); Z.glow('201,160,255', c[0], c[1] - 80 * k, 520 * k, .45 * al); });
   g.globalAlpha = 1;
 }
 
@@ -123,11 +132,21 @@ B.kit('naoya', { tech: 'Projection Sorcery', col: GOLD, glow: 'gold', scale: .8,
   { name: 'Freeze Frame', cd: 9, max: 340, wind: .4, pre: 'jab', dur: .5, run(o, p, A, t) {
     o.rate = 44; o.vx = t < .12 ? o.face * 700 : 0; o.target = t < .3 ? POSE.jab : POSE.idle;
     if (A.done || t < .05 || t > .22 || !B.swing(o, 230, { dmg: 5, kb: 0, stun: 1.1 }, 190)) return;
-    A.done = 1; sfx.charge(); B.say(p, '1/24', GOLD);
-    V.custom(1.1, u => {
-      const c = F(p.x, p.y), k = c[2];
-      g.fillStyle = 'rgba(255,236,170,.16)'; g.strokeStyle = `rgba(255,236,170,${.9 * Math.min(1, (1 - u) * 5)})`; g.lineWidth = 4;
-      g.beginPath(); g.rect(c[0] - 70 * k, c[1] - 280 * k, 140 * k, 290 * k); g.fill(); g.stroke();
+    A.done = 1; sfx.charge(); B.say(p, '1/24', GOLD); E.stop(.06);
+    Z.flash('255,236,170', .22, .2); Z.flare(p.x, p.y + 160, '255,236,170', 420, .2); Z.shock(p.x, 240, '255,210,61', .4, 8);
+    V.custom(1.1, u => {                            // one frame of film with him in it: the strip's own holes down both sides, and the light of the projector crossing it
+      const q = E.P1, c = F(q.x, q.y), k = c[2], al = Math.min(1, (1 - u) * 5), w = 92 * k, h = 300 * k, x0 = c[0] - w, y0 = c[1] - h + 8 * k;
+      g.fillStyle = `rgba(255,236,170,${.14 * al})`; g.fillRect(x0, y0, w * 2, h);
+      Z.lite(() => {
+        g.strokeStyle = `rgba(255,220,120,${al})`; g.lineWidth = 4 * k; g.strokeRect(x0, y0, w * 2, h); g.lineWidth = 1.5 * k; g.strokeRect(x0 + 16 * k, y0 + 8 * k, w * 2 - 32 * k, h - 16 * k);
+        g.fillStyle = `rgba(255,255,255,${.35 * al})`; g.fillRect(x0 + 16 * k, y0 + ((E.T * 1.7) % 1) * h, w * 2 - 32 * k, 3 * k);
+      });
+      g.fillStyle = `rgba(20,14,4,${.85 * al})`; for (let i = 0; i < 8; i++) for (const sx of [x0 + 4 * k, x0 + w * 2 - 12 * k]) g.fillRect(sx, y0 + (10 + i * 37) * k, 8 * k, 16 * k);
+    });
+    B.later(1.05, () => {                           // and the frame coming apart when it lets him go
+      const q = E.P1;
+      for (let i = 0; i < 16; i++) Z.emit(3, q.x + rnd(-80, 80), q.y + rnd(20, 290), rnd(-500, 500), rnd(-100, 600), rnd(6, 13), rnd(.5, .9), '255,236,170', { g: 1400, vr: rnd(-14, 14), w: .2, rot: rnd(0, TAU), a: .85 });
+      V.ring(q.x, q.y + 150, 220, GOLD, .3);
     });
   } },
   { of: PROJ.div, cd: 10, max: 880, wind: .5, pre: 'hookWind', scale: .7 },
@@ -135,7 +154,20 @@ B.kit('naoya', { tech: 'Projection Sorcery', col: GOLD, glow: 'gold', scale: .8,
 ] });
 
 // Yuta: a sword, more cursed energy than anyone alive, and Rika
-function blade(o, len, ang) { const s = o.scale || 1; V.slash(o.x + o.face * 150 * s, o.y + 175 * s, o.face > 0 ? ang : Math.PI - ang, len, STEEL, 12); }
+const LI = Z.hex(LILAC), PINK = '255,120,190', MURK = '18,8,30';
+// his sword: the steel, and what he puts into it, which is more than steel should carry
+function blade(o, len, ang) {
+  const s = o.scale || 1, x = o.x + o.face * 150 * s, y = o.y + 175 * s, a = o.face > 0 ? ang : Math.PI - ang;
+  V.slash(x, y, a, len * 1.15, LILAC, 26); V.slash(x, y, a, len, STEEL, 12, .02); Z.flare(x, y, LI, len * .5, .14);
+  for (let i = 0; i < 6; i++) Z.emit(5, x + rnd(-80, 80), y + rnd(-60, 60), rnd(-200, 200), rnd(0, 400), rnd(3, 6), rnd(.3, .6), i & 1 ? LI : PINK);
+}
+// the dark she reaches down out of
+function hole(x, t) {
+  const c = F(x, 800), k = c[2], open = Math.min(1, t / .25) * (t > .8 ? Math.max(0, 1 - (t - .8) / .2) : 1);
+  g.fillStyle = '#07030c'; g.beginPath(); g.ellipse(c[0], c[1], 250 * k * open, 70 * k * open, 0, 0, TAU); g.fill();
+  Z.lite(() => { g.strokeStyle = `rgba(${LI},${.9 * open})`; g.lineWidth = 6 * k; g.beginPath(); g.ellipse(c[0], c[1], 250 * k * open, 70 * k * open, 0, 0, TAU); g.stroke(); Z.glow(LI, c[0], c[1], 700 * k * open, .5); });
+  if (Math.random() < .7) Z.emit(2, x + rnd(-200, 200), 780, rnd(-30, 30), rnd(-260, -80), rnd(90, 160), rnd(.5, .9), MURK, { s1: 1.8, a: .7 });
+}
 B.kit('yuta', { tech: 'Queen of Curses', col: LILAC, glow: 'purple', every: [2.1, 3.5], moves: [
   { name: 'Katana Rush', cd: 5, min: 150, max: 640, wind: .4, pre: 'dash', dur: .85, run(o, p, A, t) {
     const gap = (p.x - o.x) * o.face, n = Math.floor((t - .18) / .2);
@@ -144,17 +176,20 @@ B.kit('yuta', { tech: 'Queen of Curses', col: LILAC, glow: 'purple', every: [2.1
     o.vx = 0; o.target = n > 2 ? POSE.idle : [POSE.hook, POSE.cross, POSE.crush][n];
     if (n > 2 || n === A.n) return;
     A.n = n; sfx.whoosh(); blade(o, 400, [-.3, .35, -1.2][n]);                         // three cuts, and the last one lifts him off the floor
+    Z.ghost(o, .3, .16); if (n === 2) { Z.shock(o.x + o.face * 140, 300, LI, .35, 9); Z.dust(o.x, 5, o.face); cam.shake = Math.max(cam.shake, 12); }
     B.swing(o, 290, n === 2 ? { dmg: 9, kb: 620, lift: 480 } : { dmg: 6, kb: 160, stun: .4 }, 190);
   } },
   { name: 'Rika', cd: 8, max: 900, wind: .5, pre: 'manjiWind', dur: .7, run(o, p, A, t) {
     o.rate = 30; o.vx = 0; o.target = t < .5 ? POSE.crushWind : POSE.crush;
     if (A.s) return;
-    A.s = 1; sfx.charge();
+    A.s = 1; sfx.charge(); Z.dim(.6, 1.1); Z.flash(LI, .12, .3);
     const x = clamp(p.x, -900, 900);                // where he was standing when she was called: that is the spot to leave
     B.mark(x, 190, .5, LILAC);
-    B.add({ life: 1, draw: h => fist(x, h.t), upd(h) {
+    B.add({ life: 1, draw: h => { hole(x, h.t); fist(x, h.t); }, upd(h) {
       if (h.hit || h.t < .5) return;
-      h.hit = 1; sfx.blast(); cam.shake = Math.max(cam.shake, 26); V.crack(x, 320); V.rocks(x, 0, 14); V.ring(x, 60, 320, LILAC, .4);
+      h.hit = 1; sfx.blast(); cam.shake = Math.max(cam.shake, 32); V.crack(x, 340); V.rocks(x, 0, 20); V.ring(x, 60, 320, LILAC, .4);
+      Z.boom(x, 30, 160, LI, { n: 20, smoke: MURK, hot: '255,220,240' }); Z.shock(x, 600, LI, .6, 14); Z.dust(x, 12); Z.decal('crater', x, 220, LI, 9, 0);
+      for (let i = 0; i < 12; i++) Z.emit(2, x + rnd(-170, 170), rnd(0, 80), rnd(-200, 200), rnd(40, 240), rnd(100, 170), rnd(.6, 1.1), MURK, { s1: 1.9, a: .7 });
       B.burst(x, 200, { dmg: 16, kb: 520, lift: 640 }, 420);
     } });
   } },
@@ -162,11 +197,16 @@ B.kit('yuta', { tech: 'Queen of Curses', col: LILAC, glow: 'purple', every: [2.1
     o.rate = 46; o.target = t < .3 ? POSE.hook : POSE.idle;
     if (A.s) return;
     A.s = 1; sfx.whoosh(); blade(o, 420, -.2);      // a cut thrown the length of the street: jump it, or dash through
+    Z.dust(o.x, 5, -o.face);
     B.shot({ x: o.x + o.face * 90, y: o.y + 120, vx: o.face * 1500, r: 26, life: 1.3, a: { dmg: 11, kb: 520, stun: .5 }, trail: 'purple', hit: s => V.sparks(s.x, s.y, 'purple', 10), draw(s) {
-      const c = F(s.x, s.y), k = c[2], d = Math.sign(s.vx);
-      g.globalCompositeOperation = 'lighter'; E.glow(E.GLOW.purple, c[0], c[1], 230 * k, .8); g.globalCompositeOperation = 'source-over';
-      g.fillStyle = '#fff'; g.beginPath(); g.moveTo(c[0] + d * 10 * k, c[1] - 95 * k); g.quadraticCurveTo(c[0] + d * 70 * k, c[1], c[0] + d * 10 * k, c[1] + 95 * k);
-      g.quadraticCurveTo(c[0] + d * 36 * k, c[1], c[0] + d * 10 * k, c[1] - 95 * k); g.fill();
+      const c = F(s.x, s.y), k = c[2], d = Math.sign(s.vx), h = 124 * k;      // a crescent of it: black at its back, his colour through it, white along the edge that cuts
+      const cres = (w, off) => { g.beginPath(); g.moveTo(c[0] + d * off * k, c[1] - h); g.quadraticCurveTo(c[0] + d * (off + w) * k, c[1], c[0] + d * off * k, c[1] + h); g.quadraticCurveTo(c[0] + d * (off + w * .45) * k, c[1], c[0] + d * off * k, c[1] - h); };
+      Z.lite(() => Z.glow(LI, c[0], c[1], 320 * k, .9));
+      g.fillStyle = '#1a0a26'; cres(100, -6); g.fill();
+      Z.lite(() => { g.fillStyle = `rgba(${LI},.95)`; cres(86, 6); g.fill(); });
+      g.fillStyle = '#fff'; cres(58, 24); g.fill();
+      if (Math.random() < .8) Z.emit(5, s.x - d * 20, s.y + rnd(-90, 90), -d * rnd(100, 400), rnd(-60, 60), rnd(3, 6), rnd(.2, .5), Math.random() < .5 ? LI : PINK);
+      const fl = F(s.x, 0); Z.lite(() => { g.fillStyle = `rgba(${LI},.2)`; g.beginPath(); g.ellipse(fl[0], fl[1], 110 * k, 16 * k, 0, 0, TAU); g.fill(); });
     } });
   } },
   { name: 'Reverse Cursed Technique', cd: 16, below: .62, wind: .6, pre: 'manjiWind', dur: .4, run(o, p, A) {
@@ -174,6 +214,8 @@ B.kit('yuta', { tech: 'Queen of Curses', col: LILAC, glow: 'purple', every: [2.1
     if (A.s) return;
     A.s = 1; sfx.charge(); o.hp = Math.min(o.max, o.hp + o.max * .06);
     B.say(o, 'HEALED', '#bff5d8'); V.ring(o.x, o.y + 160, 220, '#bff5d8', .5); V.sparks(o.x, o.y + 180, 'green', 12);
+    Z.pillar(o.x, 64, 500, '191,245,216', .8); Z.flash('191,245,216', .12, .3);      // cursed energy turned over on itself: the one kind of it that mends
+    for (let i = 0; i < 18; i++) Z.emit(5, o.x + rnd(-90, 90), rnd(0, 260), rnd(-20, 20), rnd(160, 520), rnd(3, 6), rnd(.6, 1.2), i & 1 ? '191,245,216' : '255,255,255');
   } }
 ] });
 

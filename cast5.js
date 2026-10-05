@@ -5,6 +5,7 @@
 
 const E = JU.eng, g = E.g, P = E.P, box = E.box, quad = E.quad, F = E.F, cam = E.cam, POSE = E.POSE, LINE = E.LINE, TOR = E.TOR, V = JU.vfx, sfx = JU.sfx, Fi = JU.fights, B = JU.boss, X = JU.cast2;
 const { rnd, lerp, clamp, ZP } = E, TAU = Math.PI * 2, { near } = JU.tech.tk;
+const Z = JU.bossfx, FX_FIRE = '255,140,60', FX_GOLD = '255,210,61', FX_CYAN = '122,215,255', FX_PINK = '255,110,210', FX_STEEL = '232,240,255';      // (the Boss VFX update's pieces, and the colours its redraws here use)
 const shade = (hex, f) => { const n = parseInt(hex.slice(1), 16); return `rgb(${Math.min(255, (n >> 16) * f) | 0},${Math.min(255, (n >> 8 & 255) * f) | 0},${Math.min(255, (n & 255) * f) | 0})`; };
 function skin(o) {
   const a = o.a || o.t, a2 = o.a2 || o.t2;
@@ -130,16 +131,28 @@ B.kit('ogi', { tech: 'Blazing Courage', col: FLAME, glow: 'fire', every: [2.2, 3
   { name: 'Burning Edge', cd: 6, min: 260, wind: .5, pre: 'hookWind', dur: .5, run(o, p, A, t) {
     o.rate = 46; o.target = t < .3 ? POSE.hook : POSE.idle;
     if (A.s) return;
-    A.s = 1; sfx.blast(); V.fire(o.x + o.face * 120, 10, 10); V.slash(o.x + o.face * 150, o.y + 150, o.face > 0 ? -.2 : Math.PI + .2, 420, FLAME, 14);
-    B.wave(o.x + o.face * 80, o.face, 1300, 1150, { dmg: 12, kb: 420, lift: 380 }, FLAME);            // it runs along the floor: jump it
+    A.s = 1; sfx.blast(); V.fire(o.x + o.face * 120, 10, 14); cam.shake = Math.max(cam.shake, 14);
+    const f = o.face, sx = o.x + f * 150, sy = o.y + 150, an = f > 0 ? -.2 : Math.PI + .2;
+    V.slash(sx, sy, an, 520, FLAME, 22); V.slash(sx, sy, an, 420, '#fff3c8', 8, .02);                 // the blade, and the fire he has run along it
+    Z.flare(sx, sy, FX_FIRE, 420, .18); Z.flash(FX_FIRE, .12, .2); Z.dust(o.x, 5, -f);
+    for (let i = 0; i < 14; i++) Z.emit(5, sx + rnd(-140, 140), sy + rnd(-80, 80), f * rnd(100, 600), rnd(0, 500), rnd(3, 6), rnd(.4, .8), i & 1 ? FX_FIRE : '255,225,130');
+    B.wave(o.x + f * 80, f, 1300, 1150, { dmg: 12, kb: 420, lift: 380 }, FLAME);                      // it runs along the floor: jump it
+    B.add({ life: 1150 / 1300, x: o.x + f * 80, n: 0, upd(h, dt) {                                    // and the floor it has crossed is left burning
+      h.x += f * 1300 * dt; V.fire(h.x, 0, 2);
+      if ((h.n += dt) > .1) { h.n = 0; const x = h.x; Z.decal('scorch', x, 70, FX_FIRE, 5, 0); B.add({ life: .9, upd(q, d2) { if (Math.random() < d2 * 24) V.fire(x + rnd(-40, 40), 0, 1); } }); }
+    } });
   } },
   { name: 'Falling Blossom', cd: 6, min: 200, max: 580, wind: .36, pre: 'dash', dur: .6, run(o, p, A, t) {
     o.rate = 46;
-    if (!A.s) { A.s = 1; A.dir = o.face; sfx.whoosh(); }
+    if (!A.s) { A.s = 1; A.dir = o.face; sfx.whoosh(); Z.dust(o.x, 6, -o.face); Z.flare(o.x + o.face * 60, o.y + 170, FX_FIRE, 240, .14); }
     if (t < .2) {                                   // drawn and through him in one movement
       o.target = POSE.dash; o.vx = Math.abs(o.x + A.dir * 60) < 940 ? A.dir * 2000 : 0;
+      V.fire(o.x - A.dir * 30, 0, 1);               // the line of it he leaves down the yard
       if (!A.done && Math.abs(p.x - o.x) < 110) {
-        A.done = 1; V.slash(p.x, p.y + 170, A.dir > 0 ? -.3 : Math.PI + .3, 460, FLAME, 14); V.fire(p.x, 20, 6);
+        A.done = 1; E.stop(.07); cam.shake = Math.max(cam.shake, 14);
+        V.slash(p.x, p.y + 170, A.dir > 0 ? -.3 : Math.PI + .3, 620, FLAME, 20); V.slash(p.x, p.y + 170, A.dir > 0 ? -.3 : Math.PI + .3, 480, '#fff3c8', 8, .03); V.fire(p.x, 20, 10);
+        Z.flare(p.x, p.y + 170, FX_FIRE, 460, .2); Z.flash(FX_FIRE, .14, .2); Z.boom(p.x, p.y + 150, 70, FX_FIRE, { n: 10, clean: true, flash: 0, shake: 0 });
+        for (let i = 0; i < 18; i++) Z.emit(3, p.x + rnd(-60, 60), p.y + rnd(80, 260), rnd(-360, 360), rnd(60, 520), rnd(5, 9), rnd(.8, 1.4), i % 3 ? FX_FIRE : '255,190,200', { g: 420, dr: 1.2, vr: rnd(-9, 9), w: .55, rot: rnd(0, TAU) });      // the blossom: petals of it, burning as they fall
         B.burst(p.x, 200, { dmg: 12, kb: 420, lift: 380 }, 190, A.dir);
       }
       return;
@@ -157,7 +170,10 @@ B.kit('panda', { tech: 'Gorilla Mode', col: '#cfd8e0', every: [2.6, 4.2], moves:
     o.target = POSE.dash; o.vx = gap > 170 ? o.face * 1100 : 0;
     if (gap > -30 && gap < 230) {
       A.done = 1; A.at = t; o.vx = 0; sfx.blast(); cam.shake = Math.max(cam.shake, 18);
-      V.ring(o.x + o.face * 120, 160, 260, '#ffffff', .3); V.crack(o.x + o.face * 140, 240);
+      const bx = o.x + o.face * 130, bf = o.face;
+      V.ring(bx, 160, 260, '#ffffff', .3); V.crack(o.x + o.face * 140, 280); V.rocks(bx, 0, 12); E.stop(.07);
+      Z.flare(bx, 170, '255,255,255', 480, .2); Z.flash('255,255,255', .16, .15); Z.dust(bx, 12, bf); Z.decal('crater', bx, 150, '207,216,224', 8, 0);
+      for (let i = 0; i < 3; i++) B.later(i * .09, () => { V.ring(bx + bf * i * 90, 170, 200 + i * 90, '#ffffff', .3); Z.shock(bx, 300 + i * 170, '255,255,255', .4, 12 - i * 3); cam.shake = Math.max(cam.shake, 14); });      // the beat of it: the blow lands once and is felt three times, each further in
       B.swing(o, 260, { dmg: 14, kb: 700, lift: 520 }, 190);
     }
   } }
@@ -169,10 +185,16 @@ function shutters(x, t) {
   g.globalAlpha = a;
   for (const s of [-1, 1]) {
     const c0 = F(x + s * (gap + 150), 330), c1 = F(x + s * gap, 0), w = c1[0] - c0[0], h = c1[1] - c0[1];
-    g.fillStyle = '#8c949e'; g.fillRect(c0[0], c0[1], w, h);
+    const gr = g.createLinearGradient(c0[0], 0, c1[0], 0); gr.addColorStop(0, '#6c747e'); gr.addColorStop(.5, '#a9b2bd'); gr.addColorStop(1, '#7a828c');
+    g.fillStyle = gr; g.fillRect(c0[0], c0[1], w, h);
     g.strokeStyle = 'rgba(0,0,0,.35)'; g.lineWidth = 2; g.beginPath();
     for (let i = 1; i < 9; i++) { g.moveTo(c0[0], c0[1] + h * i / 9); g.lineTo(c1[0], c0[1] + h * i / 9); }
     g.stroke(); g.lineWidth = 3; g.strokeStyle = LINE; g.strokeRect(c0[0], c0[1], w, h);
+    Z.lite(() => {                                  // the lights down its edge, the way a parlour's doors have them
+      g.strokeStyle = `rgba(${FX_PINK},${.9 * a})`; g.lineWidth = 4; g.beginPath(); g.moveTo(c1[0], c0[1]); g.lineTo(c1[0], c1[1]); g.stroke();
+      for (let i = 0; i < 7; i++) { g.fillStyle = `rgba(${(i + Math.floor(E.T * 12)) % 2 ? FX_CYAN : '255,236,120'},${a})`; g.fillRect(c1[0] - s * 10 - 4, c0[1] + h * (i + .5) / 7 - 4, 8, 8); }
+      Z.glow(FX_PINK, c1[0], c0[1] + h / 2, 260, .35 * a);
+    });
   }
   g.globalAlpha = 1;
 }
@@ -185,7 +207,10 @@ B.kit('hakari', { tech: 'Rough Cursed Energy', col: '#7ad7ff', glow: 'blue', eve
     B.mark(x, 150, .55, '#7ad7ff');
     B.add({ life: 1, draw: h => shutters(x, h.t), upd(h) {
       if (h.hit || h.t < .55) return;
-      h.hit = 1; sfx.hit(true); cam.shake = Math.max(cam.shake, 20); V.ring(x, 160, 240, '#7ad7ff', .3);
+      h.hit = 1; sfx.hit(true); cam.shake = Math.max(cam.shake, 24); V.ring(x, 160, 240, '#7ad7ff', .3); E.stop(.05);
+      Z.flare(x, 170, FX_PINK, 520, .22); Z.flash(FX_CYAN, .14, .15); Z.shock(x, 420, FX_CYAN, .45, 12); Z.dust(x, 8);
+      for (let i = 0; i < 26; i++) Z.emit(4, x + rnd(-20, 20), rnd(20, 320), rnd(-700, 700), rnd(100, 900), rnd(4, 7), 2, i % 3 ? '226,232,244' : '255,236,120', { g: 1900 });      // and the balls out of the machine, everywhere
+      for (let i = 0; i < 14; i++) { const an = rnd(0, TAU), v = rnd(400, 1200); Z.emit(1, x, rnd(40, 300), Math.cos(an) * v, Math.sin(an) * v, rnd(2, 4), rnd(.2, .4), i & 1 ? '255,200,120' : '255,255,255', { g: 2000 }); }
       B.burst(x, 150, { dmg: 14, kb: 260, stun: .8 }, 330);
     } });
   } },
@@ -196,7 +221,18 @@ B.kit('hakari', { tech: 'Rough Cursed Energy', col: '#7ad7ff', glow: 'blue', eve
     o.target = POSE.dash; o.vx = gap > 170 ? o.face * 1400 : 0;
     if (gap > -30 && gap < 230) {
       A.done = 1; A.at = t; o.vx = 0; sfx.blast(); cam.shake = Math.max(cam.shake, 20);
-      V.sparks(o.x + o.face * 110, 170, 'blue', 14); V.ring(o.x + o.face * 110, 170, 220, '#7ad7ff', .3);
+      const bx = o.x + o.face * 120, by = o.y + 170;
+      V.sparks(bx, 170, 'blue', 14); V.ring(bx, 170, 220, '#7ad7ff', .3); V.crack(bx, 240); E.stop(.07);
+      Z.flash(FX_CYAN, .16, .15); Z.shock(bx, 380, FX_CYAN, .4, 12); Z.dust(bx, 8, o.face); Z.decal('crater', bx, 140, FX_CYAN, 8, 0);
+      for (let i = 0; i < 9; i++) { const an = rnd(-1.1, 1.1) + (o.face > 0 ? 0 : Math.PI), l = rnd(160, 420); Z.lightning(bx, by, bx + Math.cos(an) * l, Math.max(0, by + Math.sin(an) * l), i & 1 ? FX_CYAN : FX_PINK, rnd(.14, .28), 4, 1); }
+      V.custom(.26, u => {                          // his cursed energy is rough: it lands like a file, not a fist
+        const c = F(bx, by), k = c[2], R = 190 * k * (.4 + .6 * Math.min(1, u * 4)), al = 1 - u;
+        Z.lite(() => {
+          g.fillStyle = `rgba(${FX_CYAN},${.7 * al})`; g.beginPath();
+          for (let i = 0; i < 26; i++) { const an = i / 26 * TAU, r = R * (i & 1 ? .45 : 1 + .25 * Math.sin(i * 7.3)); i ? g.lineTo(c[0] + Math.cos(an) * r, c[1] + Math.sin(an) * r) : g.moveTo(c[0] + Math.cos(an) * r, c[1] + Math.sin(an) * r); }
+          g.closePath(); g.fill(); Z.glow('255,255,255', c[0], c[1], R * 1.6, al);
+        });
+      });
       B.swing(o, 260, { dmg: 16, kb: 760, lift: 560 }, 190);
     }
   } }
@@ -212,10 +248,21 @@ B.kit('haba', { tech: 'Rotor', col: '#9fd8ff', every: [2.4, 4], moves: [
       o.ground = false; o.vy = 0; o.vx = 0; o.target = u < .6 ? POSE.jump : POSE.crush;
       o.x = lerp(A.x0, A.x, u * u); o.y = Math.max(3, u < .62 ? 360 * up : 360 * (1 - (u - .62) / .38));
       if (Math.random() < .5) V.puff('blue', o.x, o.y + 300, rnd(-200, 200), 0, 30, .2);
+      if (!A.rot) { A.rot = 1; V.custom(.75, () => {       // the rotor itself: a disc of blur over his head with the blades showing through it
+        const c = F(o.x, o.y + 330 * (o.scale || 1)), k = c[2], an = E.T * 46;
+        Z.lite(() => { g.fillStyle = `rgba(${FX_STEEL},.22)`; g.beginPath(); g.ellipse(c[0], c[1], 190 * k, 34 * k, 0, 0, TAU); g.fill(); g.strokeStyle = `rgba(${FX_STEEL},.7)`; g.lineWidth = 3 * k; g.stroke(); });
+        g.strokeStyle = LINE; g.lineWidth = 9 * k; g.lineCap = 'round';
+        for (let i = 0; i < 3; i++) { const a2 = an + i * TAU / 3; g.beginPath(); g.moveTo(c[0], c[1]); g.lineTo(c[0] + Math.cos(a2) * 180 * k, c[1] + Math.sin(a2) * 30 * k); g.stroke(); }
+        g.lineCap = 'butt';
+      }); }
+      for (let i = 0; i < 2; i++) Z.emit(1, o.x + rnd(-150, 150), o.y + rnd(60, 300), rnd(-120, 120), -rnd(500, 1000), rnd(1.5, 3), rnd(.15, .3), '200,230,255', { a: .6 });      // the air it is pushing down
+      if (Math.random() < .5) Z.dust(o.x, 1, Math.random() < .5 ? 1 : -1);
       return;
     }
     if (!A.done) {
-      A.done = 1; o.y = 0; o.ground = true; o.vy = 0; sfx.blast(); cam.shake = Math.max(cam.shake, 20); V.crack(A.x, 260); V.rocks(A.x, 0, 10);
+      A.done = 1; o.y = 0; o.ground = true; o.vy = 0; sfx.blast(); cam.shake = Math.max(cam.shake, 24); V.crack(A.x, 280); V.rocks(A.x, 0, 14);
+      Z.dust(A.x, 14); Z.shock(A.x, 460, '159,216,255', .5, 12); Z.shock(A.x, 280, '255,255,255', .35, 6); Z.decal('crater', A.x, 180, '159,216,255', 8, 0); Z.flare(A.x, 80, '255,255,255', 360, .16);
+      for (let i = 0; i < 16; i++) Z.emit(1, A.x, rnd(10, 60), (i & 1 ? 1 : -1) * rnd(600, 1400), rnd(0, 200), rnd(2, 4), rnd(.2, .4), '200,230,255', { a: .7 });
       B.burst(A.x, 190, { dmg: 13, kb: 560, lift: 520 }, 200);
     }
     o.target = t < .95 ? POSE.crush : POSE.idle; o.face = p.x >= o.x ? 1 : -1;
@@ -225,10 +272,12 @@ B.kit('haba', { tech: 'Rotor', col: '#9fd8ff', every: [2.4, 4], moves: [
     if (A.s) return;
     A.s = 1; sfx.whoosh();                          // thrown flat: jump it, or dash through
     B.shot({ x: o.x + o.face * 90, y: o.y + 125, vx: o.face * 1350, r: 26, life: 1.4, a: { dmg: 10, kb: 480, stun: .5 }, hit: s => V.sparks(s.x, s.y, 'blue', 10), draw(s) {
-      const c = F(s.x, s.y), k = c[2], a = E.T * 40;
-      g.strokeStyle = LINE; g.lineWidth = 9 * k; g.lineCap = 'round';
-      g.beginPath(); g.moveTo(c[0] - Math.cos(a) * 62 * k, c[1] - Math.sin(a) * 16 * k); g.lineTo(c[0] + Math.cos(a) * 62 * k, c[1] + Math.sin(a) * 16 * k); g.stroke();
-      g.strokeStyle = '#9fd8ff'; g.lineWidth = 5 * k; g.stroke(); g.lineCap = 'butt';
+      const c = F(s.x, s.y), k = c[2], a = E.T * 40;      // spinning too fast to see as a blade: a disc of it, with the three of them showing through
+      Z.lite(() => { g.fillStyle = 'rgba(159,216,255,.3)'; g.beginPath(); g.ellipse(c[0], c[1], 78 * k, 22 * k, 0, 0, TAU); g.fill(); g.strokeStyle = 'rgba(255,255,255,.8)'; g.lineWidth = 2.5 * k; g.stroke(); Z.glow('159,216,255', c[0], c[1], 240 * k, .6); });
+      g.lineCap = 'round';
+      for (const [w, col] of [[9, LINE], [5, '#9fd8ff']]) { g.strokeStyle = col; g.lineWidth = w * k; for (let i = 0; i < 3; i++) { const a2 = a + i * TAU / 3; g.beginPath(); g.moveTo(c[0], c[1]); g.lineTo(c[0] + Math.cos(a2) * 70 * k, c[1] + Math.sin(a2) * 19 * k); g.stroke(); } }
+      g.lineCap = 'butt';
+      if (Math.random() < .7) Z.emit(1, s.x, s.y + rnd(-20, 20), -Math.sign(s.vx) * rnd(200, 600), rnd(-80, 80), rnd(1.5, 3), rnd(.15, .3), '200,230,255', { a: .7 });
     } });
   } }
 ] });
@@ -251,7 +300,8 @@ const SMASH = { name: 'Gavel', cd: 6, max: 900, wind: .45, pre: 'crushWind', dur
   B.mark(x, 180, .55, GOLD);
   B.add({ life: 1, draw: h => gavel(x, h.t), upd(h) {
     if (h.hit || h.t < .55) return;
-    h.hit = 1; sfx.blast(); cam.shake = Math.max(cam.shake, 24); V.crack(x, 300); V.rocks(x, 0, 12); V.ring(x, 60, 300, GOLD, .4);
+    h.hit = 1; sfx.blast(); cam.shake = Math.max(cam.shake, 30); V.crack(x, 320); V.rocks(x, 0, 18); V.ring(x, 60, 300, GOLD, .4); E.stop(.06);
+    Z.boom(x, 30, 140, FX_GOLD, { n: 18, clean: true, hot: '255,255,255' }); Z.pillar(x, 80, 560, FX_GOLD, .5); Z.shock(x, 560, FX_GOLD, .6, 14); Z.dust(x, 12); Z.decal('crater', x, 200, FX_GOLD, 9, 0);      // the court's order, and the floor that heard it
     B.burst(x, 190, { dmg: 14, kb: 500, lift: 600 }, 420);
   } });
 } };
@@ -259,7 +309,9 @@ const SWEEP = { name: 'Order in Court', cd: 5, min: 150, max: 620, wind: .5, pre
   o.rate = 46; o.target = t < .3 ? POSE.hook : POSE.idle;
   if (A.s) return;
   A.s = 1; sfx.whoosh();                            // the handle runs out as long as the room and comes round at shin height: jump it
-  V.slash(o.x + o.face * 300, o.y + 70, o.face > 0 ? 0 : Math.PI, 640, GOLD, 16);
+  V.slash(o.x + o.face * 300, o.y + 70, o.face > 0 ? 0 : Math.PI, 700, GOLD, 22); V.slash(o.x + o.face * 300, o.y + 70, o.face > 0 ? 0 : Math.PI, 600, '#ffffff', 7, .03);
+  Z.flare(o.x + o.face * 560, o.y + 70, FX_GOLD, 300, .16); Z.dust(o.x + o.face * 200, 6, o.face); Z.dust(o.x + o.face * 460, 6, o.face); Z.shock(o.x + o.face * 300, 420, FX_GOLD, .35, 7);
+  for (let i = 0; i < 14; i++) Z.emit(1, o.x + o.face * rnd(60, 600), rnd(20, 90), o.face * rnd(200, 700), rnd(100, 600), rnd(2, 4), rnd(.2, .45), i & 1 ? FX_GOLD : '255,255,255', { g: 1800 });
   B.swing(o, 600, { dmg: 11, kb: 560, lift: 320 }, 100);
 } };
 B.kit('higuruma', { tech: 'Deadly Sentencing', col: GOLD, glow: 'gold', every: [2.3, 3.8], moves: [SMASH, SWEEP] });
@@ -270,9 +322,21 @@ B.kit('higuruma2', { tech: 'Death Penalty', col: GOLD, glow: 'gold', every: [2, 
       const gap = (p.x - o.x) * o.face;
       o.rate = 46;
       if (A.done || t > .34) { o.vx = 0; o.target = t < .55 ? POSE.div : POSE.idle; return; }
-      if (!A.s) { A.s = 1; sfx.bf(); V.custom(.34, () => { const c = F(o.x + o.face * 150, o.y + 185), k = c[2]; lit(() => E.glow(E.GLOW.gold, c[0], c[1], 420 * k, .9)); g.fillStyle = '#fff'; g.fillRect(c[0] - 150 * k, c[1] - 5 * k, 300 * k, 10 * k); }); }
+      if (!A.s) {
+        A.s = 1; sfx.bf(); Z.dim(.7, .8); Z.flash(FX_GOLD, .2, .3);
+        V.custom(.4, u => {                         // the sword the court handed him: a blade of nothing but light, and one touch of it is the sentence
+          const c = F(o.x + o.face * 60, o.y + 185), k = c[2], f = o.face, L = 330 * k, al = u > .85 ? (1 - u) / .15 : 1;
+          Z.lite(() => {
+            Z.glow(FX_GOLD, c[0] + f * L * .5, c[1], 620 * k, .9 * al);
+            g.fillStyle = `rgba(${FX_GOLD},${.8 * al})`; g.beginPath(); g.moveTo(c[0], c[1] - 20 * k); g.lineTo(c[0] + f * L, c[1]); g.lineTo(c[0], c[1] + 20 * k); g.closePath(); g.fill();
+            g.fillStyle = `rgba(255,255,255,${al})`; g.beginPath(); g.moveTo(c[0], c[1] - 8 * k); g.lineTo(c[0] + f * L * .96, c[1]); g.lineTo(c[0], c[1] + 8 * k); g.closePath(); g.fill();
+            g.fillRect(c[0] - 3 * k, c[1] - 34 * k, 6 * k, 68 * k);
+          });
+          if (Math.random() < .9) Z.emit(5, o.x + f * rnd(60, 380), o.y + 185 + rnd(-30, 30), -f * rnd(100, 500), rnd(-80, 160), rnd(3, 6), rnd(.3, .6), Math.random() < .5 ? FX_GOLD : '255,255,255');
+        });
+      }
       o.target = POSE.dash; o.vx = o.face * 1900;   // one touch is the sentence carried out: dash through it, or be in the air
-      if (gap > -30 && gap < 230) { A.done = 1; o.vx = 0; if (B.swing(o, 260, { dmg: 9999, kb: 300, pierce: 1 }, 150)) V.impact(.4, p.x, p.y + 150); }
+      if (gap > -30 && gap < 230) { A.done = 1; o.vx = 0; if (B.swing(o, 260, { dmg: 9999, kb: 300, pierce: 1 }, 150)) { V.impact(.4, p.x, p.y + 150); Z.flash('255,255,255', .6, .5); Z.pillar(p.x, 120, 760, FX_GOLD, .9); Z.shock(p.x, 700, FX_GOLD, .8, 16); } }
     } },
   SMASH, SWEEP
 ] });

@@ -146,7 +146,8 @@ H.foeIdle = (o, p, dt) => {
       const m = pool[Math.random() * pool.length | 0], ev = k.every || EVERY;
       ai.kcd[k.moves.indexOf(m)] = m.cd; ai.kt = rnd(ev[0], ev[1]);
       o.state = 'act'; o.act = { a: m, t: 0 }; o.tele = 0;
-      say(o, m.name.toUpperCase(), k.col); sfx.charge();
+      if (JU.bossfx) JU.bossfx.call(o, m, k); else say(o, m.name.toUpperCase(), k.col);      // the move is called on a card (bossfx.js)
+      sfx.charge();
       return;
     }
     ai.kt = .35;                                  // nothing fits from here: look again in a moment
@@ -222,7 +223,7 @@ H.fx = dt => {
   fx0(dt);
   if (fight.paused && haz.length) clear();        // a cutscene clears the air
   const o = E.P2, A = o.state === 'act' && o.act;
-  if (A && A.a.run && A.t < (A.a.wind || .5)) {    // a double ring in its technique's colour closing in: a move from its own set is coming
+  if (!JU.bossfx && A && A.a.run && A.t < (A.a.wind || .5)) {    // a double ring in its technique's colour closing in: a move from its own set is coming (bossfx.js draws it now, with the rest of the wind-up)
     const u = A.t / (A.a.wind || .5), hs = o.scale || 1, c = F(o.x, o.y + 150 * hs);
     g.strokeStyle = o.ai.d.kit.col; g.globalAlpha = .45 + .55 * u;
     g.lineWidth = 5; g.beginPath(); g.arc(c[0], c[1], lerp(180, 50, u) * hs * c[2], 0, TAU); g.stroke();
@@ -236,7 +237,7 @@ H.fightStart = (cfg, wave) => {
   clear();
   if (start0) start0(cfg, wave);
   const o = E.P2, k = o.ai && o.ai.d.kit;
-  if (k) later(1.2, () => { if (!o.ko) say(o, k.tech.toUpperCase(), k.col); });
+  if (k && !JU.bossfx) later(1.2, () => { if (!o.ko) say(o, k.tech.toUpperCase(), k.col); });      // (its introduction says so now: bossfx.js)
 };
 
 JU.boss = { kit, add, shot, wave, mark, swing, burst, fist, say, later, seal, mul };

@@ -137,12 +137,14 @@ Object.assign(Fi.DEFS, {
 });
 
 // the shapes most of their moves come in: in and hit; something coming down where he stood; something thrown down the lane; a shock along the floor
+const Z = JU.bossfx, rgbOf = c => (/^#[0-9a-f]{6}$/i.test(c) ? Z.hex(c) : '255,255,255');      // (Z: the Boss VFX update's pieces. These movesets were redrawn with them)
 const rush = (name, q) => ({ name, cd: q.cd || 6, min: q.min || 120, max: q.max || 620, below: q.below, wind: q.wind || .42, pre: q.pre || 'dash', dur: .7, run(o, p, M, t) {
   const gap = (p.x - o.x) * o.face;
   o.rate = 46;
   if (M.done || t > .3) { o.vx = 0; o.target = M.done && t < M.at + .25 ? POSE[q.pose || 'cross'] : POSE.idle; return; }
+  if (!M.go) { M.go = 1; Z.dust(o.x, 6, -o.face); }
   o.target = POSE.dash; o.vx = gap > 170 ? o.face * (q.speed || 1400) : 0;
-  if (gap > -30 && gap < 240) { M.done = 1; M.at = t; o.vx = 0; sfx.blast(); shake(18); if (q.fx) q.fx(o, p); B.swing(o, q.reach || 270, q.a, 190); }
+  if (gap > -30 && gap < 240) { M.done = 1; M.at = t; o.vx = 0; sfx.blast(); shake(18); E.stop(.05); if (q.fx) q.fx(o, p); B.swing(o, q.reach || 270, q.a, 190); }
 } });
 const drop = (name, q) => ({ name, cd: q.cd || 7, max: 900, below: q.below, wind: q.wind || .45, pre: q.pre || 'crushWind', dur: .7, run(o, p, M, t) {
   o.rate = 30; o.vx = 0; o.target = t < .5 ? POSE[q.pre || 'crushWind'] : POSE[q.pose || 'crush'];
@@ -153,6 +155,7 @@ const drop = (name, q) => ({ name, cd: q.cd || 7, max: 900, below: q.below, wind
   B.add({ life: at + .45, draw: h => { if (q.draw) q.draw(x, h.t, at); }, upd(h) {
     if (h.hit || h.t < at) return;
     h.hit = 1; sfx.blast(); shake(24); V.crack(x, 300); V.rocks(x, 0, 12); V.ring(x, 60, w + 120, q.col, .4);
+    Z.dust(x, 10); Z.shock(x, (w + 120) * 1.6, rgbOf(q.col), .5, 12);
     if (q.land) q.land(x);
     B.burst(x, w + 10, q.a, q.high || 420);
   } });
@@ -160,108 +163,262 @@ const drop = (name, q) => ({ name, cd: q.cd || 7, max: 900, below: q.below, wind
 const flat = (name, q) => ({ name, cd: q.cd || 5, min: q.min || 360, below: q.below, wind: q.wind || .45, pre: q.pre || 'hookWind', dur: .5, run(o, p, M, t) {
   o.rate = 46; o.target = t < .3 ? POSE[q.pose || 'hook'] : POSE.idle;
   if (M.s) return;
-  M.s = 1; sfx.whoosh();                            // thrown flat: jump it, or dash through
-  B.shot({ x: o.x + o.face * 90, y: o.y + (q.y || 125), vx: o.face * (q.speed || 1400), r: q.r || 26, life: 1.4, a: q.a, trail: q.trail, hit: s => V.sparks(s.x, s.y, q.trail || 'fire', 10), draw: q.draw });
+  M.s = 1; sfx.whoosh(); Z.dust(o.x, 4, -o.face);   // thrown flat: jump it, or dash through
+  if (q.fire) q.fire(o);
+  B.shot({ x: o.x + o.face * 90, y: o.y + (q.y || 125), vx: o.face * (q.speed || 1400), r: q.r || 26, life: 1.4, a: q.a, trail: q.trail, rgb: q.rgb, hit: s => { V.sparks(s.x, s.y, q.trail || 'fire', 10); if (q.hit) q.hit(s); }, draw: q.draw });
 } });
 const quake = (name, q) => ({ name, cd: q.cd || 6, min: q.min || 260, below: q.below, wind: q.wind || .5, pre: q.pre || 'crushWind', dur: .5, run(o, p, M, t) {
   o.rate = 46; o.vx = 0; o.target = t < .3 ? POSE[q.pose || 'crush'] : POSE.idle;
   if (M.s) return;
-  M.s = 1; sfx.blast(); shake(16); V.crack(o.x + o.face * 120, 200);
+  M.s = 1; sfx.blast(); shake(16); V.crack(o.x + o.face * 120, 200); V.rocks(o.x + o.face * 120, 0, 8);
+  Z.dust(o.x + o.face * 100, 8, o.face); Z.shock(o.x + o.face * 100, 340, rgbOf(q.col), .4, 10);
+  if (q.fx) q.fx(o);
   B.wave(o.x + o.face * 80, o.face, q.speed || 1300, 1150, q.a, q.col);            // it runs along the floor: jump it
 } });
 // where a falling thing has got to: [screen point, how solid it still is]
 function falling(x, t, at) { g.globalAlpha = t > at + .25 ? Math.max(0, 1 - (t - at - .25) / .2) : 1; return F(x, lerp(760, 0, Math.min(1, t / at) ** 2)); }
 const cuts = (o, col, n = 3) => { for (let i = 0; i < n; i++) V.slash(o.x + o.face * 150, o.y + 110 + i * 50, (o.face > 0 ? 0 : Math.PI) + rnd(-.5, .5), 380, col, 12, i * .03); };
+// the shadow of something on its way down, arriving before it does
+function shadowOf(x, t, at, w) { const c = F(x, 0), u = Math.min(1, t / at); if (t > at + .1) return; g.fillStyle = `rgba(0,0,0,${.45 * u})`; g.beginPath(); g.ellipse(c[0], c[1], w * c[2] * u, w * .16 * c[2] * u, 0, 0, TAU); g.fill(); }
+const shards = (x, y, n, rgb, spread = 600) => { for (let i = 0; i < n; i++) Z.emit(3, x + rnd(-60, 60), y + rnd(-60, 60), rnd(-spread, spread), rnd(-100, 700), rnd(6, 14), rnd(.5, 1), rgb, { g: 1300, vr: rnd(-14, 14), w: .19, rot: rnd(0, TAU), a: .85 }); };
 
 // Reggie: Contract Re-creation. Whatever a receipt says he bought, he has again
+const PAPER = '241,238,226', SLIP = { g: 420, dr: 1.4, w: 1.7, edge: 'rgba(30,24,20,.5)' };
+// a receipt held up and burning away: what it lists is on its way
+function receipt(x, y) {
+  for (let i = 0; i < 10; i++) Z.emit(3, x + rnd(-20, 20), y + rnd(-20, 20), rnd(-260, 260), rnd(40, 420), rnd(6, 10), rnd(.7, 1.3), PAPER, Object.assign({ vr: rnd(-10, 10), rot: rnd(0, TAU) }, SLIP));
+  for (let i = 0; i < 8; i++) Z.emit(5, x, y, rnd(-200, 200), rnd(0, 400), rnd(3, 5), rnd(.3, .6), '255,170,80');
+  Z.flare(x, y, '255,210,120', 220, .16);
+}
 B.kit('reggie', { tech: 'Contract Re-creation', col: '#f1eee2', every: [2.3, 3.8], moves: [
-  flat('Receipt: Knives', { a: { dmg: 10, kb: 460, stun: .5 }, speed: 1500, draw(s) {
+  flat('Receipt: Knives', { a: { dmg: 10, kb: 460, stun: .5 }, speed: 1500, rgb: '207,216,224', fire(o) { receipt(o.x + o.face * 60, o.y + 250); }, draw(s) {
     const c = F(s.x, s.y), k = c[2], d = Math.sign(s.vx);
-    g.fillStyle = '#cfd8e0'; g.strokeStyle = LINE; g.lineWidth = 2;
-    for (const dy of [-34, 0, 34]) { g.beginPath(); g.moveTo(c[0] + d * 44 * k, c[1] + dy * k); g.lineTo(c[0] - d * 10 * k, c[1] + (dy - 7) * k); g.lineTo(c[0] - d * 10 * k, c[1] + (dy + 7) * k); g.closePath(); g.fill(); g.stroke(); }
+    Z.lite(() => { g.strokeStyle = 'rgba(255,255,255,.45)'; g.lineWidth = 2 * k; for (const dy of [-34, 0, 34]) { g.beginPath(); g.moveTo(c[0] - d * 30 * k, c[1] + dy * k); g.lineTo(c[0] - d * (190 + rnd(0, 60)) * k, c[1] + dy * k); g.stroke(); } });
+    g.strokeStyle = LINE; g.lineWidth = 2;
+    for (const dy of [-34, 0, 34]) {                // three kitchen knives, handle and all, the way they were on the shelf
+      g.fillStyle = '#3a2a22'; g.beginPath(); g.rect(c[0] - d * 40 * k, c[1] + (dy - 5) * k, d * 32 * k, 10 * k); g.fill(); g.stroke();
+      g.fillStyle = '#dfe6ee'; g.beginPath(); g.moveTo(c[0] + d * 52 * k, c[1] + (dy + 2) * k); g.lineTo(c[0] - d * 8 * k, c[1] + (dy - 9) * k); g.lineTo(c[0] - d * 8 * k, c[1] + (dy + 7) * k); g.closePath(); g.fill(); g.stroke();
+      g.fillStyle = '#fff'; g.fillRect(c[0] + d * 6 * k, c[1] + (dy - 5) * k, d * 26 * k, 2 * k);
+    }
   } }),
   drop('Receipt: Truck', { w: 210, col: '#f1eee2', a: { dmg: 15, kb: 520, lift: 620 }, draw(x, t, at) {
+    shadowOf(x, t, at, 260);
     const c = falling(x, t, at), k = c[2];
-    g.fillStyle = '#d9dde4'; g.strokeStyle = LINE; g.lineWidth = 3; g.lineJoin = 'round';
-    g.beginPath(); g.rect(c[0] - 210 * k, c[1] - 210 * k, 300 * k, 180 * k); g.fill(); g.stroke();                 // the box of it
-    g.fillStyle = '#3a6ea8'; g.beginPath(); g.rect(c[0] + 90 * k, c[1] - 150 * k, 120 * k, 120 * k); g.fill(); g.stroke();   // the cab
-    g.fillStyle = '#17171b'; for (const dx of [-150, -40, 150]) { g.beginPath(); g.arc(c[0] + dx * k, c[1] - 26 * k, 28 * k, 0, TAU); g.fill(); }
+    g.strokeStyle = LINE; g.lineWidth = 3; g.lineJoin = 'round';
+    g.fillStyle = '#e4e8ee'; g.beginPath(); g.rect(c[0] - 210 * k, c[1] - 210 * k, 300 * k, 180 * k); g.fill(); g.stroke();                 // the box of it
+    g.fillStyle = '#c23b3b'; g.fillRect(c[0] - 210 * k, c[1] - 130 * k, 300 * k, 22 * k); g.fillStyle = '#b9c0ca'; for (let i = 1; i < 6; i++) g.fillRect(c[0] + (-210 + i * 50) * k, c[1] - 208 * k, 2 * k, 76 * k);
+    g.fillStyle = '#3a6ea8'; g.beginPath(); g.rect(c[0] + 90 * k, c[1] - 150 * k, 120 * k, 120 * k); g.fill(); g.stroke();                  // the cab
+    g.fillStyle = '#bfe3ff'; g.fillRect(c[0] + 130 * k, c[1] - 138 * k, 70 * k, 44 * k); g.fillStyle = '#ffe9a0'; g.fillRect(c[0] + 196 * k, c[1] - 70 * k, 12 * k, 16 * k);
+    for (const dx of [-150, -40, 150]) { g.fillStyle = '#17171b'; g.beginPath(); g.arc(c[0] + dx * k, c[1] - 26 * k, 28 * k, 0, TAU); g.fill(); g.fillStyle = '#8f98a3'; g.beginPath(); g.arc(c[0] + dx * k, c[1] - 26 * k, 11 * k, 0, TAU); g.fill(); }
     g.globalAlpha = 1;
-  } })
+    if (t < at && Math.random() < .5) Z.emit(3, x + rnd(-200, 200), lerp(760, 0, Math.min(1, t / at) ** 2) + rnd(0, 220), rnd(-80, 80), rnd(60, 260), rnd(6, 10), rnd(.6, 1), PAPER, Object.assign({ vr: rnd(-10, 10), rot: rnd(0, TAU) }, SLIP));      // the receipts it was bought with, still coming off it
+  }, land(x) { Z.boom(x, 60, 150, '255,170,80', { n: 16 }); shards(x, 150, 16, '200,230,255'); Z.decal('crater', x, 230, '255,170,80', 9, 0); for (let i = 0; i < 3; i++) Z.emit(3, x + rnd(-120, 120), 40, rnd(-500, 500), rnd(500, 1000), 24, 1.6, '23,23,27', { g: 2000, vr: rnd(-12, 12), rot: rnd(0, TAU), edge: 'rgba(143,152,163,.8)' }); } })      // (and its wheels)
 ] });
 Fi.DEFS.reggie2 = Object.assign({}, Fi.DEFS.reggie, { hp: 170 });   // the same man, with fewer receipts left on him
 
 // Uro: the sky is a surface to her, and surfaces can be taken hold of
+const SKYC = '185,168,255', SKYP = '232,240,255';
+// the sky breaking where she has put her fist through it: cracks out from the spot, and the pieces falling
+function shatter(x, y, n = 9, R = 300) {
+  V.custom(.34, u => {
+    const c = F(x, y), k = c[2], al = 1 - u * u, grow = Math.min(1, u * 5);
+    Z.lite(() => {
+      g.strokeStyle = `rgba(${SKYP},${al})`; g.lineWidth = 2.5 * k; g.beginPath();
+      for (let i = 0; i < n; i++) { const a = i / n * TAU + i * .7, r1 = R * k * grow * (.6 + .4 * ((i * 5) % 3) / 2); g.moveTo(c[0], c[1]); g.lineTo(c[0] + Math.cos(a) * r1 * .5 + Math.cos(a + 1.5) * 16 * k, c[1] + Math.sin(a) * r1 * .5 + Math.sin(a + 1.5) * 16 * k); g.lineTo(c[0] + Math.cos(a) * r1, c[1] + Math.sin(a) * r1); }
+      g.stroke(); Z.glow(SKYC, c[0], c[1], R * 2.2 * k, .6 * al);
+    });
+  });
+  shards(x, y, 18, SKYP); Z.flash(SKYC, .14, .2);
+}
 B.kit('uro', { tech: 'Sky Manipulation', col: '#b9a8ff', glow: 'purple', every: [2.1, 3.5], moves: [
-  rush('Thin Ice Breaker', { a: { dmg: 14, kb: 700, lift: 520 }, speed: 1600, fx(o) { cuts(o, '#b9a8ff', 5); V.ring(o.x + o.face * 130, 170, 260, '#b9a8ff', .3); } }),
-  quake('Sky Fold', { a: { dmg: 11, kb: 420, lift: 380 }, col: '#b9a8ff', pre: 'hookWind', pose: 'hook' })
+  rush('Thin Ice Breaker', { a: { dmg: 14, kb: 700, lift: 520 }, speed: 1600, fx(o) { const x = o.x + o.face * 140; cuts(o, '#b9a8ff', 5); V.ring(x, 170, 260, '#b9a8ff', .3); shatter(x, o.y + 170, 11, 340); Z.shock(x, 420, SKYC, .4, 10); Z.flare(x, o.y + 170, SKYP, 420, .18); } }),
+  quake('Sky Fold', { a: { dmg: 11, kb: 420, lift: 380 }, col: '#b9a8ff', pre: 'hookWind', pose: 'hook', fx(o) {
+    const f = o.face, x0 = o.x + f * 60;
+    V.custom(.6, u => {                             // a fold of the sky itself, pulled down and thrown along the floor like a sheet
+      const al = u < .15 ? u / .15 : 1 - (u - .15) / .85, x = x0 + f * 900 * u, a = F(x - f * 260, 0), b = F(x, 0), top = F(x - f * 80, 420), k = b[2];
+      Z.lite(() => {
+        const gr = g.createLinearGradient(a[0], 0, b[0], 0); gr.addColorStop(0, `rgba(${SKYC},0)`); gr.addColorStop(.7, `rgba(${SKYC},${.5 * al})`); gr.addColorStop(1, `rgba(${SKYP},${.9 * al})`);
+        g.fillStyle = gr; g.beginPath(); g.moveTo(a[0], a[1]); g.quadraticCurveTo(top[0], top[1], b[0], b[1]); g.lineTo(b[0], b[1] - 30 * k); g.quadraticCurveTo(top[0], top[1] - 60 * k, a[0], a[1]); g.closePath(); g.fill();
+        g.strokeStyle = `rgba(255,255,255,${al})`; g.lineWidth = 3 * k; g.beginPath(); g.moveTo(a[0], a[1]); g.quadraticCurveTo(top[0], top[1], b[0], b[1]); g.stroke();
+      });
+    });
+    shatter(x0, o.y + 200, 7, 220);
+  } })
 ] });
 // Ishigori: more cursed energy output than anyone, let out in a straight line
+const GRANITE = '127,233,255';
 B.kit('ishigori', { tech: 'Granite Blast', col: '#7fe9ff', glow: 'blue', every: [2.4, 3.8], moves: [
-  flat('Granite Blast', { cd: 6, min: 300, wind: .6, pre: 'divWind', pose: 'div', speed: 2000, r: 46, y: 160, trail: 'blue', a: { dmg: 15, kb: 700, lift: 420 }, draw(s) {
-    const c = F(s.x, s.y), k = c[2], d = Math.sign(s.vx);
-    lit(() => { E.glow(E.GLOW.blue, c[0], c[1], 360 * k, 1); E.glow(E.GLOW.blue, c[0] - d * 150 * k, c[1], 280 * k, .7); });
-    g.fillStyle = '#eafcff'; g.beginPath(); g.ellipse(c[0], c[1], 70 * k, 36 * k, 0, 0, TAU); g.fill();
-  } }),
-  rush('Dessert', { cd: 5, pre: 'crushWind', pose: 'crush', a: { dmg: 15, kb: 760, lift: 600 }, speed: 1200, fx(o) { V.crack(o.x + o.face * 140, 240); V.ring(o.x + o.face * 120, 160, 260, '#ffb060', .3); } })
+  flat('Granite Blast', { cd: 6, min: 300, wind: .6, pre: 'divWind', pose: 'div', speed: 2000, r: 46, y: 160, trail: 'blue', a: { dmg: 15, kb: 700, lift: 420 },
+    fire(o) { const x = o.x + o.face * 90, y = o.y + 160; Z.flare(x, y, GRANITE, 520, .22); Z.flash(GRANITE, .2, .25); Z.shock(o.x, 420, GRANITE, .45, 12); Z.dust(o.x, 8, -o.face); shake(22); o.vx = -o.face * 300; },      // it kicks: he goes back a step
+    hit: s => Z.boom(s.x, s.y, 130, GRANITE, { n: 16, clean: true }),
+    draw(s) {
+      const c = F(s.x, s.y), k = c[2], d = Math.sign(s.vx);
+      Z.beamAt(s.x - d * 520, s.x, s.y, 42, GRANITE, .8);                  // what is behind it is still arriving
+      lit(() => E.glow(E.GLOW.blue, c[0], c[1], 420 * k, 1));
+      g.fillStyle = '#eafcff'; g.beginPath(); g.ellipse(c[0], c[1], 78 * k, 40 * k, 0, 0, TAU); g.fill();
+      Z.lite(() => { g.strokeStyle = 'rgba(255,255,255,.8)'; g.lineWidth = 3 * k; for (let i = 0; i < 3; i++) { g.beginPath(); g.ellipse(c[0] - d * (40 + i * 60) * k, c[1], 14 * k, (56 + i * 14) * k, 0, 0, TAU); g.stroke(); } });
+    } }),
+  rush('Dessert', { cd: 5, pre: 'crushWind', pose: 'crush', a: { dmg: 15, kb: 760, lift: 600 }, speed: 1200, fx(o) {
+    const x = o.x + o.face * 130;
+    V.crack(o.x + o.face * 140, 260); V.ring(x, 160, 260, '#ffb060', .3); V.rocks(x, 0, 10);
+    Z.boom(x, o.y + 150, 100, '255,176,96', { n: 14, clean: true }); Z.shock(x, 400, '255,176,96', .4, 12); Z.dust(x, 10, o.face);
+    for (let i = 0; i < 8; i++) Z.emit(2, x + rnd(-60, 60), rnd(120, 260), rnd(-60, 60), rnd(120, 300), rnd(70, 120), rnd(.6, 1), '235,235,240', { s1: 2, a: .4 });      // the steam off him
+  } })
 ] });
 // Kashimo: his cursed energy is a charge. Once it is on you, the bolt cannot miss where you were
+const KZ = rgbOf(BOLT);
+const arcs = (x, y, n, R, w = 4) => { for (let i = 0; i < n; i++) { const a = rnd(0, TAU), l = rnd(R * .4, R); Z.lightning(x, y, x + Math.cos(a) * l, Math.max(0, y + Math.sin(a) * l), KZ, rnd(.12, .26), w, 1); } };
 B.kit('kashimo', { tech: 'Lightning', col: BOLT, glow: 'blue', every: [1.9, 3.2], moves: [
-  rush('Staff Thrust', { cd: 5, pose: 'jab', a: { dmg: 13, kb: 620, lift: 420 }, speed: 1700, fx(o) { V.bolt(o.x, o.y + 180, o.x + o.face * 320, o.y + 170, BOLT, .25, 5); V.sparks(o.x + o.face * 150, 170, 'blue', 14); } }),
+  rush('Staff Thrust', { cd: 5, pose: 'jab', a: { dmg: 13, kb: 620, lift: 420 }, speed: 1700, fx(o) {
+    const x = o.x + o.face * 160, y = o.y + 175;
+    V.bolt(o.x, o.y + 180, o.x + o.face * 320, o.y + 170, BOLT, .25, 5); V.sparks(o.x + o.face * 150, 170, 'blue', 14);
+    Z.lightning(o.x, y, o.x + o.face * 520, y, KZ, .3, 7, 3); arcs(x, y, 6, 300); Z.flash('255,255,255', .2, .12); Z.flare(x, y, KZ, 420, .18); Z.shock(x, 360, KZ, .35, 9);
+  } }),
   drop('Lightning', { cd: 6, w: 150, delay: .45, col: BOLT, a: { dmg: 16, kb: 300, stun: .8 }, pre: 'manjiWind', pose: 'idle',
-    land(x) { for (let i = 0; i < 3; i++) V.bolt(x + rnd(-60, 60), 900, x + rnd(-20, 20), 0, BOLT, .3, 7); V.sparks(x, 60, 'blue', 20); E.addBlast(x, 120, '159,232,255', 300); } }),
-  quake('Discharge', { cd: 7, a: { dmg: 12, kb: 420, lift: 380 }, col: BOLT, below: .7 })
+    draw(x, t, at) { if (t < at && Math.random() < .5) { const a = rnd(0, TAU); Z.lightning(x + Math.cos(a) * 230, rnd(0, 260), x + rnd(-30, 30), rnd(0, 120), KZ, .08, 2, 0); } },      // the charge that is already on him, finding its way in
+    land(x) {
+      for (let i = 0; i < 3; i++) V.bolt(x + rnd(-60, 60), 900, x + rnd(-20, 20), 0, BOLT, .3, 7);
+      V.sparks(x, 60, 'blue', 20); E.addBlast(x, 120, '159,232,255', 300);
+      for (let i = 0; i < 4; i++) Z.lightning(x + rnd(-90, 90), 900, x + rnd(-24, 24), 0, KZ, rnd(.25, .45), 9, 3);
+      Z.pillar(x, 90, 900, KZ, .45); Z.flash('255,255,255', .5, .22); Z.dim(.6, .4); Z.shock(x, 520, KZ, .5, 14); Z.decal('scorch', x, 150, KZ, 8, 0); shake(30);
+      B.add({ life: .9, upd(h, dt) { if (Math.random() < dt * 22) { const a = rnd(0, TAU), r = rnd(60, 260); Z.lightning(x, 6, x + Math.cos(a) * r, rnd(0, 60), KZ, .1, 2, 0); } } });      // and what is left of it, crawling over the floor
+    } }),
+  quake('Discharge', { cd: 7, a: { dmg: 12, kb: 420, lift: 380 }, col: BOLT, below: .7, fx(o) {
+    const f = o.face;
+    arcs(o.x, o.y + 160, 10, 420, 5); Z.flash('255,255,255', .3, .15); Z.pillar(o.x, 70, 520, KZ, .35);
+    B.add({ life: 1150 / 1300, x: o.x + f * 80, upd(h, dt) { h.x += f * 1300 * dt; if (Math.random() < dt * 40) Z.lightning(h.x, rnd(60, 240), h.x + rnd(-80, 80), 0, KZ, .1, 3, 0); } });      // it earths itself all the way along
+  } })
 ] });
 // Naoya, as a curse: everything he was, and faster than sound
+const NP = '255,106,208';
 B.kit('naoya2', { tech: 'Projection Sorcery', col: '#ff6ad0', glow: 'purple', every: [1.8, 3], moves: [
   { name: 'Mach Dive', cd: 5, min: 200, max: 760, wind: .34, pre: 'dash', dur: .6, run(o, p, M, t) {
     o.rate = 46;
-    if (!M.s) { M.s = 1; M.dir = o.face; sfx.whoosh(); }
+    if (!M.s) {
+      M.s = 1; M.dir = o.face; sfx.whoosh();
+      Z.dust(o.x, 10, -o.face); Z.shock(o.x, 420, NP, .4, 12); V.ring(o.x, o.y + 170, 300, '#ffffff', .25); Z.flash('255,255,255', .12, .1);
+      V.custom(.18, () => {                         // the cone of air he is dragging: he is ahead of his own sound
+        const c = F(o.x + M.dir * 60, o.y + 170), k = c[2], d = M.dir;
+        Z.lite(() => {
+          g.strokeStyle = `rgba(${NP},.6)`; g.lineWidth = 10 * k; g.beginPath(); g.moveTo(c[0] - d * 420 * k, c[1] - 250 * k); g.quadraticCurveTo(c[0] + d * 20 * k, c[1], c[0] - d * 420 * k, c[1] + 250 * k); g.stroke();
+          g.strokeStyle = 'rgba(255,255,255,.85)'; g.lineWidth = 4 * k; g.beginPath(); g.moveTo(c[0] - d * 300 * k, c[1] - 190 * k); g.quadraticCurveTo(c[0] + d * 60 * k, c[1], c[0] - d * 300 * k, c[1] + 190 * k); g.stroke();
+        });
+      });
+    }
     if (t < .18) {                                  // from one end of the pass to the other before the sound of it arrives
       o.target = POSE.dash; o.vx = Math.abs(o.x + M.dir * 60) < 940 ? M.dir * 2600 : 0;
       if (Math.random() < .7) V.puff('purple', o.x - M.dir * 60, o.y + rnd(60, 240), -M.dir * 300, 0, 40, .25);
-      if (!M.done && Math.abs(p.x - o.x) < 120) { M.done = 1; V.ring(p.x, p.y + 160, 260, '#ff6ad0', .3); B.burst(p.x, 200, { dmg: 13, kb: 520, lift: 420 }, 190, M.dir); }
+      if (!M.done && Math.abs(p.x - o.x) < 120) {
+        M.done = 1; V.ring(p.x, p.y + 160, 260, '#ff6ad0', .3); E.stop(.06); shake(18);
+        Z.boom(p.x, p.y + 150, 90, NP, { n: 12, clean: true }); Z.shock(p.x, 420, NP, .4, 12);
+        B.burst(p.x, 200, { dmg: 13, kb: 520, lift: 420 }, 190, M.dir);
+      }
       return;
     }
     o.face = p.x >= o.x ? 1 : -1; o.target = t < .4 ? POSE.cross : POSE.idle;
   } },
-  quake('Sonic Boom', { a: { dmg: 12, kb: 480, lift: 400 }, col: '#ff6ad0', pre: 'hookWind', pose: 'hook', speed: 1700 }),
+  quake('Sonic Boom', { a: { dmg: 12, kb: 480, lift: 400 }, col: '#ff6ad0', pre: 'hookWind', pose: 'hook', speed: 1700, fx(o) {
+    const f = o.face, x0 = o.x + f * 100, y = o.y + 170;
+    V.ring(x0, y, 420, '#ffffff', .3); V.ring(x0, y, 300, '#ff6ad0', .4); Z.flash('255,255,255', .14, .1);
+    B.add({ life: 1150 / 1700, x: x0, upd(h, dt) { h.x += f * 1700 * dt; }, draw(h) {                // the wall of it, standing up and travelling
+      const c = F(h.x, 170), k = c[2], u = 1 - h.t / h.life;
+      Z.lite(() => { g.strokeStyle = `rgba(255,255,255,${.8 * u})`; g.lineWidth = 4 * k; g.beginPath(); g.ellipse(c[0], c[1], 40 * k, 190 * k, 0, 0, TAU); g.stroke(); g.strokeStyle = `rgba(${NP},${.5 * u})`; g.lineWidth = 12 * k; g.beginPath(); g.ellipse(c[0] - f * 30 * k, c[1], 54 * k, 220 * k, 0, 0, TAU); g.stroke(); });
+    } });
+  } }),
   drop('Frame Break', { cd: 9, below: .7, w: 170, col: '#ff6ad0', a: { dmg: 14, kb: 200, stun: 1 }, pre: 'manjiWind', pose: 'idle', draw(x, t, at) {
-    const c = F(x, 0), k = c[2], u = Math.min(1, t / at);
-    g.strokeStyle = `rgba(255,106,208,${.4 + .6 * u})`; g.lineWidth = 4; g.strokeRect(c[0] - 80 * k, c[1] - 290 * k, 160 * k, 300 * k);
-  } })
+    if (t > at + .1) return;
+    const c = F(x, 0), k = c[2], u = Math.min(1, t / at), w = 90 * k, h = 300 * k, x0 = c[0] - w, y0 = c[1] - h, s = 1 + (1 - u) * .6;
+    g.fillStyle = `rgba(255,106,208,${.08 + .12 * u})`; g.fillRect(x0, y0, w * 2, h);
+    Z.lite(() => { g.strokeStyle = `rgba(255,106,208,${.4 + .6 * u})`; g.lineWidth = 4 * k; g.strokeRect(x0, y0, w * 2, h); g.lineWidth = 1.5 * k; g.strokeRect(c[0] - w * s, c[1] - h / 2 - h * s / 2, w * 2 * s, h * s); });      // a second frame closing on the first: when they meet, he is in it
+    g.fillStyle = `rgba(20,4,14,${.8 * u})`; for (let i = 0; i < 8; i++) for (const sx of [x0 + 4 * k, x0 + w * 2 - 12 * k]) g.fillRect(sx, y0 + (10 + i * 37) * k, 8 * k, 16 * k);
+  }, land(x) { shards(x, 160, 18, '255,200,240', 500); Z.flash(NP, .2, .2); Z.flare(x, 160, NP, 460, .2); } })
 ] });
 // Kenjaku: every curse Geto ever swallowed, and the technique of a body he wore before this one
+const KG = '201,165,58', KP = '150,90,200', KVOID = '20,4,42';
 B.kit('kenjaku', { tech: 'Cursed Spirit Manipulation', col: '#c9a53a', glow: 'gold', every: [2, 3.4], moves: [
-  flat('Cursed Spirit', { a: { dmg: 11, kb: 520, stun: .5 }, speed: 1300, r: 34, trail: 'purple', draw(s) {
-    const c = F(s.x, s.y), k = c[2], d = Math.sign(s.vx), w = Math.sin(E.T * 30) * 10 * k;
-    g.fillStyle = '#2a1a22'; g.strokeStyle = LINE; g.lineWidth = 3;
-    g.beginPath(); g.ellipse(c[0], c[1] + w, 60 * k, 30 * k, 0, 0, TAU); g.fill(); g.stroke();
-    g.beginPath(); g.ellipse(c[0] - d * 80 * k, c[1] - w, 40 * k, 22 * k, 0, 0, TAU); g.fill(); g.stroke();
-    g.fillStyle = '#f4f1d0'; eye(c[0] + d * 26 * k, c[1] + w - 6 * k, 9 * k, 9 * k); g.fillStyle = '#c2182b'; eye(c[0] + d * 29 * k, c[1] + w - 6 * k, 4 * k, 4 * k);
-  } }),
+  flat('Cursed Spirit', { a: { dmg: 11, kb: 520, stun: .5 }, speed: 1300, r: 34, trail: 'purple', rgb: KP,
+    fire(o) { const x = o.x + o.face * 60, y = o.y + 200; Z.flare(x, y, KP, 200, .15); for (let i = 0; i < 6; i++) Z.emit(2, x + rnd(-40, 40), y + rnd(-40, 40), rnd(-80, 80), rnd(-20, 160), rnd(80, 130), rnd(.5, .9), KVOID, { s1: 1.8, a: .7 }); },
+    hit: s => { for (let i = 0; i < 6; i++) Z.emit(2, s.x + rnd(-40, 40), s.y + rnd(-40, 40), rnd(-160, 160), rnd(-40, 200), rnd(80, 140), rnd(.5, .9), KVOID, { s1: 1.8, a: .7 }); },
+    draw(s) {
+      const c = F(s.x, s.y), k = c[2], d = Math.sign(s.vx), T = E.T * 22;
+      for (let i = 5; i >= 0; i--) {                // a long thing with too many joints, swimming through the air at him
+        const x = c[0] - d * i * 44 * k, y = c[1] + Math.sin(T - i * .9) * 16 * k, r = (34 - i * 4) * k;
+        g.strokeStyle = '#1a0f16'; g.lineWidth = 2; if (i) { g.beginPath(); g.moveTo(x, y + r * .8); g.lineTo(x - d * 10 * k, y + r + 14 * k); g.moveTo(x, y - r * .8); g.lineTo(x - d * 10 * k, y - r - 14 * k); g.stroke(); }
+        g.fillStyle = i & 1 ? '#3a2233' : '#2a1a22'; g.strokeStyle = LINE; g.lineWidth = 3; g.beginPath(); g.ellipse(x, y, r * 1.25, r, 0, 0, TAU); g.fill(); g.stroke();
+      }
+      const hy = c[1] + Math.sin(T) * 16 * k;
+      g.fillStyle = '#f4f1d0'; eye(c[0] + d * 14 * k, hy - 10 * k, 10 * k, 10 * k); g.fillStyle = '#c2182b'; eye(c[0] + d * 17 * k, hy - 10 * k, 4.5 * k, 4.5 * k);
+      g.fillStyle = '#f4f1e6'; for (let i = 0; i < 4; i++) { g.beginPath(); g.moveTo(c[0] + d * (40 - i * 9) * k, hy + 6 * k); g.lineTo(c[0] + d * (36 - i * 9) * k, hy + 19 * k); g.lineTo(c[0] + d * (32 - i * 9) * k, hy + 6 * k); g.closePath(); g.fill(); }
+      if (Math.random() < .6) Z.emit(2, s.x - d * 200, s.y + rnd(-20, 20), -d * rnd(20, 100), rnd(-20, 60), rnd(60, 100), rnd(.4, .8), KVOID, { s1: 1.8, a: .6 });
+    } }),
   drop('Antigravity System', { cd: 8, w: 250, delay: .7, col: '#c9a53a', high: 9999, a: { dmg: 16, kb: 0, stun: 1 }, pre: 'manjiWind', pose: 'idle', draw(x, t, at) {
-    const c = F(x, 0), k = c[2];                    // everything inside the ring is about to weigh a great deal more: leave it, jumping will not help
-    g.strokeStyle = 'rgba(201,165,58,.7)'; g.lineWidth = 3;
-    for (let i = 0; i < 4; i++) { const y = ((t * 2 + i / 4) % 1) * 420; g.beginPath(); g.ellipse(c[0], c[1] - (420 - y) * k, 250 * k, 60 * k, 0, 0, TAU); g.stroke(); }
+    if (t > at + .3) return;
+    const c = F(x, 0), k = c[2], u = Math.min(1, t / at);      // everything inside the ring is about to weigh a great deal more: leave it, jumping will not help
+    Z.lite(() => {
+      g.strokeStyle = `rgba(${KG},${.5 + .4 * u})`; g.lineWidth = 3 * k;
+      for (let i = 0; i < 5; i++) { const y = ((t * 2 + i / 5) % 1) * 460, sq = .7 + .3 * y / 460; g.beginPath(); g.ellipse(c[0], c[1] - (460 - y) * k, 250 * k * sq, 60 * k * sq, 0, 0, TAU); g.stroke(); }
+      const top = F(x, 520), gr = g.createLinearGradient(0, top[1], 0, c[1]); gr.addColorStop(0, `rgba(${KG},0)`); gr.addColorStop(1, `rgba(${KG},${.1 + .25 * u})`);
+      g.fillStyle = gr; g.fillRect(c[0] - 250 * k, top[1], 500 * k, c[1] - top[1]);
+    });
+    if (t < at && Math.random() < .6) Z.emit(3, x + rnd(-240, 240), rnd(200, 460), 0, -rnd(200, 700), rnd(3, 7), rnd(.3, .6), '80,70,60', { rot: rnd(0, TAU), vr: rnd(-6, 6) });      // grit being pressed down out of the air
+  }, land(x) {
+    Z.dim(.5, .4); Z.flash(KG, .2, .2); Z.shock(x, 700, KG, .6, 16); Z.decal('crater', x, 260, KG, 10, 0); V.crack(x, 420);
+    for (let i = 0; i < 20; i++) Z.emit(2, x + rnd(-240, 240), rnd(0, 20), rnd(-500, 500), rnd(0, 60), rnd(80, 140), rnd(.5, .9), '150,140,165', { s1: 2, a: .45, dr: 3 });
   } }),
-  flat('Uzumaki', { cd: 12, below: .6, min: 260, wind: .7, pre: 'divWind', pose: 'div', speed: 1800, r: 60, y: 170, trail: 'purple', a: { dmg: 20, kb: 800, lift: 520 }, draw(s) {
-    const c = F(s.x, s.y), k = c[2];
-    lit(() => E.glow(E.GLOW.purple, c[0], c[1], 460 * k, 1));
-    g.strokeStyle = '#14042a'; g.lineWidth = 10 * k; g.beginPath();
-    for (let a = 0; a < 14; a += .3) { const rr = a * 6 * k, x = c[0] + Math.cos(a + E.T * 12) * rr, y = c[1] + Math.sin(a + E.T * 12) * rr; a ? g.lineTo(x, y) : g.moveTo(x, y); }
-    g.stroke();
-  } })
+  flat('Uzumaki', { cd: 12, below: .6, min: 260, wind: .7, pre: 'divWind', pose: 'div', speed: 1800, r: 60, y: 170, trail: 'purple', rgb: KP, a: { dmg: 20, kb: 800, lift: 520 },
+    fire(o) { Z.dim(.7, .9); Z.flash(KP, .25, .3); Z.shock(o.x, 520, KP, .5, 14); shake(26); E.banner('極ノ番', 'MAXIMUM: UZUMAKI', 'sm'); },
+    hit: s => Z.boom(s.x, s.y, 200, KP, { n: 26, smoke: KVOID, hot: '255,220,255' }),
+    draw(s) {
+      const c = F(s.x, s.y), k = c[2], T = E.T * 12;
+      lit(() => E.glow(E.GLOW.purple, c[0], c[1], 620 * k, 1));
+      g.lineCap = 'round';
+      for (let arm = 0; arm < 3; arm++) {           // every curse he has left, wound into one: three arms of them turning in to the middle
+        g.strokeStyle = arm ? (arm === 1 ? '#3a145e' : '#5a3a10') : '#14042a'; g.lineWidth = (16 - arm * 3) * k; g.beginPath();
+        for (let a = 0; a < 13; a += .3) { const rr = a * 7.5 * k, x = c[0] + Math.cos(a + T + arm * 2.094) * rr, y = c[1] + Math.sin(a + T + arm * 2.094) * rr; a ? g.lineTo(x, y) : g.moveTo(x, y); }
+        g.stroke();
+      }
+      g.lineCap = 'butt';
+      Z.lite(() => { g.strokeStyle = `rgba(${KG},.8)`; g.lineWidth = 3 * k; g.beginPath(); g.arc(c[0], c[1], 104 * k, T, T + 4.4); g.stroke(); Z.glow('255,255,255', c[0], c[1], 130 * k, .9); });
+      for (let i = 0; i < 4; i++) { const a = T * .7 + i * 1.57, x = c[0] + Math.cos(a) * 70 * k, y = c[1] + Math.sin(a) * 70 * k; g.fillStyle = '#f4f1d0'; eye(x, y, 8 * k, 8 * k); g.fillStyle = '#c2182b'; eye(x, y, 3.5 * k, 3.5 * k); }      // and their eyes still open in it
+      if (Math.random() < .5) Z.lightning(s.x, s.y, s.x + rnd(-200, 200), Math.max(0, s.y + rnd(-200, 200)), KP, .1, 3, 0);
+    } })
 ] });
 // Yorozu: Construction. Liquid metal, armour, and one perfect thing
+const SILVER = '226,232,244', RZ = rgbOf(ROSE);
 B.kit('yorozu', { tech: 'Construction', col: ROSE, glow: 'red', every: [2, 3.4], moves: [
-  quake('Liquid Metal', { a: { dmg: 12, kb: 440, lift: 400 }, col: '#cfd8e0', pre: 'hookWind', pose: 'hook', speed: 1500 }),
-  rush('Insect Armour', { a: { dmg: 14, kb: 700, lift: 520 }, speed: 1500, pose: 'crush', pre: 'crushWind', fx(o) { cuts(o, ROSE, 4); } }),
+  quake('Liquid Metal', { a: { dmg: 12, kb: 440, lift: 400 }, col: '#cfd8e0', pre: 'hookWind', pose: 'hook', speed: 1500, fx(o) {
+    const f = o.face;
+    for (let i = 0; i < 14; i++) Z.emit(4, o.x + f * rnd(40, 160), rnd(20, 200), f * rnd(200, 800), rnd(100, 700), rnd(4, 9), 2, SILVER, { g: 1800 });
+    B.add({ life: 1150 / 1500, x: o.x + f * 80, n: 0, upd(h, dt) {                                     // a tide of it along the floor, throwing spikes up as it goes
+      h.x += f * 1500 * dt;
+      if (Math.random() < dt * 60) Z.emit(4, h.x + rnd(-40, 40), rnd(10, 60), f * rnd(0, 300), rnd(200, 700), rnd(4, 8), 2, SILVER, { g: 1800 });
+      if ((h.n += dt) < .07) return;
+      h.n = 0; const x = h.x;
+      V.custom(.4, u => {
+        const a = F(x - 26, 0), b = F(x + 26, 0), c = F(x + f * 20, 150 * Math.sin(Math.min(1, u * 3) * Math.PI / 2) * (1 - Math.max(0, u - .5) * 2)), gr = g.createLinearGradient(a[0], 0, b[0], 0);
+        gr.addColorStop(0, '#8f98a3'); gr.addColorStop(.5, '#ffffff'); gr.addColorStop(1, '#5a626c');
+        g.fillStyle = gr; g.strokeStyle = LINE; g.lineWidth = 2; g.beginPath(); g.moveTo(a[0], a[1]); g.lineTo(c[0], c[1]); g.lineTo(b[0], b[1]); g.closePath(); g.fill(); g.stroke();
+      });
+    } });
+  } }),
+  rush('Insect Armour', { a: { dmg: 14, kb: 700, lift: 520 }, speed: 1500, pose: 'crush', pre: 'crushWind', fx(o) {
+    const x = o.x + o.face * 130, y = o.y + 160;
+    cuts(o, ROSE, 4); Z.boom(x, y, 90, RZ, { n: 12, clean: true }); Z.shock(x, 380, RZ, .4, 12); Z.flare(x, y, RZ, 380, .18);
+    for (let i = 0; i < 12; i++) Z.emit(3, x, y, o.face * rnd(100, 700) + rnd(-200, 200), rnd(0, 600), rnd(5, 10), rnd(.6, 1), i & 1 ? '60,30,44' : '120,40,70', { g: 1500, vr: rnd(-14, 14), w: .5, rot: rnd(0, TAU), edge: 'rgba(0,0,0,.6)' });      // plates of the armour breaking off on him
+  } }),
   drop('True Sphere', { cd: 10, below: .65, w: 230, delay: .7, col: ROSE, a: { dmg: 22, kb: 560, lift: 680 }, draw(x, t, at) {
-    const c = falling(x, t, at), k = c[2], gr = g.createRadialGradient(c[0] - 40 * k, c[1] - 190 * k, 10 * k, c[0], c[1] - 150 * k, 150 * k);
-    gr.addColorStop(0, '#ffffff'); gr.addColorStop(.25, '#8f98a3'); gr.addColorStop(1, '#17171b');
-    g.fillStyle = gr; g.beginPath(); g.arc(c[0], c[1] - 150 * k, 150 * k, 0, TAU); g.fill(); g.lineWidth = 3; g.strokeStyle = LINE; g.stroke();
+    shadowOf(x, t, at, 200);
+    const c = falling(x, t, at), k = c[2], R = 150 * k, cy = c[1] - R, gr = g.createRadialGradient(c[0] - 46 * k, cy - 50 * k, 8 * k, c[0], cy, R);
+    gr.addColorStop(0, '#ffffff'); gr.addColorStop(.18, '#c9d1dc'); gr.addColorStop(.55, '#59616c'); gr.addColorStop(1, '#101014');
+    g.fillStyle = gr; g.beginPath(); g.arc(c[0], cy, R, 0, TAU); g.fill(); g.lineWidth = 3; g.strokeStyle = LINE; g.stroke();
+    g.save(); g.beginPath(); g.arc(c[0], cy, R, 0, TAU); g.clip();                                     // the world, bent across the face of it
+    g.fillStyle = 'rgba(255,255,255,.16)'; g.fillRect(c[0] - R, cy + R * .1, R * 2, R * .16); g.fillStyle = `rgba(${RZ},.22)`; g.fillRect(c[0] - R, cy + R * .34, R * 2, R * .5);
+    g.restore();
+    Z.lite(() => { g.strokeStyle = 'rgba(255,255,255,.7)'; g.lineWidth = 2 * k; g.beginPath(); g.arc(c[0], cy, R * 1.08, -2.2, -1.2); g.stroke(); Z.glow('255,255,255', c[0] - 50 * k, cy - 56 * k, 110 * k, .9); });
     g.globalAlpha = 1;
+  }, land(x) {                                      // a perfect sphere touches the floor at one point: all of its weight on nothing at all
+    V.impact(.16, x, 120); Z.shock(x, 760, SILVER, .7, 18); Z.shock(x, 460, RZ, .5, 10); Z.decal('crater', x, 250, RZ, 12, 0); Z.flash('255,255,255', .3, .2); V.crack(x, 460);
+    for (let i = 0; i < 24; i++) Z.emit(2, x + rnd(-200, 200), rnd(0, 20), rnd(-700, 700), rnd(0, 80), rnd(90, 150), rnd(.6, 1), '150,140,165', { s1: 2, a: .45, dr: 3 });
   } })
 ] });
 // Sukuna, in Megumi: the same moves as ever, in a body that has not been cut yet

@@ -5,6 +5,15 @@
 // Newest first. v = the build, jp = the seal stamped beside it, pic = notes/<pic>.jpg, cap = what the picture shows.
 // A new update goes at the top of this list.
 const NOTES = [
+  { v: '0.7', name: 'Boss VFX', jp: '彩', date: '5 Oct 2026', pic: 'bossfx', cap: 'Mahoraga, adapting: the wheel turns one notch', items: [
+    'Every boss in the story has been redrawn. What they do is what it was; what it looks like is not',
+    'Each boss has an element of its own now, and its body gives it off the whole fight: Jogo’s fire and embers, Choso’s and Eso’s blood, Kashimo’s lightning, the flicker of Sukuna’s cuts, Mahito’s wisps, Hanami’s petals, Reggie’s receipts. Toji and Maki give off nothing at all, because they have no cursed energy: only the air they move',
+    'A boss’s move is called on a card. While it winds up, light is dragged in to it and the floor under it is marked, and the big ones dim the world behind them',
+    'Bosses are introduced by name when the fight begins, flare when a move they were holding back comes free, and go out properly when they are beaten',
+    'What they throw trails light and bursts. What they land throws sparks, splashes or splinters in their own element, flashes the screen their colour, and leaves scorch, blood and craters on the floor',
+    'Season 1: the Finger Bearer’s Cursed Cannon is a beam; Jogo’s volcano erupts, his flame is a jet, and his Meteor is a cracked rock on fire; Todo’s Boogie Woogie leaves both of you where you were for a moment; Eso’s Wing King lashes, Kechizu’s jaws shut, Maki’s Playful Cloud has its three lengths',
+    'Season 2: Toji’s chain is a chain; Mahoraga’s wheel turns behind it; Naoya’s Freeze Frame is a frame of film; Rika’s arm comes down out of the dark; Ogi’s blade leaves the floor burning; Hakari’s shutters have their lights and their pachinko balls; Haba has his rotor; Higuruma’s Executioner’s Sword is a blade of light',
+    'Season 3: Reggie’s knives and truck, Uro breaking the sky, Ishigori’s Granite Blast, Kashimo’s lightning, Naoya ahead of his own sound, Kenjaku’s Uzumaki and Antigravity System, Yorozu’s liquid metal and True Sphere'] },
   { v: '0.6', name: 'One v Ones', jp: '対', date: '5 Oct 2026', pic: 'duel', cap: 'The board: one ban each, then one technique each', items: [
     'Servers: Free Exploration with up to five people. On the Play screen, agree on a server code with your friends and all type the same one. You are then in the same Tokyo, Shibuya and Kyoto, and see each other walk about with your names over your heads',
     'Press / to say something. It shows in a bubble over your head',
