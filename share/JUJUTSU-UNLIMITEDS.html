@@ -18024,7 +18024,7 @@ JU.mp = { card, join, leave, tick, fighters, draw, MAX, to, hear(t, fn) { heard[
 'use strict';
 
 const E = JU.eng, H = E.hooks, Fi = JU.fights, S = JU.street, M = JU.mp, V = JU.vfx, sfx = JU.sfx, T = JU.tech;
-const HP = 1200, CAP = .4, K = 100 / HP;             // what each has in a duel; the most one blow may take; and what that makes of his own hundred
+const HP = 600, CAP = .4, K = 100 / HP;              // what each has in a duel (it was 1200: fights went on too long); the most one blow may take; and what that makes of his own hundred
 const ASK_T = 20, BAN_T = 25, PICK_T = 30, SEND = 1 / 30, BUNCH = .08, QUIET = 10, BREAK = 2.6;
 const esc = x => String(x).replace(/[<>&"]/g, '');
 const r2 = v => Math.round(v * 100) / 100;
