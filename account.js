@@ -10,6 +10,10 @@
    And it has a SECOND ACCOUNT, TheUnlimitedsTeam2: the same sign-in under another name, with everything unlocked as well and a save of
    its own (begun as a copy of the first one's). Switching between the two asks for no password either; in a browser where nobody is signed
    in, the second name with the team's password goes straight to it. It is there so that two of the team can be on one server at once.
+   The team can also give ADMIN POWERS to somebody who is on a server with it (mp.js), and take them back: everything unlocked, as it is
+   for the team, in that browser and for that save. What is handed over is a note signed with the team's key, naming the browser it is for;
+   a game takes it only if the signature checks out, so one player cannot hand them to another. Announcing, and giving admin powers, stay
+   the team's alone.
    None of this is security against somebody who opens the developer tools. A game that runs entirely in the browser cannot keep anything
    from the person running it; what this does is keep honest players honest. */
 (() => {
@@ -17,8 +21,10 @@
 
 const sfx = JU.sfx, TEAM = 'TheUnlimitedsTeam', TEAM2 = 'TheUnlimitedsTeam2', GUEST = '_guest', ROUNDS = 120000;
 const TEAM_SALT = '9ccc5ca0f18acfc6', TEAM_V = '353497485db0c38d6701a02f4965022b8ca9ebd8c795d4887103df9112005a09';
+const TEAM_PUB = 'f763d2e72b4617fd9c00658cdbcb4d0107cd24dee5c0153109e59a41db4a7d7d';      // the public half of the key the team signs with (announcements, admin powers)
+const VOID_BEFORE = 0;                                     // admin powers given before this moment (ms) count for nothing: raising it takes every one of them back
 const NAME = /^[A-Za-z0-9][A-Za-z0-9_]{2,19}$/, MINPW = 6;
-const OWN = /^ju\.(sfx$|accounts$|session$|save\.)/;       // these are not part of anybody's progress
+const OWN = /^ju\.(sfx$|accounts$|session$|device$|save\.)/;       // these are not part of anybody's progress
 
 /* ---------- SHA-256, and the stretch built on it ---------- */
 const K = new Int32Array(64), H0 = new Int32Array(8), W = new Int32Array(64);
@@ -81,6 +87,35 @@ const home = () => (two ? TWO : me.name.toLowerCase());     // whichever of the 
 const called = () => (two ? TEAM2 : me.name);
 const slot = () => (me ? (test ? TEST : home()) : GUEST);
 
+/* ---------- admin powers, given by the team ---------- */
+let DEVICE = read('ju.device', '');                        // this browser, as a name the team's note can be made out to
+if (typeof DEVICE !== 'string' || !/^[0-9a-f]{16}$/.test(DEVICE)) { DEVICE = hex(crypto.getRandomValues(new Uint8Array(8))); write('ju.device', DEVICE); }
+const unhex = h => Uint8Array.from(h.match(/../g), x => parseInt(x, 16));
+async function signed(text, sig) {                         // did the team sign this
+  try {
+    if (typeof sig !== 'string' || !/^[0-9a-f]{128}$/.test(sig)) return false;
+    const key = await crypto.subtle.importKey('raw', unhex(TEAM_PUB), { name: 'Ed25519' }, false, ['verify']);
+    return await crypto.subtle.verify({ name: 'Ed25519' }, key, unhex(sig), enc(text));
+  } catch (e) { return false; }
+}
+let admin = false, ui = false;
+function strip() { admin = false; drop('ju.admin'); if (JU.shop && JU.shop.check) JU.shop.check(); if (ui) paint(); }
+{
+  const a = read('ju.admin', null);                        // the note is kept with the save. It is taken at its word for the moment it takes to check it
+  if (a && a.d === DEVICE && typeof a.t === 'number' && a.t >= VOID_BEFORE) { admin = true; signed('ju-admin|' + DEVICE + '|' + a.t, a.sig).then(ok => { if (!ok) strip(); }); }
+  else if (a) drop('ju.admin');
+}
+// the team's word arriving: m = { a: 'give' | 'drop', t, sig }
+async function take(m) {
+  if (!m || typeof m.t !== 'number' || !(m.t >= VOID_BEFORE) || (me && me.team)) return false;
+  const give = m.a === 'give';
+  if (!give && m.a !== 'drop') return false;
+  if (!(await signed((give ? 'ju-admin|' : 'ju-admin-off|') + DEVICE + '|' + m.t, m.sig))) return false;
+  if (give) { admin = true; write('ju.admin', { d: DEVICE, t: m.t, sig: m.sig }); if (ui) paint('The team gave you admin powers: everything is unlocked.'); }
+  else { const a = read('ju.admin', null); if (a && a.t > m.t) return false; strip(); }       // (an older taking-back does not undo a newer giving)
+  return true;
+}
+
 // everything the game has saved, under whoever is leaving; and whatever is kept for whoever is arriving, in its place
 function liveKeys() {
   const live = [];
@@ -108,7 +143,7 @@ async function sign(text) {
   return hex(new Uint8Array(await crypto.subtle.sign({ name: 'Ed25519' }, key, enc(text))));
 }
 
-JU.account = Object.freeze({ TEAM, TEAM2, get name() { return me ? called() : ''; }, get two() { return two; }, get dev() { return !!(me && me.team && !test); }, get test() { return test; }, get team() { return !!(me && me.team); }, get signedIn() { return !!me; }, sign });
+JU.account = Object.freeze({ TEAM, TEAM2, get name() { return me ? called() : ''; }, get two() { return two; }, get dev() { return !!(me && me.team && !test) || admin; }, get admin() { return admin; }, device: DEVICE, PUB: TEAM_PUB, take, get test() { return test; }, get team() { return !!(me && me.team); }, get signedIn() { return !!me; }, sign });
 
 /* ---------- the scroll ---------- */
 const box = document.getElementById('ascroll');
@@ -119,18 +154,18 @@ box.innerHTML = `<div class="rod"></div><button class="ahead" id="ahead" aria-ex
   <div class="abody" id="abody"></div><div class="rod"></div>`;
 const head = box.querySelector('#ahead'), body = box.querySelector('#abody');
 const $ = q => body.querySelector(q);
-body.inert = true;
+body.inert = true; ui = true;
 const say = (text, ok) => { const m = $('#amsg'); if (m) { m.textContent = text; m.classList.toggle('ok', !!ok); } };
 function fail(text) { say(text); sfx.back(); body.classList.remove('no'); void body.offsetWidth; body.classList.add('no'); }
 
 function paint(note) {
   const team = !!(me && me.team && !test);
   box.classList.toggle('in', !!me); box.classList.toggle('team', team); box.classList.toggle('test', test);
-  head.innerHTML = `<b lang="ja" aria-hidden="true">${test ? '試' : team ? '無' : me ? '印' : '巻'}</b><span><small>${me ? (test ? 'Test account' : team ? 'Team account' : 'Signed in') : 'Account'}</small>${me ? (test ? 'Plays as a player' : esc(called())) : 'Log in · Register'}</span><u aria-hidden="true"></u>`;
+  head.innerHTML = `<b lang="ja" aria-hidden="true">${test ? '試' : team ? '無' : me ? '印' : '巻'}</b><span><small>${me ? (test ? 'Test account' : team ? 'Team account' : admin ? 'Admin' : 'Signed in') : admin ? 'Admin' : 'Account'}</small>${me ? (test ? 'Plays as a player' : esc(called())) : 'Log in · Register'}</span><u aria-hidden="true"></u>`;
   if (me) {
     body.innerHTML = `<div class="ain"><small>${test ? 'The test account' : team ? 'The team’s account' : 'Signed in as'}</small><b>${test ? 'Plays as a player' : esc(called())}</b>
       <p>${test ? 'Nothing is unlocked here: tickets, slots and locks are what the public gets. It has a save of its own, and going back asks for no password.'
-        : team ? 'Everything is unlocked for this account: every technique, clan and tool, and spins that use nothing up.' : 'Your techniques, clans, tickets and story are kept with this account.'}</p>
+        : team ? 'Everything is unlocked for this account: every technique, clan and tool, and spins that use nothing up.' : admin ? 'The team gave this account admin powers: everything is unlocked.' : 'Your techniques, clans, tickets and story are kept with this account.'}</p>
       <p class="amsg ok" id="amsg" aria-live="polite">${note || ''}</p>
       ${team ? `<button class="aseal alt" id="ahop" type="button"><b lang="ja" aria-hidden="true">${two ? '壱' : '弐'}</b><span>Switch to ${two ? TEAM : TEAM2}</span></button>` : ''}
       ${me.team ? `<button class="aseal alt" id="aflip" type="button"><b lang="ja" aria-hidden="true">${test ? '無' : '試'}</b><span>${test ? 'Back to ' + (two ? TEAM2 : 'the team account') : 'Switch to the test account'}</span></button>` : ''}
@@ -147,7 +182,7 @@ function paint(note) {
       <label>Name<input id="aname" name="username" autocomplete="username" maxlength="20" spellcheck="false" autocapitalize="off" autocorrect="off"></label>
       <label>Password<input id="apass" name="password" type="password" autocomplete="${up ? 'new-password' : 'current-password'}" maxlength="64"></label>
       ${up ? '<label>Password, once more<input id="apass2" type="password" autocomplete="new-password" maxlength="64"></label>' : ''}
-      <p class="amsg" id="amsg" aria-live="polite">${note || ''}</p>
+      <p class="amsg${admin && !note ? ' ok' : ''}" id="amsg" aria-live="polite">${note || (admin ? 'The team gave you admin powers: everything is unlocked.' : '')}</p>
       <button class="aseal" type="submit"><b lang="ja" aria-hidden="true">${up ? '記' : '入'}</b><span>${up ? 'Register' : 'Log in'}</span></button>
       <p class="afine">${up ? 'An account is kept in this browser only: it does not follow you to another device, and a forgotten password cannot be recovered. Use one you use nowhere else.'
         : 'Accounts are kept in this browser only. One made on another device is not here.'}</p>

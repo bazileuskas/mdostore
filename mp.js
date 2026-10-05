@@ -15,7 +15,7 @@ const RELAY = 'https://ntfy.sh', MAX = 5, RATE = 100, ICE = [{ urls: 'stun:stun.
 const id = Array.from(crypto.getRandomValues(new Uint8Array(5)), b => b.toString(16).padStart(2, '0')).join('');
 const peers = new Map();                             // everybody else in the room: id -> { id, pc, dc, name, st, f, say, sayT, ct }
 const heard = {};                                   // what else may come down the line besides where somebody is: a challenge, a duel (pvp.js)
-let code = '', topic = '', es = null, on = false, armed = false, greeted = false, loop = 0, note = '', noteT = 0, mine = { c: '', ct: 0 }, last = [0, 0], sayT = 0;
+let code = '', topic = '', es = null, on = false, armed = false, greeted = false, loop = 0, note = '', noteOk = false, noteT = 0, sure = '', sureT = 0, mine = { c: '', ct: 0 }, last = [0, 0], sayT = 0;
 try { code = localStorage.getItem('jump.code') || ''; } catch (e) {}
 const myName = () => ((JU.account && JU.account.name) || 'Player-' + id.slice(0, 4)).slice(0, 20);
 const open = () => [...peers.values()].filter(p => p.dc && p.dc.readyState === 'open');
@@ -34,17 +34,31 @@ function make(pid, name) {
 }
 function wire(p, dc) {
   p.dc = dc;
-  dc.onopen = () => { p.was = true; sfx.confirm(); paint(); };
+  dc.onopen = () => { p.was = true; sfx.confirm(); try { dc.send(JSON.stringify({ t: 'id', d: JU.account.device })); } catch (e) {} paint(); };
   dc.onclose = () => drop(p.id);
   dc.onmessage = e => {
     let s; try { s = JSON.parse(e.data); } catch (err) { return; }
     if (s && typeof s.t === 'string') { if (s.t === 'bye') drop(p.id); else if (heard[s.t]) heard[s.t](p, s); return; }
     if (!s || typeof s.x !== 'number' || typeof s.z !== 'number') return;
     p.st = s; if (s.n) p.name = String(s.n).slice(0, 20);
+    if ((s.a | 0) !== p.a) { p.a = s.a | 0; paint(); }
     if (s.c && s.ct !== p.ct) { p.ct = s.ct; p.say = String(s.c).slice(0, 80); p.sayT = 6; sfx.hover(); }
   };
 }
-function warn(text) { note = text; noteT = 12; paint(); }
+function warn(text, ok) { note = text; noteOk = !!ok; noteT = 12; paint(); }
+/* ---------- admin powers: the team's account gives them to somebody on the server, or takes them back (account.js keeps and checks them) ---------- */
+const boss = () => !!(JU.account && JU.account.team && JU.account.dev);
+heard.id = (p, s) => { p.dev = typeof s.d === 'string' && /^[0-9a-f]{16}$/.test(s.d) ? s.d : ''; paint(); };      // (which browser he is: the note is made out to it. Nothing else is ever signed)
+heard.adm = (p, s) => { JU.account.take({ a: s.a, t: s.t0, sig: s.sig }).then(ok => { if (!ok) return; warn(s.a === 'give' ? 'The team gave you admin powers. Everything is unlocked.' : 'Your admin powers were taken back.', s.a === 'give'); send(); }); };
+function grant(pid) {
+  const p = peers.get(pid);
+  if (!p || !p.dev || !boss()) return;
+  if (sure !== pid) { sure = pid; clearTimeout(sureT); sureT = setTimeout(() => { sure = ''; paint(); }, 3500); sfx.hover(); paint(); return; }      // asked twice
+  sure = ''; clearTimeout(sureT);
+  const give = p.a !== 1, t = Date.now();
+  JU.account.sign((give ? 'ju-admin|' : 'ju-admin-off|') + p.dev + '|' + t).then(sig => { to(pid, { t: 'adm', a: give ? 'give' : 'drop', t0: t, sig }); sfx.confirm(); warn(give ? `Admin powers given to ${p.name}.` : `Admin powers taken back from ${p.name}.`, true); },
+    () => warn('That could not be signed. Log in to the team account again.'));
+}
 function drop(pid) { const p = peers.get(pid); if (!p) return; peers.delete(pid); try { p.pc.close(); } catch (e) {} if (heard.gone) heard.gone(p); paint(); }
 async function offer(to, name) {                     // of any two players it is the one whose id sorts first that calls the other, so nobody calls twice
   if (peers.has(to) || peers.size >= MAX - 1) return;
@@ -102,7 +116,7 @@ function send() {
   const street = E.root.dataset.mode === 'street', moving = Math.abs(me.x - last[0]) + Math.abs(me.z - last[1]) > 1.5;
   last = [me.x, me.z];
   const s = JSON.stringify({ w: S.world.name || 'tokyo', x: Math.round(me.x), z: Math.round(me.z), f: me.face, m: moving ? 1 : 0, r: E.keys.has('shift') ? 1.7 : 1, b: street ? 0 : 1,
-    k: (JU.tech.active && JU.tech.active.id) || '', h: JU.clan.body() ? JU.clan.equipped || '' : '', d: JU.pvp && JU.pvp.busy ? 1 : 0, n: myName(), c: mine.c, ct: mine.ct });
+    k: (JU.tech.active && JU.tech.active.id) || '', h: JU.clan.body() ? JU.clan.equipped || '' : '', d: JU.pvp && JU.pvp.busy ? 1 : 0, a: boss() ? 2 : JU.account && JU.account.admin ? 1 : 0, n: myName(), c: mine.c, ct: mine.ct });
   for (const p of live) try { p.dc.send(s); } catch (e) {}
 }
 const lookOf = st => { const t = JU.tech.TECH[st.k], toji = st.h === 'toji' && JU.tools && JU.tools.TOJI; return { skin: toji || (t && t.skin) || E.YUJI, scale: toji ? 1.05 : (t && t.scale) || 1 }; };
@@ -160,10 +174,10 @@ E.root.appendChild(chip);
 function paint() {
   const n = open().length + 1;
   chip.classList.toggle('on', on || !!note);
-  if (!on) { chip.innerHTML = note ? `<small class="gone">${esc(note)}</small>` : ''; return; }
+  if (!on) { chip.innerHTML = note ? `<small class="${noteOk ? 'fine' : 'gone'}">${esc(note)}</small>` : ''; return; }
   const had = chip.querySelector('input'), val = had ? had.value : '', foc = had && document.activeElement === had;
-  chip.innerHTML = `<b>Server <u>${code.replace(/[<>&"]/g, '')}</u> · ${n} / ${MAX}</b><ul><li>${esc(myName())} (you)</li>${open().map(p => `<li>${esc(p.name)}${JU.pvp ? `<button type="button" data-duel="${p.id}" title="Challenge ${esc(p.name)} to a 1v1">1v1</button>` : ''}</li>`).join('')}</ul>
-    <input maxlength="80" placeholder="/ to say something" aria-label="Say something to the server">${note ? `<small class="gone">${esc(note)}</small>` : n < 2 ? '<small>Waiting for the others. They type the same code.</small>' : JU.pvp ? '<small>1v1: challenge somebody to a duel.</small>' : ''}`;
+  chip.innerHTML = `<b>Server <u>${code.replace(/[<>&"]/g, '')}</u> · ${n} / ${MAX}</b><ul><li>${esc(myName())} (you)${JU.account.admin ? '<em>admin</em>' : ''}</li>${open().map(p => `<li>${esc(p.name)}<span>${boss() && p.dev && p.a !== 2 ? `<button type="button" data-adm="${p.id}" class="${p.a === 1 ? 'has' : ''}" title="${p.a === 1 ? 'Take admin powers back from' : 'Give admin powers to'} ${esc(p.name)}">${sure === p.id ? 'Sure?' : p.a === 1 ? 'Admin ✓' : 'Admin'}</button>` : ''}${JU.pvp ? `<button type="button" data-duel="${p.id}" title="Challenge ${esc(p.name)} to a 1v1">1v1</button>` : ''}</span></li>`).join('')}</ul>
+    <input maxlength="80" placeholder="/ to say something" aria-label="Say something to the server">${note ? `<small class="${noteOk ? 'fine' : 'gone'}">${esc(note)}</small>` : n < 2 ? '<small>Waiting for the others. They type the same code.</small>' : JU.pvp ? '<small>1v1: challenge somebody to a duel.</small>' : ''}`;
   const inp = chip.querySelector('input'); inp.value = val; if (foc) inp.focus();
 }
 chip.addEventListener('keydown', e => {              // typing here is typing, not walking
@@ -173,7 +187,7 @@ chip.addEventListener('keydown', e => {              // typing here is typing, n
   else if (e.key === 'Escape') { e.preventDefault(); inp.blur(); }
 });
 chip.addEventListener('pointerdown', e => e.stopPropagation());
-chip.addEventListener('click', e => { const b = e.target.closest('[data-duel]'); if (b && JU.pvp) { JU.pvp.invite(b.dataset.duel); b.blur(); } });
+chip.addEventListener('click', e => { const b = e.target.closest('[data-duel]'), a = e.target.closest('[data-adm]'); if (a) grant(a.dataset.adm); else if (b && JU.pvp) { JU.pvp.invite(b.dataset.duel); b.blur(); } });
 addEventListener('keydown', e => { if (on && e.key === '/' && E.root.dataset.mode === 'street' && !(e.target instanceof HTMLInputElement)) { const inp = chip.querySelector('input'); if (inp) { e.preventDefault(); e.stopPropagation(); E.keys.clear(); inp.focus(); } } }, true);
 
 // the card on the Play screen (script.js puts it there), and its buttons

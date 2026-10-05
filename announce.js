@@ -6,7 +6,7 @@
 (() => {
 'use strict';
 
-const HOST = 'https://ntfy.sh', PUB = 'f763d2e72b4617fd9c00658cdbcb4d0107cd24dee5c0153109e59a41db4a7d7d', MAXLEN = 160, FRESH = 600, STAY = 11000;
+const HOST = 'https://ntfy.sh', PUB = JU.account.PUB, MAXLEN = 160, FRESH = 600, STAY = 11000;
 let topic = 'jujutsu-unlimiteds-024aef04681f', es = null, key = null, showing = false, hide = 0;
 const queue = [], sfx = JU.sfx, enc = s => new TextEncoder().encode(s);
 const unhex = h => new Uint8Array(h.match(/../g).map(b => parseInt(b, 16)));

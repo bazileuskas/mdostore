@@ -164,6 +164,11 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 .mp input:focus{outline:1px solid #7fe9ff}
 .mp small{display:block;margin-top:.45em;color:rgba(244,239,228,.6)}
 .mp small.gone{margin:0;color:#ff8a98}
+.mp small.fine{color:#ffd23d}
+.mp li span{display:flex;flex:none;gap:.35em}
+.mp li em{margin-left:auto;font:600 .72em/1 var(--f-ui);font-style:normal;letter-spacing:.14em;text-transform:uppercase;color:#ffd23d}
+.mp li button[data-adm]{border-color:#ffd23d;color:#ffd23d}
+.mp li button[data-adm].has,.mp li button[data-adm]:hover,.mp li button[data-adm]:focus-visible{background:#ffd23d;color:#0b0710}
 /* One v Ones (pvp.js): a line at the top, the challenge, the board the two ban and pick from */
 .dtoast{position:absolute;left:50%;top:clamp(54px,11vh,110px);z-index:9;max-width:min(92vw,44em);padding:.5em 1em;translate:-50% -12px;opacity:0;pointer-events:none;border-left:3px solid var(--c,#7fe9ff);background:rgba(8,6,14,.9);color:#f4efe4;font:500 clamp(12px,min(1.3vw,2.4vh),20px)/1.3 var(--f-ui);letter-spacing:.06em;transition:opacity .25s,translate .25s}
 .dtoast.on{opacity:1;translate:-50% 0}
@@ -1919,6 +1924,10 @@ window.JU = { sfx, flash, bolts: blackFlash, reduceMotion, startGame, exitGame, 
    And it has a SECOND ACCOUNT, TheUnlimitedsTeam2: the same sign-in under another name, with everything unlocked as well and a save of
    its own (begun as a copy of the first one's). Switching between the two asks for no password either; in a browser where nobody is signed
    in, the second name with the team's password goes straight to it. It is there so that two of the team can be on one server at once.
+   The team can also give ADMIN POWERS to somebody who is on a server with it (mp.js), and take them back: everything unlocked, as it is
+   for the team, in that browser and for that save. What is handed over is a note signed with the team's key, naming the browser it is for;
+   a game takes it only if the signature checks out, so one player cannot hand them to another. Announcing, and giving admin powers, stay
+   the team's alone.
    None of this is security against somebody who opens the developer tools. A game that runs entirely in the browser cannot keep anything
    from the person running it; what this does is keep honest players honest. */
 (() => {
@@ -1926,8 +1935,10 @@ window.JU = { sfx, flash, bolts: blackFlash, reduceMotion, startGame, exitGame, 
 
 const sfx = JU.sfx, TEAM = 'TheUnlimitedsTeam', TEAM2 = 'TheUnlimitedsTeam2', GUEST = '_guest', ROUNDS = 120000;
 const TEAM_SALT = '9ccc5ca0f18acfc6', TEAM_V = '353497485db0c38d6701a02f4965022b8ca9ebd8c795d4887103df9112005a09';
+const TEAM_PUB = 'f763d2e72b4617fd9c00658cdbcb4d0107cd24dee5c0153109e59a41db4a7d7d';      // the public half of the key the team signs with (announcements, admin powers)
+const VOID_BEFORE = 0;                                     // admin powers given before this moment (ms) count for nothing: raising it takes every one of them back
 const NAME = /^[A-Za-z0-9][A-Za-z0-9_]{2,19}$/, MINPW = 6;
-const OWN = /^ju\.(sfx$|accounts$|session$|save\.)/;       // these are not part of anybody's progress
+const OWN = /^ju\.(sfx$|accounts$|session$|device$|save\.)/;       // these are not part of anybody's progress
 
 /* ---------- SHA-256, and the stretch built on it ---------- */
 const K = new Int32Array(64), H0 = new Int32Array(8), W = new Int32Array(64);
@@ -1990,6 +2001,35 @@ const home = () => (two ? TWO : me.name.toLowerCase());     // whichever of the 
 const called = () => (two ? TEAM2 : me.name);
 const slot = () => (me ? (test ? TEST : home()) : GUEST);
 
+/* ---------- admin powers, given by the team ---------- */
+let DEVICE = read('ju.device', '');                        // this browser, as a name the team's note can be made out to
+if (typeof DEVICE !== 'string' || !/^[0-9a-f]{16}$/.test(DEVICE)) { DEVICE = hex(crypto.getRandomValues(new Uint8Array(8))); write('ju.device', DEVICE); }
+const unhex = h => Uint8Array.from(h.match(/../g), x => parseInt(x, 16));
+async function signed(text, sig) {                         // did the team sign this
+  try {
+    if (typeof sig !== 'string' || !/^[0-9a-f]{128}$/.test(sig)) return false;
+    const key = await crypto.subtle.importKey('raw', unhex(TEAM_PUB), { name: 'Ed25519' }, false, ['verify']);
+    return await crypto.subtle.verify({ name: 'Ed25519' }, key, unhex(sig), enc(text));
+  } catch (e) { return false; }
+}
+let admin = false, ui = false;
+function strip() { admin = false; drop('ju.admin'); if (JU.shop && JU.shop.check) JU.shop.check(); if (ui) paint(); }
+{
+  const a = read('ju.admin', null);                        // the note is kept with the save. It is taken at its word for the moment it takes to check it
+  if (a && a.d === DEVICE && typeof a.t === 'number' && a.t >= VOID_BEFORE) { admin = true; signed('ju-admin|' + DEVICE + '|' + a.t, a.sig).then(ok => { if (!ok) strip(); }); }
+  else if (a) drop('ju.admin');
+}
+// the team's word arriving: m = { a: 'give' | 'drop', t, sig }
+async function take(m) {
+  if (!m || typeof m.t !== 'number' || !(m.t >= VOID_BEFORE) || (me && me.team)) return false;
+  const give = m.a === 'give';
+  if (!give && m.a !== 'drop') return false;
+  if (!(await signed((give ? 'ju-admin|' : 'ju-admin-off|') + DEVICE + '|' + m.t, m.sig))) return false;
+  if (give) { admin = true; write('ju.admin', { d: DEVICE, t: m.t, sig: m.sig }); if (ui) paint('The team gave you admin powers: everything is unlocked.'); }
+  else { const a = read('ju.admin', null); if (a && a.t > m.t) return false; strip(); }       // (an older taking-back does not undo a newer giving)
+  return true;
+}
+
 // everything the game has saved, under whoever is leaving; and whatever is kept for whoever is arriving, in its place
 function liveKeys() {
   const live = [];
@@ -2017,7 +2057,7 @@ async function sign(text) {
   return hex(new Uint8Array(await crypto.subtle.sign({ name: 'Ed25519' }, key, enc(text))));
 }
 
-JU.account = Object.freeze({ TEAM, TEAM2, get name() { return me ? called() : ''; }, get two() { return two; }, get dev() { return !!(me && me.team && !test); }, get test() { return test; }, get team() { return !!(me && me.team); }, get signedIn() { return !!me; }, sign });
+JU.account = Object.freeze({ TEAM, TEAM2, get name() { return me ? called() : ''; }, get two() { return two; }, get dev() { return !!(me && me.team && !test) || admin; }, get admin() { return admin; }, device: DEVICE, PUB: TEAM_PUB, take, get test() { return test; }, get team() { return !!(me && me.team); }, get signedIn() { return !!me; }, sign });
 
 /* ---------- the scroll ---------- */
 const box = document.getElementById('ascroll');
@@ -2028,18 +2068,18 @@ box.innerHTML = `<div class="rod"></div><button class="ahead" id="ahead" aria-ex
   <div class="abody" id="abody"></div><div class="rod"></div>`;
 const head = box.querySelector('#ahead'), body = box.querySelector('#abody');
 const $ = q => body.querySelector(q);
-body.inert = true;
+body.inert = true; ui = true;
 const say = (text, ok) => { const m = $('#amsg'); if (m) { m.textContent = text; m.classList.toggle('ok', !!ok); } };
 function fail(text) { say(text); sfx.back(); body.classList.remove('no'); void body.offsetWidth; body.classList.add('no'); }
 
 function paint(note) {
   const team = !!(me && me.team && !test);
   box.classList.toggle('in', !!me); box.classList.toggle('team', team); box.classList.toggle('test', test);
-  head.innerHTML = `<b lang="ja" aria-hidden="true">${test ? '試' : team ? '無' : me ? '印' : '巻'}</b><span><small>${me ? (test ? 'Test account' : team ? 'Team account' : 'Signed in') : 'Account'}</small>${me ? (test ? 'Plays as a player' : esc(called())) : 'Log in · Register'}</span><u aria-hidden="true"></u>`;
+  head.innerHTML = `<b lang="ja" aria-hidden="true">${test ? '試' : team ? '無' : me ? '印' : '巻'}</b><span><small>${me ? (test ? 'Test account' : team ? 'Team account' : admin ? 'Admin' : 'Signed in') : admin ? 'Admin' : 'Account'}</small>${me ? (test ? 'Plays as a player' : esc(called())) : 'Log in · Register'}</span><u aria-hidden="true"></u>`;
   if (me) {
     body.innerHTML = `<div class="ain"><small>${test ? 'The test account' : team ? 'The team’s account' : 'Signed in as'}</small><b>${test ? 'Plays as a player' : esc(called())}</b>
       <p>${test ? 'Nothing is unlocked here: tickets, slots and locks are what the public gets. It has a save of its own, and going back asks for no password.'
-        : team ? 'Everything is unlocked for this account: every technique, clan and tool, and spins that use nothing up.' : 'Your techniques, clans, tickets and story are kept with this account.'}</p>
+        : team ? 'Everything is unlocked for this account: every technique, clan and tool, and spins that use nothing up.' : admin ? 'The team gave this account admin powers: everything is unlocked.' : 'Your techniques, clans, tickets and story are kept with this account.'}</p>
       <p class="amsg ok" id="amsg" aria-live="polite">${note || ''}</p>
       ${team ? `<button class="aseal alt" id="ahop" type="button"><b lang="ja" aria-hidden="true">${two ? '壱' : '弐'}</b><span>Switch to ${two ? TEAM : TEAM2}</span></button>` : ''}
       ${me.team ? `<button class="aseal alt" id="aflip" type="button"><b lang="ja" aria-hidden="true">${test ? '無' : '試'}</b><span>${test ? 'Back to ' + (two ? TEAM2 : 'the team account') : 'Switch to the test account'}</span></button>` : ''}
@@ -2056,7 +2096,7 @@ function paint(note) {
       <label>Name<input id="aname" name="username" autocomplete="username" maxlength="20" spellcheck="false" autocapitalize="off" autocorrect="off"></label>
       <label>Password<input id="apass" name="password" type="password" autocomplete="${up ? 'new-password' : 'current-password'}" maxlength="64"></label>
       ${up ? '<label>Password, once more<input id="apass2" type="password" autocomplete="new-password" maxlength="64"></label>' : ''}
-      <p class="amsg" id="amsg" aria-live="polite">${note || ''}</p>
+      <p class="amsg${admin && !note ? ' ok' : ''}" id="amsg" aria-live="polite">${note || (admin ? 'The team gave you admin powers: everything is unlocked.' : '')}</p>
       <button class="aseal" type="submit"><b lang="ja" aria-hidden="true">${up ? '記' : '入'}</b><span>${up ? 'Register' : 'Log in'}</span></button>
       <p class="afine">${up ? 'An account is kept in this browser only: it does not follow you to another device, and a forgotten password cannot be recovered. Use one you use nowhere else.'
         : 'Accounts are kept in this browser only. One made on another device is not here.'}</p>
@@ -2170,7 +2210,7 @@ if (note) { open(true, true); shut = setTimeout(() => open(false, true), 5200); 
 (() => {
 'use strict';
 
-const HOST = 'https://ntfy.sh', PUB = 'f763d2e72b4617fd9c00658cdbcb4d0107cd24dee5c0153109e59a41db4a7d7d', MAXLEN = 160, FRESH = 600, STAY = 11000;
+const HOST = 'https://ntfy.sh', PUB = JU.account.PUB, MAXLEN = 160, FRESH = 600, STAY = 11000;
 let topic = 'jujutsu-unlimiteds-024aef04681f', es = null, key = null, showing = false, hide = 0;
 const queue = [], sfx = JU.sfx, enc = s => new TextEncoder().encode(s);
 const unhex = h => new Uint8Array(h.match(/../g).map(b => parseInt(b, 16)));
@@ -16711,7 +16751,7 @@ const RELAY = 'https://ntfy.sh', MAX = 5, RATE = 100, ICE = [{ urls: 'stun:stun.
 const id = Array.from(crypto.getRandomValues(new Uint8Array(5)), b => b.toString(16).padStart(2, '0')).join('');
 const peers = new Map();                             // everybody else in the room: id -> { id, pc, dc, name, st, f, say, sayT, ct }
 const heard = {};                                   // what else may come down the line besides where somebody is: a challenge, a duel (pvp.js)
-let code = '', topic = '', es = null, on = false, armed = false, greeted = false, loop = 0, note = '', noteT = 0, mine = { c: '', ct: 0 }, last = [0, 0], sayT = 0;
+let code = '', topic = '', es = null, on = false, armed = false, greeted = false, loop = 0, note = '', noteOk = false, noteT = 0, sure = '', sureT = 0, mine = { c: '', ct: 0 }, last = [0, 0], sayT = 0;
 try { code = localStorage.getItem('jump.code') || ''; } catch (e) {}
 const myName = () => ((JU.account && JU.account.name) || 'Player-' + id.slice(0, 4)).slice(0, 20);
 const open = () => [...peers.values()].filter(p => p.dc && p.dc.readyState === 'open');
@@ -16730,17 +16770,31 @@ function make(pid, name) {
 }
 function wire(p, dc) {
   p.dc = dc;
-  dc.onopen = () => { p.was = true; sfx.confirm(); paint(); };
+  dc.onopen = () => { p.was = true; sfx.confirm(); try { dc.send(JSON.stringify({ t: 'id', d: JU.account.device })); } catch (e) {} paint(); };
   dc.onclose = () => drop(p.id);
   dc.onmessage = e => {
     let s; try { s = JSON.parse(e.data); } catch (err) { return; }
     if (s && typeof s.t === 'string') { if (s.t === 'bye') drop(p.id); else if (heard[s.t]) heard[s.t](p, s); return; }
     if (!s || typeof s.x !== 'number' || typeof s.z !== 'number') return;
     p.st = s; if (s.n) p.name = String(s.n).slice(0, 20);
+    if ((s.a | 0) !== p.a) { p.a = s.a | 0; paint(); }
     if (s.c && s.ct !== p.ct) { p.ct = s.ct; p.say = String(s.c).slice(0, 80); p.sayT = 6; sfx.hover(); }
   };
 }
-function warn(text) { note = text; noteT = 12; paint(); }
+function warn(text, ok) { note = text; noteOk = !!ok; noteT = 12; paint(); }
+/* ---------- admin powers: the team's account gives them to somebody on the server, or takes them back (account.js keeps and checks them) ---------- */
+const boss = () => !!(JU.account && JU.account.team && JU.account.dev);
+heard.id = (p, s) => { p.dev = typeof s.d === 'string' && /^[0-9a-f]{16}$/.test(s.d) ? s.d : ''; paint(); };      // (which browser he is: the note is made out to it. Nothing else is ever signed)
+heard.adm = (p, s) => { JU.account.take({ a: s.a, t: s.t0, sig: s.sig }).then(ok => { if (!ok) return; warn(s.a === 'give' ? 'The team gave you admin powers. Everything is unlocked.' : 'Your admin powers were taken back.', s.a === 'give'); send(); }); };
+function grant(pid) {
+  const p = peers.get(pid);
+  if (!p || !p.dev || !boss()) return;
+  if (sure !== pid) { sure = pid; clearTimeout(sureT); sureT = setTimeout(() => { sure = ''; paint(); }, 3500); sfx.hover(); paint(); return; }      // asked twice
+  sure = ''; clearTimeout(sureT);
+  const give = p.a !== 1, t = Date.now();
+  JU.account.sign((give ? 'ju-admin|' : 'ju-admin-off|') + p.dev + '|' + t).then(sig => { to(pid, { t: 'adm', a: give ? 'give' : 'drop', t0: t, sig }); sfx.confirm(); warn(give ? `Admin powers given to ${p.name}.` : `Admin powers taken back from ${p.name}.`, true); },
+    () => warn('That could not be signed. Log in to the team account again.'));
+}
 function drop(pid) { const p = peers.get(pid); if (!p) return; peers.delete(pid); try { p.pc.close(); } catch (e) {} if (heard.gone) heard.gone(p); paint(); }
 async function offer(to, name) {                     // of any two players it is the one whose id sorts first that calls the other, so nobody calls twice
   if (peers.has(to) || peers.size >= MAX - 1) return;
@@ -16798,7 +16852,7 @@ function send() {
   const street = E.root.dataset.mode === 'street', moving = Math.abs(me.x - last[0]) + Math.abs(me.z - last[1]) > 1.5;
   last = [me.x, me.z];
   const s = JSON.stringify({ w: S.world.name || 'tokyo', x: Math.round(me.x), z: Math.round(me.z), f: me.face, m: moving ? 1 : 0, r: E.keys.has('shift') ? 1.7 : 1, b: street ? 0 : 1,
-    k: (JU.tech.active && JU.tech.active.id) || '', h: JU.clan.body() ? JU.clan.equipped || '' : '', d: JU.pvp && JU.pvp.busy ? 1 : 0, n: myName(), c: mine.c, ct: mine.ct });
+    k: (JU.tech.active && JU.tech.active.id) || '', h: JU.clan.body() ? JU.clan.equipped || '' : '', d: JU.pvp && JU.pvp.busy ? 1 : 0, a: boss() ? 2 : JU.account && JU.account.admin ? 1 : 0, n: myName(), c: mine.c, ct: mine.ct });
   for (const p of live) try { p.dc.send(s); } catch (e) {}
 }
 const lookOf = st => { const t = JU.tech.TECH[st.k], toji = st.h === 'toji' && JU.tools && JU.tools.TOJI; return { skin: toji || (t && t.skin) || E.YUJI, scale: toji ? 1.05 : (t && t.scale) || 1 }; };
@@ -16856,10 +16910,10 @@ E.root.appendChild(chip);
 function paint() {
   const n = open().length + 1;
   chip.classList.toggle('on', on || !!note);
-  if (!on) { chip.innerHTML = note ? `<small class="gone">${esc(note)}</small>` : ''; return; }
+  if (!on) { chip.innerHTML = note ? `<small class="${noteOk ? 'fine' : 'gone'}">${esc(note)}</small>` : ''; return; }
   const had = chip.querySelector('input'), val = had ? had.value : '', foc = had && document.activeElement === had;
-  chip.innerHTML = `<b>Server <u>${code.replace(/[<>&"]/g, '')}</u> · ${n} / ${MAX}</b><ul><li>${esc(myName())} (you)</li>${open().map(p => `<li>${esc(p.name)}${JU.pvp ? `<button type="button" data-duel="${p.id}" title="Challenge ${esc(p.name)} to a 1v1">1v1</button>` : ''}</li>`).join('')}</ul>
-    <input maxlength="80" placeholder="/ to say something" aria-label="Say something to the server">${note ? `<small class="gone">${esc(note)}</small>` : n < 2 ? '<small>Waiting for the others. They type the same code.</small>' : JU.pvp ? '<small>1v1: challenge somebody to a duel.</small>' : ''}`;
+  chip.innerHTML = `<b>Server <u>${code.replace(/[<>&"]/g, '')}</u> · ${n} / ${MAX}</b><ul><li>${esc(myName())} (you)${JU.account.admin ? '<em>admin</em>' : ''}</li>${open().map(p => `<li>${esc(p.name)}<span>${boss() && p.dev && p.a !== 2 ? `<button type="button" data-adm="${p.id}" class="${p.a === 1 ? 'has' : ''}" title="${p.a === 1 ? 'Take admin powers back from' : 'Give admin powers to'} ${esc(p.name)}">${sure === p.id ? 'Sure?' : p.a === 1 ? 'Admin ✓' : 'Admin'}</button>` : ''}${JU.pvp ? `<button type="button" data-duel="${p.id}" title="Challenge ${esc(p.name)} to a 1v1">1v1</button>` : ''}</span></li>`).join('')}</ul>
+    <input maxlength="80" placeholder="/ to say something" aria-label="Say something to the server">${note ? `<small class="${noteOk ? 'fine' : 'gone'}">${esc(note)}</small>` : n < 2 ? '<small>Waiting for the others. They type the same code.</small>' : JU.pvp ? '<small>1v1: challenge somebody to a duel.</small>' : ''}`;
   const inp = chip.querySelector('input'); inp.value = val; if (foc) inp.focus();
 }
 chip.addEventListener('keydown', e => {              // typing here is typing, not walking
@@ -16869,7 +16923,7 @@ chip.addEventListener('keydown', e => {              // typing here is typing, n
   else if (e.key === 'Escape') { e.preventDefault(); inp.blur(); }
 });
 chip.addEventListener('pointerdown', e => e.stopPropagation());
-chip.addEventListener('click', e => { const b = e.target.closest('[data-duel]'); if (b && JU.pvp) { JU.pvp.invite(b.dataset.duel); b.blur(); } });
+chip.addEventListener('click', e => { const b = e.target.closest('[data-duel]'), a = e.target.closest('[data-adm]'); if (a) grant(a.dataset.adm); else if (b && JU.pvp) { JU.pvp.invite(b.dataset.duel); b.blur(); } });
 addEventListener('keydown', e => { if (on && e.key === '/' && E.root.dataset.mode === 'street' && !(e.target instanceof HTMLInputElement)) { const inp = chip.querySelector('input'); if (inp) { e.preventDefault(); e.stopPropagation(); E.keys.clear(); inp.focus(); } } }, true);
 
 // the card on the Play screen (script.js puts it there), and its buttons
