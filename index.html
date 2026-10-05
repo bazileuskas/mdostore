@@ -366,27 +366,32 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 /* the subway's route map: where to? (shibuya.js) */
 .metro{position:absolute;inset:0;z-index:8;display:grid;place-items:center;padding:3vmin;background:rgba(3,2,8,.84);opacity:0;pointer-events:none;transition:opacity .2s}
 .metro.on{opacity:1;pointer-events:auto}
-.mbox{width:min(100%,62em);padding:1.1em 1.4em 1.3em;color:#f4efe4;background:#0d0f18;border-top:5px solid #ffd23d;box-shadow:10px 12px 0 rgba(0,0,0,.6);font:400 clamp(12px,min(1.2vw,2.2vh),22px)/1.4 var(--f-ui);letter-spacing:.03em}
-.mhd{display:flex;align-items:baseline;gap:1em;margin:0 0 .6em}
-.mhd b{font:400 1.9em/1 var(--f-jp);color:#ffd23d}
-.mhd h3{margin:0;font:400 2.1em/1 var(--f-display);letter-spacing:.05em;text-transform:uppercase}
-.mhd p{margin:0 0 0 auto;font-size:.82em;letter-spacing:.22em;text-transform:uppercase;color:rgba(244,239,228,.6)}
-.mmap{position:relative;aspect-ratio:1000/420;background:#11141f;outline:1px solid rgba(255,255,255,.12)}
+.mbox{width:min(100%,66em);overflow:hidden;color:#111;background:#f7f5ee;border:3px solid #111;border-radius:6px;box-shadow:10px 12px 0 rgba(0,0,0,.6);font:400 clamp(12px,min(1.15vw,2.1vh),21px)/1.35 Arial,Helvetica,sans-serif;letter-spacing:.01em}
+.msign{display:flex;align-items:center;gap:.8em;padding:.5em .9em;color:#111;background:#f5c400;border-bottom:3px solid #111}
+.msign i{display:grid;place-items:center;flex:none;width:1.7em;aspect-ratio:1;font:italic 700 1.5em/1 Georgia,'Times New Roman',serif;color:#fff;background:#1c5fb8;border-radius:4px}
+.msign b{display:flex;align-items:baseline;gap:.6em;font-weight:700;font-size:1.7em;line-height:1}
+.msign b span{font-size:.62em;font-weight:700}
+.msign em{margin-left:auto;font-style:normal;font-weight:700;font-size:.9em}
+.mmap{position:relative;aspect-ratio:1000/440;margin:.6em;background:#fff;outline:2px solid #b9b4a4}
 .mmap svg{position:absolute;inset:0;width:100%;height:100%}
-.mst{position:absolute;translate:-50% -50%;display:grid;justify-items:center;gap:.16em;padding:.42em .8em .38em;cursor:pointer;color:#f4efe4;background:#0d0f18;border:2px solid #f4efe4;border-radius:99px;outline:none;
-  font:400 1.02em/1 var(--f-display);letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;transition:transform .12s,background .12s,color .12s}
-.mst span{font:400 .62em/1 var(--f-jp);letter-spacing:.2em;opacity:.75}
-.mst small{font:600 .5em/1 var(--f-ui);letter-spacing:.2em}
-.mst:hover:not(:disabled),.mst:focus-visible:not(:disabled){transform:scale(1.12);background:#ffd23d;color:#0b0710;border-color:#ffd23d}
-.mst.here{color:#38c8ff;border-color:#38c8ff;cursor:default}
-.mst:disabled:not(.here){color:rgba(244,239,228,.42);border-color:rgba(244,239,228,.38);border-style:dashed;cursor:default}
-.mft{display:flex;align-items:center;flex-wrap:wrap;gap:.6em 1em;margin-top:.8em}
-.mft span{flex:1 1 16em;font-size:.92em;color:rgba(244,239,228,.78)}
-.mft span b{font-weight:600;color:#ffd23d}
-.mft span i{font-style:normal;font-weight:600;color:#ff8a98}
-.mft button{padding:.5em 1.1em .45em;cursor:pointer;color:#f4efe4;background:rgba(244,239,228,.1);border:0;border-left:3px solid var(--red);outline:none;font:400 1.1em/1 var(--f-display);letter-spacing:.07em;text-transform:uppercase}
-.mft button small{margin-left:.8em;font:400 .55em/1 var(--f-ui);letter-spacing:.3em;opacity:.6}
-.mft button:hover,.mft button:focus-visible{background:var(--red)}
+.mst{position:absolute;translate:-50% -50%;display:flex;align-items:center;gap:.45em;padding:.16em .7em .16em .16em;cursor:pointer;color:#111;background:#fff;border:2px solid #111;border-radius:99px;outline:none;
+  font:700 1em/1.05 Arial,Helvetica,sans-serif;white-space:nowrap;text-align:left;box-shadow:2px 3px 0 rgba(0,0,0,.25);transition:transform .12s,background .12s}
+.rnd{display:grid;place-items:center;align-content:center;flex:none;width:2.5em;aspect-ratio:1;font:700 .82em/1 Arial,Helvetica,sans-serif;font-style:normal;color:#111;background:#fff;border:.36em solid var(--c);border-radius:50%}
+.rnd b{font-size:.95em}
+.mst span{display:grid;gap:.12em}
+.mst small{font:400 .66em/1 Arial,Helvetica,sans-serif;color:#555}
+.mst:hover:not(:disabled),.mst:focus-visible:not(:disabled){transform:scale(1.1);background:#f5c400}
+.mst.here{border-color:#d0102a;cursor:default}
+.mst.here small{color:#d0102a;font-weight:700}
+.mst:disabled:not(.here){color:#8a8676;border-color:#aaa594;background:#efede4;box-shadow:none;cursor:default}
+.mst:disabled:not(.here) .rnd{opacity:.55}
+.mft{display:flex;align-items:center;flex-wrap:wrap;gap:.5em 1em;padding:.55em .9em;color:#111;background:#f5c400;border-top:3px solid #111}
+.mft span{flex:1 1 16em;font-weight:600;font-size:.95em}
+.mft span b{font-weight:700;text-decoration:underline}
+.mft span i{font-style:normal;font-weight:700;color:#b00020}
+.mft button{padding:.45em 1em .4em;cursor:pointer;color:#f5c400;background:#111;border:0;border-radius:3px;outline:none;font:700 1em/1 Arial,Helvetica,sans-serif}
+.mft button small{margin-left:.7em;font-size:.7em;opacity:.7}
+.mft button:hover,.mft button:focus-visible{background:#1c5fb8;color:#fff}
 .obj span{margin-left:.5em;font:400 .6em/1 var(--f-jp);letter-spacing:.2em;color:rgba(244,239,228,.6)}
 /* a question that has to be answered before something is lost */
 .askov{position:fixed;inset:0;z-index:30;display:grid;place-items:center;padding:4vmin;background:rgba(3,2,8,.86)}
@@ -1831,7 +1836,7 @@ window.JU = { sfx, flash, bolts: blackFlash, reduceMotion, startGame, exitGame, 
 // Load every game script fresh on each page load. The dev server sends no cache headers, so without this a reload
 // could run a mix of old and new files (new menu, old moves) while the game is being worked on.
 ['account.js', 'announce.js', 'game.js', 'fx2.js', 'chars.js', 'street.js', 'walk.js', 'foes.js', 'cuts.js', 'sukuna.js', 'school.js', 'story.js', 'story2.js', 'tech.js', 'tech_a.js',
-  'tech_b.js', 'sets.js', 'story3.js', 'cast2.js', 'script.js', 'naoya.js', 'ch45.js', 'ch67.js', 'clan.js', 'clan_a.js', 'clan_b.js', 'boss.js', 'boss_a.js', 'boss_b.js', 'boss_c.js', 'training.js', 'choso.js', 'domain.js', 'domain2.js', 'mahito.js', 'combo.js', 'combat.js', 'cast3.js', 'ch810.js', 'ch1112.js', 'cast4.js', 'ch1316.js', 'cast5.js', 'ch1721.js', 'combat2.js', 'judge.js', 'awaken.js', 'alimit.js', 'ats.js', 'switcher.js', 'tools.js', 'smark.js', 'cast6.js', 'ch2230.js', 'plants.js', 'clash.js', 'block.js', 'cannon.js', 'tced.js', 'shibuya.js', 'notes.js', 'shop.js', 'touch.js'].forEach(src => {
+  'tech_b.js', 'sets.js', 'story3.js', 'cast2.js', 'script.js', 'naoya.js', 'ch45.js', 'ch67.js', 'clan.js', 'clan_a.js', 'clan_b.js', 'boss.js', 'boss_a.js', 'boss_b.js', 'boss_c.js', 'training.js', 'choso.js', 'domain.js', 'domain2.js', 'mahito.js', 'combo.js', 'combat.js', 'cast3.js', 'ch810.js', 'ch1112.js', 'cast4.js', 'ch1316.js', 'cast5.js', 'ch1721.js', 'combat2.js', 'judge.js', 'awaken.js', 'alimit.js', 'ats.js', 'switcher.js', 'tools.js', 'smark.js', 'cast6.js', 'ch2230.js', 'plants.js', 'clash.js', 'block.js', 'cannon.js', 'tced.js', 'shibuya.js', 'kyoto.js', 'notes.js', 'shop.js', 'touch.js'].forEach(src => {
   const s = document.createElement('script');
   s.src = src + '?v=' + Date.now(); s.async = false;      // async = false keeps them running in this order
   document.body.appendChild(s);

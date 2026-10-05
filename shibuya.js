@@ -398,7 +398,7 @@ const SECRETS = {
   kenjaku: { name: 'Kenjaku', foe: 'sb_kenjaku', at: [13025, 1830], pay: 180, first: { cl: 3 }, show: () => !!M.raids.sealing, say: 'Under the last lantern a man in a monk’s robe is drinking alone. There are stitches across his forehead.' },
   sukuna: { name: 'Ryomen Sukuna', foe: 'sb_sukuna', at: [9700, 700], pay: 300, first: { ct: 5, cl: 3, tl: 2 }, show: () => !!M.secrets.maho, say: 'In front of the store the road is gone, cut out in a circle. Somebody is standing in the middle of it, laughing.' }
 };
-const tally = o => Object.keys(o).filter(k => o[k]).length;
+const tally = (o, w) => Object.keys(o).filter(k => o[k] && ((RAIDS[k] || SECRETS[k] || {}).w === 'k') === (w === 'k')).length;      // (w: 'k' counts Kyoto's, anything else Shibuya's)
 function reward(pay, give) {
   const got = [];
   if (JU.shop) { JU.shop.earn(pay); for (const k in give || {}) { JU.shop.give(k, give[k]); got.push(give[k] + ' ' + { ct: 'CT ticket', cl: 'clan roll', tl: 'tool spin' }[k] + (give[k] > 1 ? 's' : '')); } }
@@ -414,7 +414,7 @@ function raid(id) {
   begin({ mark: '討', tag: 'Raid · ' + R.jp, title: R.name, text: `${R.say} ${R.foes.length} fights, one straight after another, and no leaving once it has begun.`, yes: 'Start the raid', no: 'Not yet', lead: 1 }, () => S.fight({ stay: true, cfg: Object.assign({ foes: R.foes, label: 'Raid · ' + R.name, win: ['祓', 'RAID CLEARED'] }, R.stage ? { stage: R.stage() } : null), after(won) {
     if (!won) return;
     const first = !M.raids[id];
-    M.raids[id] = (M.raids[id] || 0) + 1; M.wins++; save();
+    M.raids[id] = (M.raids[id] || 0) + 1; M[R.w === 'k' ? 'kwins' : 'wins'] = (M[R.w === 'k' ? 'kwins' : 'wins'] || 0) + 1; save();
     S.talk([['sign', `${R.name} is cleared. ${reward(R.pay, R.give)}.` + (first ? ` And for the first time through: ${reward(0, R.first).replace('0 Cursed Tokens, ', '')}.` : '')]]);
   } }));
 }
@@ -423,7 +423,7 @@ function secret(id) {
   begin({ mark: '？', tag: 'Something that was not meant to be found', title: M.secrets[id] ? B.name : 'Something is here', text: B.say, yes: 'Face it', no: 'Walk away', lead: 1 }, () => S.fight({ stay: true, cfg: { foes: [B.foe], label: 'Secret boss', wild: true, win: ['祓', 'EXORCISED'] }, after(won) {
     if (!won) return;
     const first = !M.secrets[id];
-    M.secrets[id] = (M.secrets[id] || 0) + 1; M.wins++; save();
+    M.secrets[id] = (M.secrets[id] || 0) + 1; M[B.w === 'k' ? 'kwins' : 'wins'] = (M[B.w === 'k' ? 'kwins' : 'wins'] || 0) + 1; save();
     S.talk([['sign', `${B.name} is down. ${reward(B.pay)}.` + (first ? ` The first time: ${reward(0, B.first).replace('0 Cursed Tokens, ', '')}.` : '')]]);
   } }));
 }
@@ -457,7 +457,7 @@ const LINES = {
     return [['shoko', 'Sit. Hold still.'], ['shoko', 'Reversed technique, on somebody else. Not many can. Your next fight you go in with half again your health.', () => { M.bless = 1; save(); sfx.confirm(); }]];
   },
   yuki() {
-    const n = tally(M.secrets), all = Object.keys(SECRETS).length;
+    const n = tally(M.secrets), all = Object.keys(SECRETS).filter(k => SECRETS[k].w !== 'k').length;
     if (n >= all && !M.hunt) return [['yuki', 'All five? Every one of the things nobody was meant to find?'], ['yuki', `Then you are the kind of sorcerer I came back for. Here. ${reward(500, { ct: 5 })}.`, () => { M.hunt = 1; save(); sfx.bf(); }]];
     if (M.hunt) return [['yuki', 'Nothing left in this ward that can surprise you. Try the next one, when the line opens.']];
     return [['yuki', 'What kind of curse is your type? No? Then a serious question.'], ['yuki', `Five things are hiding in Shibuya tonight that have no business here. You have put down ${n}. Come and tell me when it is all of them.`]];
@@ -500,24 +500,38 @@ const seasonOne = () => { const CH = JU.chapters, end = CH.SEASONS[1].from, all 
 const exorcised = () => (JU.smark ? JU.smark.progress.kills : 0);
 const NEED = 10;
 const canRide = () => dev() || (exorcised() >= NEED && seasonOne()[0] >= seasonOne()[1]);
-const STOPS = [{ id: 'tokyo', name: 'Tokyo', jp: '東京', x: 800, y: 250, at: () => [T0.LEN - 340, 1290, -1], world: () => T0 },      // (up the stairs onto the far pavement: the near one has a special grade standing on it)
-  { id: 'shibuya', name: 'Shibuya', jp: '渋谷', x: 430, y: 250, at: () => [STAIRS[0] - 60, STAIRS[1] - 150, -1], world: () => world },
-  { id: 'harajuku', name: 'Harajuku', jp: '原宿', x: 430, y: 150, soon: 1 }, { id: 'shinjuku', name: 'Shinjuku', jp: '新宿', x: 430, y: 60, soon: 1 },
-  { id: 'ebisu', name: 'Ebisu', jp: '恵比寿', x: 430, y: 350, soon: 1 }, { id: 'ikebukuro', name: 'Ikebukuro', jp: '池袋', x: 700, y: 60, soon: 1 }, { id: 'roppongi', name: 'Roppongi', jp: '六本木', x: 620, y: 350, soon: 1 }];
+// the stops, with the numbers the real ones carry on their signs: a ring in the line's colour, its letter, the station's number
+const STOPS = [{ id: 'tokyo', name: 'Tokyo', jp: '東京', code: ['M', 17, '#e60012'], x: 800, y: 215, at: () => [T0.LEN - 340, 1290, -1], world: () => T0 },      // (up the stairs onto the far pavement: the near one has a special grade standing on it)
+  { id: 'shibuya', name: 'Shibuya', jp: '渋谷', code: ['G', 1, '#f39700'], x: 455, y: 250, at: () => [STAIRS[0] - 60, STAIRS[1] - 150, -1], world: () => world },
+  { id: 'harajuku', name: 'Harajuku', jp: '原宿', code: ['C', 3, '#00a650'], x: 395, y: 165, soon: 1 }, { id: 'shinjuku', name: 'Shinjuku', jp: '新宿', code: ['M', 8, '#e60012'], x: 440, y: 78, soon: 1 },
+  { id: 'ebisu', name: 'Ebisu', jp: '恵比寿', code: ['H', 2, '#9caeb7'], x: 500, y: 345, soon: 1 }, { id: 'ikebukuro', name: 'Ikebukuro', jp: '池袋', code: ['Y', 9, '#c1a470'], x: 650, y: 62, soon: 1 },
+  { id: 'roppongi', name: 'Roppongi', jp: '六本木', code: ['H', 4, '#9caeb7'], x: 660, y: 330, soon: 1 }];
 const metro = document.createElement('div'), fade = E.root.querySelector('#fade');
 metro.className = 'metro'; metro.id = 'metro';
 E.root.appendChild(metro);
 let mapOpen = false, armed = true;
+const hereStop = () => (STOPS.find(s => s.world && s.world() === S.world) || STOPS[0]).id;
+// the board is drawn the way the ones on a station wall are: a yellow sign over a white street map, blocks in grey, parks in green, water
+// in blue, and every stop as its numbered ring
+const BLOCKS = (() => {
+  let sd = 77;
+  const r = () => (sd = sd * 16807 % 2147483647) / 2147483647, out = [];
+  for (let y = 8; y < 432; y += 44) for (let x = 8; x < 992;) { const w = 38 + r() * 70; if (r() < .86) out.push(`<rect x="${x.toFixed(0)}" y="${(y + r() * 4).toFixed(0)}" width="${(w - 7).toFixed(0)}" height="${(30 + r() * 8).toFixed(0)}" fill="${r() < .1 ? '#f3d9a4' : r() < .12 ? '#e9b9b0' : '#e4e0d4'}"/>`); x += w; }
+  return out.join('');
+})();
 function paintMap() {
-  const here = S.world === world ? 'shibuya' : 'tokyo', ok = canRide(), s1 = seasonOne(), k = exorcised();
-  metro.innerHTML = `<div class="mbox" role="dialog" aria-modal="true" aria-label="Subway map"><div class="mhd"><b lang="ja">路線図</b><h3>Where to?</h3><p>${ok ? 'One stop is open' : 'The line is closed to you'}</p></div>
-    <div class="mmap"><svg viewBox="0 0 1000 420" aria-hidden="true">
-      <path d="M430 30V400" stroke="#7fbf3f" stroke-width="14" fill="none" stroke-linecap="round"/><path d="M120 250H880" stroke="#ff9a1f" stroke-width="14" fill="none" stroke-linecap="round"/>
-      <path d="M430 250L560 150L700 60" stroke="#9c5a2c" stroke-width="12" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M430 250L620 350L860 370" stroke="#8f76d6" stroke-width="12" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-      <g fill="#11141f" stroke="#f4efe4" stroke-width="4">${[[250, 250], [620, 250], [560, 150], [860, 370]].map(p => `<circle cx="${p[0]}" cy="${p[1]}" r="9"/>`).join('')}</g>
-      <g font-family="Oswald, sans-serif" font-size="15" fill="rgba(244,239,228,.45)" letter-spacing="2"><text x="250" y="284" text-anchor="middle">DOGENZAKA-UE</text><text x="620" y="284" text-anchor="middle">OMOTE-SANDO</text><text x="578" y="176" text-anchor="start">MEIJI-JINGUMAE</text><text x="860" y="402" text-anchor="middle">AZABU</text></g>
-    </svg>${STOPS.map(s => { const cur = s.id === here, off = cur || s.soon || !ok; return `<button class="mst${cur ? ' here' : ''}" data-stop="${s.id}" style="left:${s.x / 10}%;top:${s.y / 4.2}%" ${off ? 'disabled' : ''}>${s.name}<span lang="ja">${s.jp}</span><small>${cur ? 'You are here' : s.soon ? 'Sealed · soon' : ok ? 'Ride' : 'Closed'}</small></button>`; }).join('')}</div>
-    <div class="mft"><span>${ok ? (here === 'tokyo' ? 'The nearest stop is <b>Shibuya</b>, under the curtain: the night of the incident.' : 'Back to the block you started on, or stay.') + (dev() ? ' <b>Team account:</b> the line is open regardless.' : '')
+  const here = hereStop(), ok = canRide(), s1 = seasonOne(), k = exorcised();
+  const line = (d, c, w = 11) => `<path d="${d}" stroke="#fff" stroke-width="${w + 6}" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="${d}" stroke="${c}" stroke-width="${w}" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`;
+  metro.innerHTML = `<div class="mbox" role="dialog" aria-modal="true" aria-label="Route map"><div class="msign"><i>i</i><b>のりば案内<span>Where to?</span></b><em>${ok ? '出口 Exit · the line is open' : '出口 Exit · the line is closed to you'}</em></div>
+    <div class="mmap"><svg viewBox="0 0 1000 440" aria-hidden="true"><rect width="1000" height="440" fill="#f7f5ee"/>${BLOCKS}
+      <path d="M300 96q60-30 96 10l18 70q-40 44-104 22z" fill="#b9dc92"/><path d="M700 150q70-26 110 20l-6 86q-64 30-112-14z" fill="#b9dc92"/><path d="M716 168q52-16 78 14l-4 56q-46 20-78-8z" fill="none" stroke="#9fd0ea" stroke-width="9"/>
+      <path d="M-10 404q200-34 420-6t600-22v70H-10z" fill="#a9d6ee"/><path d="M40 60l140 20M60 330l130 14" stroke="#b9dc92" stroke-width="22" stroke-linecap="round"/>
+      <path d="M150 250H455L800 215" stroke="#fff" stroke-width="15" fill="none"/><path d="M150 250H455L800 215" stroke="#1c5fb8" stroke-width="7" stroke-dasharray="16 9" fill="none"/>
+      ${line('M440 40V250L500 345', '#7fbf3f')}${line('M455 250H640L800 215', '#f39700')}${line('M440 78L800 215', '#e60012')}${line('M395 165L455 250', '#00a650', 8)}${line('M500 345L660 330L800 215', '#9caeb7', 8)}${line('M650 62L800 215', '#c1a470', 8)}
+      <g font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" fill="#1c5fb8"><text x="300" y="238" text-anchor="middle">東海道新幹線 TOKAIDO SHINKANSEN</text></g>
+      <g font-family="Arial, Helvetica, sans-serif" font-size="11" fill="#6a665a"><text x="352" y="128" text-anchor="middle">代々木公園</text><text x="754" y="204" text-anchor="middle">皇居</text><text x="200" y="424">東京湾 TOKYO BAY</text></g>
+    </svg>${STOPS.map(s => { const cur = s.id === here, off = cur || s.soon || !ok; return `<button class="mst${cur ? ' here' : ''}" data-stop="${s.id}" style="left:${s.x / 10}%;top:${s.y / 4.4}%" ${off ? 'disabled' : ''}><i class="rnd" style="--c:${s.code[2]}"><b>${s.code[0]}</b>${String(s.code[1]).padStart(2, '0')}</i><span>${s.name}<small lang="ja">${s.jp}${cur ? ' · 現在地 you are here' : s.soon ? ' · sealed' : ok ? '' : ' · closed'}</small></span></button>`; }).join('')}</div>
+    <div class="mft"><span>${ok ? (here === 'tokyo' ? 'Two stops are open: <b>Shibuya</b>, the night of the incident, and <b>Kyoto</b>, by the bullet train.' : 'Ride on, go back to the block you started on, or stay.') + (dev() ? ' <b>Team account:</b> the line is open regardless.' : '')
       : `To ride: exorcise ${NEED} curses (<${k >= NEED ? 'b' : 'i'}>${Math.min(k, NEED)} / ${NEED}</${k >= NEED ? 'b' : 'i'}>) and finish Season 1 (<${s1[0] >= s1[1] ? 'b' : 'i'}>${s1[0]} / ${s1[1]} chapters</${s1[0] >= s1[1] ? 'b' : 'i'}>).`}</span><button id="mClose">Stay here <small>Esc</small></button></div></div>`;
 }
 function onKey(e) {
@@ -574,7 +588,8 @@ H.fightStart = (cfg, wave) => {
 };
 H.reset = () => { if (reset0) reset0(); if (mapOpen) { mapOpen = false; removeEventListener('keydown', onKey, true); } metro.classList.remove('on'); armed = true; };
 
-JU.shibuya = { world, RAIDS, SECRETS, STOPS, canRide, openMap, closeMap, seasonOne, exorcised, NEED,
-  resume: () => (M.last === 'shibuya' && canRide() ? { world, at: [STAIRS[0] - 60, STAIRS[1] - 150] } : null),      // Free Exploration starts wherever he last got off
+JU.shibuya = { world, RAIDS, SECRETS, STOPS, canRide, openMap, closeMap, seasonOne, exorcised, NEED, M, save,
+  kit: { slab, fill, lit, on, text, beacon, lamp, tree, column, arch, raid, secret, tally, mk, JP, EN, YGOJO },      // what the next district is built with (kyoto.js)
+  resume() { const s = STOPS.find(x => x.id === M.last); return s && s.id !== 'tokyo' && s.world && canRide() ? { world: s.world(), at: s.at() } : null; },      // Free Exploration starts wherever he last got off
   get state() { return Object.assign({ mapOpen }, JSON.parse(JSON.stringify(M))); } };
 })();
