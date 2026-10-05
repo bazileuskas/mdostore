@@ -8,7 +8,8 @@
    2 Downpour: eight more, out of the sky, 26 each, wherever it is standing by then. He is free to move while they fall.
    3 Repulse: a third of a second gathering, then a burst all round him, 110. Hit him while he gathers and the hit is turned aside, the burst
      comes at once, and it is worth 176.
-   4 Max Granite Blast: 900 over a second and a third */
+   4 Dessert: the finisher (160 in the beating, 140 in the swing, 700 in the last blow). See where it is written.
+   G Max Granite Blast, when the bar his damage fills is full: 900 over a second and a third */
 (() => {
 'use strict';
 
@@ -200,6 +201,164 @@ function drawInsert() {
   if (fl > 0) { g.fillStyle = `rgba(255,255,255,${fl})`; g.fillRect(0, 0, VW, VH); }
 }
 
+/* ---------- 4: Dessert. Staged after the clip the user sent of this awakening's finisher in Jujutsu Shenanigans, beat for beat as far as a
+   side-on fight allows: steam off his hair; a burst of white crescents and teal lines that throws him forward; hold of the enemy, which goes
+   down, and a beating where it lies; his face, close; one red swing; his eye, close, and red closing over it block by block; black, with
+   something red catching in it; the flash; the blow itself held still against streaming red; one frame of pure black and white; and it is
+   gone across the stage. The numbers are ours ---------- */
+const PUM = 8, PUM_DMG = 20, SWING_DMG = 140, BF_DMG = 700, CUT1 = .5, FIN = 3.1;      // blows in the beating and what each does; the swing; the last blow; how long each of the two times the fight is held still lasts
+let pin = null, show = null;                        // the enemy, held where the scene wants it; and what is over the whole screen just now
+const cap = (o, n) => Math.max(0, Math.min(n, o.hp - 1));      // nothing before the last blow finishes it
+function burstFx(p) {                               // the launch: white crescents and teal lines thrown out round him
+  const x = p.x, y = p.y + 170 * SIZE, f = p.face, L = Array.from({ length: 30 }, () => [rnd(0, TAU), rnd(.3, 1), rnd(2, 8)]);
+  V.custom(.36, u => {
+    const c = F(x, y), k = c[2], e = 1 - (1 - u) * (1 - u), al = 1 - u, flip = f < 0 ? Math.PI : 0;
+    g.save(); g.lineCap = 'round';
+    lit(() => E.glow(E.GLOW.blue, c[0], c[1], 1500 * e * k, al * .8));
+    for (const q of L) {
+      const r0 = (90 + 520 * e * q[1]) * k, r1 = r0 + (240 + 520 * q[1]) * k * (1 - u * .5), cs = Math.cos(q[0]), sn = Math.sin(q[0]) * .62;
+      g.strokeStyle = `rgba(${q[2] > 5 ? '255,255,255' : RGB},${al})`; g.lineWidth = q[2] * k;
+      g.beginPath(); g.moveTo(c[0] + cs * r0, c[1] + sn * r0); g.lineTo(c[0] + cs * r1, c[1] + sn * r1); g.stroke();
+    }
+    g.strokeStyle = `rgba(255,255,255,${al})`;
+    for (let i = 0; i < 3; i++) { g.lineWidth = Math.max(1, (24 - i * 6) * k * al); g.beginPath(); g.arc(c[0] - f * (60 + i * 60) * e * k, c[1], (160 + i * 140) * e * k, flip - 1.05, flip + 1.05); g.stroke(); }
+    g.restore();
+  });
+}
+function drops(x, n) {                              // what it leaves on the floor: red, in squares
+  const bits = Array.from({ length: n }, () => [x + rnd(-190, 190), rnd(-70, 70), rnd(12, 30)]), ZP = E.ZP, P = E.P;
+  V.custom(7, u => {
+    g.fillStyle = `rgba(200,16,36,${Math.min(1, (1 - u) * 3) * .9})`;
+    for (const b of bits) { const a = P(b[0] - b[2], 1, ZP + b[1] - b[2] * .5), c = P(b[0] + b[2], 1, ZP + b[1] - b[2] * .5), d = P(b[0] + b[2], 1, ZP + b[1] + b[2] * .5), e = P(b[0] - b[2], 1, ZP + b[1] + b[2] * .5); g.beginPath(); g.moveTo(a[0], a[1]); g.lineTo(c[0], c[1]); g.lineTo(d[0], d[1]); g.lineTo(e[0], e[1]); g.closePath(); g.fill(); }
+  }, 0, true);
+}
+function crescent(p) {                              // the swing: a dark red crescent the width of the screen
+  const x = p.x + p.face * 120, y = p.y + 170 * SIZE, f = p.face;
+  V.custom(.3, u => {
+    const c = F(x, y), k = c[2], al = 1 - u, a0 = f > 0 ? -2.2 : -.94, sweep = (f > 0 ? 1 : -1) * 2.5 * Math.min(1, u * 4);
+    g.save(); g.lineCap = 'round'; g.strokeStyle = `rgba(150,8,24,${al})`; g.lineWidth = 46 * k * al;
+    g.beginPath(); g.arc(c[0], c[1], 330 * k, a0, a0 + sweep, f < 0); g.stroke();
+    g.strokeStyle = `rgba(255,70,90,${al})`; g.lineWidth = 10 * k * al; g.beginPath(); g.arc(c[0], c[1], 344 * k, a0, a0 + sweep, f < 0); g.stroke();
+    g.restore();
+  });
+}
+// his face, filling the screen. blocks: red closes over it, block by block, and what is left is black
+function closeUp(p, u, blocks) {
+  const VW = E.VW, VH = E.VH, c = F(p.x, p.y + 238 * (p.scale || 1)), k = 4.6 + u * .6, gr = g.createLinearGradient(0, 0, VW, VH);
+  gr.addColorStop(0, '#0b1c2a'); gr.addColorStop(1, '#03070c'); g.fillStyle = gr; g.fillRect(0, 0, VW, VH);
+  g.strokeStyle = 'rgba(190,240,255,.5)'; g.lineWidth = 2; g.beginPath();
+  for (let i = 0; i < 26; i++) { const y = ((i * 97 % 100) / 100) * VH, x = ((i * 53 + E.T * 900) % (VW + 600)) - 300; g.moveTo(x, y); g.lineTo(x + 240 + (i % 5) * 60, y); }
+  g.stroke();
+  g.save(); g.translate(VW * (.5 - p.face * .05), VH * .58); g.rotate(-.1 * p.face); g.scale(k, k); g.translate(-c[0], -c[1]); E.drawFighter(p); g.restore();
+  if (!blocks) return;
+  const n = Math.floor(clamp((u - .4) / .5, 0, 1) * 7);
+  for (let i = 0; i < n; i++) { g.save(); g.translate(VW * (.12 + (i * 37 % 80) / 100), VH * (.2 + (i * 53 % 60) / 100)); g.rotate((i * 1.3) % 1 - .5); g.fillStyle = i % 2 ? '#c8102e' : '#a00d24'; g.fillRect(-VW * .26, -VH * .3, VW * .52, VH * .6); g.restore(); }
+  if (u > .9) { g.fillStyle = `rgba(0,0,0,${(u - .9) / .1})`; g.fillRect(0, 0, VW, VH); }
+}
+// black, and something red catching in it; white lines scratched across; and then, for an instant, the flash
+function crackle(flash) {
+  const VW = E.VW, VH = E.VH;
+  let sd = 1 + Math.floor(E.T * 15) * 7919 % 2147483646;
+  const rr = () => (sd = sd * 16807 % 2147483647) / 2147483647;
+  g.fillStyle = '#000'; g.fillRect(0, 0, VW, VH);
+  lit(() => {
+    for (let c = 0; c < (flash ? 7 : 3); c++) {
+      const cx = rr() * VW, cy = rr() * VH, sp = 60 + rr() * 220;
+      g.fillStyle = `rgba(255,${30 + rr() * 50 | 0},${60 + rr() * 40 | 0},${flash ? .55 : .4})`;
+      for (let i = 0; i < 70; i++) { const a = rr() * TAU, d = rr() * rr() * sp, z = 2 + rr() * 7; g.fillRect(cx + Math.cos(a) * d * 1.6, cy + Math.sin(a) * d * .7, z * 2.2, z); }
+    }
+  });
+  g.strokeStyle = `rgba(255,255,255,${.5 + rr() * .4})`; g.lineWidth = 2; g.lineJoin = 'round';
+  for (let l = 0; l < 3; l++) { let x = rr() * VW * .3, y = rr() * VH; g.beginPath(); g.moveTo(x, y); for (let i = 0; i < 8; i++) { x += VW * (.06 + rr() * .1); y += (rr() - .5) * VH * .24; g.lineTo(x, y); } g.stroke(); }
+  if (!flash) return;
+  g.save(); g.shadowColor = '#ff2d55'; g.shadowBlur = 70; g.fillStyle = '#fff3f6'; g.strokeStyle = '#080205'; g.lineWidth = 5;
+  for (let b = 0; b < 3; b++) {
+    const cx = VW * (.26 + b * .26 + (rr() - .5) * .1), cy = VH * (.34 + rr() * .34), R = VH * (.16 + rr() * .16), n = 14;
+    g.beginPath(); for (let i = 0; i < n; i++) { const a = i / n * TAU, r = R * (i % 2 ? .5 + rr() * .25 : .9 + rr() * .6); g.lineTo(cx + Math.cos(a) * r * 1.5, cy + Math.sin(a) * r); } g.closePath(); g.fill(); g.stroke();
+  }
+  g.restore();
+  g.fillStyle = '#ff4d6d'; for (let i = 0; i < 16; i++) { g.save(); g.translate(rr() * VW, rr() * VH); g.rotate(rr() * TAU); g.fillRect(-26, -4, 52, 8); g.restore(); }
+}
+// the blow itself, held: the two of them close, his fist in its face, and red streaming past behind
+function posed(s, u) {
+  const VW = E.VW, VH = E.VH, p = E.P1, o = E.P2, mid = F((p.x + o.x) / 2, 190), k = 2.05 + u * .3;
+  g.fillStyle = '#10050a'; g.fillRect(0, 0, VW, VH);
+  lit(() => {
+    for (let i = 0; i < 46; i++) {
+      const sp = 900 + (i * 61 % 9) * 240, x = ((i * 173 + E.T * sp * s.f) % (VW + 800) + VW + 800) % (VW + 800) - 400, y = ((i * 89 % 100) / 100) * VH, L = 160 + (i * 37 % 7) * 60;
+      g.fillStyle = i % 3 ? 'rgba(255,60,90,.42)' : 'rgba(255,170,190,.5)'; g.beginPath(); g.ellipse(x, y + (x - VW / 2) * -.18 * s.f, L, 6 + (i % 4) * 5, -.18 * s.f, 0, TAU); g.fill();
+    }
+  });
+  g.save(); g.translate(VW / 2, VH * .56); g.scale(k, k); g.translate(-mid[0], -mid[1]); E.drawFighter(o); E.drawFighter(p); g.restore();
+  if (u < .42) { g.fillStyle = `rgba(255,246,248,${1 - u / .42})`; g.fillRect(0, 0, VW, VH); }
+}
+function drawShow() {
+  const s = show, t = E.T - s.t0, VW = E.VW, VH = E.VH;
+  if (t >= s.dur) { show = null; return; }
+  if (s.kind === 'face') { closeUp(E.P1, t / s.dur, 0); return; }
+  if (t < .5) closeUp(E.P1, t / .5, 1);
+  else if (t < 1.25) crackle(0);
+  else if (t < 1.45) { if (!s.bf) { s.bf = 1; sfx.bf(); } crackle(1); }
+  else if (t < 1.55) { g.fillStyle = '#000'; g.fillRect(0, 0, VW, VH); }
+  else posed(s, (t - 1.55) / (s.dur - 1.55));
+}
+const DESSERT = { name: 'Dessert', cd: 28, dur: 12, run(p, m, t) {
+  const o = E.P2, f = p.face;
+  p.rate = 44;
+  if (m.grab === undefined) {
+    if (t < .45) {                                  // steam off his hair first
+      p.vx = 0; p.target = AIM;
+      if (!o.ko) p.face = o.x >= p.x ? 1 : -1;
+      if (!m.c) { m.c = 1; sfx.steam(); }
+      if (Math.random() < .6) { const z = muzzle(p); V.puff('white', z[0] + rnd(-20, 20), z[1] + rnd(0, 20), rnd(-40, 40), rnd(160, 380), rnd(22, 46), rnd(.4, .7)); }
+      return;
+    }
+    if (!m.b) { m.b = 1; sfx.cannon(1); sfx.whoosh(); shake(24); burstFx(p); p.inv = Math.max(p.inv, 1.1); E.zoomIn(.4); }
+    const gap = (o.x - p.x) * f;
+    p.target = POSE.dash; p.vx = gap > 150 ? f * 2500 : 0;
+    if (Math.random() < .8) V.puff('blue', p.x - f * 40, p.y + rnd(40, 270), -f * 520, 0, 30, .25);
+    if (gap > -30 && gap < 210 && up(o)) {          // hold of it: it goes down, and stays where it is put
+      m.grab = t; m.n = 0; p.vx = 0; p.inv = Math.max(p.inv, 12); E.root.classList.add('cine'); sfx.hit(true); shake(18);
+      pin = { o, f, pose: POSE.down, x: clamp(p.x + f * 120, -940, 940) };
+      Object.assign(o, { state: 'idle', stun: 0, act: null, vx: 0, vy: 0, tele: 0, y: 0 });      // (idle is the state in which the scene, not the enemy, decides what it does: H.foePre)
+    } else if (t > 1.2) { p.vx = 0; E.cd.manji = 6; E.endMove(p); }      // nothing to take hold of: most of the wait is given back
+    return;
+  }
+  const u = t - m.grab, U1 = .14 + PUM * .13 + .1;
+  p.vx = 0;
+  if (m.rel !== undefined) { p.target = t < m.rel + .32 ? POSE.cross : POSE.idle; if (t > m.rel + .6) E.endMove(p); return; }
+  if (m.fin) {                                      // the fight has just been let go again: this is where it lands
+    const y = o.y + 165 * (o.scale || 1);
+    m.rel = t; pin = null; Object.assign(o, { state: 'idle', stun: 0 }); E.root.classList.remove('cine'); p.inv = Math.max(.5, 0);
+    V.impact(.16, o.x, y); sfx.blast(); shake(56); shout(p, 'DESSERT', '#ff5a6e');
+    E.addBlast(o.x, y, '255,44,72', 900); for (let i = 0; i < 4; i++) V.ring(o.x, y, 200 + i * 150, i % 2 ? '#ff2440' : '#ffffff', .3 + i * .06);
+    for (let i = 0; i < 6; i++) V.bolt(o.x + rnd(-200, 200), y + rnd(-160, 200), o.x + rnd(-320, 320), y + rnd(-200, 260), '#ff2440', .2, 3, '#120306');
+    drops(o.x, 14); V.crack(o.x, 320); V.rocks(o.x, 0, 10);
+    E.applyHit(o, f, exact(o, BF_DMG, { kb: 2400, lift: 760, stun: 1.2, stop: .34, heavy: 1, ring: 1, col: '#ff2440' }));
+    return;
+  }
+  while (m.n < PUM && u >= .14 + m.n * .13) {       // the beating, where it lies
+    const i = m.n++;
+    p.pose = (i % 2 ? POSE.crush : POSE.hook).slice();
+    E.applyHit(o, f, exact(o, cap(o, PUM_DMG), { kb: 0, stun: 12, stop: .035, col: '#8dffb0' })); Object.assign(o, { state: 'idle', stun: 0, act: null });
+    V.slash(pin.x + rnd(-40, 40), 70 + rnd(0, 60), f > 0 ? rnd(-1.1, -.5) : Math.PI + rnd(.5, 1.1), 280, i % 2 ? '#8dffb0' : '#ffffff', 10);
+    drops(pin.x, 2); sfx.hit(false); shake(9);
+  }
+  if (u < U1) { p.target = POSE.crushWind; return; }
+  if (!m.c1) { m.c1 = 1; show = { kind: 'face', t0: E.T, dur: CUT1 }; E.stop(CUT1); sfx.charge(); p.pose = POSE.hookWind.slice(); p.target = POSE.hookWind; return; }
+  if (u < U1 + .16) { p.target = POSE.hookWind; return; }
+  if (!m.sw) {                                      // one red swing
+    m.sw = 1; p.pose = POSE.hook.slice(); crescent(p); sfx.hit(true); sfx.whoosh(); shake(30);
+    E.applyHit(o, f, exact(o, cap(o, SWING_DMG), { kb: 0, stun: 12, stop: .12, heavy: 1, col: '#c8102e' })); Object.assign(o, { state: 'idle', stun: 0, act: null });
+    o.flash = .22; V.ring(pin.x, 150, 520, '#ffffff', .4); drops(pin.x, 7);
+  }
+  if (u < U1 + .6) { p.target = POSE.hook; return; }
+  m.fin = 1;                                        // and the last of it: everything stops, and is shown
+  pin.pose = POSE.hurt; pin.x = clamp(p.x + f * 150, -940, 940);
+  Object.assign(o, { x: pin.x, y: 0 }); o.pose = POSE.hurt.slice(); o.target = POSE.hurt; p.pose = POSE.cross.slice(); p.target = POSE.cross;
+  show = { kind: 'fin', t0: E.T, dur: FIN, f }; E.stop(FIN); sfx.rise(1.2);
+} };
+
 const MOVES = {
   strikes: { name: 'Volley', cd: 5, dur: 1.6, run(p, m, t) {
     const o = E.P2, END = .16 + SHOTS * GAP;
@@ -231,7 +390,10 @@ const MOVES = {
     p.target = t < m.s + .22 ? THROWN : POSE.idle;
     if (t > m.s + .36) E.endMove(p);
   } },
-  manji: { name: 'Max Granite Blast', cd: 30, dur: CHARGE + HOLD + .7, run(p, m, t) {
+  manji: DESSERT
+};
+// G, when the bar under his health is full: Granite Blast at full power
+const MAXB = { name: 'Max Granite Blast', cd: 30, dur: CHARGE + HOLD + .7, run(p, m, t) {
     const o = E.P2;
     p.rate = 28;
     if (t < CHARGE) {
@@ -258,15 +420,26 @@ const MOVES = {
     if (!m.end) { m.end = 1; beat(p, m, true); }
     p.vx = 0; p.target = u < HOLD + .3 ? RECOIL : POSE.idle;
     if (u > HOLD + .5) E.endMove(p);
-  } }
-};
+} };
 
 JU.tech.add('tced', { name: 'True Cursed Energy Discharge', jp: '真・呪力放出', mark: '轟', who: 'Ryu Ishigori, nothing held back', odds: 0, col: CYAN, glow: 'blue', moves: MOVES,
-  awakened: true, skin: JU.cast6.ISHIGORI, as: ['Ryu Ishigori', '石流龍'], scale: SIZE, hint: '<b>3</b> Repulse turns a hit aside while he gathers' });
+  awakened: true, skin: JU.cast6.ISHIGORI, as: ['Ryu Ishigori', '石流龍'], scale: SIZE, hint: '<b>3</b> Repulse turns a hit aside while he gathers · <b>G</b> Max Granite Blast when the bar is full',
+  awkName: 'Max Granite Blast', awkHits: false, awkStart: 0, awaken(p) { p.move = { def: MAXB, t: 0 }; } });
 const DEF = JU.tech.TECH.tced, on = () => JU.tech.active === DEF;
 
 /* ---------- wiring ---------- */
-const fx0 = H.fx, post0 = H.post, reset0 = H.reset, start0 = H.fightStart, rim0 = H.rim, guard0 = H.guard;
+const fx0 = H.fx, post0 = H.post, reset0 = H.reset, start0 = H.fightStart, rim0 = H.rim, guard0 = H.guard, pre0 = H.foePre, hit0 = H.hit, tick0 = H.tick;
+H.foePre = (o, p, dt) => {                          // during Dessert it is wherever the scene has put it, and does nothing of its own
+  if (!pin || pin.o !== o) return pre0 ? pre0(o, p, dt) : false;
+  o.vx = 0; o.x = pin.x; o.y = 0; o.face = -pin.f; o.target = pin.pose; o.rate = 40;
+  return true;
+};
+H.hit = (o, face, h) => {                           // the bar for Max Granite Blast fills with the damage he does: about a thousand of it
+  hit0(o, face, h);
+  const m = E.P1.move;
+  if (on() && !(m && m.def === MAXB)) JU.tech.charge(h.dmg * (o.dr || 1) * .1);
+};
+H.tick = dt => { tick0(dt); if (pin && !(on() && E.P1.move && E.P1.move.def === DESSERT)) { pin = null; show = null; E.root.classList.remove('cine'); } };      // cut short somehow: nothing is left hanging
 H.guard = (face, a, mul) => {                       // hit while he is gathering Repulse: it is turned aside, and the burst comes now
   const p = E.P1, m = p.move;
   if (on() && m && m.def === MOVES.div && m.s === undefined && !m.turned) { m.turned = 1; p.inv = Math.max(p.inv, .3); sfx.tap(1); V.ring(p.x, p.y + 170 * SIZE, 150, '#ffffff', .16); return true; }
@@ -274,7 +447,7 @@ H.guard = (face, a, mul) => {                       // hit while he is gathering
 };
 H.rim = f => {                                      // awakened: the edge of him is lit the whole time, and harder while he gathers the big one
   if (f !== E.P1 || !on() || f.dead) return rim0 ? rim0(f) : null;
-  const m = f.move, big = m && m.def === MOVES.manji && m.t < CHARGE;
+  const m = f.move, big = m && m.def === MAXB && m.t < CHARGE;
   return { col: CYAN, blur: big ? 7 + 9 * m.t / CHARGE : 5 + 1.5 * Math.sin(E.T * 5) };
 };
 H.fx = dt => {
@@ -282,7 +455,7 @@ H.fx = dt => {
   const p = E.P1, m = p.move;
   if (!on() || p.dead || p.alpha < .05) return;
   const z = muzzle(p), c = F(z[0], z[1]), k = c[2], T = E.T;
-  if (m && m.def === MOVES.manji) {
+  if (m && m.def === MAXB) {
     if (m.t < CHARGE) {                             // being gathered: the lens of light at the front of his hair, as it is seen from in front
       const u = m.t / CHARGE, R = (14 + 70 * u * u + 3 * Math.sin(T * 40)) * k;
       lit(() => { E.glow(E.GLOW.blue, c[0], c[1], (260 + 700 * u) * k, .9); E.glow(E.GLOW.white, c[0], c[1], R * 4.6, 1); });
@@ -296,18 +469,18 @@ H.fx = dt => {
   }
   lit(() => { E.glow(E.GLOW.blue, c[0], c[1], (96 + 14 * Math.sin(T * 7)) * k, .75); E.glow(E.GLOW.white, c[0], c[1], 30 * k, .9); });      // otherwise: it is simply never out
 };
-H.post = dt => { if (post0) post0(dt); if (insert) drawInsert(); };
-H.reset = () => { reset0(); insert = null; };
+H.post = dt => { if (post0) post0(dt); if (insert) drawInsert(); if (show) drawShow(); };
+H.reset = () => { reset0(); insert = null; pin = show = null; E.root.classList.remove('cine'); };
 H.fightStart = (cfg, wave) => {
-  start0(cfg, wave); if (!wave) insert = null;
+  start0(cfg, wave); if (!wave) insert = null; pin = show = null;
   if (on() && !JU.clan.body()) E.P1.scale = SIZE;
 };
 
 // its card on the Awaken CT screen. It is Cursed Cannon awakened, so it asks for Cursed Cannon, and that is Early Access
 Object.assign(JU.awakened.LIST.find(a => a.id === 'tced'), {
-  what: 'Ryu Ishigori with nothing held back, and no heat to mind. Volley, Downpour, Repulse, and Granite Blast at full power (900).',
+  what: 'Ryu Ishigori with nothing held back, and no heat to mind. Volley, Downpour, Repulse, and Dessert, the finisher (1000). G: Granite Blast at full power (900).',
   later: () => 'Needs Cursed Cannon, which is Early Access. Early Access is not on sale yet.',
   open: () => dev() || !JU.shop || JU.shop.holds('tech', 'cannon') });
 
-JU.tced = { MOVES, SHOTS, SHOT, DROPS, DROP, BURST, TURNED, FULL, CHARGE, HOLD, get state() { return { insert: !!insert }; } };
+JU.tced = { MOVES, MAXB, SHOTS, SHOT, DROPS, DROP, BURST, TURNED, FULL, CHARGE, HOLD, DESSERT: PUM * PUM_DMG + SWING_DMG + BF_DMG, get state() { return { insert: !!insert, show: show && show.kind, pin: !!pin }; } };
 })();
