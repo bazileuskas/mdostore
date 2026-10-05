@@ -83,6 +83,7 @@ function start(cfg, wave = 0) {
 
 function lose() {
   const p = E.P1;
+  if (fight.cfg && fight.cfg.onLose) { p.dead = true; p.ps = p.ground ? 'down' : 'air'; p.stun = 99; E.slow(.8); fight.cfg.onLose(); return; }   // a duel: losing is the end of it, not a second go (pvp.js)
   if (H.death && H.death()) return;                 // a clan can have other plans for dying
   p.dead = true; p.ps = p.ground ? 'down' : 'air'; p.stun = 99;
   E.slow(.8); E.banner('敗北', 'DEFEATED');
@@ -96,11 +97,11 @@ function hurt(face, a, mul = 1) {
   if (H.guard && H.guard(face, a, mul)) return false;
   if (p.dashT > 0 || p.inv > 0 || p.dead || p.ps === 'down' || p.ps === 'up' || fight.paused) return false;
   if (p.move) E.endMove(p);
-  const dmg = Math.round(a.dmg * mul * (H.foePower ? H.foePower(a) : 1));     // something may have weakened it, or put more behind its hits
+  const raw = a.dmg * mul * (H.foePower ? H.foePower(a) : 1), dmg = a.exact ? raw : Math.round(raw);     // something may have weakened it, or put more behind its hits (exact: a duel's blows are counted to the fraction)
   p.hp = Math.max(fight.floor, p.hp - dmg); p.flash = .1; p.face = -face; p.vx = face * a.kb;
   if (a.lift) { p.vy = a.lift; p.ground = false; p.y = Math.max(p.y, 1); p.ps = 'air'; } else { p.ps = 'hurt'; p.stun = a.stun || .4; }
   E.stop(.08); cam.shake = Math.max(cam.shake, a.lift ? 20 : 11); cam.kick -= face * .04;
-  E.addSpark(p.x + face * 20, p.y + 150, '#ff5a6e', a.lift ? 130 : 80); E.addNum(p.x, p.y + 270, dmg, '#ff5a6e');
+  E.addSpark(p.x + face * 20, p.y + 150, '#ff5a6e', a.lift ? 130 : 80); E.addNum(p.x, p.y + 270, a.exact ? +(a.shown || dmg).toFixed(1) : dmg, '#ff5a6e');
   V.ring(p.x, p.y + 150, a.lift ? 170 : 90, '#ff2440'); if (a.lift) V.rocks(p.x, 0, 6);
   sfx.hit(!!a.lift);
   if (fight.low && !fight.lowDone && p.hp <= p.max * fight.low.at) { fight.lowDone = true; fight.low.fn(); }

@@ -138,6 +138,73 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 .ain>b{display:block;margin:.2em 0 .3em;overflow:hidden;text-overflow:ellipsis;font:400 1.7em/1.05 var(--f-display);letter-spacing:.04em}
 .ain p{margin:.3em 0 0}
 .abody.no{animation:nope .3s}
+/* a server to play on with friends (mp.js): the card on the Play screen, and who is in it while he walks */
+.mpcard{display:grid;grid-template-columns:1fr auto;gap:.3em 1em;align-items:baseline;width:min(100%,36em);padding:.8em 1.2em .9em;border-left:3px solid #7fe9ff;background:rgba(127,233,255,.06)}
+.mpcard>b{font:400 clamp(17px,min(2vw,3.6vh),42px)/1 var(--f-display);letter-spacing:.05em;text-transform:uppercase}
+.mpcard>span{font:400 clamp(10px,min(1vw,1.8vh),19px)/1 var(--f-jp);letter-spacing:.3em;color:#7fe9ff}
+.mpcard>i{grid-column:1/-1;font-style:normal;font-size:.88em;line-height:1.35;color:rgba(244,239,228,.66)}
+.mpcard>small{grid-column:1/-1;font-size:.72em;line-height:1.35;color:rgba(244,239,228,.5)}
+.mprow{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:.5em;margin:.35em 0 .1em}
+.mprow input{flex:1 1 9em;min-width:0;padding:.55em .8em;border:1px solid rgba(127,233,255,.5);background:rgba(4,3,10,.75);color:#f4efe4;font:600 1em/1 var(--f-ui);letter-spacing:.18em}
+.mprow input:focus{outline:2px solid #7fe9ff;outline-offset:1px}
+.mprow .mode.mpgo{display:block;width:auto;padding:.55em 1.1em;border:0;border-left:0;background:#7fe9ff;color:#06121a}
+.mprow .mode.mpgo b{font:400 1.05em/1 var(--f-display);letter-spacing:.08em}
+.mprow .mode.mpgo:hover,.mprow .mode.mpgo:focus-visible{background:#fff;transform:skewX(-9deg)}
+.mpnew{padding:.55em .9em;border:1px solid rgba(244,239,228,.35);background:none;color:rgba(244,239,228,.8);font:600 .8em/1 var(--f-ui);letter-spacing:.14em;text-transform:uppercase;cursor:pointer}
+.mpnew:hover,.mpnew:focus-visible{border-color:#fff;color:#fff}
+.mp{position:absolute;right:clamp(12px,2vw,34px);top:clamp(12px,3vh,36px);z-index:6;display:none;width:min(18em,46vw);padding:.6em .75em .7em;border-left:3px solid #7fe9ff;background:rgba(8,6,14,.82);color:#f4efe4;font:500 clamp(11px,min(1.1vw,2.1vh),17px)/1.3 var(--f-ui)}
+.game[data-mode="street"]:not(.cine) .mp.on{display:block}
+.mp b{display:block;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#7fe9ff}
+.mp b u{text-decoration:none;color:#fff;letter-spacing:.16em}
+.mp ul{margin:.4em 0 .5em;padding:0;list-style:none}
+.mp li{display:flex;align-items:center;justify-content:space-between;gap:.5em;padding:.14em 0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.mp li button{flex:none;padding:.22em .6em;border:1px solid #ff5a6e;background:none;color:#ff8a98;font:600 .82em/1 var(--f-ui);letter-spacing:.1em;cursor:pointer}
+.mp li button:hover,.mp li button:focus-visible{background:#ff5a6e;color:#fff}
+.mp input{width:100%;box-sizing:border-box;padding:.4em .55em;border:1px solid rgba(244,239,228,.25);background:rgba(0,0,0,.5);color:#f4efe4;font:inherit}
+.mp input:focus{outline:1px solid #7fe9ff}
+.mp small{display:block;margin-top:.45em;color:rgba(244,239,228,.6)}
+.mp small.gone{margin:0;color:#ff8a98}
+/* One v Ones (pvp.js): a line at the top, the challenge, the board the two ban and pick from */
+.dtoast{position:absolute;left:50%;top:clamp(54px,11vh,110px);z-index:9;max-width:min(92vw,44em);padding:.5em 1em;translate:-50% -12px;opacity:0;pointer-events:none;border-left:3px solid var(--c,#7fe9ff);background:rgba(8,6,14,.9);color:#f4efe4;font:500 clamp(12px,min(1.3vw,2.4vh),20px)/1.3 var(--f-ui);letter-spacing:.06em;transition:opacity .25s,translate .25s}
+.dtoast.on{opacity:1;translate:-50% 0}
+.duel{position:absolute;inset:0;z-index:8;display:none;place-items:center;padding:3vmin;background:rgba(3,2,8,.84);color:#f4efe4;font:500 clamp(12px,min(1.25vw,2.3vh),19px)/1.35 var(--f-ui)}
+.duel.on{display:grid}
+.duel.small{inset:clamp(54px,11vh,110px) 0 auto 0;padding:0;background:none;pointer-events:none}
+.dask{position:relative;display:grid;gap:.5em;width:min(92vw,26em);padding:.9em 3.2em 1em 1.2em;pointer-events:auto;border-left:4px solid var(--red);background:#120b1d;box-shadow:8px 9px 0 rgba(0,0,0,.5)}
+.dask b{font:400 1.7em/1 var(--f-display);letter-spacing:.06em;text-transform:uppercase}
+.dask p{margin:0;color:rgba(244,239,228,.8)}
+.dask u,.dbox u{text-decoration:none;color:#ffd23d}
+.dask div{display:flex;gap:.6em;margin-top:.2em}
+.dask button,.dbox footer button{padding:.5em 1em;border:1px solid rgba(244,239,228,.4);background:none;color:#f4efe4;font:600 .9em/1 var(--f-ui);letter-spacing:.12em;text-transform:uppercase;cursor:pointer}
+.dask button.go{border-color:var(--red);background:var(--red);color:#fff}
+.dask button:hover,.dask button:focus-visible,.dbox footer button:hover,.dbox footer button:focus-visible{border-color:#fff;background:#fff;color:#0b0710}
+.dask kbd{margin-left:.5em;padding:.05em .4em;border:1px solid currentColor;font:inherit;opacity:.7}
+.dask em,.dbox header em{position:absolute;right:.7em;top:.5em;font:400 1.5em/1 var(--f-display);font-style:normal;color:#ff8a98}
+.dbox{position:relative;display:grid;gap:.7em;width:min(100%,62em);max-height:100%;padding:1.2em 1.4em 1.2em;overflow:auto;border-left:5px solid var(--red);background:#120b1d;box-shadow:10px 12px 0 rgba(0,0,0,.55)}
+.dbox header{display:flex;align-items:baseline;gap:1em;padding-right:3em}
+.dbox header b{font:400 2.4em/1 var(--f-display);letter-spacing:.06em;color:var(--red)}
+.dbox header span{font-weight:600;letter-spacing:.14em;text-transform:uppercase}
+.dbox header span i{font-style:normal;color:rgba(244,239,228,.5);margin:0 .4em}
+.dstep{margin:0;font-size:1.1em;color:rgba(244,239,228,.85)}
+.dstep u{font-weight:600;text-transform:uppercase;letter-spacing:.1em}
+.dgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(8.6em,1fr));gap:.55em}
+.dc{position:relative;display:grid;justify-items:center;gap:.2em;padding:.6em .4em .55em;border:0;border-top:3px solid var(--c);background:rgba(255,255,255,.05);color:#f4efe4;font:inherit;text-align:center;cursor:pointer;transition:transform .12s,background .12s}
+.dc b{font:400 2.1em/1 var(--f-jp);color:var(--c)}
+.dc span{font-weight:600;font-size:.86em;line-height:1.15;letter-spacing:.06em;text-transform:uppercase}
+.dc small{min-height:1.2em;font-size:.7em;letter-spacing:.12em;text-transform:uppercase;color:rgba(244,239,228,.55)}
+.dc:not(:disabled):hover,.dc:not(:disabled):focus-visible{background:var(--c);color:#0b0710;transform:translateY(-4px)}
+.dc:not(:disabled):hover b,.dc:not(:disabled):focus-visible b,.dc:not(:disabled):hover small,.dc:not(:disabled):focus-visible small{color:#0b0710}
+.dc:disabled{cursor:default;opacity:.55}
+.dc.no{opacity:.3}
+.dc.ban{opacity:.38;border-top-color:#ff2440}
+.dc.ban small{color:#ff5a6e}
+.dc.ban::after{content:"";position:absolute;left:8%;right:8%;top:50%;height:3px;background:#ff2440;rotate:-14deg}
+.dc.me{opacity:1;outline:3px solid #ffd23d;outline-offset:-3px}
+.dc.them{opacity:1;outline:3px solid #7fe9ff;outline-offset:-3px}
+.dc.me.them{outline-color:#fff}
+.dbox footer{display:flex;flex-wrap:wrap;align-items:center;gap:.5em 1.6em;color:rgba(244,239,228,.7)}
+.dbox footer button{margin-left:auto}
+@media (max-height:480px){.dbox{gap:.4em;padding:.6em 1em .7em}.dbox header b{font-size:1.5em}.dstep{font-size:1em}.dgrid{grid-template-columns:repeat(8,minmax(0,1fr));gap:.35em}.dc{padding:.3em .2em}.dc b{font-size:1.3em}.dc span{font-size:.7em}.dc small{min-height:0;font-size:.6em}}
 .acast{margin:.8em 0 .2em;padding-top:.7em;border-top:1px dashed rgba(43,26,16,.45)}
 .acast label{display:grid;gap:.3em;font:600 .72em/1 var(--f-ui);letter-spacing:.24em;text-transform:uppercase;color:rgba(43,26,16,.75)}
 .acast textarea{width:100%;padding:.35em .45em;resize:none;font:400 max(16px,1.5em)/1.3 var(--f-ui);letter-spacing:.02em;text-transform:none;color:var(--ink);background:rgba(255,255,255,.35);border:2px solid rgba(43,26,16,.5);border-radius:0;outline:none;user-select:text;-webkit-user-select:text}
@@ -919,7 +986,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
   </div>
 
   <div class="side" aria-hidden="true" lang="ja">領域展開</div>
-  <div class="hud tl"><b lang="ja">呪</b>Fan project · Build 0.5 · Kyoto</div>
+  <div class="hud tl"><b lang="ja">呪</b>Fan project · Build 0.6 · One v Ones</div>
   <div class="hud bl">↑ ↓ Select &nbsp;·&nbsp; Enter Confirm</div>
   <div class="hud br">Title screen</div>
   <div class="acct" id="acct">
@@ -1836,7 +1903,7 @@ window.JU = { sfx, flash, bolts: blackFlash, reduceMotion, startGame, exitGame, 
 // Load every game script fresh on each page load. The dev server sends no cache headers, so without this a reload
 // could run a mix of old and new files (new menu, old moves) while the game is being worked on.
 ['account.js', 'announce.js', 'game.js', 'fx2.js', 'chars.js', 'street.js', 'walk.js', 'foes.js', 'cuts.js', 'sukuna.js', 'school.js', 'story.js', 'story2.js', 'tech.js', 'tech_a.js',
-  'tech_b.js', 'sets.js', 'story3.js', 'cast2.js', 'script.js', 'naoya.js', 'ch45.js', 'ch67.js', 'clan.js', 'clan_a.js', 'clan_b.js', 'boss.js', 'boss_a.js', 'boss_b.js', 'boss_c.js', 'training.js', 'choso.js', 'domain.js', 'domain2.js', 'mahito.js', 'combo.js', 'combat.js', 'cast3.js', 'ch810.js', 'ch1112.js', 'cast4.js', 'ch1316.js', 'cast5.js', 'ch1721.js', 'combat2.js', 'judge.js', 'awaken.js', 'alimit.js', 'ats.js', 'switcher.js', 'tools.js', 'smark.js', 'cast6.js', 'ch2230.js', 'plants.js', 'clash.js', 'block.js', 'cannon.js', 'tced.js', 'shibuya.js', 'kyoto.js', 'notes.js', 'shop.js', 'touch.js'].forEach(src => {
+  'tech_b.js', 'sets.js', 'story3.js', 'cast2.js', 'script.js', 'naoya.js', 'ch45.js', 'ch67.js', 'clan.js', 'clan_a.js', 'clan_b.js', 'boss.js', 'boss_a.js', 'boss_b.js', 'boss_c.js', 'training.js', 'choso.js', 'domain.js', 'domain2.js', 'mahito.js', 'combo.js', 'combat.js', 'cast3.js', 'ch810.js', 'ch1112.js', 'cast4.js', 'ch1316.js', 'cast5.js', 'ch1721.js', 'combat2.js', 'judge.js', 'awaken.js', 'alimit.js', 'ats.js', 'switcher.js', 'tools.js', 'smark.js', 'cast6.js', 'ch2230.js', 'plants.js', 'clash.js', 'block.js', 'cannon.js', 'tced.js', 'shibuya.js', 'kyoto.js', 'mp.js', 'pvp.js', 'notes.js', 'shop.js', 'touch.js'].forEach(src => {
   const s = document.createElement('script');
   s.src = src + '?v=' + Date.now(); s.async = false;      // async = false keeps them running in this order
   document.body.appendChild(s);

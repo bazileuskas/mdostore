@@ -207,6 +207,7 @@ function mount(body) {
       ${naoya ? `<button class="mode" data-mode="maki" style="border-left-color:#ffd23d"><b>Maki Fight</b><span lang="ja" style="color:#ffd23d">真希</span>
         <i>Naoya against Maki Zenin, up in the mountains. Here because Projection Sorcery is equipped.${JU.shop && JU.shop.PAID ? ` Costs ${JU.shop.FEES.maki} Cursed Tokens a go: you have ${JU.shop.tokens}.` : ''}</i></button>` : ''}
     </div>
+    ${JU.mp ? JU.mp.card() : ''}
   </div>`;
 }
 

@@ -5,6 +5,14 @@
 // Newest first. v = the build, jp = the seal stamped beside it, pic = notes/<pic>.jpg, cap = what the picture shows.
 // A new update goes at the top of this list.
 const NOTES = [
+  { v: '0.6', name: 'One v Ones', jp: '対', date: '5 Oct 2026', pic: 'duel', cap: 'The board: one ban each, then one technique each', items: [
+    'Servers: Free Exploration with up to five people. On the Play screen, agree on a server code with your friends and all type the same one. You are then in the same Tokyo, Shibuya and Kyoto, and see each other walk about with your names over your heads',
+    'Press / to say something. It shows in a bubble over your head',
+    'One v Ones: challenge anybody on your server from the list in the corner. Each of you bans one cursed technique, each picks one of what is left, and you fight. No clans, no cursed tools',
+    'In a duel both fighters have the same health, and no single blow takes more than two fifths of it. Blocking, and dashing through a blow, work against a person the way they do against a curse',
+    'Every ordinary technique can be picked in a duel whether you hold it or not. Awakened and Early Access techniques only by whoever has them, though anybody may ban them',
+    'Duels won and lost are counted',
+    'There is no machine behind a server: the games connect straight to each other. Some school and office networks do not allow that, and the game says so when it cannot reach somebody. Join only with people you know'] },
   { v: '0.5', name: 'Kyoto', jp: '京', date: '5 Oct 2026', pic: 'kyoto', cap: 'Kyoto Station, Kyoto Tower, and the fire on the hill', items: [
     'The Kyoto expansion: a second stop on the line, by bullet train, open on the same terms as Shibuya. Laid out from the real city: the bamboo grove at Arashiyama, the Golden Pavilion, Kyoto Jujutsu High, Kyoto Station and Kyoto Tower, the Kamo River, Gion and Hanamikoji, Yasaka Shrine, the Yasaka Pagoda, Kiyomizu-dera, the thousand gates of Fushimi Inari, and the Zenin estate. Over all of it, 大 burning on the hill',
     'In Kyoto: Todo, Mai, Utahime and Maki to talk to; three raids (The Goodwill Event, A Thousand Curses on the Kamo bridge, The Zenin Estate); and five secret bosses, two of them standing where a thousand-year-old sorcerer would',

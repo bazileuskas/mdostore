@@ -117,6 +117,7 @@ function start(opts) {
 function update(dt, real) {
   const p = me;
   if (st.free) JU.clan.street(dt);
+  if (st.free && JU.mp) JU.mp.tick(real);            // whoever else is on the server with him
   let mx = 0, mz = 0, run = 1;
   if (st.goto) {                                 // a cutscene is walking him to a mark
     const dx = st.goto[0] - p.x, dz = st.goto[1] - p.z, d = Math.hypot(dx, dz);
@@ -233,7 +234,7 @@ function render() {
 
   W.sky(); W.ground(); W.alley();
   // during a cutscene the camera is pushed right in, so passers-by on the near pavement would fill the frame
-  const people = [me, ...(W === JU.tokyo ? [megumi] : []), ...npcs, ...curses, ...cast, ...(pal ? [pal] : [])].filter(f => Math.abs(f.x - cam.x) < 2600 && !(st.locked && f.speed && f.z < 1000));
+  const people = [me, ...(W === JU.tokyo ? [megumi] : []), ...npcs, ...curses, ...cast, ...(pal ? [pal] : []), ...(st.free && JU.mp ? JU.mp.fighters() : [])].filter(f => Math.abs(f.x - cam.x) < 2600 && !(st.locked && f.speed && f.z < 1000));
   const deep = [], list = [];                    // what stands back beyond the building line (an alley, a square) is drawn before the buildings
   for (const it of W.props) (it.z > W.Z1 + 20 ? deep : list).push(it);
   for (const f of people) (f.z > W.Z1 + 20 ? deep : list).push({ z: f.z, f });
@@ -256,6 +257,7 @@ function render() {
   if (st.free && JU.awakened) JU.awakened.streetDraw();
   if (st.free && JU.switcher) JU.switcher.streetDraw();
   if (st.free && W.spots && !st.hold) for (const s of W.spots) if (Math.abs(s.x - cam.x) < 1700 && !(s.show && !s.show())) mark(s, s === st.near);
+  if (st.free && JU.mp) JU.mp.draw();
   if (!st.locked) W.front();                     // close-ups drop the poles that would cross the frame
   g.restore();
 
