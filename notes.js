@@ -5,6 +5,17 @@
 // Newest first. v = the build, jp = the seal stamped beside it, pic = notes/<pic>.jpg, cap = what the picture shows.
 // A new update goes at the top of this list.
 const NOTES = [
+  { v: '0.4', name: 'Map Update', jp: '渋', date: '5 Oct 2026', pic: 'shibuya', cap: 'Hachiko Square: the statue, the old green train car, and somebody waiting by the dog', items: [
+    'The Tokyo block has a subway entrance at its east end. Walk to the end of the block and a route map asks where to. The line opens once you have exorcised 10 curses and finished Season 1',
+    'One stop is open, the nearest: Shibuya, on the night of the incident, under the curtain. It is about three times the length of the Tokyo block and laid out from the real place: Dogenzaka, Mark City and the Avenue Exit, Shibuya 109, Center Gai, the Scramble Crossing under QFRONT, Hachiko Square, the station and the Yamanote viaduct, Scramble Square, Hikarie, Miyashita Park, Nonbei Yokocho, Expressway Route 3 and C Tower',
+    'People to talk to, with E or a tap: Ijichi, Nanami, Megumi, Nobara, Panda, Yuki, Ieiri at the tollgate, and Gojo as he was at school, waiting by the dog',
+    'Gojo awakens Limitless for whoever comes to him carrying it. That is how Awakened Limitless is unlocked now',
+    'Awakened Ten Shadows is earned: 100 curses exorcised with Ten Shadows, 10 of them bosses. Megumi, up on Dogenzaka, keeps you told of the count',
+    'Three raids, each marked by a column of red light: The Night Parade on the crossing, The Sealing Ground five floors under Hikarie, The Curtain\'s Anchor under C Tower. Fights one straight after another with something worse at the end, and tokens and tickets for clearing them',
+    'Five secret bosses. Two are there for whoever goes looking; three only turn up once something else has been done',
+    'Ieiri\'s reversed technique: your next fight starts with half again your health',
+    'Curses on every block, and their corners do not stay empty. Free Exploration starts wherever you last got off the train',
+    'Shinjuku and the other stops are on the map, and sealed for now'] },
   { v: '0.3v1', name: 'Three Slots', jp: '枠', date: '5 Oct 2026', pic: 'slots', cap: 'Three slots, one more for a limited technique, and a free one for Early Access', items: [
     'Three slots for cursed techniques, and three for clans. Press a slot to select it: what it holds is what you fight with, and the next roll or draw lands there, in place of what was in it',
     'Spinning off anything as rare as 10% is asked about twice first',

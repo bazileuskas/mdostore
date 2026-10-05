@@ -351,6 +351,31 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 .hslot.lim{border-left-width:7px;border-left-style:double}
 .hslot.lim small{color:#ffd23d}
 .hslot.ea small{color:#7de0b0}
+/* the subway's route map: where to? (shibuya.js) */
+.metro{position:absolute;inset:0;z-index:8;display:grid;place-items:center;padding:3vmin;background:rgba(3,2,8,.84);opacity:0;pointer-events:none;transition:opacity .2s}
+.metro.on{opacity:1;pointer-events:auto}
+.mbox{width:min(100%,62em);padding:1.1em 1.4em 1.3em;color:#f4efe4;background:#0d0f18;border-top:5px solid #ffd23d;box-shadow:10px 12px 0 rgba(0,0,0,.6);font:400 clamp(12px,min(1.2vw,2.2vh),22px)/1.4 var(--f-ui);letter-spacing:.03em}
+.mhd{display:flex;align-items:baseline;gap:1em;margin:0 0 .6em}
+.mhd b{font:400 1.9em/1 var(--f-jp);color:#ffd23d}
+.mhd h3{margin:0;font:400 2.1em/1 var(--f-display);letter-spacing:.05em;text-transform:uppercase}
+.mhd p{margin:0 0 0 auto;font-size:.82em;letter-spacing:.22em;text-transform:uppercase;color:rgba(244,239,228,.6)}
+.mmap{position:relative;aspect-ratio:1000/420;background:#11141f;outline:1px solid rgba(255,255,255,.12)}
+.mmap svg{position:absolute;inset:0;width:100%;height:100%}
+.mst{position:absolute;translate:-50% -50%;display:grid;justify-items:center;gap:.16em;padding:.42em .8em .38em;cursor:pointer;color:#f4efe4;background:#0d0f18;border:2px solid #f4efe4;border-radius:99px;outline:none;
+  font:400 1.02em/1 var(--f-display);letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;transition:transform .12s,background .12s,color .12s}
+.mst span{font:400 .62em/1 var(--f-jp);letter-spacing:.2em;opacity:.75}
+.mst small{font:600 .5em/1 var(--f-ui);letter-spacing:.2em}
+.mst:hover:not(:disabled),.mst:focus-visible:not(:disabled){transform:scale(1.12);background:#ffd23d;color:#0b0710;border-color:#ffd23d}
+.mst.here{color:#38c8ff;border-color:#38c8ff;cursor:default}
+.mst:disabled:not(.here){color:rgba(244,239,228,.42);border-color:rgba(244,239,228,.38);border-style:dashed;cursor:default}
+.mft{display:flex;align-items:center;flex-wrap:wrap;gap:.6em 1em;margin-top:.8em}
+.mft span{flex:1 1 16em;font-size:.92em;color:rgba(244,239,228,.78)}
+.mft span b{font-weight:600;color:#ffd23d}
+.mft span i{font-style:normal;font-weight:600;color:#ff8a98}
+.mft button{padding:.5em 1.1em .45em;cursor:pointer;color:#f4efe4;background:rgba(244,239,228,.1);border:0;border-left:3px solid var(--red);outline:none;font:400 1.1em/1 var(--f-display);letter-spacing:.07em;text-transform:uppercase}
+.mft button small{margin-left:.8em;font:400 .55em/1 var(--f-ui);letter-spacing:.3em;opacity:.6}
+.mft button:hover,.mft button:focus-visible{background:var(--red)}
+.obj span{margin-left:.5em;font:400 .6em/1 var(--f-jp);letter-spacing:.2em;color:rgba(244,239,228,.6)}
 /* a question that has to be answered before something is lost */
 .askov{position:fixed;inset:0;z-index:30;display:grid;place-items:center;padding:4vmin;background:rgba(3,2,8,.86)}
 .ask{position:relative;display:grid;gap:.5em;width:min(100%,30em);padding:1.4em 1.6em 1.5em;overflow:hidden;color:var(--bone);background:#120b1d;border-left:5px solid var(--red);box-shadow:10px 12px 0 rgba(0,0,0,.55);
@@ -877,7 +902,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
   </div>
 
   <div class="side" aria-hidden="true" lang="ja">領域展開</div>
-  <div class="hud tl"><b lang="ja">呪</b>Fan project · Build 0.3v1 · Three Slots</div>
+  <div class="hud tl"><b lang="ja">呪</b>Fan project · Build 0.4 · Map Update</div>
   <div class="hud bl">↑ ↓ Select &nbsp;·&nbsp; Enter Confirm</div>
   <div class="hud br">Title screen</div>
   <div class="acct" id="acct">
@@ -1794,7 +1819,7 @@ window.JU = { sfx, flash, bolts: blackFlash, reduceMotion, startGame, exitGame, 
 // Load every game script fresh on each page load. The dev server sends no cache headers, so without this a reload
 // could run a mix of old and new files (new menu, old moves) while the game is being worked on.
 ['account.js', 'game.js', 'fx2.js', 'chars.js', 'street.js', 'walk.js', 'foes.js', 'cuts.js', 'sukuna.js', 'school.js', 'story.js', 'story2.js', 'tech.js', 'tech_a.js',
-  'tech_b.js', 'sets.js', 'story3.js', 'cast2.js', 'script.js', 'naoya.js', 'ch45.js', 'ch67.js', 'clan.js', 'clan_a.js', 'clan_b.js', 'boss.js', 'boss_a.js', 'boss_b.js', 'boss_c.js', 'training.js', 'choso.js', 'domain.js', 'domain2.js', 'mahito.js', 'combo.js', 'combat.js', 'cast3.js', 'ch810.js', 'ch1112.js', 'cast4.js', 'ch1316.js', 'cast5.js', 'ch1721.js', 'combat2.js', 'judge.js', 'awaken.js', 'alimit.js', 'ats.js', 'switcher.js', 'tools.js', 'smark.js', 'cast6.js', 'ch2230.js', 'plants.js', 'clash.js', 'block.js', 'cannon.js', 'tced.js', 'notes.js', 'shop.js', 'touch.js'].forEach(src => {
+  'tech_b.js', 'sets.js', 'story3.js', 'cast2.js', 'script.js', 'naoya.js', 'ch45.js', 'ch67.js', 'clan.js', 'clan_a.js', 'clan_b.js', 'boss.js', 'boss_a.js', 'boss_b.js', 'boss_c.js', 'training.js', 'choso.js', 'domain.js', 'domain2.js', 'mahito.js', 'combo.js', 'combat.js', 'cast3.js', 'ch810.js', 'ch1112.js', 'cast4.js', 'ch1316.js', 'cast5.js', 'ch1721.js', 'combat2.js', 'judge.js', 'awaken.js', 'alimit.js', 'ats.js', 'switcher.js', 'tools.js', 'smark.js', 'cast6.js', 'ch2230.js', 'plants.js', 'clash.js', 'block.js', 'cannon.js', 'tced.js', 'shibuya.js', 'notes.js', 'shop.js', 'touch.js'].forEach(src => {
   const s = document.createElement('script');
   s.src = src + '?v=' + Date.now(); s.async = false;      // async = false keeps them running in this order
   document.body.appendChild(s);

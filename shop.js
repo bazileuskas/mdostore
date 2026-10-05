@@ -40,6 +40,7 @@ function earn(n, o) {
 }
 // a spin is about to happen: is it allowed? It costs a ticket of its own kind (nothing, for the team's account)
 const has = kind => !paid() || S[kind] > 0;
+function give(kind, n) { if (ITEMS[kind]) { S[kind] += n; save(); } }      // tickets won, not bought: a raid pays in them
 function take(kind) {
   if (!paid()) return true;
   if (S[kind] > 0) { S[kind]--; save(); return true; }
@@ -134,10 +135,10 @@ function ask(list) {
     };
     const put = () => {
       const q = list[i];
-      ov.innerHTML = `<div class="ask" role="alertdialog" aria-modal="true" aria-labelledby="askT"><b lang="ja" aria-hidden="true">断</b>
-        <small>${list.length > 1 ? `Asked twice · ${i + 1} of ${list.length}` : 'Before you do'}</small><h3 id="askT">${q.title}</h3><p>${q.text}</p>
+      ov.innerHTML = `<div class="ask" role="alertdialog" aria-modal="true" aria-labelledby="askT"><b lang="ja" aria-hidden="true">${q.mark || '断'}</b>
+        <small>${q.tag || (list.length > 1 ? `Asked twice · ${i + 1} of ${list.length}` : 'Before you do')}</small><h3 id="askT">${q.title}</h3><p>${q.text}</p>
         <div class="askb"><button class="keep" data-a="no">${q.no || 'Cancel'}</button><button class="go" data-a="yes">${q.yes || 'Yes'}</button></div></div>`;
-      ov.querySelector('.keep').focus({ preventScroll: true });      // the safe answer is the one under his hand
+      ov.querySelector(q.lead ? '.go' : '.keep').focus({ preventScroll: true });      // the safe answer is the one under his hand (unless the question is an invitation)
     };
     ov.className = 'askov';
     ov.addEventListener('click', e => {
@@ -313,7 +314,7 @@ function fee(kind) {
   S.t -= FEES[kind]; save();
   return true;
 }
-JU.shop = { mount, take, has, tix, earn, offers, fee, owns, holds, grant, allowed, check, slotsOf, pick, place, plan, ask, row, giveUp, PACKS, FEES, PRICE, RARE,
+JU.shop = { mount, take, has, give, tix, earn, offers, fee, owns, holds, grant, allowed, check, slotsOf, pick, place, plan, ask, row, giveUp, PACKS, FEES, PRICE, RARE,
   get PAID() { return paid(); }, get dev() { return dev(); }, get tokens() { return S.t; }, get owned() { return { ct: S.ct, cl: S.cl, tl: S.tl }; },
   get state() { return { slots: { tech: S.slots.tech.slice(), clan: S.slots.clan.slice() }, lim: { tech: S.lim.tech.slice(), clan: S.lim.clan.slice() }, ea: { tech: S.ea.tech.slice(), clan: S.ea.clan.slice() }, sel: Object.assign({}, S.sel), tool: S.own.tool.slice() }; },
   get demon() { return dev() || !!S.dd; } };        // may the dagger's other form be used?

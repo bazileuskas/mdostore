@@ -9,8 +9,9 @@ const E = JU.eng, g = E.g, P = E.P, F = E.F, cam = E.cam, H = E.hooks, POSE = E.
 const { rnd, lerp, clamp, ZP } = E, TAU = Math.PI * 2, { shout } = JU.tech.tk, GOLD = '#ffd23d', PINK = '#d24fb4';
 const shake = v => { cam.shake = Math.max(cam.shake, v); };
 const NEED = true, FRAMES = 3, DROP = .05;          // are the frames required; how many; the Maki boss's chance of dropping one
-const dev = () => !!(JU.account && JU.account.dev), has = id => !JU.shop || JU.shop.owns('tech', id);
-const S = { frames: 0 };
+const dev = () => !!(JU.account && JU.account.dev);
+const TS_KILLS = 100, TS_BOSS = 10;                 // Awakened Ten Shadows: a hundred curses exorcised with Ten Shadows, ten of them bosses (the user's rule, the Map Update)
+const S = { frames: 0, tsKills: 0, tsBoss: 0, gojo: 0 };      // Projection Frames; curses and bosses exorcised with Ten Shadows; whether Gojo, as he was at school, has awakened his Limitless
 try { Object.assign(S, JSON.parse(localStorage.getItem('ju.awk') || '{}')); } catch (e) {}
 const save = () => { try { localStorage.setItem('ju.awk', JSON.stringify(S)); } catch (e) {} };
 
@@ -318,6 +319,12 @@ H.fightStart = (cfg, wave) => { clear(); start0(cfg, wave); };
 // what it will have to be earned with: the Maki boss gives up a Projection Frame v2 one time in twenty
 H.ko = o => {
   const res = ko0(o), cfg = Fi.fight.cfg;
+  if (cfg && !cfg.dummy && o.ai && JU.tech.active && JU.tech.active.id === 'ten') {      // exorcised with Ten Shadows: it counts toward awakening them
+    const was = S.tsKills >= TS_KILLS && S.tsBoss >= TS_BOSS, boss = !!o.ai.d.kit;
+    S.tsKills++; if (boss) S.tsBoss++; save();
+    if (!was && S.tsKills >= TS_KILLS && S.tsBoss >= TS_BOSS) { sfx.bf(); E.fx.push({ k: 2, x: o.x, y: 470, n: 'AWAKENED TEN SHADOWS  ·  UNLOCKED', col: '#8f9bff', t: 0, life: 3 }); }
+    else if (!was && (boss || S.tsKills % 10 === 0)) E.fx.push({ k: 2, x: o.x, y: 470, n: `TEN SHADOWS  ·  ${Math.min(S.tsKills, TS_KILLS)} / ${TS_KILLS}  ·  BOSSES ${Math.min(S.tsBoss, TS_BOSS)} / ${TS_BOSS}`, col: '#8f9bff', t: 0, life: 2 });
+  }
   if (cfg && cfg.label === 'Maki fight' && o.ai && o.ai.d === Fi.DEFS.maki && Math.random() < DROP) {
     S.frames++; save(); sfx.confirm();
     E.fx.push({ k: 2, x: o.x, y: 420, n: `PROJECTION FRAME V2  ·  ${Math.min(S.frames, FRAMES)} / ${FRAMES}`, col: GOLD, t: 0, life: 2.4 });
@@ -331,7 +338,7 @@ let walk = null, fast = 0;                          // the run, and the seconds 
 const brush = me => { for (const n of JU.street.npcs) if (!(n.frozen > 0) && Math.abs(n.x - me.x) < 90 && Math.abs(n.z - me.z) < 80) { n.frozen = 2; sfx.hover(); } };   // anybody he passes close to
 function streetKey(a) {
   if (a !== 'crush' || !keys.has('r') || !on() || walk || fast > 0) return false;
-  const me = JU.street.me, W = JU.tokyo, dir = me.face || 1;
+  const me = JU.street.me, W = JU.street.world, dir = me.face || 1;
   let far = 0;                                      // how much clear pavement there is ahead of him
   while (far < 2400 && W.free(me.x + dir * (far + 40), me.z)) far += 40;
   walk = { x0: me.x, z: me.z, dir, far, t: 0, trail: [], skin: me.skin, n: 0 }; me.alpha = 0; sfx.charge();
@@ -339,7 +346,7 @@ function streetKey(a) {
 }
 // called every step he takes out there. What it gives back multiplies how fast he walks: nothing while the run plays, a lot once it is over
 function streetTick(dt) {
-  const me = JU.street.me, W = JU.tokyo;
+  const me = JU.street.me, W = JU.street.world;
   if (walk) {
     const n = lapAt(walk.t += dt)[0], u = Math.min(1, walk.t / TOTAL);
     if (n !== walk.n) { walk.n = n; if (n < 10 || n % 3 === 0) sfx.whoosh(); shake(3 + n * .3); }
@@ -369,9 +376,10 @@ const LIST = [
   { id: 'aproj', name: 'Awakened Projection', mark: '蟲', col: PINK, what: 'Naoya, as the cursed spirit he came back as. Frame Breaker, Top Speed, Sonic Boom, Mach 3.',
     later: () => `Needs 3 Projection Frame v2, dropped by the Maki boss (5%). You have ${Math.min(S.frames, FRAMES)}.`, open: () => dev() || !NEED || S.frames >= FRAMES },
   { id: 'alimit', name: 'Awakened Limitless', mark: '蒼', col: '#38c8ff', what: 'Maximum: Blue, Reversal Red: MAX, 150% Hollow Purple, Unlimited Void. Two secret moves.',
-    later: () => 'Needs Limitless: roll it, or buy it in the Daily Shop.', open: () => dev() || has('limitless') },
+    later: () => 'Needs Gojo, as he was at school. He is in Shibuya, by the statue of the dog, and he awakens it for whoever comes to him carrying Limitless.', open: () => dev() || !!S.gojo },
   { id: 'ats', name: 'Awakened Ten Shadows', mark: '影', col: '#8f9bff', what: 'Shiro, Rabbit Escape, Mahoraga, Max Elephant, and the domain Chimera Shadow Garden. Two meters: shikigami left, and cursed energy.',
-    later: () => 'Needs Ten Shadows: roll it first.', note: 'Every exorcism adds one shikigami to call.', open: () => dev() || has('ten') },
+    later: () => `Needs ${TS_KILLS} curses exorcised with Ten Shadows (you have ${Math.min(S.tsKills, TS_KILLS)}), ${TS_BOSS} of them bosses: Mahito, Choso, anything with a technique of its own (you have ${Math.min(S.tsBoss, TS_BOSS)}).`,
+    note: 'Every exorcism adds one shikigami to call.', open: () => dev() || (S.tsKills >= TS_KILLS && S.tsBoss >= TS_BOSS) },
   { id: 'smark', name: 'Sukuna\'s Mark', mark: '印', col: '#ff2440' },
   { id: 'tced', name: 'True Cursed Energy Discharge', mark: '轟', col: '#7fe9ff' }      // tced.js fills this one in
 ];
@@ -394,5 +402,7 @@ document.addEventListener('click', e => {
   JU.tech.equip(c.dataset.awk); mount(body); sfx.bf(); JU.flash(r.left + r.width / 2, r.top + r.height / 2);
 });
 
-JU.awakened = { LIST, SPIRIT, mount, streetKey, streetTick, streetDraw, get frames() { return S.frames; } };
+JU.awakened = { LIST, SPIRIT, mount, streetKey, streetTick, streetDraw, get frames() { return S.frames; },
+  grant(what) { if (what === 'gojo' && !S.gojo) { S.gojo = 1; save(); } }, get gojo() { return !!S.gojo; },
+  get shadows() { return { kills: S.tsKills, boss: S.tsBoss, need: [TS_KILLS, TS_BOSS] }; } };
 })();
