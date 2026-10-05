@@ -42,6 +42,79 @@ function bunny(c, k, a, hop) {                      // one rabbit: small, white,
   g.fillStyle = `rgba(250,250,252,${a})`; g.strokeStyle = `rgba(7,6,12,${a})`; g.lineWidth = 1.5;
   g.beginPath(); g.ellipse(c[0], c[1] - (14 + hop) * k, 17 * k, 13 * k, 0, 0, TAU); g.fill(); g.stroke();
   g.beginPath(); g.ellipse(c[0] + 9 * k, c[1] - (32 + hop) * k, 4 * k, 12 * k, .25, 0, TAU); g.ellipse(c[0] + 15 * k, c[1] - (30 + hop) * k, 4 * k, 11 * k, .5, 0, TAU); g.fill(); g.stroke();
+  g.fillStyle = `rgba(255,150,170,${a})`; g.beginPath(); g.ellipse(c[0] + 9.5 * k, c[1] - (32 + hop) * k, 1.6 * k, 8 * k, .25, 0, TAU); g.fill();
+  g.fillStyle = `rgba(200,16,40,${a})`; g.beginPath(); g.arc(c[0] + 10 * k, c[1] - (17 + hop) * k, 2 * k, 0, TAU); g.fill();
+}
+/* ---------- the shikigami, redrawn (the visual rework): no longer boxes. Each is drawn as the thing it is, from how the series shows it:
+   the Divine Dog a lean white wolf with the mark on its brow; Max Elephant round and pink, water pouring from its trunk; Mahoraga under its
+   eight-handled wheel; and in the domain the rest of the ten as shapes standing in the shadow: Nue with its wings out, the toad, the great
+   serpent, the elephant. `ink` draws one as a shape cut out of the dark, with only its eyes lit ---------- */
+function beast(c, k, face, a, fn) { if (a <= 0) return; g.save(); g.translate(c[0], c[1]); g.scale(face * k, k); g.globalAlpha = Math.min(1, a); g.lineJoin = 'round'; g.lineCap = 'round'; fn(); g.restore(); g.globalAlpha = 1; }
+const shape = (pts, close = true) => { g.beginPath(); g.moveTo(pts[0], pts[1]); for (let i = 2; i < pts.length; i += 2) g.lineTo(pts[i], pts[i + 1]); if (close) g.closePath(); g.fill(); g.stroke(); };
+function wolf(coat, edge, eye, T, run, ink) {
+  const sw = run ? Math.sin(T * 17) : Math.sin(T * 2.2) * .2, leg = (hx, d) => shape([hx - 9, -34, hx + 10, -34, hx + 7 + d * 16, -2, hx + 13 + d * 16, 0, hx - 6 + d * 16, 0]);
+  g.fillStyle = coat; g.strokeStyle = edge; g.lineWidth = 3;
+  g.beginPath(); g.moveTo(-62, -60); g.quadraticCurveTo(-112, -96 + sw * 8, -100, -44); g.quadraticCurveTo(-84, -52, -62, -44); g.closePath(); g.fill(); g.stroke();      // the tail
+  leg(-52, -sw); leg(26, sw);                                                                                       // the far pair of legs
+  g.beginPath(); g.moveTo(-68, -60); g.bezierCurveTo(-44, -84, 6, -82, 34, -74); g.lineTo(54, -54); g.bezierCurveTo(40, -26, -40, -22, -66, -34); g.closePath(); g.fill(); g.stroke();   // the body, deep in the chest and narrow at the hip
+  for (let i = 0; i < 5; i++) shape([-40 + i * 16, -78, -34 + i * 16, -92 - (i % 2) * 5, -26 + i * 16, -78]);     // the ruff standing up along its back
+  leg(-36, sw); leg(40, -sw);
+  shape([28, -76, 42, -112, 54, -88, 62, -108, 72, -84, 100, -70, 100, -60, 76, -50, 48, -50]);                    // the head: two ears, a long muzzle
+  g.fillStyle = ink ? eye : '#1a0a0e'; shape([74, -52, 98, -58, 80, -40]);                                         // its mouth, open
+  if (!ink) { g.fillStyle = '#fff'; g.lineWidth = 1; shape([80, -52, 84, -45, 88, -53]); shape([90, -55, 93, -48, 96, -56]); }
+  g.fillStyle = eye; g.strokeStyle = eye; g.lineWidth = 1; shape([62, -78, 72, -74, 62, -70]);                     // the eye
+  if (!ink) shape([50, -96, 56, -84, 46, -86]);                                                                    // and the mark on its brow
+}
+function elephant(T, ink) {
+  const body = ink ? '#05040c' : '#f7a8c8', dark = ink ? '#05040c' : '#e07aa6', edge = ink ? 'rgba(143,155,255,.6)' : LINE;
+  g.fillStyle = dark; g.strokeStyle = edge; g.lineWidth = 4;
+  for (const x of [-96, 56]) { g.beginPath(); g.roundRect(x, -70, 58, 70, 12); g.fill(); g.stroke(); }             // far legs
+  g.fillStyle = body; g.beginPath(); g.ellipse(-10, -150, 150, 100, 0, 0, TAU); g.fill(); g.stroke();              // the body
+  for (const x of [-130, 20]) { g.beginPath(); g.roundRect(x, -76, 62, 76, 14); g.fill(); g.stroke(); }
+  g.beginPath(); g.ellipse(118, -196, 78, 72, 0, 0, TAU); g.fill(); g.stroke();                                    // the head
+  g.fillStyle = dark; g.beginPath(); g.ellipse(70, -200, 50, 74, -.2, 0, TAU); g.fill(); g.stroke();               // an ear like a sail
+  g.strokeStyle = edge; g.lineWidth = 34; g.beginPath(); g.moveTo(170, -190); g.quadraticCurveTo(232, -170, 214, -96 + Math.sin(T * 5) * 6); g.stroke();      // the trunk
+  g.strokeStyle = body; g.lineWidth = 27; g.beginPath(); g.moveTo(170, -190); g.quadraticCurveTo(232, -170, 214, -96 + Math.sin(T * 5) * 6); g.stroke();
+  g.lineWidth = 3; g.strokeStyle = edge; g.fillStyle = '#f4f1e6'; shape([156, -160, 196, -132, 162, -146]);        // a tusk
+  g.fillStyle = ink ? INDIGO : LINE; g.beginPath(); g.arc(138, -206, ink ? 5 : 7, 0, TAU); g.fill();
+  if (!ink) { g.fillStyle = 'rgba(255,255,255,.55)'; g.beginPath(); g.ellipse(-30, -206, 70, 22, -.1, 0, TAU); g.fill(); }
+}
+function toad() {                                    // squat, wide-mouthed, waiting
+  g.fillStyle = '#05040c'; g.strokeStyle = 'rgba(143,155,255,.6)'; g.lineWidth = 3;
+  g.beginPath(); g.ellipse(0, -44, 78, 46, 0, 0, TAU); g.fill(); g.stroke(); shape([-70, -20, -104, 0, -40, 0]); shape([50, -20, 96, 0, 30, 0]);
+  g.beginPath(); g.ellipse(46, -78, 44, 30, 0, 0, TAU); g.fill(); g.stroke(); g.beginPath(); g.moveTo(14, -70); g.lineTo(88, -70); g.stroke();
+  g.fillStyle = INDIGO; g.beginPath(); g.arc(40, -98, 7, 0, TAU); g.arc(66, -96, 7, 0, TAU); g.fill();
+}
+function nue(T) {                                    // the owl-masked one, wings out, hanging in the air
+  const f = Math.sin(T * 5) * 16;
+  g.fillStyle = '#05040c'; g.strokeStyle = 'rgba(143,155,255,.6)'; g.lineWidth = 3;
+  shape([0, -60, -70, -110 - f, -150, -70 - f * 2, -120, -50, -84, -56, -60, -30, -20, -34]); shape([0, -60, 70, -110 - f, 150, -70 - f * 2, 120, -50, 84, -56, 60, -30, 20, -34]);
+  g.beginPath(); g.ellipse(0, -44, 30, 40, 0, 0, TAU); g.fill(); g.stroke(); g.fillStyle = '#e8e4d8'; g.beginPath(); g.ellipse(0, -66, 20, 16, 0, 0, TAU); g.fill();
+  g.fillStyle = '#05040c'; g.beginPath(); g.arc(-8, -66, 5, 0, TAU); g.arc(8, -66, 5, 0, TAU); g.fill();
+}
+function serpent(T) {                                // the great serpent, most of it still under the floor
+  g.strokeStyle = 'rgba(143,155,255,.6)'; g.lineWidth = 50; g.beginPath(); g.moveTo(-90, 0); g.bezierCurveTo(-110, -230, 30, -260 + Math.sin(T * 2) * 14, 60, -130); g.stroke();
+  g.strokeStyle = '#05040c'; g.lineWidth = 44; g.beginPath(); g.moveTo(-90, 0); g.bezierCurveTo(-110, -230, 30, -260 + Math.sin(T * 2) * 14, 60, -130); g.stroke();
+  g.fillStyle = '#05040c'; g.strokeStyle = 'rgba(143,155,255,.6)'; g.lineWidth = 3; shape([40, -150, 110, -128, 104, -104, 60, -100]);
+  g.fillStyle = INDIGO; g.beginPath(); g.arc(78, -130, 5, 0, TAU); g.fill();
+}
+// the wheel that turns over Mahoraga's head: eight handles, and it has turned once for everything that has ever hit it
+function wheel(c, k, a, spin) {
+  g.save(); g.translate(c[0], c[1]); g.rotate(spin); g.globalAlpha = Math.min(1, a); g.lineCap = 'round';
+  g.globalCompositeOperation = 'lighter'; E.glow(E.GLOW.gold || E.GLOW.fire, 0, 0, 380 * k, .5 * a); g.globalCompositeOperation = 'source-over';
+  g.strokeStyle = '#3a2c10'; g.lineWidth = 13 * k; g.beginPath(); g.arc(0, 0, 62 * k, 0, TAU); g.stroke();
+  g.strokeStyle = GOLD; g.lineWidth = 7 * k; g.beginPath(); g.arc(0, 0, 62 * k, 0, TAU); g.stroke(); g.beginPath(); g.arc(0, 0, 16 * k, 0, TAU); g.stroke();
+  for (let i = 0; i < 8; i++) { const an = i * TAU / 8, cs = Math.cos(an), sn = Math.sin(an); g.lineWidth = 5 * k; g.beginPath(); g.moveTo(cs * 16 * k, sn * 16 * k); g.lineTo(cs * 62 * k, sn * 62 * k); g.stroke(); g.lineWidth = 9 * k; g.beginPath(); g.moveTo(cs * 70 * k, sn * 70 * k); g.lineTo(cs * 92 * k, sn * 92 * k); g.stroke(); }
+  g.restore(); g.globalAlpha = 1;
+}
+// the pool a shikigami comes up out of: shadow, lying on the floor like spilt ink, with the edge of it still moving
+function pool(x, r, a, col = '143,155,255') {
+  const c = F(x, 0), k = c[2], T = E.T;
+  g.fillStyle = `rgba(4,3,10,${.9 * a})`; g.beginPath();
+  for (let i = 0; i <= 40; i++) { const an = i / 40 * TAU, rr = r * (1 + .07 * Math.sin(an * 5 + T * 3) + .05 * Math.sin(an * 9 - T * 2)); g.lineTo(c[0] + Math.cos(an) * rr * k, c[1] + Math.sin(an) * rr * .23 * k); }
+  g.closePath(); g.fill(); g.strokeStyle = `rgba(${col},${.7 * a})`; g.lineWidth = 2.5; g.stroke();
+  g.fillStyle = `rgba(4,3,10,${.85 * a})`;
+  for (let i = 0; i < 7; i++) { const u = (T * .9 + i * .37) % 1, px = c[0] + ((i * 61 % 100) / 50 - 1) * r * .8 * k; g.beginPath(); g.ellipse(px, c[1] - u * 150 * k, 5 * k * (1 - u), 12 * k * (1 - u), 0, 0, TAU); g.fill(); }   // and drops of it going up, not down
 }
 const RITUAL = [.12, -.06, 1.5, 1.42, .28, -.28, 0];               // both fists out in front of him, one on top of the other
 function flee() {                                   // he is past the last of the rabbits: the fight is somebody else's problem now
@@ -97,15 +170,15 @@ const SHAPES = Array.from({ length: 9 }, (_, i) => [-1000 + i * 250 + (i * 37 % 
 function gardenIn() {
   const HY = E.HY, VW = E.VW, T = E.T;
   g.fillStyle = 'rgba(6,5,16,.82)'; g.fillRect(-300, HY, VW + 600, E.VH - HY + 500);
+  const hz = g.createLinearGradient(0, HY - 260, 0, HY); hz.addColorStop(0, 'rgba(14,12,48,0)'); hz.addColorStop(1, 'rgba(60,66,160,.34)'); g.fillStyle = hz; g.fillRect(-300, HY - 260, VW + 600, 262);      // the dark standing up out of the floor
+  g.fillStyle = 'rgba(4,3,10,.9)'; for (let i = 0; i < 16; i++) { const x = ((i * 173 % 1000) / 1000) * (VW + 200) - 100, h = 120 + (i * 97 % 260) + 30 * Math.sin(T * 1.3 + i); g.beginPath(); g.moveTo(x - 26, HY); g.quadraticCurveTo(x - 6 + 10 * Math.sin(T + i), HY - h * .6, x, HY - h); g.quadraticCurveTo(x + 8 + 10 * Math.sin(T + i), HY - h * .6, x + 26, HY); g.fill(); }
+  g.fillStyle = 'rgba(143,155,255,.5)'; for (let i = 0; i < 40; i++) { const u = (T * .35 + i * .137) % 1, c2 = P(-1100 + (i * 211 % 2200), u * 520, ZP + 60 + (i * 53 % 420)); g.fillRect(c2[0], c2[1], 3 * c2[2], 9 * c2[2] * (1 - u)); }      // drops of it, going up
   g.strokeStyle = 'rgba(143,155,255,.28)'; g.lineWidth = 2;                                       // rings going out across it, as if it were water
   for (let i = 0; i < 6; i++) { const r = ((T * 90 + i * 220) % 1320) + 60, c = P(0, 0, ZP + 120); g.beginPath(); g.ellipse(c[0], c[1], r * c[2], r * .24 * c[2], 0, 0, TAU); g.stroke(); }
   for (const s of SHAPES) {                                                                       // the rest of the ten, waiting
     const c = P(s[0], 0, ZP + s[1]), k = c[2] * s[2], bob = Math.sin(T * 1.4 + s[0]) * 8 * k;
-    g.save(); g.translate(c[0], c[1] + bob); g.scale(s[3] * k, k);
-    g.fillStyle = '#05040c'; g.strokeStyle = 'rgba(143,155,255,.5)'; g.lineWidth = 2;
-    for (const r of DOG) { g.beginPath(); g.rect(r[0], r[1], r[2], r[3]); g.fill(); g.stroke(); }
-    g.fillStyle = INDIGO; g.fillRect(40, -62, 8, 6);
-    g.restore();
+    const kind = SHAPES.indexOf(s) % 5;
+    beast([c[0], c[1] + (kind === 2 ? -150 * k + bob * 2 : bob)], k * (kind === 4 ? 1.5 : 1.1), s[3], 1, () => (kind === 0 ? wolf('#05040c', 'rgba(143,155,255,.6)', INDIGO, T + s[0], false, true) : kind === 1 ? toad() : kind === 2 ? nue(T + s[0]) : kind === 3 ? serpent(T + s[0]) : elephant(T, true)));
   }
 }
 function hold(o) { if (!o.ko && (o.state === 'idle' || o.state === 'act' || o.state === 'up')) Object.assign(o, { state: 'hurt', stun: .4, act: null, tele: 0 }); }
@@ -218,15 +291,12 @@ H.under = dt => {
   if (!on()) return;
   if (rite) {                                       // the pool of shadow it comes up out of, and the two dogs howling over it
     const u = Math.min(1, rite.t / 1.2), c = F(rite.x, 0), k = c[2];
-    g.fillStyle = `rgba(4,3,10,${.9 * u})`; g.beginPath(); g.ellipse(c[0], c[1], 420 * u * k, 96 * u * k, 0, 0, TAU); g.fill();
-    g.strokeStyle = `rgba(226,192,96,${u})`; g.lineWidth = 3; g.stroke();
-    const w = F(rite.x, 330 + 60 * u);
-    g.save(); g.translate(w[0], w[1]); g.rotate(E.T * 3); g.strokeStyle = `rgba(226,192,96,${u})`; g.lineWidth = 5 * k;
-    g.beginPath(); g.arc(0, 0, 60 * k, 0, TAU); g.stroke();
-    for (let i = 0; i < 8; i++) { const a = i * TAU / 8; g.beginPath(); g.moveTo(Math.cos(a) * 20 * k, Math.sin(a) * 20 * k); g.lineTo(Math.cos(a) * 84 * k, Math.sin(a) * 84 * k); g.stroke(); }
-    g.restore();
-    sprite(rite.x - 330, 0, 1, 1.15, u, '#f2f4f8', DOG, dogFace); sprite(rite.x + 330, 0, -1, 1.15, u, '#17161f', DOG, dogFace);
+    pool(rite.x, 430 * u, u, '226,192,96'); pool(rite.x - 330, 130 * u, u); pool(rite.x + 330, 130 * u, u);
+    wheel(F(rite.x, 330 + 90 * u), k * (1 + .4 * u), u, E.T * 3);
+    beast(F(rite.x - 330, 0), k * 1.2, 1, u, () => wolf('#f2f4f8', LINE, '#c2182b', E.T, false)); beast(F(rite.x + 330, 0), k * 1.2, -1, u, () => wolf('#1b1a24', '#6a6f9a', '#f2f4f8', E.T, false));
   }
+  if (dog && !dog.gone) pool(dog.x, 110 * Math.min(1, dog.a), Math.min(1, dog.a) * .8);
+  if (maho && maho.f) pool(maho.f.x, 260, .8, '226,192,96');
   if (rab) {                                        // rabbits, wall to wall and well past it
     const r = rab, T = E.T, o = E.P2;
     if (r.storm) {                                  // ...or all of them in one place, which stops looking like rabbits at all
@@ -238,14 +308,18 @@ H.under = dt => {
 H.fx = dt => {
   fx0(dt);
   if (!on()) return;
-  if (dog) sprite(dog.x, 0, dog.face, 1.05, dog.gone ? 1 - dog.gone / .4 : dog.a, '#f2f4f8', DOG, dogFace);
+  if (dog) { const da = dog.gone ? 1 - dog.gone / .4 : dog.a, c = F(dog.x, 0); beast(c, c[2] * 1.15, dog.face, da, () => wolf('#f2f4f8', LINE, '#c2182b', E.T, !!dog.at)); }
+  if (maho && maho.f) { const f = maho.f, c = P(f.x, f.y + 560, f.z || ZP); wheel(c, c[2] * 1.15, f.alpha === undefined ? 1 : f.alpha, E.T * 1.6 + (maho.sw || 0) * .8); }      // the wheel stays over it for as long as it does
   if (rab && rab.storm) {                           // the front half of the blob, over whatever is inside it
     const o = E.P2, u = Math.min(1, rab.storm.t / .35), c = F(o.x, o.y + 150 * (o.scale || 1)), k = c[2], T = E.T;
     for (let i = 0; i < 44; i++) { const a = i * 2.39996 - T * 4, d = (20 + (i * 53 % 130)) * u; bunny([c[0] + Math.cos(a) * d * k, c[1] + Math.sin(a) * d * .9 * k + 14 * k], k * 1.25, 1, 0); }
   }
   if (ele) {                                        // it arrives from straight overhead
     const e = ele, y = e.t < .45 ? lerp(760, 0, (e.t / .45) ** 2) : 0, a = e.t > 1.1 ? Math.max(0, 1 - (e.t - 1.1) / .4) : 1;
-    sprite(e.x, y, e.face, 1.5, a, '#ff9ec4', ELE, eleFace);
+    const c = F(e.x, y), k = c[2] * 1.5;
+    if (e.t < .5) { g.fillStyle = `rgba(122,215,255,${.5 * a})`; g.beginPath(); g.rect(c[0] + e.face * 190 * k, c[1] - 110 * k, 34 * k * e.face, 900 * k); g.fill(); }      // the water is already coming down ahead of it
+    else if (e.t < 1) { const u = (e.t - .5) / .5, g0 = F(e.x, 0); g.strokeStyle = `rgba(190,236,255,${1 - u})`; g.lineWidth = 6; for (let i = 0; i < 12; i++) { const an = Math.PI + i / 11 * Math.PI, r = (120 + 340 * u) * g0[2]; g.beginPath(); g.moveTo(g0[0] + Math.cos(an) * r * .5, g0[1]); g.quadraticCurveTo(g0[0] + Math.cos(an) * r, g0[1] + Math.sin(an) * r * .9, g0[0] + Math.cos(an) * r * 1.25, g0[1] + Math.sin(an) * r * .3 + u * 80 * g0[2]); g.stroke(); } }   // and where it lands, a crown of it thrown up
+    beast(c, k, e.face, a, () => elephant(E.T, false));
   }
 };
 const clear = () => { dog = rab = maho = ele = rite = null; garden = fled = false; used = 0; ce = 30; };

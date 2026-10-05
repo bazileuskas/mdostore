@@ -5,6 +5,14 @@
 // Newest first. v = the build, jp = the seal stamped beside it, pic = notes/<pic>.jpg, cap = what the picture shows.
 // A new update goes at the top of this list.
 const NOTES = [
+  { v: '0.5', name: 'Kyoto', jp: '京', date: '5 Oct 2026', pic: 'kyoto', cap: 'Kyoto Station, Kyoto Tower, and the fire on the hill', items: [
+    'The Kyoto expansion: a second stop on the line, by bullet train, open on the same terms as Shibuya. Laid out from the real city: the bamboo grove at Arashiyama, the Golden Pavilion, Kyoto Jujutsu High, Kyoto Station and Kyoto Tower, the Kamo River, Gion and Hanamikoji, Yasaka Shrine, the Yasaka Pagoda, Kiyomizu-dera, the thousand gates of Fushimi Inari, and the Zenin estate. Over all of it, 大 burning on the hill',
+    'In Kyoto: Todo, Mai, Utahime and Maki to talk to; three raids (The Goodwill Event, A Thousand Curses on the Kamo bridge, The Zenin Estate); and five secret bosses, two of them standing where a thousand-year-old sorcerer would',
+    'The route board has been redrawn the way the ones on a station wall are: a yellow sign, a white street map, and every stop as its numbered ring',
+    'True Cursed Energy Discharge has a new fourth move, Dessert: steam off his hair, a burst that throws him across the stage, a beating where the enemy falls, one red swing, and a last blow that everything stops for. 1000 in all',
+    'Max Granite Blast has moved to G. The bar under his health fills with the damage he does, and G spends it',
+    'Awakened Ten Shadows has been redrawn. Shiro is a wolf now, not a box. Max Elephant comes down with its water. Mahoraga stands under its eight-handled wheel. And in Chimera Shadow Garden the rest of the ten are standing in the shadow as what they are: Nue, the toad, the great serpent, the elephant',
+    'Announcements from the team appear at the top of the screen, marked with a blue tick'] },
   { v: '0.4', name: 'Map Update', jp: '渋', date: '5 Oct 2026', pic: 'shibuya', cap: 'Hachiko Square: the statue, the old green train car, and somebody waiting by the dog', items: [
     'The Tokyo block has a subway entrance at its east end. Walk to the end of the block and a route map asks where to. The line opens once you have exorcised 10 curses and finished Season 1',
     'One stop is open, the nearest: Shibuya, on the night of the incident, under the curtain. It is about three times the length of the Tokyo block and laid out from the real place: Dogenzaka, Mark City and the Avenue Exit, Shibuya 109, Center Gai, the Scramble Crossing under QFRONT, Hachiko Square, the station and the Yamanote viaduct, Scramble Square, Hikarie, Miyashita Park, Nonbei Yokocho, Expressway Route 3 and C Tower',
