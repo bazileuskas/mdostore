@@ -107,7 +107,7 @@ function flash02(p) {
   });
 }
 
-JU.tech.add('smark', { name: 'King of Curses\'s Mark', jp: '王の印', mark: '印', who: 'The King of Curses, through his vessel', odds: 0, col: RED, glow: 'red', moves: MOVES, awakened: true });
+JU.tech.add('smark', { name: 'Mark of the King', jp: '王の印', mark: '印', who: 'The King of Curses, through his vessel', odds: 0, col: RED, glow: 'red', moves: MOVES, awakened: true });
 const DEF = JU.tech.TECH.smark, on = () => JU.tech.active === DEF;
 
 /* ---------- wiring ---------- */

@@ -12980,7 +12980,7 @@ const LIST = [
   { id: 'ats', name: 'Awakened Ten Shadows', mark: '影', col: '#8f9bff', what: 'Shiro, Rabbit Escape, Mahoraga, Max Elephant, and the domain Chimera Shadow Garden. Two meters: shikigami left, and cursed energy.',
     later: () => `Needs ${TS_KILLS} curses exorcised with Ten Shadows (you have ${Math.min(S.tsKills, TS_KILLS)}), ${TS_BOSS} of them bosses: Soul Shaper, Blood Brother, anything with a technique of its own (you have ${Math.min(S.tsBoss, TS_BOSS)}).`,
     note: 'Every exorcism adds one shikigami to call.', open: () => dev() || (S.tsKills >= TS_KILLS && S.tsBoss >= TS_BOSS) },
-  { id: 'smark', name: 'King of Curses\'s Mark', mark: '印', col: '#ff2440' },
+  { id: 'smark', name: 'Mark of the King', mark: '印', col: '#ff2440' },
   { id: 'tced', name: 'True Cursed Energy Discharge', mark: '轟', col: '#7fe9ff' }      // tced.js fills this one in
 ];
 function mount(body) {
@@ -14515,7 +14515,7 @@ function flash02(p) {
   });
 }
 
-JU.tech.add('smark', { name: 'King of Curses\'s Mark', jp: '王の印', mark: '印', who: 'The King of Curses, through his vessel', odds: 0, col: RED, glow: 'red', moves: MOVES, awakened: true });
+JU.tech.add('smark', { name: 'Mark of the King', jp: '王の印', mark: '印', who: 'The King of Curses, through his vessel', odds: 0, col: RED, glow: 'red', moves: MOVES, awakened: true });
 const DEF = JU.tech.TECH.smark, on = () => JU.tech.active === DEF;
 
 /* ---------- wiring ---------- */
@@ -18363,7 +18363,7 @@ const NOTES = [
     'What a spin lands on is yours to keep. A card now equips only what you own: the rest are shown sealed, and pressing one says how it is come by',
     'Whatever you had equipped when this update arrived (your technique, your clan, the tools in your pockets) counts as yours',
     'Accounts. The scroll in the top right corner unrolls into Log in and Register, and SFX has moved to its left. An account has a save of its own: techniques, clans, tickets, tokens, story. Accounts are kept in the browser they are made in, and do not follow you to another device',
-    'Awakened techniques are earned now. Awakened Projection: three Projection Frame v2 from the Heavenly Blade boss, who gives one up 5% of the time. King of Curses\'s Mark: the King of Curses clan, 150 Black Flashes as King of Curses, 500 curses exorcised. Awakened Limitless and Awakened Ten Shadows: the technique each is the awakening of',
+    'Awakened techniques are earned now. Awakened Projection: three Projection Frame v2 from the Heavenly Blade boss, who gives one up 5% of the time. Mark of the King: the King of Curses clan, 150 Black Flashes as King of Curses, 500 curses exorcised. Awakened Limitless and Awakened Ten Shadows: the technique each is the awakening of',
     'The Heavenly Blade fight costs 50 Cursed Tokens a go',
     'Early Access techniques and the Dagger of the Demonly Holdings are sealed until they can be had: Early Access is not on sale yet, and the dagger\'s questline is not built',
     'A new awakened technique: True Cursed Energy Discharge. Granite Cannon with nothing held back, and no heat to mind. It is Cursed Cannon awakened, so it asks for Cursed Cannon',
@@ -18387,7 +18387,7 @@ const NOTES = [
     'A heavy blow breaks it: anything that would have thrown him into the air, or that hits for 16 or more. He takes half of it, keeps his feet, and cannot block again for two seconds',
     'Behind his guard he can walk, slowly, and nothing else: no strikes, no moves, no dash, no jump until the key is let go. A blow from behind, a sure-hit and the Executioner\'s Sword are not blocked',
     'On a phone there is a Block button to hold down',
-    'The Shop has a Packs tab, and in it the Heian Era God pack, $12.99: Shrine, King of Curses\'s Mark, the King of Curses clan, the Dagger of the Demonly Holdings, 50 Clan spins, 75 CT spins and 30 Cursed Tool spins. Like Early Access it is not on sale yet, so its button does nothing',
+    'The Shop has a Packs tab, and in it the Heian Era God pack, $12.99: Shrine, Mark of the King, the King of Curses clan, the Dagger of the Demonly Holdings, 50 Clan spins, 75 CT spins and 30 Cursed Tool spins. Like Early Access it is not on sale yet, so its button does nothing',
     'The sound of a blow stopped on his guard is made by the game. A file of your own saved as sounds/block.mp3 is used instead'] },
   { v: '0.2v4', name: 'Shrine Rework × Blood Brother', jp: '斬血', date: '5 Oct 2026', pic: 'cuts', cap: 'Malevolent Shrine, cutting', items: [
     'Shrine has been redrawn from the anime, all of it. A cut is not a red line across the screen any more: it parts what it goes through. A hairline first, then the two sides slide past each other, the floor, the background and whoever is standing there with them, the gap shows black with its edges still hot, and it closes',
@@ -18396,7 +18396,7 @@ const NOTES = [
     'Fuga: flames turn in to his hand and become an arrow. It crosses the arena in a tenth of a second, and where it lands a fire stands on a floor cracked and glowing',
     'World Slash: the light goes, a line is drawn across everything, and the picture splits along it and stays split for a moment',
     'The heavy cuts land in the frame the anime shows them in: white with the cuts on it as hairlines, then the colour of raw meat with broad dark strokes across it. Dismantle and Cleave are brushed onto the air as they land',
-    'Malevolent Shrine cuts the air, the floor and whatever is on it, over and over, and leaves the floor gashed. King of Curses\'s plain strikes are blades now, the choke hold cuts, and King of Curses\'s Mark cuts the same way. King of Curses as a boss has all of it too',
+    'Malevolent Shrine cuts the air, the floor and whatever is on it, over and over, and leaves the floor gashed. King of Curses\'s plain strikes are blades now, the choke hold cuts, and Mark of the King cuts the same way. King of Curses as a boss has all of it too',
     'Blood Brother: the edge of him is lit red while the technique is his, brighter while he is striking',
     'Blood Brother\'s plain strikes are hardened blood: a spike off the first fist, a blade off each of the next two, a wider one off his foot. They reach a little further than a bare hand',
     'Piercing Blood is held. His hands come together and stay together for as long as the fourth key is down, up to three seconds, with blood winding round him. The longer, the harder: 28 for a tap, 33 at the old timing, 64 just short of two seconds',
@@ -18453,8 +18453,8 @@ const NOTES = [
     '29 Unsealed: Blindfolded Infinity is out of the box. 30 December 24th: Blindfolded Infinity, with Awakened Limitless, walks out to meet King of Curses in Shinjuku. It stops as the two domains go up',
     'New opponents with movesets of their own: Receipt Man, Sky Captain, Granite Cannon, Thunder God, cursed-spirit Frame Runner, The Stitched One and The Constructor. New places: the gym, the docks of Tokyo No. 2, and Shinjuku in the snow',
     'A long season lays its chapters out in three rows'] },
-  { v: '0.19v8', name: 'King of Curses\'s Mark and Deadly Sentencing', jp: '王の印', date: '4 Oct 2026', pic: 'smark', cap: 'Shinjutsu Shrine: a thousand cuts, 3 each', items: [
-    'King of Curses\'s Mark, the fourth Awakened CT (Cursed Technique screen, Awaken CT). Free for now. Later it will need the King of Curses clan, 150 Black Flashes as King of Curses and 500 curses exorcised: both are being counted already',
+  { v: '0.19v8', name: 'Mark of the King and Deadly Sentencing', jp: '王の印', date: '4 Oct 2026', pic: 'smark', cap: 'Shinjutsu Shrine: a thousand cuts, 3 each', items: [
+    'Mark of the King, the fourth Awakened CT (Cursed Technique screen, Awaken CT). Free for now. Later it will need the King of Curses clan, 150 Black Flashes as King of Curses and 500 curses exorcised: both are being counted already',
     '1 Deadly Cleave: he dashes in, takes hold of it and lets Cleave off into it. 666',
     '2 Shrine Cleave: a shrine with no domain round it stands for five seconds and cuts at the enemy. 500 in all',
     '3 500% Fuga: an arrow of fire. 700 where it lands, and the enemy is thrown the length of the arena',
@@ -18508,7 +18508,7 @@ const NOTES = [
     'Out on the street in Free Exploration, hold R and press 2 for Top Speed: passers-by and curses you brush past freeze where they stand',
     'Sonic Boom (3) and Mach 3 (4) round out the set',
     'It is free for now. Later it will take three Projection Frame v2, which the Heavenly Blade boss already drops one time in twenty',
-    'Awakened Limitless, Awakened Ten Shadows and King of Curses\'s Mark are on the menu as coming soon'] },
+    'Awakened Limitless, Awakened Ten Shadows and Mark of the King are on the menu as coming soon'] },
   { v: '0.19v2', name: 'Early Access: Cursed Judge', jp: '審判', date: '4 Oct 2026', pic: 'judge', cap: 'Justice Served', items: [
     'A new early-access technique: Cursed Judge (The Judge), with the Defense Attorney\'s moves from another game',
     'His strikes are gavel strikes. The gavel is a size bigger with every strike of the chain, the second one raps twice, and each has its own sound',
@@ -18886,7 +18886,7 @@ const HEIAN = `<img src="${(window.JU_PICS && window.JU_PICS['heian-sukuna']) ||
 const PACK_PRICE = '$12.99';
 const PACKS = [{ id: 'heian', name: 'Heian Era God', tag: 'God Pack · King of Curses', price: PACK_PRICE, col: '#ff2440', pic: HEIAN,
   line: 'Everything the King of Curses had at his height, a thousand years ago, in one pack.',
-  holds: [['Shrine', 'cursed technique'], ['King of Curses\'s Mark', 'awakened cursed technique'], ['King of Curses', 'clan'], ['Dagger of the Demonly Holdings', 'cursed tool'],
+  holds: [['Shrine', 'cursed technique'], ['Mark of the King', 'awakened cursed technique'], ['King of Curses', 'clan'], ['Dagger of the Demonly Holdings', 'cursed tool'],
           ['50', 'Clan spins'], ['75', 'CT spins'], ['30', 'Cursed Tool spins']] }];
 function packs() {
   return `<div class="goods">${PACKS.map(k => `<div class="good pack" style="--c:${k.col}">

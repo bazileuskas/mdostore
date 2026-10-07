@@ -380,7 +380,7 @@ const LIST = [
   { id: 'ats', name: 'Awakened Ten Shadows', mark: '影', col: '#8f9bff', what: 'Shiro, Rabbit Escape, Mahoraga, Max Elephant, and the domain Chimera Shadow Garden. Two meters: shikigami left, and cursed energy.',
     later: () => `Needs ${TS_KILLS} curses exorcised with Ten Shadows (you have ${Math.min(S.tsKills, TS_KILLS)}), ${TS_BOSS} of them bosses: Soul Shaper, Blood Brother, anything with a technique of its own (you have ${Math.min(S.tsBoss, TS_BOSS)}).`,
     note: 'Every exorcism adds one shikigami to call.', open: () => dev() || (S.tsKills >= TS_KILLS && S.tsBoss >= TS_BOSS) },
-  { id: 'smark', name: 'King of Curses\'s Mark', mark: '印', col: '#ff2440' },
+  { id: 'smark', name: 'Mark of the King', mark: '印', col: '#ff2440' },
   { id: 'tced', name: 'True Cursed Energy Discharge', mark: '轟', col: '#7fe9ff' }      // tced.js fills this one in
 ];
 function mount(body) {
