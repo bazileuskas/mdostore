@@ -3,7 +3,7 @@
 'use strict';
 
 const E = JU.eng, C = JU.cast, X = JU.cast2, V = JU.vfx, sfx = JU.sfx, Y = E.YUJI, add = JU.chapters.add;
-const AS_GOJO = { skin: C.GOJO, tech: 'limitless', name: ['Satoru Gojo', '五条悟'] };
+const AS_GOJO = { skin: C.GOJO, tech: 'limitless', name: ['Blindfolded Infinity', '無限'] };
 const NANAMI = { skin: X.NANAMI, call: 'RATIO  7:3', col: '#ffd27a', dmg: 11 };
 
 add(4, 'The Strongest', [
@@ -16,19 +16,19 @@ add(4, 'The Strongest', [
     ['gojo', 'But first, a field trip. Somebody has been dying to meet me.']
   ] },
   { stage: 'mountain', p1: [C.GOJO, -200], cast: [[Y, -430, 1]], foe: ['jogo', 300], card: ['山道', 'A MOUNTAIN ROAD'], lines: [
-    ['jogo', 'Satoru Gojo. Tonight the pillar this rotten human age leans on burns down.'],
-    ['gojo', 'A special grade that can hold a conversation. Yuji, this one is a lesson. Watch closely.'],
+    ['jogo', 'Blindfolded Infinity. Tonight the pillar this rotten human age leans on burns down.'],
+    ['gojo', 'A special grade that can hold a conversation. Vessel, this one is a lesson. Watch closely.'],
     ['yuji', 'You brought me to a fight as homework?!'],
     ['gojo', 'The best kind. Do not blink.']
   ] },
   // the player is Gojo here, with the whole Limitless moveset
-  { foes: ['jogo'], stage: 'mountain', as: AS_GOJO, label: 'The strongest', card: ['漏瑚', 'JOGO'], domain: 'blue' },
+  { foes: ['jogo'], stage: 'mountain', as: AS_GOJO, label: 'The strongest', card: ['火山', 'DISASTER FLAME'], domain: 'blue' },
   { stage: 'void', p1: [C.GOJO, -160], cast: [[Y, -400, 1]], foe: ['jogo', 220], card: ['無量空処', 'UNLIMITED VOID'], zoom: 1.05, lines: [
     ['gojo', 'Domain Expansion. Unlimited Void.'],
     ['gojo', 'In here you see everything and feel everything, without end. So you can do nothing at all.'],
     ['jogo', '...I cannot... move. What... is this...'],
     ['yuji', 'So this is what the strongest looks like.'],
-    ['gojo', 'This is what the top looks like, Yuji. Now climb.']
+    ['gojo', 'This is what the top looks like, Vessel. Now climb.']
   ] }
 ]);
 
@@ -39,9 +39,9 @@ function trespass() {
   V.impact(.3, o.x, 150); V.sparks(o.x, 150, 'red', 20); E.cam.shake = 24; sfx.bf();
 }
 
-add(5, 'Mahito', [
+add(5, 'Soul Shaper', [
   { stage: 'street', p1: [Y, -260], cast: [[X.NANAMI, -20, -1]], card: ['川崎', 'KAWASAKI'], lines: [
-    ['nanami', 'Kento Nanami. Grade one. I should say now that I do not like this job. I only dislike it less than my last one.'],
+    ['nanami', 'Ratio Blade. Grade one. I should say now that I do not like this job. I only dislike it less than my last one.'],
     ['yuji', 'Nice to meet you, Nanamin!'],
     ['nanami', 'Do not call me that. Look ahead. Those were people an hour ago. Something reshaped them.'],
     ['yuji', 'Can we turn them back?'],
@@ -49,12 +49,12 @@ add(5, 'Mahito', [
   ] },
   { foes: ['warped', 'warped2'], stage: 'street', ally: NANAMI, label: 'Kawasaki' },
   { stage: 'school', p1: [Y, -230], cast: [[X.NANAMI, -470, 1]], foe: ['mahito', 280], card: ['里桜高校', 'SATOZAKURA HIGH'], lines: [
-    ['mahito', 'So you are Sukuna\'s vessel! I have wanted to get my hands on your soul for ages.'],
+    ['mahito', 'So you are King of Curses\'s vessel! I have wanted to get my hands on your soul for ages.'],
     ['yuji', 'You are the one who did that to those people.'],
     ['mahito', 'I changed their shape, that is all. Souls are clay. Shall we look at yours?'],
-    ['nanami', 'Itadori. Do not let his palms touch you.']
+    ['nanami', 'Vessel. Do not let his palms touch you.']
   ] },
-  { foes: ['mahito'], stage: 'school', ally: NANAMI, label: 'Special grade', card: ['真人', 'MAHITO'], win: ['逃', 'HE GOT AWAY'],
+  { foes: ['mahito'], stage: 'school', ally: NANAMI, label: 'Special grade', card: ['魂', 'SOUL SHAPER'], win: ['逃', 'HE GOT AWAY'],
     mid: { at: .5, lines: [
       ['mahito', 'Got you. Now, what does the inside of a vessel look l—'],
       ['sukuna', 'Who told you that you could touch my soul?', trespass],

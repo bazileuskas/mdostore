@@ -134,25 +134,25 @@ Object.assign(Fi.DEFS, {
   warped: { name: 'Transfigured Human', jp: '改造人間', skin: WARPED, hp: 70, scale: 1, speed: 190, range: 150, gap: [.6, 1.3], atk: [A('hookWind', 'hook', .5, 280, 170, 8, 320)] },
   warped2: { name: 'Transfigured Human', jp: '改造人間', skin: WARPED, hp: 100, scale: 1.2, speed: 160, range: 170, gap: [.6, 1.2],
     atk: [A('hookWind', 'hook', .5, 300, 190, 9, 360), A('crushWind', 'crush', .7, 320, 210, 14, 540, { lift: 520 })] },
-  jogo: { name: 'Jogo', jp: '漏瑚', skin: JOGO, hp: 220, scale: 1, speed: 210, range: 190, gap: [.4, 1], human: true,
+  jogo: { name: 'Disaster Flame', jp: '火山', skin: JOGO, hp: 220, scale: 1, speed: 210, range: 190, gap: [.4, 1], human: true,
     atk: [A('hookWind', 'hook', .4, 380, 200, 9, 420), A('divWind', 'div', .6, 0, 0, 12, 480, Object.assign({ lift: 380 }, SHOT)), A('crushWind', 'crush', .65, 360, 220, 15, 600, { lift: 580 })] },
-  mahito: { name: 'Mahito', jp: '真人', skin: MAHITO, hp: 240, scale: 1.02, speed: 230, range: 190, gap: [.4, 1], dr: .8, human: true,
+  mahito: { name: 'Soul Shaper', jp: '魂', skin: MAHITO, hp: 240, scale: 1.02, speed: 230, range: 190, gap: [.4, 1], dr: .8, human: true,
     atk: [A('hookWind', 'hook', .4, 400, 230, 10, 440), A('divWind', 'div', .6, 0, 0, 11, 460, SHOT), A('kickWind', 'kick', .5, 420, 220, 12, 620, { lift: 560 })] },
-  todo: { name: 'Aoi Todo', jp: '東堂葵', skin: TODO, hp: 210, scale: 1.2, speed: 220, range: 190, gap: [.45, 1], human: true,
+  todo: { name: 'Clapping Brawler', jp: '拍手', skin: TODO, hp: 210, scale: 1.2, speed: 220, range: 190, gap: [.45, 1], human: true,
     atk: [A('hookWind', 'hook', .42, 400, 210, 10, 460), A('crushWind', 'crush', .6, 380, 220, 15, 640, { lift: 560 }), A('kickWind', 'kick', .5, 420, 220, 12, 600, { lift: 480 })] },
-  hanami: { name: 'Hanami', jp: '花御', skin: HANAMI, hp: 300, scale: 1.3, speed: 200, range: 210, gap: [.4, .95], dr: .55, poise: true,
+  hanami: { name: 'Disaster Bloom', jp: '花', skin: HANAMI, hp: 300, scale: 1.3, speed: 200, range: 210, gap: [.4, .95], dr: .55, poise: true,
     atk: [A('hookWind', 'hook', .45, 400, 240, 12, 480), A('divWind', 'div', .65, 0, 0, 13, 500, Object.assign({ lift: 400 }, SHOT)), A('crushWind', 'crush', .6, 380, 250, 17, 680, { lift: 600 })] },
-  kechizu: { name: 'Kechizu', jp: '血塗', skin: KECHIZU, hp: 150, scale: .95, speed: 200, range: 170, gap: [.5, 1.1],
+  kechizu: { name: 'Rot Maw', jp: '腐', skin: KECHIZU, hp: 150, scale: .95, speed: 200, range: 170, gap: [.5, 1.1],
     atk: [A('hookWind', 'hook', .45, 340, 190, 9, 380), A('divWind', 'div', .6, 0, 0, 9, 380, SHOT)] },
-  eso: { name: 'Eso', jp: '壊相', skin: ESO, hp: 230, scale: 1.15, speed: 230, range: 200, gap: [.4, 1], dr: .8,
+  eso: { name: 'Rot Wing', jp: '翅', skin: ESO, hp: 230, scale: 1.15, speed: 230, range: 200, gap: [.4, 1], dr: .8,
     atk: [A('hookWind', 'hook', .4, 400, 220, 10, 440), A('divWind', 'div', .55, 0, 0, 11, 440, SHOT), A('kickWind', 'kick', .5, 420, 230, 13, 620, { lift: 560 })] },
-  maki: { name: 'Maki Zenin', jp: '禪院真希', skin: MAKI, hp: 320, scale: 1.02, speed: 330, range: 240, gap: [.25, .7], dr: .7, human: true, blade: true,
+  maki: { name: 'Heavenly Blade', jp: '天与', skin: MAKI, hp: 320, scale: 1.02, speed: 330, range: 240, gap: [.25, .7], dr: .7, human: true, blade: true,
     atk: [A('hookWind', 'hook', .3, 460, 270, 10, 480), A('dash', 'cross', .34, 1000, 320, 12, 640, { lift: 380 }), A('crushWind', 'crush', .5, 420, 280, 16, 700, { lift: 620 })] }
 });
 
 Object.assign(JU.story.WHO, {
-  nanami: ['Kento Nanami', '七海建人', '#ffd27a'], mahito: ['Mahito', '真人', '#9db4ff'], jogo: ['Jogo', '漏瑚', '#ff8c50'], todo: ['Aoi Todo', '東堂葵', '#7ad7ff'],
-  hanami: ['Hanami', '花御', '#7ddc6a'], eso: ['Eso', '壊相', '#c77dff'], kechizu: ['Kechizu', '血塗', '#8dff6a'], naoya: ['Naoya Zenin', '禪院直哉', '#ffd23d'], maki: ['Maki Zenin', '禪院真希', '#7ddc9a']
+  nanami: ['Ratio Blade', '七三', '#ffd27a'], mahito: ['Soul Shaper', '魂', '#9db4ff'], jogo: ['Disaster Flame', '火山', '#ff8c50'], todo: ['Clapping Brawler', '拍手', '#7ad7ff'],
+  hanami: ['Disaster Bloom', '花', '#7ddc6a'], eso: ['Rot Wing', '翅', '#c77dff'], kechizu: ['Rot Maw', '腐', '#8dff6a'], naoya: ['Frame Runner', '投射', '#ffd23d'], maki: ['Heavenly Blade', '天与', '#7ddc9a']
 });
 
 JU.cast2 = { NANAMI, MAHITO, JOGO, TODO, HANAMI, ESO, KECHIZU, WARPED, NAOYA, MAKI };

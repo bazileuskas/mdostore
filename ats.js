@@ -190,7 +190,7 @@ D.kind('garden', { rim: '143,155,255', tint: '14,12,48', inside: gardenIn, tick(
   },
   end() { garden = false; } });
 
-JU.tech.add('ats', { name: 'Awakened Ten Shadows', jp: '十種影法術', mark: '影', who: 'Megumi Fushiguro, with nothing held back', odds: 0, col: INDIGO, glow: 'indigo', moves: MOVES,
+JU.tech.add('ats', { name: 'Awakened Ten Shadows', jp: '十種影法術', mark: '影', who: 'Shadow Summoner, with nothing held back', odds: 0, col: INDIGO, glow: 'indigo', moves: MOVES,
   awakened: true, awkName: 'Domain',
   awaken(p) {
     p.inv = Math.max(p.inv, 1);

@@ -169,8 +169,8 @@ const MOVES = {
   manji: { name: 'Coming soon', cd: 1, dur: .01, run() {} }
 };
 
-JU.tech.add('cannon', { name: 'Cursed Cannon', jp: 'グラニテブラスト', mark: '砲', who: 'Ryu Ishigori', odds: 0, col: CYAN, glow: 'blue', moves: MOVES,
-  early: true, skin: JU.cast6.ISHIGORI, as: ['Ryu Ishigori', '石流龍'], scale: SIZE, hint: '<b>Hold 1</b> Granite Blast · <b>Right click</b> / <b>C</b> underheat' });
+JU.tech.add('cannon', { name: 'Cursed Cannon', jp: 'グラニテブラスト', mark: '砲', who: 'Granite Cannon', odds: 0, col: CYAN, glow: 'blue', moves: MOVES,
+  early: true, skin: JU.cast6.ISHIGORI, as: ['Granite Cannon', '砲'], scale: SIZE, hint: '<b>Hold 1</b> Granite Blast · <b>Right click</b> / <b>C</b> underheat' });
 const DEF = JU.tech.TECH.cannon, on = () => JU.tech.active === DEF;
 
 /* ---------- wiring ---------- */

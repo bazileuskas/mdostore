@@ -94,21 +94,21 @@ JU.chapters.STAGES.void = () => voidStage;
 /* ================= Maki fight (shown on the Play screen while Projection Sorcery is equipped) ================= */
 function start() {
   const foe = Fi.make('maki', 240), nm = Fi.nm;
-  const asNaoya = () => { E.P1.skin = X.NAOYA; nm.p1.textContent = 'Naoya Zenin'; nm.p1j.textContent = '禪院直哉'; };
+  const asNaoya = () => { E.P1.skin = X.NAOYA; nm.p1.textContent = 'Frame Runner'; nm.p1j.textContent = '投射'; };
   foe.ai = null;
   E.arena({ stage: mountain, foe, skin: X.NAOYA, p1x: -240, yaw: -.3 });
-  E.banner('山', 'NAOYA  VS  MAKI', 'sm');
+  E.banner('山', 'FRAME RUNNER  VS  HEAVENLY BLADE', 'sm');
   cut({
     look: () => foe.x, cx: () => 0, delay: 1500,
     lines: [
-      ['naoya', 'You, of all people. Know where you stand, Maki. Three steps behind me.'],
+      ['naoya', 'You, of all people. Know where you stand, Heavenly Blade. Three steps behind me.'],
       ['maki', 'Still talking. You always did have more mouth than speed.'],
       ['naoya', 'Speed? Twenty-four frames a second. Count them, if your eyes can keep up.'],
       ['maki', 'I do not need to see them. I only need to hit you once.']
     ],
     then() {
       JU.tech.apply('projection');
-      Fi.start({ foes: ['maki'], stage: mountain, label: 'Maki fight', p1x: -240, win: ['勝', 'NAOYA WINS'], onWin() { Fi.later(1600, () => JU.exitGame()); } });
+      Fi.start({ foes: ['maki'], stage: mountain, label: 'Heavenly Blade fight', p1x: -240, win: ['勝', 'FRAME RUNNER WINS'], onWin() { Fi.later(1600, () => JU.exitGame()); } });
       asNaoya();
     }
   });

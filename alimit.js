@@ -355,7 +355,7 @@ const MOVES = {
   } }
 };
 
-JU.tech.add('alimit', { name: 'Awakened Limitless', jp: '無下限呪術', mark: '蒼', who: 'Satoru Gojo, with nothing held back', odds: 0, col: BLUE, glow: 'blue', moves: MOVES, awakened: true });
+JU.tech.add('alimit', { name: 'Awakened Limitless', jp: '無下限呪術', mark: '蒼', who: 'Blindfolded Infinity, with nothing held back', odds: 0, col: BLUE, glow: 'blue', moves: MOVES, awakened: true });
 const DEF = JU.tech.TECH.alimit, on = () => JU.tech.active === DEF;
 
 /* ---------- wiring ---------- */

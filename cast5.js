@@ -1,4 +1,4 @@
-/* JUJUTSU UNLIMITEDS — the cast of chapters 17 to 21: Ogi and Mai Zenin and the clan's swordsmen, Panda, Hakari, Haba, Higuruma and Judgeman,
+/* JUJUTSU UNLIMITEDS — the cast of chapters 17 to 21: Ogi and Mai Zenin and the clan's swordsmen, Panda, Hakari, Haba, Higuruma and The Arbiter,
    Maki as somebody to play, and four places: the pit, the fight club, the theatre and the courtroom inside Deadly Sentencing */
 (() => {
 'use strict';
@@ -109,19 +109,19 @@ const HIGURUMA = skin({ t: '#15161b', t2: '#22232b', h: PALE[0], h2: PALE[1], l:
 /* ---------- how they fight ---------- */
 const A = (pre, pose, wind, lunge, reach, dmg, kb, more) => Object.assign({ pre, pose, wind, lunge, reach, dmg, kb, stun: .45 }, more);
 Object.assign(Fi.DEFS, {
-  ogi: { name: 'Ogi Zenin', jp: '禪院扇', skin: OGI, hp: 240, scale: 1.04, speed: 300, range: 240, gap: [.3, .8], dr: .8, human: true, blade: true,
+  ogi: { name: 'Blazing Elder', jp: '炎刀', skin: OGI, hp: 240, scale: 1.04, speed: 300, range: 240, gap: [.3, .8], dr: .8, human: true, blade: true,
     atk: [A('hookWind', 'hook', .32, 460, 260, 10, 460), A('dash', 'cross', .34, 980, 310, 12, 620, { lift: 380 }), A('crushWind', 'crush', .5, 420, 280, 15, 700, { lift: 600 })] },
-  hei: { name: 'Zenin Swordsman', jp: '躯倶留隊', skin: HEI, hp: 80, scale: 1, speed: 260, range: 220, gap: [.5, 1.1], human: true, blade: true,
+  hei: { name: 'Clan Swordsman', jp: '剣士', skin: HEI, hp: 80, scale: 1, speed: 260, range: 220, gap: [.5, 1.1], human: true, blade: true,
     atk: [A('hookWind', 'hook', .42, 420, 240, 8, 400), A('dash', 'cross', .45, 900, 300, 10, 560, { lift: 340 })] },
-  kukuru: { name: 'Kukuru Captain', jp: '躯倶留隊長', skin: HEI, hp: 150, scale: 1.14, speed: 280, range: 230, gap: [.4, .9], dr: .9, human: true, blade: true,
+  kukuru: { name: 'Guard Captain', jp: '隊長', skin: HEI, hp: 150, scale: 1.14, speed: 280, range: 230, gap: [.4, .9], dr: .9, human: true, blade: true,
     atk: [A('hookWind', 'hook', .36, 440, 250, 10, 440), A('dash', 'cross', .38, 960, 310, 12, 600, { lift: 360 }), A('crushWind', 'crush', .55, 400, 270, 14, 680, { lift: 580 })] },
   panda: { name: 'Panda', jp: 'パンダ', skin: PANDA, hp: 230, scale: 1.25, speed: 220, range: 200, gap: [.45, 1], dr: .85, human: true,
     atk: [A('hookWind', 'hook', .42, 400, 220, 10, 460), A('crushWind', 'crush', .6, 380, 230, 15, 640, { lift: 560 }), A('kickWind', 'kick', .5, 420, 220, 12, 600, { lift: 480 })] },
-  hakari: { name: 'Kinji Hakari', jp: '秤金次', skin: HAKARI, hp: 400, scale: 1.1, speed: 300, range: 220, gap: [.3, .8], dr: .6, human: true,
+  hakari: { name: 'Jackpot Gambler', jp: '博徒', skin: HAKARI, hp: 400, scale: 1.1, speed: 300, range: 220, gap: [.3, .8], dr: .6, human: true,
     atk: [A('hookWind', 'hook', .34, 460, 240, 12, 480), A('dash', 'cross', .34, 980, 300, 13, 620, { lift: 380 }), A('crushWind', 'crush', .5, 420, 250, 17, 720, { lift: 620 })] },
-  haba: { name: 'Haba', jp: '羽場', skin: HABA, hp: 210, scale: 1.05, speed: 260, range: 200, gap: [.4, .95], human: true,
+  haba: { name: 'Rotor Head', jp: '回転翼', skin: HABA, hp: 210, scale: 1.05, speed: 260, range: 200, gap: [.4, .95], human: true,
     atk: [A('hookWind', 'hook', .4, 420, 220, 9, 420), A('kickWind', 'kick', .48, 440, 230, 12, 600, { lift: 520 })] },
-  higuruma: { name: 'Hiromi Higuruma', jp: '日車寛見', skin: HIGURUMA, hp: 330, scale: 1.02, speed: 280, range: 240, gap: [.35, .85], dr: .75, human: true,
+  higuruma: { name: 'The Judge', jp: '裁判官', skin: HIGURUMA, hp: 330, scale: 1.02, speed: 280, range: 240, gap: [.35, .85], dr: .75, human: true,
     atk: [A('hookWind', 'hook', .36, 440, 260, 10, 460), A('crushWind', 'crush', .55, 400, 280, 14, 680, { lift: 580 })] }
 });
 Fi.DEFS.higuruma2 = Object.assign({}, Fi.DEFS.higuruma);        // the same man, holding the sword his domain has just handed him
@@ -388,7 +388,7 @@ const MOVES = {
     if (E.tryHit(p, n === 2 ? { reach: 250, dmg: 16, kb: 900, lift: 500, stop: .16, heavy: 1, col: '#ff5a6e' } : { reach: 240, dmg: 7, kb: 90, stun: .6, stop: .06, col: '#ff5a6e' }) && n === 2) V.crack(E.P2.x, 260);
   } }
 };
-JU.tech.TECH.maki = { id: 'maki', name: 'Heavenly Restriction', jp: '天与呪縛', who: 'Maki Zenin', odds: 0, col: GREEN, glow: 'green', moves: MOVES };   // not on the roll: the story hands it to her
+JU.tech.TECH.maki = { id: 'maki', name: 'Heavenly Restriction', jp: '天与呪縛', who: 'Heavenly Blade', odds: 0, col: GREEN, glow: 'green', moves: MOVES };   // not on the roll: the story hands it to her
 
 /* ---------- the pit under the Zenin estate, where the clan keeps its curses and its failures ---------- */
 const EYES = Array.from({ length: 22 }, () => [(r() * 2 - 1) * 1000, 60 + r() * 330, r() * TAU, 3 + r() * 4]);
@@ -580,10 +580,10 @@ const court = {
 Object.assign(JU.chapters.STAGES, { pit: () => pit, garage: () => garage, theatre: () => theatre, court: () => court });
 
 Object.assign(JU.story.WHO, {
-  ogi: ['Ogi Zenin', '禪院扇', FLAME], mai: ['Mai Zenin', '禪院真依', '#9ad0c0'], hei: ['Zenin Swordsman', '躯倶留隊', '#9aa3b5'], panda: ['Panda', 'パンダ', '#e6e5df'],
-  hakari: ['Kinji Hakari', '秤金次', '#7ad7ff'], haba: ['Haba', '羽場', '#9fd8ff'], higuruma: ['Hiromi Higuruma', '日車寛見', GOLD], judgeman: ['Judgeman', 'ジャッジマン', GOLD],
-  kogane: ['Kogane', 'コガネ', '#b9c3cc']
+  ogi: ['Blazing Elder', '炎刀', FLAME], mai: ['Bullet Maker', '構築', '#9ad0c0'], hei: ['Clan Swordsman', '剣士', '#9aa3b5'], panda: ['Panda', 'パンダ', '#e6e5df'],
+  hakari: ['Jackpot Gambler', '博徒', '#7ad7ff'], haba: ['Rotor Head', '回転翼', '#9fd8ff'], higuruma: ['The Judge', '裁判官', GOLD], judgeman: ['The Arbiter', 'ジャッジマン', GOLD],
+  kogane: ['Tally', '点', '#b9c3cc']
 });
 
-JU.cast5 = { OGI, MAI, HEI, PANDA, HAKARI, HABA, HIGURUMA, pit, garage, theatre, court, speak(sec) { jaw = E.T + sec; } };   // speak: Judgeman's mouth opens for that long
+JU.cast5 = { OGI, MAI, HEI, PANDA, HAKARI, HABA, HIGURUMA, pit, garage, theatre, court, speak(sec) { jaw = E.T + sec; } };   // speak: The Arbiter's mouth opens for that long
 })();

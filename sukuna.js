@@ -140,7 +140,7 @@ function label() {
   for (const k in SM) { E.hud.mv[k].querySelector('b').textContent = on ? SM[k].name : YUJI_NAMES[k]; E.CD[k] = on ? SM[k].cd : YUJI_CD[k]; E.cd[k] = 0; }
   E.root.classList.toggle('sukuna', on);
   const nm = JU.fights.nm;
-  nm.p1.textContent = on ? 'Ryomen Sukuna' : 'Yuji Itadori'; nm.p1j.textContent = on ? '両面宿儺' : '虎杖悠仁';
+  nm.p1.textContent = on ? 'King of Curses' : 'The Vessel'; nm.p1j.textContent = on ? '呪いの王' : '器';
 }
 function awaken() {
   const p = E.P1;

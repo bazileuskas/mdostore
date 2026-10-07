@@ -253,7 +253,7 @@ function drawFrame(real) {
 function stamp(ch, x, y, size = 230, col = '#c8102e') {
   V.custom(.5, u => {
     const c = F(x, y), k = c[2], s = size * k * (1 + .5 * (1 - Math.min(1, u * 9)) ** 2), a = u < .5 ? 1 : 1 - (u - .5) / .5;
-    g.save(); g.globalAlpha = .92 * a; g.font = `${Math.round(s)}px 'Yuji Syuku','Yu Mincho',serif`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.lineJoin = 'round';
+    g.save(); g.globalAlpha = .92 * a; g.font = `${Math.round(s)}px 'Vessel Syuku','Yu Mincho',serif`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.lineJoin = 'round';
     g.lineWidth = s * .09; g.strokeStyle = '#08030a'; g.strokeText(ch, c[0], c[1]); g.fillStyle = col; g.fillText(ch, c[0], c[1]);
     g.restore();
   });

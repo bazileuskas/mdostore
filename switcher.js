@@ -162,8 +162,8 @@ const MOVES = {
   } }
 };
 
-JU.tech.add('switcher', { name: 'Switcher Stitcher', jp: '不義遊戯', mark: '拍', who: 'Aoi Todo', odds: 0, col: CYAN, glow: 'blue', moves: MOVES,
-  early: true, skin: X.TODO, as: ['Aoi Todo', '東堂葵'], scale: SIZE });
+JU.tech.add('switcher', { name: 'Switcher Stitcher', jp: '不義遊戯', mark: '拍', who: 'Clapping Brawler', odds: 0, col: CYAN, glow: 'blue', moves: MOVES,
+  early: true, skin: X.TODO, as: ['Clapping Brawler', '拍手'], scale: SIZE });
 const DEF = JU.tech.TECH.switcher, on = () => JU.tech.active === DEF;
 
 /* ---------- wiring ---------- */

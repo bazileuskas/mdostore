@@ -236,11 +236,11 @@ function earlyTab() {
 }
 /* ---------- packs: several things at once, for real money. Like Early Access, nothing is on sale yet: the button is there and does nothing ---------- */
 // the picture on the Heian Era God pack is one the user supplied (img/heian-sukuna.jpg; the one-file build carries it in window.JU_PICS)
-const HEIAN = `<img src="${(window.JU_PICS && window.JU_PICS['heian-sukuna']) || 'img/heian-sukuna.jpg'}" alt="Sukuna as he was in the Heian era, four-armed, his hands at the sign of his domain">`;
+const HEIAN = `<img src="${(window.JU_PICS && window.JU_PICS['heian-sukuna']) || 'img/heian-sukuna.jpg'}" alt="King of Curses as he was in the Heian era, four-armed, his hands at the sign of his domain">`;
 const PACK_PRICE = '$12.99';
-const PACKS = [{ id: 'heian', name: 'Heian Era God', tag: 'God Pack · Ryomen Sukuna', price: PACK_PRICE, col: '#ff2440', pic: HEIAN,
+const PACKS = [{ id: 'heian', name: 'Heian Era God', tag: 'God Pack · King of Curses', price: PACK_PRICE, col: '#ff2440', pic: HEIAN,
   line: 'Everything the King of Curses had at his height, a thousand years ago, in one pack.',
-  holds: [['Shrine', 'cursed technique'], ['Sukuna\'s Mark', 'awakened cursed technique'], ['Sukuna', 'clan'], ['Dagger of the Demonly Holdings', 'cursed tool'],
+  holds: [['Shrine', 'cursed technique'], ['King of Curses\'s Mark', 'awakened cursed technique'], ['King of Curses', 'clan'], ['Dagger of the Demonly Holdings', 'cursed tool'],
           ['50', 'Clan spins'], ['75', 'CT spins'], ['30', 'Cursed Tool spins']] }];
 function packs() {
   return `<div class="goods">${PACKS.map(k => `<div class="good pack" style="--c:${k.col}">

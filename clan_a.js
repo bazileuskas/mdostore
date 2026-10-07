@@ -98,7 +98,7 @@ K.ext('zenin', {
 });
 
 /* ================= Kenjaku: R over a body takes it ================= */
-const TECH_OF = { Mahito: 'trans', Hanami: 'plants', 'Ryomen Sukuna': 'shrine', Choso: 'blood' };   // which bodies carry a technique worth having
+const TECH_OF = { Mahito: 'trans', Hanami: 'plants', 'King of Curses': 'shrine', Choso: 'blood' };   // which bodies carry a technique worth having
 // what a body is worth: its health, and how hard and fast it hits compared with Yuji
 function hostOf(o, extra) {
   const d = o.ai.d;
@@ -120,7 +120,7 @@ K.ext('kenjaku', {
     wear(p, hostOf(o));
     p.x = o.x; o.alpha = 0;
     V.ring(p.x, p.y + 150, 280, '#c77dff', .5); V.sparks(p.x, p.y + 220, 'purple', 18);
-    cam.shake = 16; sfx.bf(); E.banner('羂索', 'BODY TAKEN', 'sm');
+    cam.shake = 16; sfx.bf(); E.banner('縫い目', 'BODY TAKEN', 'sm');
   },
   tick() {
     const o = E.P2;

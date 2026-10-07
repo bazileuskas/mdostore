@@ -422,8 +422,8 @@ const MAXB = { name: 'Max Granite Blast', cd: 30, dur: CHARGE + HOLD + .7, run(p
     if (u > HOLD + .5) E.endMove(p);
 } };
 
-JU.tech.add('tced', { name: 'True Cursed Energy Discharge', jp: '真・呪力放出', mark: '轟', who: 'Ryu Ishigori, nothing held back', odds: 0, col: CYAN, glow: 'blue', moves: MOVES,
-  awakened: true, skin: JU.cast6.ISHIGORI, as: ['Ryu Ishigori', '石流龍'], scale: SIZE, hint: '<b>3</b> Repulse turns a hit aside while he gathers · <b>G</b> Max Granite Blast when the bar is full',
+JU.tech.add('tced', { name: 'True Cursed Energy Discharge', jp: '真・呪力放出', mark: '轟', who: 'Granite Cannon, nothing held back', odds: 0, col: CYAN, glow: 'blue', moves: MOVES,
+  awakened: true, skin: JU.cast6.ISHIGORI, as: ['Granite Cannon', '砲'], scale: SIZE, hint: '<b>3</b> Repulse turns a hit aside while he gathers · <b>G</b> Max Granite Blast when the bar is full',
   awkName: 'Max Granite Blast', awkHits: false, awkStart: 0, awaken(p) { p.move = { def: MAXB, t: 0 }; } });
 const DEF = JU.tech.TECH.tced, on = () => JU.tech.active === DEF;
 
@@ -478,7 +478,7 @@ H.fightStart = (cfg, wave) => {
 
 // its card on the Awaken CT screen. It is Cursed Cannon awakened, so it asks for Cursed Cannon, and that is Early Access
 Object.assign(JU.awakened.LIST.find(a => a.id === 'tced'), {
-  what: 'Ryu Ishigori with nothing held back, and no heat to mind. Volley, Downpour, Repulse, and Dessert, the finisher (1000). G: Granite Blast at full power (900).',
+  what: 'Granite Cannon with nothing held back, and no heat to mind. Volley, Downpour, Repulse, and Dessert, the finisher (1000). G: Granite Blast at full power (900).',
   later: () => 'Needs Cursed Cannon, which is Early Access. Early Access is not on sale yet.',
   open: () => dev() || !JU.shop || JU.shop.holds('tech', 'cannon') });
 

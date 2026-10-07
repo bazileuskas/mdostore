@@ -342,7 +342,7 @@ const MOVES = {
   } }
 };
 
-JU.tech.add('judge', { name: 'Cursed Judge', jp: '誅伏賜死', mark: '槌', who: 'Hiromi Higuruma', odds: 3, col: GOLD, glow: 'gold', moves: MOVES,
+JU.tech.add('judge', { name: 'Cursed Judge', jp: '誅伏賜死', mark: '槌', who: 'The Judge', odds: 3, col: GOLD, glow: 'gold', moves: MOVES,
   awkName: 'Deadly Sentencing',
   awaken(p) {
     const o = E.P2;
@@ -371,14 +371,14 @@ function deal(t) {
   t.lean = Math.random() * 3 | 0; t.pick = Math.random() < TELL ? t.lean : (t.lean + 1 + (Math.random() * 2 | 0)) % 3;
   const rest = [0, 1, 2].filter(i => i !== t.pick && i !== t.lean);
   t.out = rest[Math.random() * rest.length | 0]; t.me = t.foe = -1;
-  if (JU.cast5.speak) JU.cast5.speak(1.3);          // Judgeman reads it out
+  if (JU.cast5.speak) JU.cast5.speak(1.3);          // The Arbiter reads it out
 }
 function paint() {
   const t = trial, shown = t.phase !== 'ask', hit = t.me === t.foe;
   const said = t.phase === 'verdict' ? (t.won ? 'Guilty. The sentence is death: take the sword.' : 'The court cannot convict. Not guilty.')
     : shown ? `${t.name}: ${PLEAS[t.foe][0]}. ` + (hit ? 'You called it.' : 'You called it wrong.') : '';
   board.innerHTML = `<div class="tbar"><b>Verdict</b>${[0, 1, 2].map(i => `<i class="${i < t.score ? 'on' : ''}"></i>`).join('')}<span>${t.score} / ${GUILTY}</span><em>Count ${t.round + 1} of ${ROUNDS}</em></div>
-    <div class="tbody"><small><span lang="ja">誅伏賜死</span> · Deadly Sentencing · Judgeman</small>
+    <div class="tbody"><small><span lang="ja">誅伏賜死</span> · Deadly Sentencing · The Arbiter</small>
       <p>${COUNTS[t.round]} How does it plead?</p><p class="tt">${TELLS[t.lean]}</p>
       <div class="tpicks${shown ? ' done' : ''}">${PLEAS.map((p, i) => `<button data-plea="${i}" class="${shown && i === t.me ? 'me' : ''}${shown && i === t.foe ? ' foe' : ''}${i === t.out ? ' out' : ''}" aria-label="${p[0]}${i === t.out ? ', ruled out' : ''}"><kbd>${i + 1}</kbd><b>${p[0]}</b><span lang="ja">${i === t.out ? 'ruled out' : p[1]}</span></button>`).join('')}</div>
       <p class="tr${(t.phase === 'verdict' ? t.won : hit) ? '' : ' no'}">${said || 'Call its plea. One is ruled out for you, and how it is standing nearly always gives the answer away.'}</p></div>`;

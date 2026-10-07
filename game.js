@@ -346,7 +346,7 @@ const CURSE = {
     g.lineWidth = 1.5; g.strokeStyle = '#a5102a'; g.strokeRect(3, -17, 17, 33);
     g.fillStyle = '#a5102a'; g.fillRect(10.5, 4, 2, 10);
     g.save(); g.translate(11.5, -6); g.scale(flip, 1);
-    g.font = "15px 'Yuji Syuku','Yu Mincho',serif"; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('呪', 0, 0);
+    g.font = "15px 'Vessel Syuku','Yu Mincho',serif"; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('呪', 0, 0);
     g.restore();
   }
 };

@@ -65,7 +65,7 @@ function building(b) {
     g.fillStyle = '#14060b'; g.textAlign = 'center'; g.textBaseline = 'middle';
     for (let i = 0; i < n; i++) {
       const q = P(sx, s.y + (n - i - .5) * 42 + 8, BZ - 70);
-      g.font = `${34 * q[2] | 0}px 'Yuji Syuku','Yu Mincho',serif`; g.fillText(s.t[i], q[0], q[1]);
+      g.font = `${34 * q[2] | 0}px 'Vessel Syuku','Yu Mincho',serif`; g.fillText(s.t[i], q[0], q[1]);
     }
   }
 }

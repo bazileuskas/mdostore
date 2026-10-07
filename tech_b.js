@@ -174,7 +174,7 @@ const AWAKEN = { name: 'Awakening', dur: 3.3, glow: 'gold', run(p, m, t) {
   if (E.tryHit(p, { reach: 240, dmg: 18, kb: 1100, lift: 520, stop: .22, heavy: 1, col: GOLD })) V.impact(.16, o.x, o.y + 150);
 } };
 
-JU.tech.add('limitless', { name: 'Limitless', jp: '無下限呪術', mark: '蒼', who: 'Satoru Gojo', odds: 10, col: BLUE, glow: 'blue', moves: LIMIT,
+JU.tech.add('limitless', { name: 'Limitless', jp: '無下限呪術', mark: '蒼', who: 'Blindfolded Infinity', odds: 10, col: BLUE, glow: 'blue', moves: LIMIT,
   guard(face, a) {                               // Infinity: the blow stops short and the attacker is shoved off
     if (infT <= 0 || (a && a.pierce)) return false;   // unless it is the Inverted Spear of Heaven
     const p = E.P1, o = E.P2;
@@ -183,7 +183,7 @@ JU.tech.add('limitless', { name: 'Limitless', jp: '無下限呪術', mark: '蒼'
   },
   tick(dt) { if (infT > 0) infT -= dt; }
 });
-JU.tech.add('projection', { name: 'Projection Sorcery', jp: '投射呪法', mark: '速', who: 'Naoya Zenin', odds: 5, col: GOLD, glow: 'gold', moves: PROJ, dash: .45,
+JU.tech.add('projection', { name: 'Projection Sorcery', jp: '投射呪法', mark: '速', who: 'Frame Runner', odds: 5, col: GOLD, glow: 'gold', moves: PROJ, dash: .45,
   dashFx: { t: .3, v: 1650, tint: 1 },           // the dash runs much further and leaves blue frames of him behind
   awaken(p) { p.move = { def: AWAKEN, t: 0 }; },
   aim(p, h) {                                    // a frozen target stays frozen under light hits and shatters under a heavy one
@@ -196,5 +196,5 @@ JU.tech.add('projection', { name: 'Projection Sorcery', jp: '投射呪法', mark
   },
   tick(dt) { if (frozen > 0) frozen -= dt; if (boost > 0) boost -= dt; }
 });
-JU.tech.add('shrine', { name: 'Shrine', jp: '御廚子', mark: '斬', who: 'Ryomen Sukuna', odds: 5, col: RED, glow: 'red', moves: JU.sukuna.SM });
+JU.tech.add('shrine', { name: 'Shrine', jp: '御廚子', mark: '斬', who: 'King of Curses', odds: 5, col: RED, glow: 'red', moves: JU.sukuna.SM });
 })();

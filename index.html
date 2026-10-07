@@ -6,13 +6,13 @@
 <title>JUJUTSU UNLIMITEDS</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@400;600&family=Yuji+Syuku&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@400;600&family=Vessel+Syuku&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box}
 :root{
   --ink:#05040a; --bone:#f4efe4; --red:#ff2440; --blood:#8a0018; --blue:#38c8ff; --purple:#a55cff;
   --f-display:'Anton',Impact,Haettenschweiler,'Arial Narrow Bold',sans-serif;
-  --f-jp:'Yuji Syuku','Yu Mincho','Hiragino Mincho ProN','MS PMincho',serif;
+  --f-jp:'Vessel Syuku','Yu Mincho','Hiragino Mincho ProN','MS PMincho',serif;
   --f-ui:'Oswald','Segoe UI',system-ui,sans-serif;
   --pad-x:clamp(22px,6.5vw,120px);
   --extrude:
@@ -799,7 +799,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 /* ---------- Domain Expansion: the HUD steps aside while the panel is across the screen ---------- */
 .game.dom :is(.g-top,.combo,.hotbar,.ghint,.awk,.tc){opacity:0 !important;transition:opacity .12s}
 
-/* ---------- Sukuna is in control ---------- */
+/* ---------- King of Curses is in control ---------- */
 .game.sukuna .fb.p1 .hpb i{background:linear-gradient(180deg,#c4142c,#5a0010 50%,#1a0004)}
 .game.sukuna .fb.p1 .nm b{color:var(--red)}
 .game.sukuna .mv{border-bottom-color:#fff;background:rgba(44,0,10,.9)}
@@ -830,7 +830,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 .dlg p{margin:0;min-height:3.1em;font:400 clamp(15px,min(1.55vw,2.8vh),32px)/1.5 var(--f-ui);letter-spacing:.03em}
 .dlg em{position:absolute;right:1.4em;bottom:.8em;font:600 clamp(9px,1.1vh,15px)/1 var(--f-ui);font-style:normal;
   letter-spacing:.3em;text-transform:uppercase;color:rgba(244,239,228,.45)}
-/* the rules of the Culling Game, put up while Tengen goes through them */
+/* the rules of the Culling Game, put up while Barrier Master goes through them */
 .rules{left:50%;top:clamp(6px,1.2vh,14px);translate:-50% 0;width:min(96vw,max(760px,90vw));padding:clamp(8px,1.3vh,16px) clamp(16px,2vw,36px) clamp(9px,1.5vh,18px);
   background:rgba(8,6,14,.94);border-top:3px solid var(--red);box-shadow:8px 10px 0 rgba(0,0,0,.5);opacity:0;transition:opacity .4s}
 .rules.on{opacity:1}
@@ -1018,7 +1018,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 <section class="game" id="game" aria-label="Fight" inert>
   <canvas id="gc"></canvas>
   <div class="g-top">
-    <div class="fb p1"><div class="nm"><b>Yuji Itadori</b><span lang="ja">虎杖悠仁</span></div><div class="hpb"><u id="lag1"></u><i id="hp1"></i></div></div>
+    <div class="fb p1"><div class="nm"><b>The Vessel</b><span lang="ja">器</span></div><div class="hpb"><u id="lag1"></u><i id="hp1"></i></div></div>
     <div class="vs"><b>∞</b><span>Training</span></div>
     <div class="fb p2"><div class="nm"><b>Training Curse</b><span lang="ja">呪霊</span></div><div class="hpb"><u id="lag2"></u><i id="hp2"></i></div></div>
   </div>
@@ -1438,7 +1438,7 @@ function drawRing(r, back) {
     for (let i = 0; i < n; i++) {
       const p = ringPoint(r, i / n * TAU + T * .1);
       if (!p || (p.z > pz) !== back) continue;
-      ctx.font = `${Math.max(8, .46 * p.s) | 0}px 'Yuji Syuku','Yu Mincho',serif`;
+      ctx.font = `${Math.max(8, .46 * p.s) | 0}px 'Vessel Syuku','Yu Mincho',serif`;
       ctx.fillStyle = ac(back ? .22 : .85);
       ctx.fillText(r.glyphs[i], p.x, p.y);
     }
@@ -1501,7 +1501,7 @@ function drawCore() {
   g.addColorStop(0, 'rgba(255,255,255,.95)'); g.addColorStop(.5, `rgba(${rgb},.5)`); g.addColorStop(1, 'rgba(255,255,255,.1)');
   ctx.strokeStyle = g; ctx.lineWidth = Math.max(1, r * .03);
   ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, TAU); ctx.stroke();
-  ctx.font = `${r * 1.05 | 0}px 'Yuji Syuku','Yu Mincho',serif`;
+  ctx.font = `${r * 1.05 | 0}px 'Vessel Syuku','Yu Mincho',serif`;
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   ctx.fillStyle = `rgba(${rgb},${.13 + .06 * Math.sin(T * 1.3)})`;
   ctx.fillText('無', p.x, p.y + r * .04);
@@ -1567,7 +1567,7 @@ function drawOfuda(o) {
   if (front) {
     ctx.strokeStyle = ctx.fillStyle = '#a5102a';
     ctx.lineWidth = 2; ctx.strokeRect(4, 4, 32, 92);
-    ctx.font = "26px 'Yuji Syuku','Yu Mincho',serif";
+    ctx.font = "26px 'Vessel Syuku','Yu Mincho',serif";
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillText(o.g, 20, 28);
     ctx.fillRect(18.5, 50, 3, 38); ctx.fillRect(11, 60, 18, 2.5); ctx.fillRect(13, 74, 14, 2.5);
@@ -1764,7 +1764,7 @@ const PANELS = {
        <dt>Design &amp; Direction</dt><dd>The Unlimiteds Team</dd>
        <dt>Built with</dt><dd>HTML · Canvas · JavaScript</dd>
      </dl>
-     <p class="fine">Unofficial fan project inspired by <em>Jujutsu Kaisen</em> by Gege Akutami.
+     <p class="fine">Unofficial fan project inspired by <em>sorcery stories</em> by Gege Akutami.
      Not affiliated with or endorsed by Shueisha, MAPPA or any rights holder.</p>` }
 };
 
@@ -1896,7 +1896,7 @@ requestAnimationFrame(frame);
 const fonts = document.fonts ? Promise.all([
   document.fonts.load("10px Anton"),
   document.fonts.load("600 10px Oswald"),
-  document.fonts.load("10px 'Yuji Syuku'", '呪術無限領域展開封禁縛壱弐参肆開始式一族制作力に界はない')
+  document.fonts.load("10px 'Vessel Syuku'", '呪術無限領域展開封禁縛壱弐参肆開始式一族制作力に界はない')
 ]).catch(() => {}) : Promise.resolve();
 Promise.race([fonts, new Promise(r => setTimeout(r, 1800))]).then(() => {
   document.body.classList.add('ready');

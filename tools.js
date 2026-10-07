@@ -139,8 +139,8 @@ const TOJI = Object.assign({}, JU.cast3.TOJI, {
     g.fillStyle = '#d8c8e6'; g.beginPath(); g.arc(27, -TOR + 10, 10, 0, TAU); g.fill(); g.lineWidth = 2.5; g.strokeStyle = LINE; g.stroke();
     g.fillStyle = LINE; g.fillRect(28, -TOR + 6, 3, 3); g.fillRect(31, -TOR + 12, 4, 2);
   } });
-const HOST = { skin: TOJI, scale: 1.05, hp: 100, name: 'Toji Fushiguro', jp: '伏黒甚爾', m1: 0, ce: 0, m1s: 0 };
-C.CLAN.toji = { id: 'toji', name: 'Toji', jp: '甚爾', odds: .01, col: '#cfd8e0', hp: 3, limited: ENDS, grade: 'Disaster grade',
+const HOST = { skin: TOJI, scale: 1.05, hp: 100, name: 'Sorcerer Killer', jp: '術師殺し', m1: 0, ce: 0, m1s: 0 };
+C.CLAN.toji = { id: 'toji', name: 'Sorcerer Killer', jp: '殺し', odds: .01, col: '#cfd8e0', hp: 3, limited: ENDS, grade: 'Disaster grade',
   lines: ['+300% health', '+200% cursed tool damage', 'Carries three cursed tools at once: one in hand, one in the cursed spirit round his neck, one at his waist. T switches',
     'No cursed energy at all: a cursed technique cannot be equipped with this clan, nor this clan with a cursed technique'],
   ability: 'R — Deadly Counter. For three seconds, anything that hits you dies on the spot' };
@@ -275,7 +275,7 @@ function mount(body) {
     <div class="pockets">${Array.from({ length: n }, (_, i) => { const t = TOOLS[S.slots[i]]; return `<button class="pocket${i === pick ? ' on' : ''}" data-pocket="${i}" style="--c:${t ? t.col : '#555'}" aria-label="${where[i]}: ${t ? nameOf(t) : 'empty'}"><small>${n > 1 ? where[i] : 'Your cursed tool'}</small><b>${t ? nameOf(t) : 'Empty'}</b></button>`; }).join('')}</div>
     <div class="tcards wcards">${ORDER.map(id => { const t = TOOLS[id]; return `<button class="wcard${S.slots.slice(0, n).includes(id) ? ' on' : ''}${mine(id) ? '' : ' lock'}" data-tool="${id}" style="--c:${t.col}" aria-label="Take the ${t.name}${mine(id) ? '' : ', not yours yet'}"><b lang="ja">${t.mark}</b><span>${t.name}</span><i>${t.odds}%</i><p>${t.what}</p></button>`; }).join('')}</div>
     <button class="formb${S.demon ? ' on' : ''}${demonOk() ? '' : ' lock'}" id="formb"><b>${S.demon ? DEMONLY.name : demonOk() ? 'Dagger' : DEMONLY.name}</b><small>${demonOk() ? 'The dagger’s form · click to change' : 'The dagger’s other form · sealed · a questline to come'}</small><p>${S.demon || !demonOk() ? DEMONLY.what : TOOLS.dagger.what}</p></button>
-    <p class="fine">${n > 1 ? 'The Toji clan carries three: pick a pocket, then spin or take a card to fill it. In a fight, T switches between them.' : 'You carry one cursed tool. It is used in place of a cursed technique, in Free Exploration and Training: its moves are on the first keys when no technique is equipped. The Toji clan carries three.'}${JU.shop && JU.shop.PAID ? ' A spin uses a cursed tool spin, and what it lands on is yours: after that its card puts it in your pocket.' : ''}</p>`;
+    <p class="fine">${n > 1 ? 'The Sorcerer Killer clan carries three: pick a pocket, then spin or take a card to fill it. In a fight, T switches between them.' : 'You carry one cursed tool. It is used in place of a cursed technique, in Free Exploration and Training: its moves are on the first keys when no technique is equipped. The Sorcerer Killer clan carries three.'}${JU.shop && JU.shop.PAID ? ' A spin uses a cursed tool spin, and what it lands on is yours: after that its card puts it in your pocket.' : ''}</p>`;
 }
 function spin() {
   if (spinning) return;

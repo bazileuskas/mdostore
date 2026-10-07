@@ -119,9 +119,9 @@ const A = (pre, pose, wind, lunge, reach, dmg, kb, more) => Object.assign({ pre,
 Object.assign(Fi.DEFS, {
   ruin: { name: 'Grade 1 Curse', jp: '一級呪霊', skin: RUIN, hp: 170, scale: 1.3, speed: 200, range: 195, gap: [.45, 1], dr: .85,
     atk: [A('hookWind', 'hook', .45, 380, 220, 10, 440), A('crushWind', 'crush', .65, 360, 240, 14, 620, { lift: 560 }), A('divWind', 'div', .6, 0, 0, 11, 460, { far: 1, shot: 1, lift: 380 })] },
-  naoya: { name: 'Naoya Zenin', jp: '禪院直哉', skin: X.NAOYA, hp: 250, scale: 1.02, speed: 360, range: 220, gap: [.25, .7], dr: .8, human: true,
+  naoya: { name: 'Frame Runner', jp: '投射', skin: X.NAOYA, hp: 250, scale: 1.02, speed: 360, range: 220, gap: [.25, .7], dr: .8, human: true,
     atk: [A('hookWind', 'hook', .3, 480, 250, 9, 440), A('dash', 'cross', .3, 1000, 300, 11, 600, { lift: 360 }), A('kickWind', 'kick', .45, 440, 230, 12, 620, { lift: 520 })] },
-  yuta: { name: 'Yuta Okkotsu', jp: '乙骨憂太', skin: YUTA, hp: 420, scale: 1.02, speed: 340, range: 250, gap: [.25, .7], dr: .6, human: true, blade: true,
+  yuta: { name: 'Keeper of the Queen', jp: '女王の器', skin: YUTA, hp: 420, scale: 1.02, speed: 340, range: 250, gap: [.25, .7], dr: .6, human: true, blade: true,
     atk: [A('hookWind', 'hook', .3, 480, 280, 11, 480), A('dash', 'cross', .32, 1000, 320, 13, 620, { lift: 380 }), A('crushWind', 'crush', .5, 420, 290, 16, 700, { lift: 620 })] }
 });
 
@@ -179,7 +179,7 @@ B.kit('yuta', { tech: 'Queen of Curses', col: LILAC, glow: 'purple', every: [2.1
     Z.ghost(o, .3, .16); if (n === 2) { Z.shock(o.x + o.face * 140, 300, LI, .35, 9); Z.dust(o.x, 5, o.face); cam.shake = Math.max(cam.shake, 12); }
     B.swing(o, 290, n === 2 ? { dmg: 9, kb: 620, lift: 480 } : { dmg: 6, kb: 160, stun: .4 }, 190);
   } },
-  { name: 'Rika', cd: 8, max: 900, wind: .5, pre: 'manjiWind', dur: .7, run(o, p, A, t) {
+  { name: 'The Queen', cd: 8, max: 900, wind: .5, pre: 'manjiWind', dur: .7, run(o, p, A, t) {
     o.rate = 30; o.vx = 0; o.target = t < .5 ? POSE.crushWind : POSE.crush;
     if (A.s) return;
     A.s = 1; sfx.charge(); Z.dim(.6, 1.1); Z.flash(LI, .12, .3);
@@ -352,7 +352,7 @@ const tomb = {
 JU.chapters.STAGES.ruins = () => ruins;
 JU.chapters.STAGES.tomb = () => tomb;
 
-Object.assign(JU.story.WHO, { yuta: ['Yuta Okkotsu', '乙骨憂太', LILAC], yuki: ['Yuki Tsukumo', '九十九由基', '#ffd87a'], tengen: ['Master Tengen', '天元', '#d9d2bc'] });
+Object.assign(JU.story.WHO, { yuta: ['Keeper of the Queen', '女王の器', LILAC], yuki: ['Star Rage', '星', '#ffd87a'], tengen: ['Barrier Master', '結界師', '#d9d2bc'] });
 
 JU.cast4 = { YUTA, YUKI, TENGEN, RUIN, rika, grip, ruins, tomb };
 })();

@@ -68,9 +68,9 @@ const MAHITO2 = skin({ t: '#3d4258', t2: '#525a78', h: '#232632', h2: '#30344a',
 /* ---------- how they fight ---------- */
 const A = (pre, pose, wind, lunge, reach, dmg, kb, more) => Object.assign({ pre, pose, wind, lunge, reach, dmg, kb, stun: .45 }, more);
 Object.assign(Fi.DEFS, {
-  toji: { name: 'Toji Fushiguro', jp: '伏黒甚爾', skin: TOJI, hp: 300, scale: 1.05, speed: 340, range: 240, gap: [.25, .7], dr: .7, human: true, blade: true,
+  toji: { name: 'Sorcerer Killer', jp: '術師殺し', skin: TOJI, hp: 300, scale: 1.05, speed: 340, range: 240, gap: [.25, .7], dr: .7, human: true, blade: true,
     atk: [A('hookWind', 'hook', .3, 480, 270, 10, 480), A('dash', 'cross', .32, 1000, 320, 12, 620, { lift: 380 }), A('crushWind', 'crush', .5, 420, 280, 15, 700, { lift: 600 })] },
-  choso: { name: 'Choso', jp: '脹相', skin: JU.choso.CHOSO, hp: 260, scale: 1.02, speed: 230, range: 190, gap: [.4, 1], dr: .8, human: true,
+  choso: { name: 'Blood Brother', jp: '血', skin: JU.choso.CHOSO, hp: 260, scale: 1.02, speed: 230, range: 190, gap: [.4, 1], dr: .8, human: true,
     atk: [A('hookWind', 'hook', .4, 400, 220, 10, 440), A('kickWind', 'kick', .5, 420, 220, 12, 620, { lift: 540 })] },
   mahoraga: { name: 'Mahoraga', jp: '魔虚羅', skin: MAHORAGA, hp: 255, scale: 1.5, speed: 200, range: 230, gap: [.7, 1.4], dr: .8, poise: true,
     atk: [A('hookWind', 'hook', .5, 380, 260, 11, 520), A('crushWind', 'crush', .65, 380, 270, 15, 720, { lift: 620 })] },
@@ -228,7 +228,7 @@ const station = {
     }
     const s0 = P(-240, 470, z - 32), s1 = P(240, 420, z - 32);                      // the station name
     g.fillStyle = '#e8ecf0'; g.fillRect(s0[0], s0[1], s1[0] - s0[0], s1[1] - s0[1]);
-    g.fillStyle = '#12161d'; g.font = `${(s1[1] - s0[1]) * .7}px 'Yuji Syuku','Yu Mincho',serif`; g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.fillStyle = '#12161d'; g.font = `${(s1[1] - s0[1]) * .7}px 'Vessel Syuku','Yu Mincho',serif`; g.textAlign = 'center'; g.textBaseline = 'middle';
     g.fillText('渋谷', (s0[0] + s1[0]) / 2, (s0[1] + s1[1]) / 2);
     box(0, 480, z - 320, 2700, 70, 60, '#0d1016', '#080a0e');                       // a beam under the ceiling, where the lights hang
     for (let i = -4; i <= 4; i++) {                                                 // strip lights, one of them failing
@@ -243,7 +243,7 @@ const station = {
 JU.chapters.STAGES.station = () => station;
 
 Object.assign(JU.story.WHO, {
-  toji: ['Toji Fushiguro', '伏黒甚爾', '#cfd8e0'], geto: ['Suguru Geto', '夏油傑', '#c9a53a'], kenjaku: ['Suguru Geto?', '偽夏油', '#c9a53a'], choso: ['Choso', '脹相', '#e0203c']
+  toji: ['Sorcerer Killer', '術師殺し', '#cfd8e0'], geto: ['Curse Eater', '呪霊使い', '#c9a53a'], kenjaku: ['The False Monk', '偽僧', '#c9a53a'], choso: ['Blood Brother', '血', '#e0203c']
 });
 
 JU.cast3 = { TOJI, GETO, KENJAKU, MAHORAGA, MAHITO2, station };

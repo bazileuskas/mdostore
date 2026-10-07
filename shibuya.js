@@ -53,7 +53,7 @@ const on = (f, hh) => {
   const X = (u, v) => lerp(lerp(a[0], b[0], u), lerp(e[0], c[0], u), v), Y = (u, v) => lerp(lerp(a[1], b[1], u), lerp(e[1], c[1], u), v);
   return (u0, y0, u1, y1) => { const v0 = y0 / hh, v1 = y1 / hh; g.moveTo(X(u0, v0), Y(u0, v0)); g.lineTo(X(u1, v0), Y(u1, v0)); g.lineTo(X(u1, v1), Y(u1, v1)); g.lineTo(X(u0, v1), Y(u0, v1)); g.closePath(); };
 };
-const JP = "'Yuji Syuku','Yu Mincho',serif", EN = 'Anton, Impact, sans-serif';
+const JP = "'Vessel Syuku','Yu Mincho',serif", EN = 'Anton, Impact, sans-serif';
 function text(s, x, y, z, size, col, font) {
   const q = P(x, y, z), px = size * q[2];
   if (px < 5 || q[0] < -500 || q[0] > E.VW + 500) return;
@@ -377,8 +377,8 @@ const IJICHI = Object.assign({}, C.GOJO, {
     g.lineWidth = 1.8; g.strokeStyle = '#2a2c36'; g.strokeRect(-1, -3, 11, 11); g.strokeRect(12.5, -3, 10, 11); g.beginPath(); g.moveTo(10, 1); g.lineTo(12.5, 1); g.stroke();
     g.lineWidth = 2; g.strokeStyle = LINE; g.beginPath(); g.moveTo(8, 17); g.lineTo(15, 16); g.stroke();
   } });
-Object.assign(JU.story.WHO, { ijichi: ['Kiyotaka Ijichi', '伊地知潔高', '#9aa3b5'], ygojo: ['Satoru Gojo', '五条悟', '#38c8ff'], nanami: ['Kento Nanami', '七海建人', '#e2c060'], nobara: ['Nobara Kugisaki', '釘崎野薔薇', '#ff9a4d'],
-  shoko: ['Shoko Ieiri', '家入硝子', '#b08cff'], panda: ['Panda', 'パンダ', '#e8ecf4'], yuki: ['Yuki Tsukumo', '九十九由基', '#ffd23d'], sign: ['Shibuya', '渋谷', '#ffd23d'] });
+Object.assign(JU.story.WHO, { ijichi: ['The Driver', '運転手', '#9aa3b5'], ygojo: ['Blindfolded Infinity', '無限', '#38c8ff'], nanami: ['Ratio Blade', '七三', '#e2c060'], nobara: ['Straw Doll', '藁人形', '#ff9a4d'],
+  shoko: ['The Healer', '医師', '#b08cff'], panda: ['Panda', 'パンダ', '#e8ecf4'], yuki: ['Star Rage', '星', '#ffd23d'], sign: ['Shibuya', '渋谷', '#ffd23d'] });
 
 // ---- the raids, and what is hiding
 const RAIDS = {
@@ -392,11 +392,11 @@ const RAIDS = {
 const mk = (id, more) => { Fi.DEFS['sb_' + id] = Object.assign({}, Fi.DEFS[id], more); };       // the same enemies, as they are when nobody was meant to find them
 mk('mahito', { hp: 380 }); mk('toji', { hp: 520 }); mk('mahoraga', { hp: 600, dr: .7 }); mk('kenjaku', { hp: 700 }); mk('sukuna', { hp: 900, dr: .5 });
 const SECRETS = {
-  double: { name: 'Mahito’s double', foe: 'sb_mahito', at: [1430, 1790], pay: 80, first: { ct: 2 }, show: () => true, say: 'At the bottom of the alley, something with a patchwork face turns round.' },
-  toji: { name: 'Toji Fushiguro', foe: 'sb_toji', at: [2280, 1300], pay: 120, first: { tl: 2, cl: 1 }, show: () => M.wins >= 5, say: 'A man with a scar at his mouth is leaning by the Avenue Exit. He has been watching you fight.' },
+  double: { name: 'Soul Shaper’s double', foe: 'sb_mahito', at: [1430, 1790], pay: 80, first: { ct: 2 }, show: () => true, say: 'At the bottom of the alley, something with a patchwork face turns round.' },
+  toji: { name: 'Sorcerer Killer', foe: 'sb_toji', at: [2280, 1300], pay: 120, first: { tl: 2, cl: 1 }, show: () => M.wins >= 5, say: 'A man with a scar at his mouth is leaning by the Avenue Exit. He has been watching you fight.' },
   maho: { name: 'Mahoraga', foe: 'sb_mahoraga', at: [3200, 1010], pay: 150, first: { ct: 3 }, show: () => !!M.raids.parade, say: 'There is a wheel scratched into the road in front of 109. It is turning.' },
-  kenjaku: { name: 'Kenjaku', foe: 'sb_kenjaku', at: [13025, 1830], pay: 180, first: { cl: 3 }, show: () => !!M.raids.sealing, say: 'Under the last lantern a man in a monk’s robe is drinking alone. There are stitches across his forehead.' },
-  sukuna: { name: 'Ryomen Sukuna', foe: 'sb_sukuna', at: [9700, 700], pay: 300, first: { ct: 5, cl: 3, tl: 2 }, show: () => !!M.secrets.maho, say: 'In front of the store the road is gone, cut out in a circle. Somebody is standing in the middle of it, laughing.' }
+  kenjaku: { name: 'The Stitched One', foe: 'sb_kenjaku', at: [13025, 1830], pay: 180, first: { cl: 3 }, show: () => !!M.raids.sealing, say: 'Under the last lantern a man in a monk’s robe is drinking alone. There are stitches across his forehead.' },
+  sukuna: { name: 'King of Curses', foe: 'sb_sukuna', at: [9700, 700], pay: 300, first: { ct: 5, cl: 3, tl: 2 }, show: () => !!M.secrets.maho, say: 'In front of the store the road is gone, cut out in a circle. Somebody is standing in the middle of it, laughing.' }
 };
 const tally = (o, w) => Object.keys(o).filter(k => o[k] && ((RAIDS[k] || SECRETS[k] || {}).w === 'k') === (w === 'k')).length;      // (w: 'k' counts Kyoto's, anything else Shibuya's)
 function reward(pay, give) {
@@ -432,7 +432,7 @@ function secret(id) {
 const have = id => !JU.shop || JU.shop.holds('tech', id);
 const LINES = {
   ijichi: () => [['ijichi', 'Everything from Dogenzaka to the expressway is under the curtain. There are curses on every block.'],
-    ['ijichi', 'Nanami is at the crossing. Ieiri has set up at the tollgate, as far east as you can walk. Fushiguro went west, up the hill.'],
+    ['ijichi', 'Ratio Blade is at the crossing. The Healer has set up at the tollgate, as far east as you can walk. Shadow went west, up the hill.'],
     ['ijichi', 'And there is somebody with white hair by the dog. He would not tell me why. The stairs behind me go back down to the line.']],
   ygojo() {
     if (JU.awakened.gojo) return [['ygojo', 'Still here? Go and break something with it.']];
@@ -464,8 +464,8 @@ const LINES = {
   },
   hachi: () => [['sign', 'A bronze dog on a stone plinth, sitting up. People have arranged to meet here for longer than anyone alive can remember.'], ['sign', 'Tonight nobody is waiting.']]
 };
-const WHO = [['ijichi', IJICHI, 8180, 1700, 1, 'Ijichi'], ['ygojo', YGOJO, 7900, 1600, 1.04, 'Gojo'], ['megumi', C.MEGUMI, 1000, 700, 1, 'Megumi'], ['nanami', JU.cast2.NANAMI, 7080, 700, 1.04, 'Nanami'],
-  ['nobara', JU.sets.NOBARA, 1640, 1290, 1, 'Nobara'], ['panda', JU.cast5.PANDA, 12600, 700, 1.25, 'Panda'], ['shoko', JU.sets.SHOKO, 14060, 1250, 1, 'Ieiri'], ['yuki', JU.cast4.YUKI, 4480, 2180, 1.02, 'Yuki']];
+const WHO = [['ijichi', IJICHI, 8180, 1700, 1, 'The Driver'], ['ygojo', YGOJO, 7900, 1600, 1.04, 'Blindfolded Infinity'], ['megumi', C.MEGUMI, 1000, 700, 1, 'Summoner'], ['nanami', JU.cast2.NANAMI, 7080, 700, 1.04, 'Ratio Blade'],
+  ['nobara', JU.sets.NOBARA, 1640, 1290, 1, 'Straw Doll'], ['panda', JU.cast5.PANDA, 12600, 700, 1.25, 'Panda'], ['shoko', JU.sets.SHOKO, 14060, 1250, 1, 'The Healer'], ['yuki', JU.cast4.YUKI, 4480, 2180, 1.02, 'Star Rage']];
 function cast() {
   return WHO.map(w => { const f = E.fighter(w[1], w[2], -1); f.z = w[3]; f.y = f.ground0 = 12; f.scale = w[4]; f.pose = C.STAND.slice(); f.target = C.STAND; f.who = w[0]; return f; });
 }
@@ -489,7 +489,7 @@ const world = { name: 'shibuya', label: 'Shibuya', LEN, Z0, Z1, BZ, gy, free, sk
   won() { M.wins++; save(); },
   status(st, set) { const a = areaAt(S.me.x); set(`${a[1]} <span lang="ja">${a[2]}</span>`, `Shibuya · E talk or use · exorcised here ${M.wins} · raids ${tally(M.raids)}/3 · secret bosses ${tally(M.secrets)}/5`); },
   tick(dt, real, p, st) {
-    if (!M.been) { M.been = 1; save(); S.talk([['ijichi', 'You came through the curtain in one piece. Good. I am Ijichi. I do the paperwork nobody else will.']].concat(LINES.ijichi())); }
+    if (!M.been) { M.been = 1; save(); S.talk([['ijichi', 'You came through the curtain in one piece. Good. I am The Driver. I do the paperwork nobody else will.']].concat(LINES.ijichi())); }
     const a = areaAt(p.x);
     if (st.area !== a) { st.area = a; S.status(); }                                                      // the corner of the screen says which part of the ward this is
     return false;

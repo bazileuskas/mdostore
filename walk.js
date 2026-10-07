@@ -110,7 +110,7 @@ function start(opts) {
     if (W.status) status();
     else setObj('Free exploration', [JU.tech.name && 'Technique: ' + JU.tech.name, JU.clan.name && 'Clan: ' + JU.clan.name, 'W A S D move · Shift run · walk into a curse to fight it'].filter(Boolean).join(' · '));
   }
-  else setObj('Find Megumi', 'W A S D move · Shift run');
+  else setObj('Find Summoner', 'W A S D move · Shift run');
   E.setScene(scene);
 }
 
@@ -220,7 +220,7 @@ function mark(s, near) {
   } else {
     const r = 15 * k + 5;
     g.rotate(Math.PI / 4); g.fillStyle = 'rgba(8,6,14,.85)'; g.fillRect(-r, -r, r * 2, r * 2); g.strokeStyle = s.col || '#ffd23d'; g.lineWidth = 2; g.strokeRect(-r, -r, r * 2, r * 2); g.rotate(-Math.PI / 4);
-    g.fillStyle = s.col || '#ffd23d'; g.font = `${Math.round(r * 1.25)}px 'Yuji Syuku','Yu Mincho',serif`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(s.icon || '話', 0, 1);
+    g.fillStyle = s.col || '#ffd23d'; g.font = `${Math.round(r * 1.25)}px 'Vessel Syuku','Yu Mincho',serif`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(s.icon || '話', 0, 1);
   }
   g.restore();
 }

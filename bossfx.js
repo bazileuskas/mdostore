@@ -407,7 +407,7 @@ function drawIntro(real) {
   const inn = ease(Math.min(1, c.t / .28)), out = Math.max(0, (c.t - (c.life - .4)) / .4), al = (1 - out) * Math.min(1, c.t / .12), x = VW - 60 + 60 * (1 - inn) + 80 * out * out, y = VH * .27;      // (under its health, above where FIGHT! is written)
   g.save(); g.globalAlpha = al; g.textAlign = 'right'; g.textBaseline = 'alphabetic';
   slab(VW - 560 * inn + 700 * out, y - 66, 760, 5, 0); g.fillStyle = `rgb(${c.rgb})`; g.fill();
-  g.font = "120px 'Yuji Syuku','Yu Mincho',serif"; g.fillStyle = `rgba(${c.rgb},.22)`; g.fillText(c.jp, x + 20, y + 34);
+  g.font = "120px 'Vessel Syuku','Yu Mincho',serif"; g.fillStyle = `rgba(${c.rgb},.22)`; g.fillText(c.jp, x + 20, y + 34);
   g.font = '62px Anton, Impact, sans-serif'; g.lineJoin = 'round'; g.lineWidth = 10; g.strokeStyle = '#07060c'; g.strokeText(c.name, x, y); g.fillStyle = '#fff'; g.shadowColor = `rgb(${c.rgb})`; g.shadowBlur = 18; g.fillText(c.name, x, y); g.shadowBlur = 0;
   g.font = "600 20px Oswald, 'Segoe UI', sans-serif"; g.lineWidth = 5; g.strokeText(c.tech.split('').join(' '), x - 4, y + 30); g.fillStyle = `rgb(${c.rgb})`; g.fillText(c.tech.split('').join(' '), x - 4, y + 30);
   g.restore();

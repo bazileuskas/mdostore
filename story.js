@@ -7,10 +7,10 @@ const { lerp, clamp, ZP } = E;
 const $ = s => root.querySelector(s);
 const el = { dlg: $('#dlg'), who: $('#dWho'), jp: $('#dJp'), txt: $('#dTxt'), fade: $('#fade') };
 const WHO = {
-  gojo: ['Satoru Gojo', '五条悟', '#38c8ff'],
-  yuji: ['Yuji Itadori', '虎杖悠仁', '#ff2440'],
-  megumi: ['Megumi Fushiguro', '伏黒恵', '#8f9bff'],
-  sukuna: ['Ryomen Sukuna', '両面宿儺', '#d0102a']
+  gojo: ['Blindfolded Infinity', '無限', '#38c8ff'],
+  yuji: ['The Vessel', '器', '#ff2440'],
+  megumi: ['Shadow Summoner', '影法師', '#8f9bff'],
+  sukuna: ['King of Curses', '呪いの王', '#d0102a']
 };
 
 /* ---------- dialogue box ---------- */
@@ -79,14 +79,14 @@ function fightWon() {
 
 function talk() {
   say([
-    ['gojo', 'Yo, Yuji! Sorry, sorry. I got held up buying sweets.'],
+    ['gojo', 'Yo, Vessel! Sorry, sorry. I got held up buying sweets.'],
     ['gojo', 'But I caught the ending. That last hit of yours... the sparks went black.'],
     ['yuji', 'Yeah. It felt different. Like everything lined up for a split second.'],
     ['gojo', 'That was a Black Flash. Your cursed energy landed within a millionth of a second of your fist, and space itself bent around the hit.'],
     ['gojo', 'There are sorcerers who go their whole careers without landing one. You pulled it off on a training run. Honestly? I am impressed.'],
     ['yuji', 'So if I just do the same thing again...'],
     ['gojo', 'Nobody lands it on purpose. Not even me. But now your body knows what it feels like. Hold on to that.'],
-    ['gojo', 'Right, class dismissed! Megumi is out in the city on a job. Go find him. You will feel the cursed energy before you see him.'],
+    ['gojo', 'Right, class dismissed! Summoner is out in the city on a job. Go find him. You will feel the cursed energy before you see him.'],
     ['yuji', 'Got it!']
   ], () => {
     root.classList.remove('cine'); el.fade.classList.add('on');
@@ -103,12 +103,12 @@ function foundMegumi() {
   st.arrive = () => {
     S.me.face = 1; S.megumi.face = -1;           // Megumi turns from what is left of the curse
     say([
-      ['megumi', '...Itadori. You are loud. I heard you coming from the main road.'],
-      ['yuji', 'Fushiguro! Gojo-sensei said you were out here. That cursed energy, was that you?'],
+      ['megumi', '...Vessel. You are loud. I heard you coming from the main road.'],
+      ['yuji', 'Shadow! Blindfolded Infinity-sensei said you were out here. That cursed energy, was that you?'],
       ['megumi', 'That was the curse. Grade three, hiding back here. It is dealt with. What you felt is what is left of it.'],
       ['yuji', 'Oh! Guess what. I landed a Black Flash today!'],
       ['megumi', '...On a training curse. Do not let it go to your head.'],
-      ['megumi', 'Gojo-sensei sent word. Curses have nested in a school two blocks from here. We clear it tonight.'],
+      ['megumi', 'Blindfolded Infinity-sensei sent word. Curses have nested in a school two blocks from here. We clear it tonight.'],
       ['yuji', 'Right behind you!']
     ], () => JU.school.begin());
   };

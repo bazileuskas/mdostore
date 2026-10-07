@@ -233,7 +233,7 @@ H.reset = () => {
   while (pend.length) clearTimeout(pend.pop());
   Object.assign(fight, { cfg: null, megumi: null, paused: false, low: null, floor: 0 });
   shots.length = 0; dog = null; V.clear();
-  nm.p2.textContent = 'Training Curse'; nm.p2j.textContent = '呪霊'; nm.p1.textContent = 'Yuji Itadori'; nm.p1j.textContent = '虎杖悠仁'; nm.vs.textContent = 'Training';
+  nm.p2.textContent = 'Training Curse'; nm.p2j.textContent = '呪霊'; nm.p1.textContent = 'The Vessel'; nm.p1j.textContent = '器'; nm.vs.textContent = 'Training';
 };
 
 JU.fights = { start, hurt, chip, make, DEFS, fight, later, nm };

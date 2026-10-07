@@ -5,7 +5,7 @@
 const E = JU.eng, H = E.hooks, C = JU.cast, X = JU.cast2, K = JU.cast4, B = JU.boss, V = JU.vfx, sfx = JU.sfx, Fi = JU.fights, Y = E.YUJI, CHOSO = JU.choso.CHOSO, add = JU.chapters.add;
 const { rnd } = E;
 const BRO = { skin: CHOSO, call: 'PIERCING BLOOD', col: '#e0203c', dmg: 10 };                   // Choso, fighting at his side
-const AS_CHOSO = { skin: CHOSO, tech: 'blood', name: ['Choso', '脹相'], hp: 130 };
+const AS_CHOSO = { skin: CHOSO, tech: 'blood', name: ['Blood Brother', '血'], hp: 130 };
 
 add(13, 'The Executioner', [
   { stage: 'ruins', p1: [Y, -240], cast: [[CHOSO, 40, -1]], card: ['東京', 'TOKYO · AFTER SHIBUYA'], lines: [
@@ -15,25 +15,25 @@ add(13, 'The Executioner', [
     ['yuji', 'I still do not get the brother thing. But thanks. Here they come.']
   ] },
   { foes: ['brute', 'ruin'], stage: 'ruins', ally: BRO, label: 'The ruins of Tokyo', card: ['呪霊', 'A CITY OF CURSES'] },
-  { stage: 'ruins', p1: [Y, -260], cast: [[CHOSO, -480, 1]], foe: ['naoya', 300], card: ['禪院直哉', 'THE ZENIN HEIR'], lines: [
-    ['naoya', 'So this is Sukuna\'s vessel. You look worse than the stories.'],
+  { stage: 'ruins', p1: [Y, -260], cast: [[CHOSO, -480, 1]], foe: ['naoya', 300], card: ['投射', 'THE HEAVENLY HEIR'], lines: [
+    ['naoya', 'So this is King of Curses\'s vessel. You look worse than the stories.'],
     ['yuji', 'Who are you?'],
-    ['naoya', 'Naoya Zenin. My father\'s will hands our clan to Megumi Fushiguro. I would rather it did not.'],
+    ['naoya', 'Frame Runner. My father\'s will hands our clan to Shadow Summoner. I would rather it did not.'],
     ['naoya', 'He is bound to come looking for you. So you are my bait. Stand still for me, will you?'],
-    ['choso', 'Yuji. This one is fast. Do not take your eyes off him.']
+    ['choso', 'Vessel. This one is fast. Do not take your eyes off him.']
   ] },
   // nobody wins this one: part-way through, something far worse arrives
   { foes: ['naoya'], stage: 'ruins', ally: BRO, label: 'The heir', card: ['投射呪法', 'PROJECTION SORCERY'], floor: 1,
     mid: { at: .6, low: .2, ends: true, lines: [
       ['naoya', 'Twenty-four frames to the second, and you cannot follow a single one of them.'],
-      ['choso', 'Yuji, behind you. Somebody else has arrived. Somebody much worse than him.'],
+      ['choso', 'Vessel, behind you. Somebody else has arrived. Somebody much worse than him.'],
       ['yuji', 'That cursed energy... I cannot find the bottom of it.']
     ] } },
-  { stage: 'ruins', p1: [Y, -300], cast: [[K.YUTA, 60, -1], [CHOSO, -520, 1]], foe: ['naoya', 480], card: ['乙骨憂太', 'THE EXECUTIONER'], lines: [
-    ['yuta', 'Yuji Itadori. My name is Yuta Okkotsu. The higher-ups have made me your executioner.'],
+  { stage: 'ruins', p1: [Y, -300], cast: [[K.YUTA, 60, -1], [CHOSO, -520, 1]], foe: ['naoya', 480], card: ['女王の器', 'THE EXECUTIONER'], lines: [
+    ['yuta', 'The Vessel. My name is Keeper of the Queen. The higher-ups have made me your executioner.'],
     ['naoya', 'The special grade himself. Fine. The vessel is yours. I will clean up whatever that other thing is.'],
-    ['choso', 'Run, Yuji! Draw him away from here. I will deal with this one and catch you up.'],
-    ['yuji', 'Do not die on me, Choso.']
+    ['choso', 'Run, Vessel! Draw him away from here. I will deal with this one and catch you up.'],
+    ['yuji', 'Do not die on me, Blood Brother.']
   ] }
 ]);
 
@@ -46,7 +46,7 @@ function poison(p, o) {
 const floored = () => { const o = E.P2; o.target = E.POSE.down; o.rate = 7; };
 
 add(14, 'Blood and Speed', [
-  { stage: 'ruins', p1: [CHOSO, -240], foe: ['naoya', 280], card: ['脹相', 'THE ELDEST BROTHER'], lines: [
+  { stage: 'ruins', p1: [CHOSO, -240], foe: ['naoya', 280], card: ['血', 'THE ELDEST BROTHER'], lines: [
     ['naoya', 'A curse playing at family. That little brother of yours will be dead before you catch him up.'],
     ['choso', 'You have brothers of your own. I can tell. And you learned nothing from having them.'],
     ['naoya', 'I learned that they were in my way.'],
@@ -62,7 +62,7 @@ add(14, 'Blood and Speed', [
   { stage: 'ruins', p1: [CHOSO, -200], foe: ['naoya', 230], lines: [
     ['naoya', 'A half-breed. Beating me. This is not how it goes...', floored],
     ['choso', 'Crawl home to your clan. I have somewhere to be.'],
-    ['choso', 'Hold on a little longer, Yuji.']
+    ['choso', 'Hold on a little longer, Vessel.']
   ] }
 ]);
 
@@ -71,32 +71,32 @@ let held = null;
 function seized(p) { held = { p, t: 0 }; V.ring(p.x, 170, 300, '#d9c9ff', .45); E.cam.shake = 16; sfx.charge(); }
 function stab() { const p = E.P1; p.hp = 1; V.impact(.35, p.x, 190); V.sparks(p.x, 210, 'red', 24); E.cam.shake = 28; sfx.bf(); }
 
-add(15, 'Yuta Okkotsu', [
+add(15, 'Keeper of the Queen', [
   { stage: 'ruins', p1: [Y, -240], foe: ['yuta', 280], card: ['特級術師', 'SPECIAL GRADE'], lines: [
     ['yuta', 'I am sorry it has to be me. I do mean that.'],
     ['yuji', 'I know what I did in Shibuya. But I cannot die yet. Not while the curses he let out are still walking around.'],
     ['yuta', 'You are a good person. That is what makes this hard.'],
-    ['yuta', 'Come on out, Rika.']
+    ['yuta', 'Come on out, The Queen.']
   ] },
   // he cannot win this one either: at half Yuta's health, or when Yuji is nearly finished, Rika ends it
-  { foes: ['yuta'], stage: 'ruins', label: 'The executioner', card: ['乙骨憂太', 'YUTA OKKOTSU'], floor: 1,
+  { foes: ['yuta'], stage: 'ruins', label: 'The executioner', card: ['女王の器', 'KEEPER OF THE QUEEN'], floor: 1,
     mid: { at: .5, low: .22, ends: true, fn: seized, lines: [
       ['yuji', 'I cannot move. Something has hold of me. Are those... hands?'],
-      ['yuta', 'That is Rika. She does not let go.'],
-      ['yuta', 'Forgive me, Itadori.', stab],
+      ['yuta', 'That is The Queen. She does not let go.'],
+      ['yuta', 'Forgive me, Vessel.', stab],
       ['yuji', '...Oh. So this... is where it stops...']
     ] } },
   { stage: 'ruins', p1: [Y, -220], cast: [[K.YUTA, 70, -1]], card: ['反転術式', 'REVERSE CURSED TECHNIQUE'], lines: [
     ['yuji', '...I am alive? You ran me through. I felt my heart stop.'],
-    ['yuta', 'It did stop. I swore a binding vow to the higher-ups that I would kill Yuji Itadori. So I killed you.'],
+    ['yuta', 'It did stop. I swore a binding vow to the higher-ups that I would kill The Vessel. So I killed you.'],
     ['yuta', 'And the moment your heart went still, I healed it. The vow is kept, and here you are.'],
-    ['yuta', 'Gojo asked me to look out for you, before any of this began. I was never going to do anything else.']
+    ['yuta', 'Blindfolded Infinity asked me to look out for you, before any of this began. I was never going to do anything else.']
   ] },
-  { stage: 'ruins', p1: [Y, -240], cast: [[C.MEGUMI, 50, -1], [K.YUTA, 300, -1, 0, 150]], card: ['伏黒恵', 'A FAVOUR'], lines: [
-    ['megumi', 'Itadori. That is enough. Come back to the school.'],
-    ['yuji', 'I cannot. Sukuna killed all those people with these hands. Stay near me and it happens again.'],
+  { stage: 'ruins', p1: [Y, -240], cast: [[C.MEGUMI, 50, -1], [K.YUTA, 300, -1, 0, 150]], card: ['影法師', 'A FAVOUR'], lines: [
+    ['megumi', 'Vessel. That is enough. Come back to the school.'],
+    ['yuji', 'I cannot. King of Curses killed all those people with these hands. Stay near me and it happens again.'],
     ['megumi', 'Nobody here has clean hands. Me least of all. That is no reason to stop saving people.'],
-    ['megumi', 'Kenjaku has started a killing game right across the country. My sister has been dragged into it.'],
+    ['megumi', 'The Stitched One has started a killing game right across the country. My sister has been dragged into it.'],
     ['megumi', 'So do not ask me what you deserve. Help me. I need your strength.'],
     ['yuji', '...All right. Tell me what we have to do.']
   ] }
@@ -127,24 +127,24 @@ const TOMB = { stage: 'tomb', p1: [Y, -150], cx: 60, zoom: 1 };
 add(16, 'The Culling Game', [
   { stage: 'school', p1: [Y, -330], cast: [[C.MEGUMI, -130, -1], [X.MAKI, 40, -1], [K.YUTA, 200, -1], [K.YUKI, 400, -1], [CHOSO, -520, 1]], cx: -40, zoom: 1.04, setup: unseen(3),
     card: ['呪術高専', 'JUJUTSU HIGH'], lines: [
-      ['megumi', 'Two problems. Gojo is shut inside the Prison Realm, and Kenjaku\'s game has already begun.'],
-      ['maki', 'And one person who knows enough to help with both. Master Tengen, down in the Tombs of the Star Corridor.'],
+      ['megumi', 'Two problems. Blindfolded Infinity is shut inside the Prison Realm, and The Stitched One\'s game has already begun.'],
+      ['maki', 'And one person who knows enough to help with both. Barrier Master, down in the Tombs of the Star Corridor.'],
       ['yuta', 'A barrier hides the way in. More than a thousand doors, and only one of them goes anywhere.'],
       ['choso', 'What is left of my brothers is kept in the storehouse beside it. I can feel them. I will find you the door.'],
       ['yuki', 'Then I am coming along. I have a question of my own for the old recluse.', appear(3)],
       ['yuji', 'Who are you?'],
-      ['yuki', 'Yuki Tsukumo. Special grade. More to the point: what sort of girl do you like, kid?']
+      ['yuki', 'Star Rage. Special grade. More to the point: what sort of girl do you like, kid?']
     ] },
   Object.assign({}, TOMB, { cast: [[K.TENGEN, 330, -1, 1.12], [K.YUKI, -330, 1], [C.MEGUMI, -500, 1, 0, 130]], setup: unseen(0), card: ['薨星宮', 'TOMBS OF THE STAR CORRIDOR'], lines: [
     ['yuji', 'There is nothing in here. Only white, whichever way you look.'],
-    ['yuki', 'Hiding from us, Tengen? After all this time, you shut the door in my face?'],
-    ['tengen', 'I am not shutting you out. Welcome, all of you. And you, the vessel of Sukuna.', appear(0)],
-    ['yuji', 'Four eyes... You are Master Tengen?'],
+    ['yuki', 'Hiding from us, Barrier Master? After all this time, you shut the door in my face?'],
+    ['tengen', 'I am not shutting you out. Welcome, all of you. And you, the vessel of King of Curses.', appear(0)],
+    ['yuji', 'Four eyes... You are Barrier Master?'],
     ['tengen', 'Twelve years ago the merger with my Star Plasma Vessel failed. Without her I kept on changing.'],
     ['tengen', 'What stands in front of you is nearer to a curse than to a person.']
   ] }),
   Object.assign({}, TOMB, { cast: [[K.TENGEN, 330, -1, 1.12], [K.YUKI, -330, 1], [C.MEGUMI, -500, 1, 0, 130]], card: ['死滅回游', 'THE CULLING GAME'], lines: [
-    ['megumi', 'Kenjaku. What is he after? What is this game for?'],
+    ['megumi', 'The Stitched One. What is he after? What is this game for?'],
     ['tengen', 'He means to force the whole of humanity to change. By merging every person in this country with me.'],
     ['tengen', 'And since I am closer to a curse now, his technique can take hold of me. That is why he waited.'],
     ['yuki', 'So the Culling Game is how he gets everybody ready for it.'],
@@ -153,11 +153,11 @@ add(16, 'The Culling Game', [
     ['yuji', 'A hundred points buys a rule. Then we add one that lets people stop.', hideRules]
   ] }),
   Object.assign({}, TOMB, { cast: [[K.TENGEN, 330, -1, 1.12], [K.YUTA, -330, 1], [C.MEGUMI, -500, 1, 0, 130], [K.YUKI, 120, 1, 0, 200], [CHOSO, -420, 1, 0, 260]], card: ['獄門疆', 'THE BACK GATE'], lines: [
-    ['yuta', 'And Gojo? Can the Prison Realm be opened?'],
+    ['yuta', 'And Blindfolded Infinity? Can the Prison Realm be opened?'],
     ['tengen', 'It has a back gate, and I hold it. But a seal has to be forced, by something that cancels a technique outright.'],
-    ['tengen', 'The Inverted Spear of Heaven would have done it. So would the Black Rope. Satoru Gojo saw to it that neither exists any more.'],
+    ['tengen', 'The Inverted Spear of Heaven would have done it. So would the Black Rope. Blindfolded Infinity saw to it that neither exists any more.'],
     ['tengen', 'One chance is left. A sorcerer from a thousand years ago is among the players. She calls herself Angel, and her technique erases any other.'],
-    ['tengen', 'In return I ask for two of you, as guards. Kenjaku will come for me.'],
+    ['tengen', 'In return I ask for two of you, as guards. The Stitched One will come for me.'],
     ['choso', 'I will stay. He is the one who made me. Whatever ending he gets, I mean to be there for it.'],
     ['yuki', 'And so will I. Off you go, the rest of you.'],
     ['megumi', 'Then we split up. Find Angel. Find my sister. And find enough strength to walk into a colony and come out again.'],

@@ -71,7 +71,7 @@ function fightBeat(b, next) {
         JU.domain.open({ who: E.P1, tone: b.domain, reveal: () => next(true) });
       } });
     E.P1.skin = a.skin || E.YUJI;
-    nm.p1.textContent = a.name ? a.name[0] : 'Yuji Itadori'; nm.p1j.textContent = a.name ? a.name[1] : '虎杖悠仁';
+    nm.p1.textContent = a.name ? a.name[0] : 'The Vessel'; nm.p1j.textContent = a.name ? a.name[1] : '器';
     if (a.hp) E.P1.max = E.P1.hp = a.hp;
     if (a.sealed) { JU.boss.seal(9999); Fi.later(1700, () => E.fx.push({ k: 2, x: E.P1.x, y: 335, n: 'CURSED ENERGY CONFISCATED  ·  STRIKES ONLY', col: '#e2c060', t: 0, life: 2.4 })); }
     if (a.domain) Fi.later(1700, () => { if (JU.domain.granted) E.fx.push({ k: 2, x: E.P1.x, y: 335, n: 'G  ·  DOMAIN EXPANSION', col: '#ff2440', t: 0, life: 2 }); });
@@ -204,8 +204,8 @@ function mount(body) {
     <div class="duo">
       <button class="mode" data-mode="free"><b>Free Exploration</b><span lang="ja">自由探索</span><i>Roam Tokyo and exorcise the curses you run into. The subway at the east end of the block goes to Shibuya and to Kyoto, once you have exorcised ten and finished Season 1.</i></button>
       <button class="mode" data-mode="training"><b>Training</b><span lang="ja">修練</span><i>A training curse that never fights back. Test your technique and clan on it.</i></button>
-      ${naoya ? `<button class="mode" data-mode="maki" style="border-left-color:#ffd23d"><b>Maki Fight</b><span lang="ja" style="color:#ffd23d">真希</span>
-        <i>Naoya against Maki Zenin, up in the mountains. Here because Projection Sorcery is equipped.${JU.shop && JU.shop.PAID ? ` Costs ${JU.shop.FEES.maki} Cursed Tokens a go: you have ${JU.shop.tokens}.` : ''}</i></button>` : ''}
+      ${naoya ? `<button class="mode" data-mode="maki" style="border-left-color:#ffd23d"><b>Heavenly Blade Fight</b><span lang="ja" style="color:#ffd23d">真希</span>
+        <i>Frame Runner against Heavenly Blade, up in the mountains. Here because Projection Sorcery is equipped.${JU.shop && JU.shop.PAID ? ` Costs ${JU.shop.FEES.maki} Cursed Tokens a go: you have ${JU.shop.tokens}.` : ''}</i></button>` : ''}
     </div>
     ${JU.mp ? JU.mp.card() : ''}
   </div>`;

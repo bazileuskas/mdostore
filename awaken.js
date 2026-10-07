@@ -281,8 +281,8 @@ function done(p) {
   for (let i = 0; i < 4; i++) V.ring(cx, 160, 240 + i * 120, '#ffffff', .3 + i * .06);
 }
 
-JU.tech.add('aproj', { name: 'Awakened Projection', jp: '投射呪法', mark: '蟲', who: 'Naoya Zenin, cursed spirit', odds: 0, col: PINK, glow: 'gold', moves: MOVES,
-  awakened: true, skin: SPIRIT, as: ['Naoya Zenin', '禪院直哉'], dash: .45, dashFx: { t: .3, v: 1650, tint: 1 } });
+JU.tech.add('aproj', { name: 'Awakened Projection', jp: '投射呪法', mark: '蟲', who: 'Frame Runner, cursed spirit', odds: 0, col: PINK, glow: 'gold', moves: MOVES,
+  awakened: true, skin: SPIRIT, as: ['Frame Runner', '投射'], dash: .45, dashFx: { t: .3, v: 1650, tint: 1 } });
 const DEF = JU.tech.TECH.aproj, on = () => JU.tech.active === DEF;
 
 const tick0 = H.tick, under0 = H.under, fx0 = H.fx, reset0 = H.reset, start0 = H.fightStart, ko0 = H.ko;
@@ -325,7 +325,7 @@ H.ko = o => {
     if (!was && S.tsKills >= TS_KILLS && S.tsBoss >= TS_BOSS) { sfx.bf(); E.fx.push({ k: 2, x: o.x, y: 470, n: 'AWAKENED TEN SHADOWS  ·  UNLOCKED', col: '#8f9bff', t: 0, life: 3 }); }
     else if (!was && (boss || S.tsKills % 10 === 0)) E.fx.push({ k: 2, x: o.x, y: 470, n: `TEN SHADOWS  ·  ${Math.min(S.tsKills, TS_KILLS)} / ${TS_KILLS}  ·  BOSSES ${Math.min(S.tsBoss, TS_BOSS)} / ${TS_BOSS}`, col: '#8f9bff', t: 0, life: 2 });
   }
-  if (cfg && cfg.label === 'Maki fight' && o.ai && o.ai.d === Fi.DEFS.maki && Math.random() < DROP) {
+  if (cfg && cfg.label === 'Heavenly Blade fight' && o.ai && o.ai.d === Fi.DEFS.maki && Math.random() < DROP) {
     S.frames++; save(); sfx.confirm();
     E.fx.push({ k: 2, x: o.x, y: 420, n: `PROJECTION FRAME V2  ·  ${Math.min(S.frames, FRAMES)} / ${FRAMES}`, col: GOLD, t: 0, life: 2.4 });
   }
@@ -373,14 +373,14 @@ function streetDraw() {
 
 /* ---------- the AWAKEN CT menu ---------- */
 const LIST = [
-  { id: 'aproj', name: 'Awakened Projection', mark: '蟲', col: PINK, what: 'Naoya, as the cursed spirit he came back as. Frame Breaker, Top Speed, Sonic Boom, Mach 3.',
-    later: () => `Needs 3 Projection Frame v2, dropped by the Maki boss (5%). You have ${Math.min(S.frames, FRAMES)}.`, open: () => dev() || !NEED || S.frames >= FRAMES },
+  { id: 'aproj', name: 'Awakened Projection', mark: '蟲', col: PINK, what: 'Frame Runner, as the cursed spirit he came back as. Frame Breaker, Top Speed, Sonic Boom, Mach 3.',
+    later: () => `Needs 3 Projection Frame v2, dropped by the Heavenly Blade boss (5%). You have ${Math.min(S.frames, FRAMES)}.`, open: () => dev() || !NEED || S.frames >= FRAMES },
   { id: 'alimit', name: 'Awakened Limitless', mark: '蒼', col: '#38c8ff', what: 'Maximum: Blue, Reversal Red: MAX, 150% Hollow Purple, Unlimited Void. Two secret moves.',
-    later: () => 'Needs Gojo, as he was at school. He is in Shibuya, by the statue of the dog, and he awakens it for whoever comes to him carrying Limitless.', open: () => dev() || !!S.gojo },
+    later: () => 'Needs Blindfolded Infinity, as he was at school. He is in Shibuya, by the statue of the dog, and he awakens it for whoever comes to him carrying Limitless.', open: () => dev() || !!S.gojo },
   { id: 'ats', name: 'Awakened Ten Shadows', mark: '影', col: '#8f9bff', what: 'Shiro, Rabbit Escape, Mahoraga, Max Elephant, and the domain Chimera Shadow Garden. Two meters: shikigami left, and cursed energy.',
-    later: () => `Needs ${TS_KILLS} curses exorcised with Ten Shadows (you have ${Math.min(S.tsKills, TS_KILLS)}), ${TS_BOSS} of them bosses: Mahito, Choso, anything with a technique of its own (you have ${Math.min(S.tsBoss, TS_BOSS)}).`,
+    later: () => `Needs ${TS_KILLS} curses exorcised with Ten Shadows (you have ${Math.min(S.tsKills, TS_KILLS)}), ${TS_BOSS} of them bosses: Soul Shaper, Blood Brother, anything with a technique of its own (you have ${Math.min(S.tsBoss, TS_BOSS)}).`,
     note: 'Every exorcism adds one shikigami to call.', open: () => dev() || (S.tsKills >= TS_KILLS && S.tsBoss >= TS_BOSS) },
-  { id: 'smark', name: 'Sukuna\'s Mark', mark: '印', col: '#ff2440' },
+  { id: 'smark', name: 'King of Curses\'s Mark', mark: '印', col: '#ff2440' },
   { id: 'tced', name: 'True Cursed Energy Discharge', mark: '轟', col: '#7fe9ff' }      // tced.js fills this one in
 ];
 function mount(body) {

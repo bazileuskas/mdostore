@@ -107,7 +107,7 @@ function flash02(p) {
   });
 }
 
-JU.tech.add('smark', { name: 'Sukuna\'s Mark', jp: '宿儺の印', mark: '印', who: 'The King of Curses, through his vessel', odds: 0, col: RED, glow: 'red', moves: MOVES, awakened: true });
+JU.tech.add('smark', { name: 'King of Curses\'s Mark', jp: '王の印', mark: '印', who: 'The King of Curses, through his vessel', odds: 0, col: RED, glow: 'red', moves: MOVES, awakened: true });
 const DEF = JU.tech.TECH.smark, on = () => JU.tech.active === DEF;
 
 /* ---------- wiring ---------- */
@@ -198,7 +198,7 @@ const open = () => !!(JU.account && JU.account.dev) || !NEED || (JU.clan.equippe
 // its card on the Awaken CT screen
 Object.assign(JU.awakened.LIST.find(a => a.id === 'smark'), { open,
   what: 'Deadly Cleave (666), Shrine Cleave (500), 500% Fuga (700), Shinjutsu Shrine (3000). 1 + R: a 0.2 second shrine (150).',
-  later: () => `Needs the Sukuna clan, ${WANT.bf} Black Flashes as Sukuna (you have ${Math.min(S.bf, WANT.bf)}) and ${WANT.kills} curses exorcised (you have ${Math.min(S.kills, WANT.kills)}).` });
+  later: () => `Needs the King of Curses clan, ${WANT.bf} Black Flashes as King of Curses (you have ${Math.min(S.bf, WANT.bf)}) and ${WANT.kills} curses exorcised (you have ${Math.min(S.kills, WANT.kills)}).` });
 
 JU.smark = { MOVES, NEED, WANT, open, get progress() { return { bf: S.bf, kills: S.kills }; },
   get state() { return { shrine: shrine && { t: shrine.t, done: shrine.done, dealt: shrine.dealt, open: shrine.open }, arrow: !!arrow, quick, quickCd }; } };

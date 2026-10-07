@@ -23,7 +23,7 @@ Object.assign(E.GLOW, { green: mk('125,220,106'), gold: mk('255,210,61'), teal: 
 // def: { name, jp, who, odds, col, glow, moves: { strikes, crush, div, manji }, dash?, m1?(i), aim?(p, h), guard?(face, a), tick?(dt) }
 const add = (id, def) => { def.id = id; TECH[id] = def; ORDER.push(id); };
 // Yuji, as a technique of his own: free, never rolled, always there. Equipping it is fighting with the moves everybody starts with
-add('yuji', { name: 'Yuji Itadori', jp: '虎杖悠仁', mark: '拳', who: 'Cursed Strikes, Divergent Fist and Black Flash', odds: 0, col: '#ff7a59', glow: 'blue', free: true, base: true,
+add('yuji', { name: 'The Vessel', jp: '器', mark: '拳', who: 'Cursed Strikes, Divergent Fist and Black Flash', odds: 0, col: '#ff7a59', glow: 'blue', free: true, base: true,
   moves: Object.fromEntries(SLOTS.map(k => [k, { name: BASE.names[k], cd: BASE.cd[k] }])) });
 
 /* ---------- equipping ---------- */

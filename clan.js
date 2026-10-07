@@ -10,15 +10,15 @@ try { equipped = localStorage.getItem('ju.clan'); } catch (e) {}
 
 // hp / ce / dmg / crit / m1s / tool are fractions: .1 = +10%. "Cursed energy" scales technique damage.
 const add = (id, def) => { def.id = id; CLAN[id] = def; ORDER.push(id); };
-add('kugisaki', { name: 'Kugisaki', jp: '釘崎', odds: 40, col: '#ff9a4d', hp: -.1, ce: .1, lines: ['+10% cursed energy', '-10% health'] });
-add('fushiguro', { name: 'Fushiguro', jp: '伏黒', odds: 40, col: '#8f9bff', hp: -.05, ce: .03, dmg: .05, lines: ['+3% cursed energy', '+5% damage', '-5% health'] });
-add('gojo', { name: 'Gojo', jp: '五条', odds: 10, col: '#38c8ff', ce: .3, crit: -.05, m1s: .2,
+add('kugisaki', { name: 'Straw Doll', jp: '藁', odds: 40, col: '#ff9a4d', hp: -.1, ce: .1, lines: ['+10% cursed energy', '-10% health'] });
+add('fushiguro', { name: 'Shadow', jp: '影', odds: 40, col: '#8f9bff', hp: -.05, ce: .03, dmg: .05, lines: ['+3% cursed energy', '+5% damage', '-5% health'] });
+add('gojo', { name: 'Infinity', jp: '無限', odds: 10, col: '#38c8ff', ce: .3, crit: -.05, m1s: .2,
   lines: ['+30% cursed energy', '+20% basic attack speed', '-5% critical damage', 'With Limitless equipped: G opens Unlimited Void'], ability: 'R — the screen cracks like glass and you are standing where your mouse was' });
-add('kenjaku', { name: 'Kenjaku', jp: '羂索', odds: 5, col: '#c77dff', hp: .3,
+add('kenjaku', { name: 'Stitched', jp: '縫い目', odds: 5, col: '#c77dff', hp: .3,
   lines: ['+30% health'], ability: 'R over a body — take it. Its technique, health, strength and speed are yours until you die' });
-add('zenin', { name: 'Zenin', jp: '禪院', odds: 4.9, col: '#7ddc9a', hp: .15, tool: .3,
+add('zenin', { name: 'Heavenly', jp: '天与', odds: 4.9, col: '#7ddc9a', hp: .15, tool: .3,
   lines: ['+15% health', 'Carries a cursed tool: +30% basic attack damage, longer reach'], ability: 'R — counter stance. A hit taken during it is turned aside and answered for 30' });
-add('sukuna', { name: 'Sukuna', jp: '宿儺', odds: .1, col: '#ff2440', hp: .5,
+add('sukuna', { name: 'King of Curses', jp: '呪王', odds: .1, col: '#ff2440', hp: .5,
   lines: ['+50% health', 'With Shrine equipped: +60% basic attack damage, +60% cursed energy, and G opens Malevolent Shrine'],
   ability: 'R near an enemy — choke hold, 80 damage in cleaves. Die and you become a finger: whatever killed you eats it and becomes your vessel (T takes over, V binding vow)' });
 
@@ -47,7 +47,7 @@ H.fightStart = (cfg, wave) => {
   p.skin = hs ? hs.skin : E.YUJI; p.scale = hs ? hs.scale : undefined;
   // outside the story he carries his clan's name, not his own: Yuji Gojo, Yuji Fushiguro. (A clan is only ever in play outside the story;
   // a body that is not his, or a technique that makes him somebody else, puts its own name up after this)
-  Fi.nm.p1.textContent = hs ? hs.name : 'Yuji ' + active.name; Fi.nm.p1j.textContent = hs ? hs.jp : active.jp + '悠仁';
+  Fi.nm.p1.textContent = hs ? hs.name : active.name + ' Vessel'; Fi.nm.p1j.textContent = hs ? hs.jp : active.jp + '器';
   if (X().start) X().start(p, cfg);
 };
 H.press = (a, inScene) => {                      // R = clan ability, T / V belong to Sukuna's vessel
@@ -100,7 +100,7 @@ const stats = c => `<ul>${c.lines.map(l => `<li>${l}</li>`).join('')}${c.ability
 function show() {
   const c = CLAN[equipped], r = document.getElementById('cres');
   if (!r) return;
-  r.innerHTML = c ? `<small>Your clan · ${c.odds}%${c.grade ? ' · ' + c.grade : ''}${c.limited ? ' · Limited time' : ''}</small><b style="color:${c.col}">${c.name}</b><span lang="ja">${c.jp}</span>${c.id === 'toji' ? '' : `<em>Outside the story you fight as Yuji ${c.name}</em>`}${stats(c)}`
+  r.innerHTML = c ? `<small>Your clan · ${c.odds}%${c.grade ? ' · ' + c.grade : ''}${c.limited ? ' · Limited time' : ''}</small><b style="color:${c.col}">${c.name}</b><span lang="ja">${c.jp}</span>${c.id === 'toji' ? '' : `<em>Outside the story you fight as ${c.name} Vessel</em>`}${stats(c)}`
     : `<small>No clan yet</small><p>${JU.shop && JU.shop.PAID ? 'Pick one of the three talismans to draw your bloodline: a draw uses a clan roll, and what it lands on goes into the slot you have selected.' : 'Pick one of the three talismans to draw your bloodline, or take a clan straight from the cards.'} Clans are used in Free Exploration.</p>`;
   document.querySelectorAll('.ccard').forEach(k => { k.classList.toggle('on', k.dataset.clan === equipped); k.classList.toggle('lock', !mine(k.dataset.clan)); });
 }

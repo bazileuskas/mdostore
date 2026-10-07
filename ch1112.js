@@ -3,12 +3,12 @@
 'use strict';
 
 const E = JU.eng, C = JU.cast, X = JU.cast2, K = JU.cast3, V = JU.vfx, sfx = JU.sfx, Y = E.YUJI, SUKUNA = JU.sukuna.SUKUNA, add = JU.chapters.add;
-const AS_SUKUNA = { skin: SUKUNA, tech: 'shrine', name: ['Ryomen Sukuna', '両面宿儺'], hp: 150, domain: 'shrine' };   // more health than the boy, and G opens Malevolent Shrine
+const AS_SUKUNA = { skin: SUKUNA, tech: 'shrine', name: ['King of Curses', '呪いの王'], hp: 150, domain: 'shrine' };   // more health than the boy, and G opens Malevolent Shrine
 const TODO = { skin: X.TODO, call: 'BOOGIE WOOGIE', col: '#7ad7ff', dmg: 10, scale: 1.2 };
 
 add(11, 'The King of Curses', [
   // the player is Sukuna for this chapter, with the whole of Shrine
-  { foes: ['jogo'], stage: 'street', as: AS_SUKUNA, label: 'One minute', card: ['両面宿儺', 'RYOMEN SUKUNA'], win: ['焔', 'ASHES'] },
+  { foes: ['jogo'], stage: 'street', as: AS_SUKUNA, label: 'One minute', card: ['呪いの王', 'KING OF CURSES'], win: ['焔', 'ASHES'] },
   { stage: 'street', p1: [SUKUNA, -220], foe: ['jogo', 240], lines: [
     ['jogo', 'Not one blow. I could not land even one...'],
     ['sukuna', 'You burned hotter than a thousand years of sorcerers. Be proud of it. You were strong.'],
@@ -16,7 +16,7 @@ add(11, 'The King of Curses', [
   ] },
   { stage: 'street', p1: [SUKUNA, -240], cast: [[C.MEGUMI, -520, 1]], foe: ['mahoraga', 300], card: ['魔虚羅', 'THE DIVINE GENERAL'], lines: [
     ['megumi', 'I call the one no Ten Shadows user has ever tamed. Come out, Mahoraga.'],
-    ['sukuna', 'Megumi Fushiguro. You would die just to drag that thing into the world? I still have a use for you.'],
+    ['sukuna', 'Shadow Summoner. You would die just to drag that thing into the world? I still have a use for you.'],
     ['sukuna', 'So the ritual breaks if somebody else kills it. Fine. Come, then. Show me what adapts to anything.']
   ] },
   // it adapts as the fight goes on. Fuga lands twice as hard while the shrine is open
@@ -42,32 +42,32 @@ function taken() {
   o.alpha = 0;
 }
 
-add(12, 'The Last of Mahito', [
+add(12, 'The Last of Soul Shaper', [
   { stage: 'station', p1: [Y, -260], cast: [[X.NANAMI, -20, -1]], foe: ['mahito', 320], card: ['渋谷駅', 'SHIBUYA STATION'], lines: [
-    ['nanami', 'Itadori. You are still standing. Good.'],
+    ['nanami', 'Vessel. You are still standing. Good.'],
     ['yuji', 'Nanamin! You are hurt. Stop, let me...'],
     ['mahito', 'Found you, Seven-to-Three. Oh, and the vessel as well. What timing.'],
-    ['nanami', 'The rest is yours, Itadori.', gone],
-    ['yuji', 'MAHITO!']
+    ['nanami', 'The rest is yours, Vessel.', gone],
+    ['yuji', 'SOUL SHAPER!']
   ] },
   // he cannot finish it alone: half-way through, the fight stops and Todo arrives
-  { foes: ['mahito'], stage: 'station', label: 'Shibuya', card: ['真人', 'MAHITO'],
+  { foes: ['mahito'], stage: 'station', label: 'Shibuya', card: ['魂', 'SOUL SHAPER'],
     mid: { at: .5, ends: true, lines: [
       ['mahito', 'You are slowing down. Tired? Sad? Souls get so heavy when they break.'],
-      ['yuji', '...Nanamin. Kugisaki. I could not...'],
+      ['yuji', '...Nanamin. Straw Doll. I could not...'],
       ['todo', 'On your feet, brother! We are sorcerers. We do not get to fall while there is still someone left to save!']
     ] } },
   { stage: 'station', p1: [Y, -240], cast: [[X.TODO, -480, 1, 1.2]], foe: ['mahito2', 300], card: ['遍殺即霊体', 'HIS TRUE SHAPE'], lines: [
     ['mahito', 'I finally understand my own soul. This is the shape it was always meant to take.'],
     ['todo', 'He has changed. Stay sharp, brother. My technique still works with one good hand.'],
-    ['yuji', 'You were right about one thing, Mahito. We are the same. So I will be the thing that kills you, as many times as it takes.']
+    ['yuji', 'You were right about one thing, Soul Shaper. We are the same. So I will be the thing that kills you, as many times as it takes.']
   ] },
-  { foes: ['mahito2'], stage: 'station', ally: TODO, label: 'The soul', card: ['真人', 'MAHITO'], win: ['黒閃', 'BLACK FLASH'] },
+  { foes: ['mahito2'], stage: 'station', ally: TODO, label: 'The soul', card: ['魂', 'SOUL SHAPER'], win: ['黒閃', 'BLACK FLASH'] },
   { stage: 'station', p1: [Y, -240], cast: [[K.KENJAKU, 420, -1]], foe: ['mahito', 150], card: ['呪霊操術', 'CURSED SPIRIT MANIPULATION'], lines: [
     ['mahito', 'No. No, stay back. I am not finished, I can still...'],
-    ['kenjaku', 'You look as though you need rescuing, Mahito.', taken],
-    ['yuji', 'He swallowed him. You. You are the one who sealed Gojo.'],
-    ['kenjaku', 'And you are Sukuna\'s cage. We will meet again, Yuji Itadori. The age of curses has only just begun.']
+    ['kenjaku', 'You look as though you need rescuing, Soul Shaper.', taken],
+    ['yuji', 'He swallowed him. You. You are the one who sealed Blindfolded Infinity.'],
+    ['kenjaku', 'And you are King of Curses\'s cage. We will meet again, The Vessel. The age of curses has only just begun.']
   ] }
 ]);
 })();

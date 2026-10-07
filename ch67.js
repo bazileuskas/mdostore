@@ -15,26 +15,26 @@ add(6, 'The Goodwill Event', [
     ['megumi', '...Idiot.'],
     ['gojo', 'Touching. Now go and beat Kyoto for me.']
   ] },
-  { stage: 'mountain', p1: [Y, -240], foe: ['todo', 260], card: ['東堂葵', 'AOI TODO'], lines: [
+  { stage: 'mountain', p1: [Y, -240], foe: ['todo', 260], card: ['拍手', 'CLAPPING BRAWLER'], lines: [
     ['todo', 'First-year. One question before we start. What kind of woman is your type?'],
     ['yuji', 'Huh? Uh... tall, I guess. With a nice...'],
     ['todo', '...! Just now, memories I never lived came flooding in. We were in the same class. You were my best friend.'],
     ['yuji', 'We met ten seconds ago!'],
     ['todo', 'Then come at me with everything you have, BROTHER!']
   ] },
-  { foes: ['todo'], stage: 'mountain', label: 'Goodwill event', card: ['東堂葵', 'AOI TODO'], win: ['友', 'MY BEST FRIEND'],
+  { foes: ['todo'], stage: 'mountain', label: 'Goodwill event', card: ['拍手', 'CLAPPING BRAWLER'], win: ['友', 'MY BEST FRIEND'],
     mid: { at: .5, lines: [
       ['todo', 'Stop! Your body moves and your cursed energy follows a beat behind. Do not send it to your fist. Be it, all at once.'],
       ['yuji', 'All at once...'],
       ['todo', 'Yes! Again, brother!']
     ] } },
-  { stage: 'mountain', p1: [Y, -240], cast: [[X.TODO, -480, 1, 1.2]], foe: ['hanami', 300], card: ['特級呪霊', 'HANAMI'], lines: [
+  { stage: 'mountain', p1: [Y, -240], cast: [[X.TODO, -480, 1, 1.2]], foe: ['hanami', 300], card: ['特級呪霊', 'DISASTER BLOOM'], lines: [
     ['hanami', 'The forests, the seas and the skies can bear humankind no longer. They are asking for time to breathe.'],
     ['todo', 'A special grade, strolling into our exchange event. Brother. Shall we?'],
     ['yuji', 'Yeah. Together!']
   ] },
   // half-way through, Todo calls it and the next thing to land is a Black Flash
-  { foes: ['hanami'], stage: 'mountain', ally: TODO, floor: 8, label: 'Special grade', card: ['花御', 'HANAMI'],
+  { foes: ['hanami'], stage: 'mountain', ally: TODO, floor: 8, label: 'Special grade', card: ['花', 'DISASTER BLOOM'],
     mid: { at: .45, lines: [
       ['todo', 'Now, brother! The sparks of black choose nobody. But you are in the zone. Hit it!'],
       ['yuji', 'BLACK FLASH!']
@@ -66,7 +66,7 @@ add(7, 'The Death Paintings', [
     ['eso', 'Brother, look. Guests. And they have seen my back.'],
     ['kechizu', 'Guests! Guests!'],
     ['eso', 'We are two of the nine Death Paintings. Our elder brother asked a favour of us. So you die here.'],
-    ['nobara', 'Itadori. The tall one is mine.']
+    ['nobara', 'Vessel. The tall one is mine.']
   ] },
   { foes: ['kechizu', 'eso'], stage: 'mountain', ally: NOBARA, label: 'Death paintings',
     mid: { at: .5, foe: 'eso', lines: [

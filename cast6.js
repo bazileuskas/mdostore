@@ -120,19 +120,19 @@ const GOJO2 = Object.assign({}, C.GOJO, { head() {
 /* ---------- how they fight ---------- */
 const A = (pre, pose, wind, lunge, reach, dmg, kb, more) => Object.assign({ pre, pose, wind, lunge, reach, dmg, kb, stun: .45 }, more);
 Object.assign(Fi.DEFS, {
-  reggie: { name: 'Reggie Star', jp: 'レジィ・スター', skin: REGGIE, hp: 240, scale: 1.02, speed: 270, range: 220, gap: [.4, .9], dr: .85, human: true,
+  reggie: { name: 'Receipt Man', jp: 'レシート', skin: REGGIE, hp: 240, scale: 1.02, speed: 270, range: 220, gap: [.4, .9], dr: .85, human: true,
     atk: [A('hookWind', 'hook', .4, 420, 230, 9, 440), A('kickWind', 'kick', .48, 440, 230, 11, 600, { lift: 500 })] },
-  uro: { name: 'Takako Uro', jp: '烏鷺亨子', skin: URO, hp: 230, scale: 1, speed: 330, range: 220, gap: [.3, .8], dr: .85, human: true,
+  uro: { name: 'Sky Captain', jp: '空', skin: URO, hp: 230, scale: 1, speed: 330, range: 220, gap: [.3, .8], dr: .85, human: true,
     atk: [A('hookWind', 'hook', .34, 460, 240, 9, 460), A('kickWind', 'kick', .42, 460, 240, 11, 620, { lift: 520 })] },
-  ishigori: { name: 'Ryu Ishigori', jp: '石流龍', skin: ISHIGORI, hp: 300, scale: 1.2, speed: 230, range: 210, gap: [.4, .95], dr: .75, human: true,
+  ishigori: { name: 'Granite Cannon', jp: '砲', skin: ISHIGORI, hp: 300, scale: 1.2, speed: 230, range: 210, gap: [.4, .95], dr: .75, human: true,
     atk: [A('hookWind', 'hook', .42, 400, 230, 11, 480), A('crushWind', 'crush', .58, 380, 240, 15, 680, { lift: 580 })] },
-  kashimo: { name: 'Hajime Kashimo', jp: '鹿紫雲一', skin: KASHIMO, hp: 420, scale: 1.02, speed: 340, range: 250, gap: [.25, .7], dr: .65, human: true,
+  kashimo: { name: 'Thunder God', jp: '雷神', skin: KASHIMO, hp: 420, scale: 1.02, speed: 340, range: 250, gap: [.25, .7], dr: .65, human: true,
     atk: [A('hookWind', 'hook', .3, 480, 270, 10, 480), A('dash', 'cross', .32, 1000, 320, 12, 620, { lift: 380 }), A('kickWind', 'kick', .45, 440, 240, 13, 640, { lift: 540 })] },
-  naoya2: { name: 'Naoya Zenin', jp: '禪院直哉', skin: JU.awakened.SPIRIT, hp: 340, scale: 1.14, speed: 400, range: 230, gap: [.2, .6], dr: .7,
+  naoya2: { name: 'Frame Runner', jp: '投射', skin: JU.awakened.SPIRIT, hp: 340, scale: 1.14, speed: 400, range: 230, gap: [.2, .6], dr: .7,
     atk: [A('hookWind', 'hook', .28, 500, 260, 10, 460), A('dash', 'cross', .28, 1100, 320, 12, 620, { lift: 380 }), A('kickWind', 'kick', .4, 460, 240, 13, 640, { lift: 540 })] },
-  kenjaku: { name: 'Kenjaku', jp: '羂索', skin: JU.cast3.KENJAKU, hp: 460, scale: 1.04, speed: 260, range: 220, gap: [.35, .85], dr: .6, human: true,
+  kenjaku: { name: 'The Stitched One', jp: '縫い目', skin: JU.cast3.KENJAKU, hp: 460, scale: 1.04, speed: 260, range: 220, gap: [.35, .85], dr: .6, human: true,
     atk: [A('hookWind', 'hook', .38, 440, 240, 11, 480), A('kickWind', 'kick', .46, 440, 240, 13, 640, { lift: 540 })] },
-  yorozu: { name: 'Yorozu', jp: '万', skin: YOROZU, hp: 330, scale: 1.04, speed: 300, range: 230, gap: [.3, .8], dr: .75, human: true,
+  yorozu: { name: 'The Constructor', jp: '万', skin: YOROZU, hp: 330, scale: 1.04, speed: 300, range: 230, gap: [.3, .8], dr: .75, human: true,
     atk: [A('hookWind', 'hook', .34, 460, 250, 10, 480), A('dash', 'cross', .34, 980, 310, 12, 620, { lift: 380 }), A('crushWind', 'crush', .5, 420, 260, 15, 700, { lift: 600 })] }
 });
 
@@ -446,7 +446,7 @@ const YUTA_M = {
     m.n = n; sfx.whoosh(); cut(p, [-.3, .35, -1.2][n], 400);                    // three cuts, and the last one lifts it off the floor
     E.tryHit(p, n === 2 ? { reach: 290, dmg: 10, kb: 620, lift: 480, stop: .12, heavy: 1, col: STEEL } : { reach: 280, dmg: 6, kb: 120, stun: .5, stop: .05, col: STEEL });
   } },
-  crush: { name: 'Rika', cd: 8, dur: .8, glow: 'purple', run(p, m, t) {
+  crush: { name: 'The Queen', cd: 8, dur: .8, glow: 'purple', run(p, m, t) {
     const o = E.P2;
     p.vx = 0; p.rate = 30; p.target = t < .5 ? POSE.crushWind : t < .7 ? POSE.crush : POSE.idle;
     if (!m.s) { m.s = 1; m.x = o.ko ? p.x + p.face * 300 : o.x; sfx.charge(); V.custom(.95, u => fist(m.x, u * .95, '#cfcbd8')); }
@@ -474,7 +474,7 @@ const YUTA_M = {
     E.fx.push({ k: 2, x: p.x, y: p.y + 390, n: 'HEALED', col: '#bff5d8', t: 0, life: 1.1 }); V.ring(p.x, p.y + 160, 220, '#bff5d8', .5); V.sparks(p.x, p.y + 180, 'green', 12);
   } }
 };
-JU.tech.TECH.yuta = { id: 'yuta', name: 'Queen of Curses', jp: '里香', who: 'Yuta Okkotsu', odds: 0, col: LILAC, glow: 'purple', moves: YUTA_M };   // none of these three is on the roll: the story hands them out
+JU.tech.TECH.yuta = { id: 'yuta', name: 'Queen of Curses', jp: '女王', who: 'Keeper of the Queen', odds: 0, col: LILAC, glow: 'purple', moves: YUTA_M };   // none of these three is on the roll: the story hands them out
 
 /* ---------- Hakari, to play: rough cursed energy, and a domain that pays out ---------- */
 function shutters(x, t) {
@@ -528,7 +528,7 @@ const HAKARI_M = {
     if (E.tryHit(p, n === 5 ? { reach: 250, dmg: 12, kb: 900, lift: 520, stop: .16, heavy: 1, col: FEVER } : { reach: 230, dmg: 4, kb: 60, stun: .5, stop: .04, col: FEVER }) && n === 5) V.crack(E.P2.x, 260);
   } }
 };
-JU.tech.TECH.hakari = { id: 'hakari', name: 'Idle Death Gamble', jp: '坐殺博徒', who: 'Kinji Hakari', odds: 0, col: FEVER, glow: 'blue', moves: HAKARI_M, awkName: 'Jackpot',
+JU.tech.TECH.hakari = { id: 'hakari', name: 'Idle Death Gamble', jp: '坐殺博徒', who: 'Jackpot Gambler', odds: 0, col: FEVER, glow: 'blue', moves: HAKARI_M, awkName: 'Jackpot',
   awaken(p) {                                       // the domain is a pachinko machine, and tonight it pays
     p.inv = Math.max(p.inv, 1);
     if (!D.open({ who: p, tone: 'teal', reveal() { jack = 12; sfx.bf(); E.after(.25, () => E.banner('大当り', 'JACKPOT', 'sm')); } })) JU.tech.charge(100);
@@ -577,7 +577,7 @@ const YUKI_M = {
     if (E.tryHit(p, { reach: 280, dmg: 30, kb: 1300, lift: 520, stop: .26, heavy: 1, col: STAR })) { V.impact(.2, o.x, o.y + 150); V.crack(o.x, 380); E.addBlast(o.x, o.y + 150, '255,216,122', 360); }
   } }
 };
-JU.tech.TECH.yuki = { id: 'yuki', name: 'Star Rage', jp: '星の怒り', who: 'Yuki Tsukumo', odds: 0, col: STAR, glow: 'gold', moves: YUKI_M };
+JU.tech.TECH.yuki = { id: 'yuki', name: 'Star Rage', jp: '星の怒り', who: 'Star Rage', odds: 0, col: STAR, glow: 'gold', moves: YUKI_M };
 
 const tick0 = H.tick, reset0 = H.reset, start0 = H.fightStart;
 H.tick = dt => {
@@ -717,8 +717,8 @@ const shinjuku = {
 Object.assign(JU.chapters.STAGES, { gym: () => gym, docks: () => docks, shinjuku: () => shinjuku });
 
 Object.assign(JU.story.WHO, {
-  reggie: ['Reggie Star', 'レジィ・スター', '#f1eee2'], uro: ['Takako Uro', '烏鷺亨子', '#b9a8ff'], ishigori: ['Ryu Ishigori', '石流龍', '#ffb060'], kashimo: ['Hajime Kashimo', '鹿紫雲一', BOLT],
-  hana: ['Hana Kurusu', '来栖華', '#ffe9a0'], yorozu: ['Yorozu', '万', ROSE], kenjaku2: ['Kenjaku', '羂索', '#c9a53a']
+  reggie: ['Receipt Man', 'レシート', '#f1eee2'], uro: ['Sky Captain', '空', '#b9a8ff'], ishigori: ['Granite Cannon', '砲', '#ffb060'], kashimo: ['Thunder God', '雷神', BOLT],
+  hana: ['The Angel', '天使', '#ffe9a0'], yorozu: ['The Constructor', '万', ROSE], kenjaku2: ['The Stitched One', '縫い目', '#c9a53a']
 });
 
 JU.cast6 = { REGGIE, URO, ISHIGORI, KASHIMO, HANA, YOROZU, MEGUNA, GOJO2, gym, docks, shinjuku, get jackpot() { return jack; } };

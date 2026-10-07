@@ -14,8 +14,8 @@ const { lerp, clamp, rnd, LINE, TOR } = E, TAU = Math.PI * 2, { slab, fill, lit,
 const LEN = 12000, Z0 = 500, Z1 = 1340, CURB1 = 790, CURB2 = 1240, BZ = 1380;
 const DEEP = [{ id: 'bamboo', x0: 600, x1: 900, z1: 2300 }, { id: 'hanami', x0: 6900, x1: 7180, z1: 2100 }, { id: 'yasaka', x0: 7600, x1: 8400, z1: 1960 }, { id: 'torii', x0: 10500, x1: 10780, z1: 2400 }];
 const RIVER = [5800, 6600], LAMPS = [350, 1250, 2600, 4050, 5450, 6750, 8500, 9150, 10300, 10950, 11700];
-const AREAS = [[0, 'Arashiyama', '嵐山'], [1350, 'Kinkaku-ji', '金閣寺'], [2750, 'Kyoto Jujutsu High', '京都府立呪術高専'], [4150, 'Kyoto Station', '京都駅'], [5700, 'Kamo River', '鴨川'], [6700, 'Gion', '祇園'],
-  [7500, 'Yasaka Shrine', '八坂神社'], [8450, 'Higashiyama', '東山'], [9250, 'Kiyomizu-dera', '清水寺'], [10350, 'Fushimi Inari', '伏見稲荷'], [10900, 'The Zenin Estate', '禪院家']];
+const AREAS = [[0, 'Arashiyama', '嵐山'], [1350, 'Kinkaku-ji', '金閣寺'], [2750, 'Kyoto Jujutsu High', '京都府立呪術高専'], [4150, 'Kyoto Station', '京都駅'], [5700, 'Crimson River', '鴨川'], [6700, 'Gion', '祇園'],
+  [7500, 'Yasaka Shrine', '八坂神社'], [8450, 'Higashiyama', '東山'], [9250, 'Kiyomizu-dera', '清水寺'], [10350, 'Fushimi Inari', '伏見稲荷'], [10900, 'The Heavenly Estate', '一族の家']];
 const areaAt = x => AREAS.filter(a => x >= a[0]).pop();
 const gy = z => (z < CURB1 || z > CURB2 ? 12 : 0);
 function free(x, z) {
@@ -125,7 +125,7 @@ function sky() {
     g.lineTo(VW + 300, HY + 2); g.closePath(); g.fill();
   }
   const dx = VW * .68 + pan * 1.6, dy = HY - 128;                                                         // and on one of them, 大, in fire
-  lit(() => glow(GLOW.fire, dx, dy, 240, .5 + .1 * Math.sin(T * 5))); g.font = "86px 'Yuji Syuku','Yu Mincho',serif"; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillStyle = '#ffb04a'; g.fillText('大', dx, dy);
+  lit(() => glow(GLOW.fire, dx, dy, 240, .5 + .1 * Math.sin(T * 5))); g.font = "86px 'Vessel Syuku','Yu Mincho',serif"; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillStyle = '#ffb04a'; g.fillText('大', dx, dy);
   gr = g.createLinearGradient(0, HY - 150, 0, HY); gr.addColorStop(0, 'rgba(255,170,90,0)'); gr.addColorStop(1, 'rgba(255,170,90,.22)');
   g.fillStyle = gr; g.fillRect(-300, HY - 150, VW + 600, 152);
 }
@@ -193,30 +193,30 @@ const UTAHIME = Object.assign({}, C.civ(1), { torso: ['#d9d4c8', '#f1ece0'], arm
     g.fillStyle = '#f4efe4'; g.fillRect(-27, -22, 54, 5); g.fillStyle = LINE; g.beginPath(); g.ellipse(5, 3, 2.4, 3, 0, 0, TAU); g.fill(); g.beginPath(); g.ellipse(17, 3, 2.1, 3, 0, 0, TAU); g.fill();
     g.strokeStyle = '#a8705c'; g.lineWidth = 2.4; g.beginPath(); g.moveTo(0, 8); g.lineTo(22, 12); g.stroke();
   } });
-Object.assign(JU.story.WHO, { todo: ['Aoi Todo', '東堂葵', '#38c8ff'], mai: ['Mai Zenin', '禪院真依', '#c77dff'], utahime: ['Utahime Iori', '庵歌姫', '#e0452f'], maki: ['Maki Zenin', '禪院真希', '#7ddc9a'], kyoto: ['Kyoto', '京都', '#ffb04a'] });
+Object.assign(JU.story.WHO, { todo: ['Clapping Brawler', '拍手', '#38c8ff'], mai: ['Bullet Maker', '構築', '#c77dff'], utahime: ['Shrine Singer', '歌姫', '#e0452f'], maki: ['Heavenly Blade', '天与', '#7ddc9a'], kyoto: ['Kyoto', '京都', '#ffb04a'] });
 K.mk('todo', { hp: 480 }); K.mk('uro', { hp: 600 }); K.mk('yorozu', { hp: 640 }); K.mk('yuta', { hp: 760, dr: .7 }); K.mk('naoya2', { hp: 620 });
-Fi.DEFS.sb_geto = Object.assign({}, Fi.DEFS.kenjaku, { name: 'Suguru Geto', jp: '夏油傑', skin: JU.cast3.GETO, hp: 520 });
+Fi.DEFS.sb_geto = Object.assign({}, Fi.DEFS.kenjaku, { name: 'Curse Eater', jp: '呪霊使い', skin: JU.cast3.GETO, hp: 520 });
 Object.assign(SH.RAIDS, {
   goodwill: { w: 'k', name: 'The Goodwill Event', jp: '交流会', at: [3650, 1290], foes: ['ruin', 'brute', 'ruin', 'hanami'], pay: 90, give: { ct: 1 }, first: { cl: 2 }, say: 'The two schools were meant to be fighting each other. Something came through the curtain instead.' },
   thousand: { w: 'k', name: 'A Thousand Curses', jp: '百鬼夜行', at: [6200, 1010], foes: ['grunt', 'brute', 'ruin', 'warped2', 'ruin', 'sb_geto'], pay: 130, give: { ct: 2 }, first: { ct: 2, cl: 2 }, say: 'He loosed a thousand of them on Kyoto, and they are coming over the bridge. The man who keeps them comes last.' },
-  zenin: { w: 'k', name: 'The Zenin Estate', jp: '禪院家', at: [11450, 1290], foes: ['hei', 'hei', 'kukuru', 'ogi', 'naoya'], pay: 150, give: { tl: 2 }, first: { tl: 2, cl: 2 }, say: 'Through the gate: the clan’s swordsmen, the captain of its guard, its elders, and the one who thinks it is already his.' }
+  zenin: { w: 'k', name: 'The Heavenly Estate', jp: '一族の家', at: [11450, 1290], foes: ['hei', 'hei', 'kukuru', 'ogi', 'naoya'], pay: 150, give: { tl: 2 }, first: { tl: 2, cl: 2 }, say: 'Through the gate: the clan’s swordsmen, the captain of its guard, its elders, and the one who thinks it is already his.' }
 });
 Object.assign(SH.SECRETS, {
-  todo: { w: 'k', name: 'Aoi Todo', foe: 'sb_todo', at: [3120, 1290], pay: 90, first: { ct: 2 }, show: () => true, say: 'He has already decided the two of you are best friends. He would like to find out how strong his best friend is.' },
-  yorozu: { w: 'k', name: 'Yorozu', foe: 'sb_yorozu', at: [750, 2130], pay: 150, first: { cl: 2, tl: 1 }, show: () => true, say: 'At the far end of the bamboo somebody is standing very still. She has been waiting a thousand years for somebody else, and you will do for now.' },
-  uro: { w: 'k', name: 'Takako Uro', foe: 'sb_uro', at: [10640, 2220], pay: 150, first: { ct: 3 }, show: () => (M.kwins || 0) >= 5, say: 'At the top of the gates the air is bent like glass. A captain of the old capital’s guard is standing in the middle of it.' },
-  yuta: { w: 'k', name: 'Yuta Okkotsu', foe: 'sb_yuta', at: [9750, 700], pay: 200, first: { ct: 3, cl: 2 }, show: () => !!M.raids.thousand, say: 'A boy in white with a sword on his back is looking down from the stage. Something very large is standing behind him.' },
-  naoya2: { w: 'k', name: 'Naoya Zenin', foe: 'sb_naoya2', at: [11780, 700], pay: 220, first: { cl: 3, tl: 2 }, show: () => !!M.raids.zenin, say: 'Something has come back to the estate that died there, and it is faster than it was.' }
+  todo: { w: 'k', name: 'Clapping Brawler', foe: 'sb_todo', at: [3120, 1290], pay: 90, first: { ct: 2 }, show: () => true, say: 'He has already decided the two of you are best friends. He would like to find out how strong his best friend is.' },
+  yorozu: { w: 'k', name: 'The Constructor', foe: 'sb_yorozu', at: [750, 2130], pay: 150, first: { cl: 2, tl: 1 }, show: () => true, say: 'At the far end of the bamboo somebody is standing very still. She has been waiting a thousand years for somebody else, and you will do for now.' },
+  uro: { w: 'k', name: 'Sky Captain', foe: 'sb_uro', at: [10640, 2220], pay: 150, first: { ct: 3 }, show: () => (M.kwins || 0) >= 5, say: 'At the top of the gates the air is bent like glass. A captain of the old capital’s guard is standing in the middle of it.' },
+  yuta: { w: 'k', name: 'Keeper of the Queen', foe: 'sb_yuta', at: [9750, 700], pay: 200, first: { ct: 3, cl: 2 }, show: () => !!M.raids.thousand, say: 'A boy in white with a sword on his back is looking down from the stage. Something very large is standing behind him.' },
+  naoya2: { w: 'k', name: 'Frame Runner', foe: 'sb_naoya2', at: [11780, 700], pay: 220, first: { cl: 3, tl: 2 }, show: () => !!M.raids.zenin, say: 'Something has come back to the estate that died there, and it is faster than it was.' }
 });
 const T2 = (a, b) => [[a, b]];
 const LINES = {
   todo: () => [['todo', 'My friend! Before anything else: what kind of woman is your type?'], ['todo', 'No, do not answer. I can see it in how you stand. We understand each other completely.'], ['todo', 'The light by the gate, if you want to know what I think of you with my fists.']],
   mai: () => [['mai', 'Tokyo sends its strays all the way out here now?'], ['mai', M.raids.zenin ? 'You went through the estate. Good. I never liked that house.' : 'My family’s estate is at the east end of this street. Nobody who goes in there uninvited comes out pleased.']],
-  utahime: () => [['utahime', 'The barrier over the school was broken from the inside once. I would rather it were not broken twice.'], ['utahime', M.raids.thousand ? 'The bridge is quiet again. Somebody is standing on the stage at Kiyomizu now. He was not there yesterday.' : 'There are curses coming over the Kamo bridge in numbers I have not seen since that winter. Start there.']],
+  utahime: () => [['utahime', 'The barrier over the school was broken from the inside once. I would rather it were not broken twice.'], ['utahime', M.raids.thousand ? 'The bridge is quiet again. Somebody is standing on the stage at Kiyomizu now. He was not there yesterday.' : 'There are curses coming over the Crimson bridge in numbers I have not seen since that winter. Start there.']],
   maki: () => [['maki', 'That gate behind me. I grew up on the wrong side of it.'], ['maki', M.raids.zenin ? 'So it is done. Then whatever is still moving in there is not one of them any more.' : 'If you are going in, go in properly. The light in front of it.']],
   daimonji: () => T2('kyoto', 'On the hill a character as tall as a street is burning: 大, great. They light it once a year to see the dead back where they came from. Tonight it has been left alight.')
 };
-const WHO = [['todo', JU.cast2.TODO, 3000, 1290, 1.2, 'Todo'], ['mai', JU.cast5.MAI, 3560, 700, 1, 'Mai'], ['utahime', UTAHIME, 7850, 1640, 1, 'Utahime'], ['maki', JU.cast2.MAKI, 11150, 700, 1, 'Maki']];
+const WHO = [['todo', JU.cast2.TODO, 3000, 1290, 1.2, 'Clapping Brawler'], ['mai', JU.cast5.MAI, 3560, 700, 1, 'Bullet Maker'], ['utahime', UTAHIME, 7850, 1640, 1, 'Shrine Singer'], ['maki', JU.cast2.MAKI, 11150, 700, 1, 'Heavenly Blade']];
 function cast() { return WHO.map(w => { const f = E.fighter(w[1], w[2], -1); f.z = w[3]; f.y = f.ground0 = 12; f.scale = w[4]; f.pose = C.STAND.slice(); f.target = C.STAND; return f; }); }
 const mine = o => Object.keys(o).filter(k => o[k].w === 'k');
 const spots = [
@@ -236,7 +236,7 @@ const world = { name: 'kyoto', label: 'Kyoto', LEN, Z0, Z1, BZ, gy, free, sky, g
   won() { M.kwins = (M.kwins || 0) + 1; SH.save(); },
   status(st, set) { const a = areaAt(S.me.x); set(`${a[1]} <span lang="ja">${a[2]}</span>`, `Kyoto · E talk or use · exorcised here ${M.kwins || 0} · raids ${K.tally(M.raids, 'k')}/3 · secret bosses ${K.tally(M.secrets, 'k')}/5`); },
   tick(dt, real, p, st) {
-    if (!M.kbeen) { M.kbeen = 1; SH.save(); S.talk([['kyoto', 'Kyoto. A thousand years the capital, and older than that in places. The school’s sister is here, and so is the Zenin clan.'], ['kyoto', 'West: the bamboo and the Golden Pavilion. East: Gion, the shrine, the pagoda, Kiyomizu, the thousand gates, and the estate at the end of the street.']]); }
+    if (!M.kbeen) { M.kbeen = 1; SH.save(); S.talk([['kyoto', 'Kyoto. A thousand years the capital, and older than that in places. The school’s sister is here, and so is the Heavenly clan.'], ['kyoto', 'West: the bamboo and the Golden Pavilion. East: Gion, the shrine, the pagoda, Kiyomizu, the thousand gates, and the estate at the end of the street.']]); }
     const a = areaAt(p.x);
     if (st.area !== a) { st.area = a; S.status(); }
     return false;

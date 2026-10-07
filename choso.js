@@ -235,8 +235,8 @@ const MOVES = {
   } }
 };
 
-JU.tech.add('blood', { name: 'Blood Brother', jp: '赤血操術', mark: '血', who: 'Choso', odds: 2.5, col: BLOOD, glow: 'red', moves: MOVES,
-  limited: ENDS, skin: CHOSO, as: ['Choso', '脹相'], hint: '<b>Hold 4</b> Piercing Blood · 2s for the wave',
+JU.tech.add('blood', { name: 'Blood Brother', jp: '赤血操術', mark: '血', who: 'Blood Brother', odds: 2.5, col: BLOOD, glow: 'red', moves: MOVES,
+  limited: ENDS, skin: CHOSO, as: ['Blood Brother', '血'], hint: '<b>Hold 4</b> Piercing Blood · 2s for the wave',
   tick(dt) {
     const p = E.P1, k = E.keys;
     if (saw) runSaw(dt);

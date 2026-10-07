@@ -82,9 +82,9 @@ function cleared() {
           m.alpha = Math.max(0, (m.alpha === undefined ? 1 : m.alpha) - real * .45);
         },
         lines: [
-          ['megumi', 'Itadori! Get back! That is not a grade three!'],
+          ['megumi', 'Vessel! Get back! That is not a grade three!'],
           ['megumi', 'It is a special grade! Do not fight it, just ru—'],
-          ['yuji', 'Fushiguro?! I cannot see you! ...Fushiguro!'],
+          ['yuji', 'Shadow?! I cannot see you! ...Shadow!'],
           ['yuji', 'Okay. Okay. Just me, then.']
         ],
         then: boss
@@ -124,7 +124,7 @@ function takeover() {
         ['sukuna', 'You. Curse. You were looking down on me just now.'],
         ['sukuna', 'Know your place.']
       ],
-      then() { E.setScene(null); cam.lift = 0; fight.paused = false; E.banner('両面宿儺', 'RYOMEN SUKUNA', 'sm'); }
+      then() { E.setScene(null); cam.lift = 0; fight.paused = false; E.banner('呪いの王', 'KING OF CURSES', 'sm'); }
     });
   });
 }
