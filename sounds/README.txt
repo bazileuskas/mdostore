@@ -28,6 +28,12 @@ The Vengeful Artist's four strikes, one sound each (cut from a clip you supplied
     The clips they were cut from are of another game, so these stay in this copy: they are not committed (.gitignore) and build.py
     leaves them out of the one-file build. On the public site the game makes spear sounds of its own, and a Final Chapter of its own.
 
+Miracle Dork's wet hits (these ship with the game, on the public site too):
+
+    gore-splat1.mp3      from "8 wet squish, slurp impacts" by Independent.nu, on OpenGameArt (https://opengameart.org/node/2547),
+    gore-splat2.mp3      CC0 (public domain: free to use and share, no credit needed, given anyway). Cut from impactsplat03, 06
+    gore-splat3.mp3      and 02, trimmed to the hit and evened out
+
 The names have to match exactly, and these have to be .mp3. For the domain music, .m4a, .ogg or .wav work as well (mahito-domain.m4a and so on).
 
 To use the track from the anime's soundtrack ("Self-Embodiment of Perfection"), save your own copy of it here as mahito-domain.mp3.

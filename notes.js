@@ -5,6 +5,14 @@
 // Newest first. v = the build, jp = the seal stamped beside it, pic = notes/<pic>.jpg, cap = what the picture shows.
 // A new update goes at the top of this list.
 const NOTES = [
+  { v: '0.11', name: 'Miracle Dork (Early Access)', jp: '奇', date: '22 Oct 2026', pic: 'haruta', cap: 'Rush: through, and out the other side', items: [
+    'A new Early Access character, Miracle Dork, with a sword: a pink grip and a gold blade',
+    'Rush (1): a dash, and the sword through whatever is at the end of it: 60, and blood',
+    'Sword Play (2): the sword thrown end over end. Whatever it hits is ragdolled, 40. Press 2 again and it comes back to your hand, through whatever is in the way, for 40 more',
+    'While the sword is away your strikes are punches, slower and steady, and every third one that lands is a miracle. And 1 becomes Lucky Cut: if it lands it is an uppercut, 50, a stack of bleeding, and 30 more as it bleeds',
+    'Miracles: six triangles under your health bar. A blow that would kill you spends them instead (the harder the blow, the more, up to five) and you live through it with a quarter of your health. Not enough of them, and it kills you',
+    'The Final Chapter’s stabs are louder',
+    'New wet hit sounds from Independent.nu (OpenGameArt, CC0)'] },
   { v: '0.10v2', name: 'Vengeful Artist: Stronde and the Final Chapter', jp: '話', date: '22 Oct 2026', pic: 'vengeful3', cap: 'The Final Chapter: the page turns', items: [
     'Stronde (4): he throws a manga panel, and it sticks to the chest of whatever it hits. Press 4 again while it is on: a pale before-image is left where they stood, and they are made to dash, the way you are moving, or either way at random if you are standing still. The panel stays on for 20 seconds',
     'Final Chapter (G, his awakening): a counter. It only starts with a panel on them; hold it, and whatever hits you turns the page into a scene of its own. A player or a boss takes 300 from it. Anything else does not get up',

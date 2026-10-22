@@ -820,7 +820,7 @@ function filmStab(f, i) {                           // one of the nineteen: the 
   phantom(p, rnd(-30, 40), last);
   V.sparks(ch[0], ch[1], 'white', 6); V.ring(ch[0], ch[1], 110 + 8 * i, '#ffffff', .14); shake(8 + i);
   gush(ch[0], ch[1], s, 5, .9); splash(ch[0], ch[1], s, 2, .6); stain = 1;
-  if (!f.heard) sfx.spear(i % 3, .6);
+  sfx.spear(i % 3, 1.2);                          // (on top of the track too, and loud: the user's ask, 0.11)
   if (i % 4 === 0) pop(ch[0] + rnd(-60, 60), ch[1] + rnd(120, 200), pick(['ドス', 'ザク', 'ズッ']), 46);
   if (duel() || f.mad) return;                      // (a player's game is told after; Mr. Instincto's are all at the end)
   const h = { kb: 0, stun: 9, stop: .01, col: hitCol(), fixed: 1, mute: 1 }, before = o.hp;
@@ -1106,7 +1106,8 @@ const clear = () => {
 H.reset = () => { reset0(); clear(); };
 H.fightStart = (cfg, wave) => { start0(cfg, wave); clear(); if (on()) prime(); };
 
-JU.vengeful = { ARTIST, ENDS, MOVES, SPEAR, MSPEAR, UP, DOWN, ULT, N, MN, GROUND, OPEN, WINDOW, BLEED: [BLEED_HP, BLEED_MORE, BLEED_T], M1_DMG, STAB, BROIL, COUNTER, AFTER, FLURRY, FILM_T, ULT_HURT,
+JU.vengeful = { fx: { gush, pool, lens, pop, splash, blood }, wound, launch, ARTIST, ENDS,      // (fx, wound and launch: Miracle Dork's blood, bleed and ragdoll are these)
+  MOVES, SPEAR, MSPEAR, UP, DOWN, ULT, N, MN, GROUND, OPEN, WINDOW, BLEED: [BLEED_HP, BLEED_MORE, BLEED_T], M1_DMG, STAB, BROIL, COUNTER, AFTER, FLURRY, FILM_T, ULT_HURT,
   get stain() { return stain; }, get fly() { return fly && { x: Math.round(fly.o.x), wall: fly.wall, hops: fly.hops, down: fly.down }; },
   get bleed() { return stacks(bleed); }, get mine() { return stacks(mine); }, get splats() { return splats.length; }, get dodgeAt() { return dodgeAt; },
   get panel() { return panel && { left: +(panel.until - E.T).toFixed(1), dashed: panel.dashed }; }, get card() { return !!card; }, get film() { return film && { t: +film.t.toFixed(2), dealt: film.dealt, heard: film.heard }; },
