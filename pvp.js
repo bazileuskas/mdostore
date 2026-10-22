@@ -189,6 +189,7 @@ function struck(m) {
   if (m.kb || m.lift || m.stun) { const a = { dmg, exact: 1, shown: dmg / K, kb: Math.min(+m.kb || 0, 1400), stun: Math.min(+m.stun || .3, 1.2) }; if (m.lift) a.lift = Math.min(+m.lift, 900); Fi.hurt(face, a, 1); }
   else Fi.chip(dmg, '#ff5a6e');                      // nothing behind it: rot, bleeding, a domain's sure-hit
   mute = false;
+  if (m.bl > 0 && H.bled) H.bled(Math.min(3, m.bl | 0));      // and it left me bleeding
 }
 // what his blows threw up, drawn here as well
 const RAW = {};
@@ -238,6 +239,7 @@ H.hit = (o, face, h) => {
   if (!F || o !== F.o) return;
   const a = F.hit || (F.hit = { kb: 0, lift: 0, stun: 0, f: face });
   a.kb = Math.max(a.kb, h.kb || 0); a.lift = Math.max(a.lift, h.lift || 0); a.stun = Math.max(a.stun, h.stun || 0); a.f = face;
+  if (h.bleed) a.bl = (a.bl || 0) + h.bleed;       // (a wound that bleeds: the Vengeful Artist's Broil)
 };
 H.ko = o => { if (F) { o.ko = false; return true; } return ko0(o); };        // he is down when his own game says he is
 H.tick = dt => {
@@ -251,12 +253,12 @@ H.tick = dt => {
   if (!f.over && (dealt > 0 || f.hit)) {
     const a = f.acc || (f.acc = { dmg: 0, kb: 0, lift: 0, stun: 0, f: p.face, t: E.T });
     a.dmg += dealt;
-    if (f.hit) { a.kb = Math.max(a.kb, f.hit.kb); a.lift = Math.max(a.lift, f.hit.lift); a.stun = Math.max(a.stun, f.hit.stun); a.f = f.hit.f; }
+    if (f.hit) { a.kb = Math.max(a.kb, f.hit.kb); a.lift = Math.max(a.lift, f.hit.lift); a.stun = Math.max(a.stun, f.hit.stun); a.f = f.hit.f; if (f.hit.bl) a.bl = (a.bl || 0) + f.hit.bl; }
   }
   f.hit = null;
   if (f.acc && E.T - f.acc.t >= BUNCH) {             // blows that land together go as one
     const a = f.acc, dmg = Math.min(a.dmg, HP * CAP); f.acc = null;
-    say(d.pid, { a: 'hit', n: ++f.seq, dmg: r2(dmg), kb: Math.round(a.kb), lift: Math.round(a.lift), stun: r2(a.stun), f: a.f });
+    say(d.pid, { a: 'hit', n: ++f.seq, dmg: r2(dmg), kb: Math.round(a.kb), lift: Math.round(a.lift), stun: r2(a.stun), f: a.f, bl: a.bl || 0 });
     f.sent.push({ n: f.seq, dmg });
   }
   // him, as his game says he is

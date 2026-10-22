@@ -5,6 +5,12 @@
 // Newest first. v = the build, jp = the seal stamped beside it, pic = notes/<pic>.jpg, cap = what the picture shows.
 // A new update goes at the top of this list.
 const NOTES = [
+  { v: '0.10v1', name: 'Vengeful Artist: Echart and Bleed', jp: '血', date: '22 Oct 2026', pic: 'vengeful2', cap: 'Broil: the spear goes in, and the blood comes out', items: [
+    'His guard is not a block any more: hold F and whatever comes at him from the front, he steps back out of, leaving a black afterimage to take it. Heavy blows do not break it. Only a blow timed to land just as he settles from the last dodge (he flashes white) catches him, and that one lands in full',
+    'Echart (3): the spear held across him for 0.8 seconds. Whatever hits him then is caught on it, and he is in front of whoever did it with the spear through them: 60. Broil within two seconds of that does 20 more',
+    'Broil hits harder: 40 for the stab and 60 for the slam. What it goes through is left bleeding: every move it makes costs it 20, and every hit on it lands a fifth harder. Bleeding stacks, and each stack lasts 30 seconds',
+    'His strikes do 7 each, and Catastrophe’s stabs 4 each',
+    'More blood: on every strike, in spurts while Broil holds them up, all over the floor and up the wall, and on the screen. The BLOOD switch still turns all of it off'] },
   { v: '0.10', name: 'Vengeful Artist', jp: '筆', date: '22 Oct 2026', pic: 'vengeful', cap: 'Catastrophe: the spear goes in twenty times', items: [
     'A new limited-time character, in Blood Brother’s place: the Vengeful Artist, a manga artist with a grudge and a spear with a pen nib on the end of it. Roll him from the talisman (2.5%) for the next seven days',
     'His strikes are the spear’s and reach further than a fist, each with a sound of its own. The fourth sends whatever it hits end over end into the wall, off it and along the floor. Hold jump through the chain and it is an uppercut; in the air, a downslam',

@@ -111,11 +111,11 @@ function hurt(face, a, mul = 1) {
 }
 
 // damage that does not stagger him: rot, cursed buds feeding, a soul being reshaped
-function chip(dmg, col) {
+function chip(dmg, col, shown) {
   const p = E.P1;
   if (p.dead || fight.paused || !(dmg > 0)) return;
   p.hp = Math.max(fight.floor, p.hp - dmg); p.flash = .06;
-  E.addNum(p.x, p.y + 270, +dmg.toFixed(1), col || '#ff5a6e');
+  E.addNum(p.x, p.y + 270, +(shown || dmg).toFixed(1), col || '#ff5a6e');
   if (fight.low && !fight.lowDone && p.hp <= p.max * fight.low.at) { fight.lowDone = true; fight.low.fn(); }
   else if (p.hp <= 0) lose();
 }

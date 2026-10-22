@@ -71,7 +71,7 @@ H.fx = dt => {
   fx0(dt);
   const p = E.P1;
   if (p.dead) return;
-  if (up) {                                                  // the guard: two arcs of light in front of his arms, brighter for a moment when something lands on them
+  if (up && !(H.ownGuard && H.ownGuard(p))) {               // the guard: two arcs of light in front of his arms, brighter for a moment when something lands on them (unless a technique draws its own)
     const f = p.face, c = F(p.x + f * 30, p.y + 208), k = c[2], hot = Math.max(0, 1 - (E.T - lastAt) / .22);
     g.save(); g.translate(c[0], c[1]); g.scale(f, 1);
     lit(() => {
@@ -93,5 +93,6 @@ const clear = () => { up = false; broken = slide = 0; lastAt = brokeAt = -9; };
 H.reset = () => { reset0(); clear(); };
 H.fightStart = (cfg, wave) => { if (!wave) clear(); start0(cfg, wave); };
 
-JU.block = { GUARD, BREAK_T, HEAVY, SOFT, get state() { return { up, broken: +Math.max(0, broken).toFixed(2), slide: Math.round(slide) }; } };
+JU.block = { GUARD, BREAK_T, HEAVY, SOFT, brk(t = BREAK_T) { up = false; broken = t; brokeAt = E.T; slide = 0; },      // (broken from outside: a guard a technique keeps in its own way)
+  get state() { return { up, broken: +Math.max(0, broken).toFixed(2), slide: Math.round(slide) }; } };
 })();
