@@ -137,7 +137,7 @@ H.foeIdle = (o, p, dt) => {
   if (!ai || p.dead || fight.paused || o.alpha < 1) return;
   const d = ai.d, dx = p.x - o.x, ad = Math.abs(dx), near = ad < d.range;
   if ((ai.t -= dt) <= 0) {
-    const pool = d.atk.filter(a => near ? !a.far : a.far);
+    const pool = d.atk.filter(a => (near ? !a.far : a.far) && !(H.kitBan && H.kitBan(o, a)));      // (what it cannot do just now: evasive.js)
     if (pool.length) { o.state = 'act'; o.act = { a: pool[Math.random() * pool.length | 0], t: 0 }; return; }
   }
   if (ad > d.range * .8) {

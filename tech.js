@@ -147,14 +147,14 @@ function show(fresh) {
   document.querySelectorAll('.tcard[data-tech]').forEach(c => { c.classList.toggle('on', c.dataset.tech === equipped); c.classList.toggle('lock', !mine(c.dataset.tech)); });
   stamp();
 }
-// (a limited technique that has left is shown only to whoever holds it, and whichever is here now comes first: since Build 0.10 that is the
-// Vengeful Artist, in Blood Brother's place)
+// (a limited technique is shown only while it is here: one that has left stays in the slots of whoever holds it, and nowhere else. Since
+// Build 0.12, when Blood Brother's card came off the list, there is no room on it for more than the one that is here now)
 function mount(body) {
   body.innerHTML = `<div class="roll"><button class="paper" id="paper" aria-label="Roll a cursed technique"><b lang="ja">封</b><i>Click to roll</i></button>
     <div class="rres" id="rres" aria-live="polite"></div>
     ${JU.awakened ? '<button class="awkct" id="awkct" aria-label="Awakened cursed techniques"><span lang="ja">覚醒</span>Awaken CT</button>' : ''}</div>
     ${JU.shop ? JU.shop.row('tech') + JU.shop.tix('ct') : ''}
-    ${ORDER.filter(id => TECH[id].limited && (live(TECH[id]) || mine(id))).sort((a, b) => live(TECH[b]) - live(TECH[a])).map(id => { const t = TECH[id]; return `<button class="tcard lim${mine(id) ? '' : ' lock'}" data-tech="${id}" style="--c:${t.col}" aria-label="Equip ${t.name}, limited time"><b lang="ja">${t.mark || t.jp[0]}</b><span><small>Limited time</small>${t.name}</span><i>${t.who} · ${t.odds}%</i><u></u></button>`; }).join('')}
+    ${ORDER.filter(id => TECH[id].limited && live(TECH[id])).map(id => { const t = TECH[id]; return `<button class="tcard lim${mine(id) ? '' : ' lock'}" data-tech="${id}" style="--c:${t.col}" aria-label="Equip ${t.name}, limited time"><b lang="ja">${t.mark || t.jp[0]}</b><span><small>Limited time</small>${t.name}</span><i>${t.who} · ${t.odds}%</i><u></u></button>`; }).join('')}
     ${ORDER.filter(id => TECH[id].early).map(id => { const t = TECH[id]; return `<button class="tcard lim ea${mine(id) ? '' : ' lock'}" data-tech="${id}" style="--c:${t.col}" aria-label="Equip ${t.name}, early access"><b lang="ja">${t.mark || t.jp[0]}</b><span><small>Early Access</small>${t.name}</span><i>${t.who}</i><u>$2.99</u></button>`; }).join('')}
     ${TEASE ? `<button class="tcard lim tease" id="tease" style="--c:#d9c9ff" aria-label="A character still to come. Press for a hint"><b lang="ja">？</b><span><small>Next character</small>? ? ?</span><i>${HINTS[hintAt]}</i><u>Soon</u></button>` : ''}
     ${ORDER.filter(id => TECH[id].admin && JU.shop && JU.shop.dev).map(id => { const t = TECH[id]; return `<button class="tcard lim ea" data-tech="${id}" style="--c:${t.col}" aria-label="Equip ${t.name}, the team's own"><b lang="ja">${t.mark || t.jp[0]}</b><span><small>Admin only</small>${t.name}</span><i>${t.who}</i><u>Team</u></button>`; }).join('')}

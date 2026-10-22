@@ -2,7 +2,8 @@
    An ordinary blow that lands on it from the front does nothing at all. A heavy one (anything that would have thrown him into the air, or
    that hits for 16 or more) goes through: his guard is broken, he takes half of it, he keeps his feet, and for two seconds he cannot block.
    Behind it he can walk, slowly, and nothing else: no strikes, no moves, no dash, no jump until the key is let go. Something that comes from
-   behind him, a sure-hit, or a blade nothing stops is not blocked at all */
+   behind him, a sure-hit, or a blade nothing stops is not blocked at all. A block breaker (brk) breaks it whatever it weighs, and with a
+   Broken Limb (evasive.js) it does not go up */
 (() => {
 'use strict';
 
@@ -15,7 +16,7 @@ const lit = fn => { g.globalCompositeOperation = 'lighter'; fn(); g.globalCompos
 
 let up = false, broken = 0, slide = 0, lastAt = -9, brokeAt = -9;      // is it up; seconds until it can be again; what a blocked blow pushed him back by; when it last stopped something; when it last gave
 const want = () => keys.has('f') || keys.has('hold:block');
-const can = p => !p.move && !p.ps && !p.dead && !(p.dashT > 0) && broken <= 0 && !Fi.fight.paused;
+const can = p => !p.move && !p.ps && !p.dead && !(p.dashT > 0) && broken <= 0 && !Fi.fight.paused && !(H.noGuard && H.noGuard(p));      // (noGuard: a Broken Limb, evasive.js)
 const frozen = () => E.root.classList.contains('dom');      // a domain opening, a trial, a cutscene over the fight: the keys belong to that
 
 /* ---------- holding it ---------- */
@@ -47,7 +48,7 @@ H.guard = (face, a, mul = 1) => {
   if (!up || p.face !== -face || a.pierce || a.dmg >= 9000) return false;      // not behind it, or it came from behind him, or nothing stops it
   const x = p.x - face * 52, y = p.y + 205;
   lastAt = now;
-  if (!a.lift && a.dmg < HEAVY) {                            // stopped
+  if (!a.lift && a.dmg < HEAVY && !a.brk) {                  // stopped (brk: a blow made to break guards, however light)
     slide = face * Math.min(300, (a.kb || 200) * .4);
     sfx.block(); E.stop(.05); cam.shake = Math.max(cam.shake, 6);
     E.addSpark(x, y, '#dff3ff', 90); V.ring(x, y, 120, '#bfe6ff', .18); V.sparks(x, y, 'white', 5);

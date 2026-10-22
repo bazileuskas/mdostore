@@ -34,6 +34,18 @@ Miracle Dork's wet hits (these ship with the game, on the public site too):
     gore-splat2.mp3      CC0 (public domain: free to use and share, no credit needed, given anyway). Cut from impactsplat03, 06
     gore-splat3.mp3      and 02, trimmed to the hit and evened out
 
+Ratio Man's strikes and swings (these ship with the game, on the public site too):
+
+    ratio-hit1..5.mp3    from "37 hits/punches" by Independent.nu, on OpenGameArt (https://opengameart.org/content/37-hitspunches),
+    ratio-kick.mp3       CC0. Cut from hit15, 23, 28, 14, 10 and 34, from the hit, tightened and evened out
+    ratio-swing1..3.mp3  from "Swishes" by artisticdude, on OpenGameArt (https://opengameart.org/content/swishes-sound-pack), CC0.
+                         Cut from swish-12, 13 and 9
+
+And if you have the Jujutsu Shenanigans hits yourself, they can be his instead, at home only (they are kept out of git and out of the
+one-file build: never on the public site):
+
+    jjs-hit1.mp3 .. jjs-hit5.mp3   the first strike to the fifth
+
 The names have to match exactly, and these have to be .mp3. For the domain music, .m4a, .ogg or .wav work as well (mahito-domain.m4a and so on).
 
 To use the track from the anime's soundtrack ("Self-Embodiment of Perfection"), save your own copy of it here as mahito-domain.mp3.

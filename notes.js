@@ -5,6 +5,15 @@
 // Newest first. v = the build, jp = the seal stamped beside it, pic = notes/<pic>.jpg, cap = what the picture shows.
 // A new update goes at the top of this list.
 const NOTES = [
+  { v: '0.12', name: 'Ratio Man (Early Access)', jp: '七', date: '22 Oct 2026', pic: 'ratio', cap: 'Seven to three: the Ratio, and the line it shows him', items: [
+    'A new Early Access character, Ratio Man, with a blade like a butcher’s, wrapped in spotted cloth. His strikes are five, not four, and each lands with a punch of its own',
+    'Cleaving Rush (1): a dash with the blade. 70, and a Broken Limb',
+    'Ratio Kick (2): a kick with blue in it, 80 and a Broken Limb. If either of you is in the air he goes to them instead: two kicks, 30 and 45, that keep them up there and break a guard. Straight after his uppercut it is three kicks, wound up first (long enough to be evaded), the last 15 harder and a second Broken Limb. It can be thrown straight out of the uppercut, the fifth strike or Cleaving Rush',
+    'Ratio (E): a line over his head with a red mark at seven to three, tilted a little differently each time. Press E again as the ring crosses the red, and for ten seconds the fifth strike of a chain is a Black Flash, and so is Cleaving Rush, which then breaks any guard',
+    'Broken Limb: for six seconds whoever has it cannot block, dash or use their Evasive, and their blows do 40% less (a second stack: 40% less again)',
+    'The Evasive, for everybody: thrown up by an uppercut or knocked down by a slam, press Q (or Dash) to get out at once, with no stun. It takes 20 seconds to come back (the line along the top of the Dash slot). Enemies have one too',
+    'Blood Brother’s card is off the Cursed Technique list now that its time is over. Whoever has it keeps it in their slots',
+    'New punch and swish sounds from Independent.nu and artisticdude (OpenGameArt, CC0)'] },
   { v: '0.11', name: 'Miracle Dork (Early Access)', jp: '奇', date: '22 Oct 2026', pic: 'haruta', cap: 'Rush: through, and out the other side', items: [
     'A new Early Access character, Miracle Dork, with a sword: a pink grip and a gold blade',
     'Rush (1): a dash, and the sword through whatever is at the end of it: 60, and blood',

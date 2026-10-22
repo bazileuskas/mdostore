@@ -1036,7 +1036,7 @@ H.guard = (face, a, mul = 1) => {
     if (m && m.def === ULT) { if (panelOn(E.P2)) roll(p); else E.endMove(p); return true; }
     if (caught(p, m, face, a)) return true;
     if (mad()) return dodge(p, face, true);
-    if (guardUp() && p.face === -face && !a.pierce && !(a.dmg >= 9000)) return dodge(p, face);
+    if (guardUp() && p.face === -face && !a.pierce && !a.brk && !(a.dmg >= 9000)) return dodge(p, face);      // (a block breaker is not dodged: it breaks the guard, block.js)
   }
   return guard0 ? guard0(face, a, mul) : false;
 };

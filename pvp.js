@@ -187,10 +187,17 @@ function struck(m) {
   const pe = JU.mp && D && JU.mp.peer(D.pid), lethal = !!m.kill && !!pe && pe.a >= 1;      // (only an admin's: anybody else's is capped like any blow)
   const dmg = lethal ? E.P1.hp + 1 : Math.min(m.dmg, HP * CAP) * K, face = m.f < 0 ? -1 : 1;
   mute = true;
-  if (m.kb || m.lift || m.stun) { const a = { dmg, exact: 1, shown: dmg / K, kb: Math.min(+m.kb || 0, 1400), stun: Math.min(+m.stun || .3, 1.2) }; if (m.lift) a.lift = Math.min(+m.lift, 900); Fi.hurt(face, a, 1); }
+  let landed = true;
+  if (m.kb || m.lift || m.stun) {
+    const a = { dmg, exact: 1, shown: dmg / K, kb: Math.min(+m.kb || 0, 1400), stun: Math.min(+m.stun || .3, 1.2) }, gb = JU.block ? JU.block.state.broken : 0;
+    if (m.lift) a.lift = Math.min(+m.lift, 900);
+    if (m.brk) a.brk = 1;                            // (it breaks a guard, whatever it weighs)
+    landed = Fi.hurt(face, a, 1) || (!!JU.block && JU.block.state.broken > gb);      // (a guard it broke on the way in counts as landing)
+  }
   else Fi.chip(dmg, '#ff5a6e');                      // nothing behind it: rot, bleeding, a domain's sure-hit
   mute = false;
   if (m.bl > 0 && H.bled) H.bled(Math.min(3, m.bl | 0));      // and it left me bleeding
+  if (landed && m.bli > 0 && H.limbed) H.limbed(Math.min(2, m.bli | 0));      // or with a Broken Limb (Ratio Man's: evasive.js)
 }
 // what his blows threw up, drawn here as well
 const RAW = {};
@@ -242,6 +249,8 @@ H.hit = (o, face, h) => {
   a.kb = Math.max(a.kb, h.kb || 0); a.lift = Math.max(a.lift, h.lift || 0); a.stun = Math.max(a.stun, h.stun || 0); a.f = face;
   if (h.bleed) a.bl = (a.bl || 0) + h.bleed;       // (a wound that bleeds: the Vengeful Artist's Broil)
   if (h.kill) a.kill = 1;                            // (Mr. Instincto: it was meant to finish him)
+  if (h.limb) a.bli = (a.bli || 0) + h.limb;         // (a Broken Limb, and a blow made to break guards: Ratio Man's)
+  if (h.brk) a.brk = 1;
 };
 H.ko = o => { if (F) { o.ko = false; return true; } return ko0(o); };        // he is down when his own game says he is
 H.tick = dt => {
@@ -255,12 +264,12 @@ H.tick = dt => {
   if (!f.over && (dealt > 0 || f.hit)) {
     const a = f.acc || (f.acc = { dmg: 0, kb: 0, lift: 0, stun: 0, f: p.face, t: E.T });
     a.dmg += dealt;
-    if (f.hit) { a.kb = Math.max(a.kb, f.hit.kb); a.lift = Math.max(a.lift, f.hit.lift); a.stun = Math.max(a.stun, f.hit.stun); a.f = f.hit.f; if (f.hit.bl) a.bl = (a.bl || 0) + f.hit.bl; if (f.hit.kill) a.kill = 1; }
+    if (f.hit) { a.kb = Math.max(a.kb, f.hit.kb); a.lift = Math.max(a.lift, f.hit.lift); a.stun = Math.max(a.stun, f.hit.stun); a.f = f.hit.f; if (f.hit.bl) a.bl = (a.bl || 0) + f.hit.bl; if (f.hit.kill) a.kill = 1; if (f.hit.bli) a.bli = (a.bli || 0) + f.hit.bli; if (f.hit.brk) a.brk = 1; }
   }
   f.hit = null;
   if (f.acc && E.T - f.acc.t >= BUNCH) {             // blows that land together go as one
     const a = f.acc, dmg = Math.min(a.dmg, HP * CAP); f.acc = null;
-    say(d.pid, { a: 'hit', n: ++f.seq, dmg: r2(dmg), kb: Math.round(a.kb), lift: Math.round(a.lift), stun: r2(a.stun), f: a.f, bl: a.bl || 0, kill: a.kill || 0 });
+    say(d.pid, { a: 'hit', n: ++f.seq, dmg: r2(dmg), kb: Math.round(a.kb), lift: Math.round(a.lift), stun: r2(a.stun), f: a.f, bl: a.bl || 0, kill: a.kill || 0, bli: a.bli || 0, brk: a.brk || 0 });
     f.sent.push({ n: f.seq, dmg });
   }
   // him, as his game says he is

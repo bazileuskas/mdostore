@@ -125,7 +125,7 @@ function kit(id, k) {
 }
 
 // making room: a quick slide back when something it has ready wants more distance than this
-const BACK = { wind: .01, dur: .26, run(o, p, A, t) {
+const BACK = { wind: .01, dur: .26, dash: 1, run(o, p, A, t) {
   o.target = POSE.kickWind; o.rate = 40; o.vx = -o.face * 1900 * (1 - t / .26);
   if (!A.s) { A.s = 1; E.addDust(o.x); sfx.whoosh(); }
 } };
@@ -135,10 +135,10 @@ H.foeIdle = (o, p, dt) => {
   const ai = o.ai, k = ai && ai.d.kit;
   if (k && ai.kcd && ai.kt <= 0 && !p.dead && !fight.paused && !(o.alpha < 1)) {
     const ad = Math.abs(p.x - o.x), hp = o.hp / o.max, near = m => ad <= (m.max || 9e9);
-    const ready = k.moves.filter((m, i) => ai.kcd[i] <= 0 && hp <= (m.below || 1) && (!m.when || m.when(o, p)));
+    const ready = k.moves.filter((m, i) => ai.kcd[i] <= 0 && hp <= (m.below || 1) && (!m.when || m.when(o, p)) && !(H.kitBan && H.kitBan(o, m)));      // (kitBan: what it cannot do just now. A Broken Limb, evasive.js, takes anything it dashes in with)
     let pool = ready.filter(m => ad >= (m.min || 0) && near(m));
     if (ready.some(m => ad < (m.min || 0)) && (!pool.length || Math.random() < .4)) {   // something it has ready wants more room: back off once, and failing that do it point-blank
-      if (!ai.back && Math.abs(o.x - o.face * 300) < 940) { ai.back = 1; o.state = 'act'; o.act = { a: BACK, t: 0 }; return; }
+      if (!ai.back && Math.abs(o.x - o.face * 300) < 940 && !(H.kitBan && H.kitBan(o, BACK))) { ai.back = 1; o.state = 'act'; o.act = { a: BACK, t: 0 }; return; }
       if (!pool.length) pool = ready.filter(near);
     }
     ai.back = 0;

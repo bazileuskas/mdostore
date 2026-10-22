@@ -361,6 +361,14 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 .mir i.full{background:linear-gradient(180deg,#fff6c2,#ffd86b 50%,#ff7ab6)}
 .mir i.gone{animation:mirgone .6s ease-out}
 @keyframes mirgone{0%{background:#fff;transform:scale(1.7)}100%{transform:scale(1)}}
+/* the Evasive (evasive.js): a line along the top of the Dash slot that empties when it is used and fills again over 20 seconds. The slot
+   is lit while there is something to get out of; with a Broken Limb it is shut */
+.mv .ev{position:absolute;z-index:2;left:0;top:0;width:100%;height:4px;background:#7fe9ff;box-shadow:0 0 8px #7fe9ff;transform-origin:left;transform:scaleX(var(--ev,1))}
+.mv .ev.low{background:rgba(127,233,255,.4);box-shadow:none}
+.mv.evo{border-color:#7fe9ff;animation:evo .45s ease-in-out infinite alternate}
+@keyframes evo{from{background:rgba(10,7,18,.84)}to{background:rgba(30,110,140,.8)}}
+.mv.lim{border-color:#ff8a3d;border-bottom-color:#ff8a3d;opacity:.55}
+.mv.lim b{text-decoration:line-through}
 .hpb i{background:linear-gradient(180deg,#ff6b7c,var(--red) 45%,#a80d24)}
 .vs{display:grid;justify-items:center;gap:.12em;font:400 clamp(26px,min(3.6vw,6.4vh),84px)/.8 var(--f-display);text-shadow:0 3px 0 var(--blood)}
 .vs b{font-weight:400}
@@ -930,6 +938,8 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 .tc .t-awk{right:calc(var(--rx) + var(--b)*1.36)}
 .tc .t-alt{right:calc(var(--rx) + var(--b)*1.36);bottom:calc(var(--by) + var(--b)*2.12);width:calc(var(--b)*.7);border-color:#7fe9ff;color:#7fe9ff;font-size:.8em}
 .game[data-tech="cannon"] .tc .t-alt{display:grid}
+.tc .t-ratio{right:calc(var(--rx) + var(--b)*1.36);bottom:calc(var(--by) + var(--b)*2.12);width:calc(var(--b)*.7);border-color:#ffd27a;color:#ffd27a;font-size:.8em}
+.game[data-tech="ratio"] .tc .t-ratio{display:grid}
 .tc .t-clan{right:calc(var(--rx) + var(--b)*2.1)}
 .tc .t-t{right:calc(var(--rx) + var(--b)*2.84)}
 .tc .t-v{right:calc(var(--rx) + var(--b)*3.58)}
@@ -1031,7 +1041,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
   </div>
 
   <div class="side" aria-hidden="true" lang="ja">領域展開</div>
-  <div class="hud tl"><b lang="ja">呪</b>Fan project · Build 0.11 · Miracle Dork</div>
+  <div class="hud tl"><b lang="ja">呪</b>Fan project · Build 0.12 · Ratio Man</div>
   <div class="hud bl">↑ ↓ Select &nbsp;·&nbsp; Enter Confirm</div>
   <div class="hud br">Title screen</div>
   <div class="acct" id="acct">
@@ -1072,6 +1082,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
     <span><b>A D</b> Move · <b>W</b> Jump · <b>Click / J</b> Strike</span>
     <span><b>3</b> again as the ring closes · Black Flash</span>
     <span><b>Q</b> Dash through an attack to dodge it</span>
+    <span><b>Q</b> Knocked up or down · Evasive, every 20 s</span>
     <span><b>F</b> Hold to block · a heavy blow breaks it</span>
     <span><b>Esc</b> Title</span>
     <span id="clanHint"></span>
@@ -1144,6 +1155,7 @@ const sfx = (() => {
   };
   /* ----- the fuller set (0.2v3): every sound below is built here out of oscillators and noise. Nothing is recorded, nothing is taken from the anime ----- */
   let hall = null, hiss = null, blades = null;
+  const HOME = /^(localhost|127\.0\.0\.1)$/.test(location.hostname);      // (the copy at home: where the sounds that never go online can be)
   // a room for the sounds that want one: a second and a half of fading noise to convolve with. A courtroom has an echo
   const room = () => {
     if (hall) return hall;
@@ -1361,6 +1373,23 @@ const sfx = (() => {
     },
     // something wet, hit hard: one of three recordings (sounds/gore-splat1..3.mp3: CC0, by Independent.nu), or the built splat if they are not here
     splatter(v = 1) { if (!clip('gore-splat' + (1 + (Math.random() * 3 | 0)), .9 * v)) this.splat(); },
+    // Ratio Man's strikes landing, the first to the fifth (i: 0 to 4), and his kicks (5). The Jujutsu Shenanigans hits if this copy has them
+    // (sounds/jjs-hit1..5.mp3, at home only: never on the public site); the CC0 ones that ship with the game (ratio-hit1..5, ratio-kick: cut
+    // from "37 hits/punches" by Independent.nu); built if neither is here
+    punch(i = 0, v = 1) {
+      const n = Math.min(i, 5);
+      if (HOME && n < 5 && clip('jjs-hit' + (n + 1), .9 * v)) return;
+      if (clip(n < 5 ? 'ratio-hit' + (n + 1) : 'ratio-kick', .9 * v)) return;
+      const big = n >= 4;
+      voice({ type: 'noise', dur: big ? .16 : .07, vol: (big ? .5 : .38) * v, attack: .002, filt: ['lowpass', big ? 2600 : 3800, 300] });
+      voice({ f: [big ? 150 : 220, big ? 45 : 70], dur: big ? .28 : .12, vol: (big ? .55 : .35) * v });
+    },
+    // his swings: a quick cut of the air (ratio-swing1..3: from "Swishes" by artisticdude, CC0), the third the heaviest
+    swipe(i = 0) { if (!clip('ratio-swing' + (Math.min(i, 2) + 1), .55)) this.whoosh(); },
+    // the Evasive: out of it in one breath (evasive.js)
+    evade() { voice({ type: 'noise', dur: .22, vol: .3, attack: .01, filt: ['bandpass', 1200, 5200], q: 1.2, wet: .2 }); voice({ f: [900, 1900], dur: .14, vol: .06, type: 'triangle' }); },
+    // a limb going: a dull crack
+    snap() { voice({ type: 'noise', dur: .05, vol: .45, filt: ['highpass', 1500] }); voice({ f: [420, 160], dur: .08, vol: .25, type: 'square', filt: ['lowpass', 1800] }); voice({ f: [140, 50], dur: .16, vol: .35 }); },
     // a sound file of the player's own, by name: false when there is none (vengeful.js plays the Final Chapter's whole track this way)
     file(name, vol) { return clip(name, vol); },
     // the Final Chapter, built (when the clip its track was cut from is not here): 0 the counter's clang, 1 the ink thrown off him, 2 the page
@@ -1841,7 +1870,7 @@ const PANELS = {
        <dt>Game</dt><dd>Jujutsu Unlimiteds</dd>
        <dt>Design &amp; Direction</dt><dd>The Unlimiteds Team</dd>
        <dt>Built with</dt><dd>HTML · Canvas · JavaScript</dd>
-       <dt>Sounds</dt><dd>Wet impacts: Independent.nu (OpenGameArt, CC0)</dd>
+       <dt>Sounds</dt><dd>Wet impacts and punches: Independent.nu · Swishes: artisticdude (OpenGameArt, CC0)</dd>
      </dl>
      <p class="fine">Unofficial fan project inspired by <em>sorcery stories</em> by Gege Akutami.
      Not affiliated with or endorsed by Shueisha, MAPPA or any rights holder.</p>` }
@@ -2001,7 +2030,7 @@ window.JU = { sfx, flash, bolts: blackFlash, reduceMotion, startGame, exitGame, 
 // Load every game script fresh on each page load. The dev server sends no cache headers, so without this a reload
 // could run a mix of old and new files (new menu, old moves) while the game is being worked on.
 ['account.js', 'announce.js', 'game.js', 'fx2.js', 'chars.js', 'street.js', 'walk.js', 'foes.js', 'cuts.js', 'sukuna.js', 'school.js', 'story.js', 'story2.js', 'tech.js', 'tech_a.js',
-  'tech_b.js', 'sets.js', 'story3.js', 'cast2.js', 'script.js', 'naoya.js', 'ch45.js', 'ch67.js', 'clan.js', 'clan_a.js', 'clan_b.js', 'boss.js', 'bossfx.js', 'boss_a.js', 'boss_b.js', 'boss_c.js', 'training.js', 'choso.js', 'domain.js', 'domain2.js', 'mahito.js', 'combo.js', 'combat.js', 'cast3.js', 'ch810.js', 'ch1112.js', 'cast4.js', 'ch1316.js', 'cast5.js', 'ch1721.js', 'combat2.js', 'judge.js', 'awaken.js', 'alimit.js', 'ats.js', 'switcher.js', 'tools.js', 'smark.js', 'cast6.js', 'ch2230.js', 'plants.js', 'clash.js', 'block.js', 'cannon.js', 'tced.js', 'shibuya.js', 'kyoto.js', 'mp.js', 'pvp.js', 'vengeful.js', 'haruta.js', 'notes.js', 'shop.js', 'touch.js'].forEach(src => {
+  'tech_b.js', 'sets.js', 'story3.js', 'cast2.js', 'script.js', 'naoya.js', 'ch45.js', 'ch67.js', 'clan.js', 'clan_a.js', 'clan_b.js', 'boss.js', 'bossfx.js', 'boss_a.js', 'boss_b.js', 'boss_c.js', 'training.js', 'choso.js', 'domain.js', 'domain2.js', 'mahito.js', 'combo.js', 'combat.js', 'cast3.js', 'ch810.js', 'ch1112.js', 'cast4.js', 'ch1316.js', 'cast5.js', 'ch1721.js', 'combat2.js', 'judge.js', 'awaken.js', 'alimit.js', 'ats.js', 'switcher.js', 'tools.js', 'smark.js', 'cast6.js', 'ch2230.js', 'plants.js', 'clash.js', 'block.js', 'cannon.js', 'tced.js', 'shibuya.js', 'kyoto.js', 'evasive.js', 'mp.js', 'pvp.js', 'vengeful.js', 'haruta.js', 'ratio.js', 'notes.js', 'shop.js', 'touch.js'].forEach(src => {
   const s = document.createElement('script');
   s.src = src + '?v=' + Date.now(); s.async = false;      // async = false keeps them running in this order
   document.body.appendChild(s);

@@ -581,9 +581,9 @@ function runBasic(p, m, t) {
   if (t < d.strike) { p.target = POSE[d.pre]; if (p.ground) p.vx = p.face * d.lunge * .4; return; }
   p.target = t < d.strike + .13 ? POSE[d.pose] : POSE.idle;
   if (p.ground) p.vx = t < d.strike + .07 ? p.face * d.lunge : 0;
-  if (!m.sw) { m.sw = 1; sfx.whoosh(); swing(p, d.kick ? 140 : 170, d.kick ? 110 : 78, d.sw || 'rgba(255,255,255,.9)'); }      // (sw: a strike that is not a bare hand may leave its own colour in the air)
+  if (!m.sw) { m.sw = 1; (d.whoosh || sfx.whoosh)(); swing(p, d.kick ? 140 : 170, d.kick ? 110 : 78, d.sw || 'rgba(255,255,255,.9)'); }      // (sw: a strike that is not a bare hand may leave its own colour in the air; whoosh, its own sound)
   if (!m.done && t < d.strike + .09 && tryHit(p, d.hit)) m.done = 1;
-  if (m.i < 3 && t > d.strike + .08 && take('m1')) startM1(m.i + 1);
+  if (m.i < (d.n || 4) - 1 && t > d.strike + .08 && take('m1')) startM1(m.i + 1);      // (n: a chain longer than four. Ratio Man's is five)
 }
 
 const MOVES = {
@@ -645,7 +645,7 @@ const MOVES = {
   } }
 };
 
-function startM1(i) { if (hooks.m1 && !hooks.m1(i)) return; P1.move = { def: MOVES.m1[i], i, t: 0 }; }
+function startM1(i) { if (hooks.m1 && !hooks.m1(i)) return; P1.move = { def: MOVES.m1[i] || MOVES.m1[0], i: MOVES.m1[i] ? i : 0, t: 0 }; }      // (past the fourth with nobody to take it: back to the first)
 function tryStart(k) {
   if (!(buf[k] > 0) || cd[k] > 0) return false;
   buf[k] = 0; cd[k] = CD[k];
@@ -657,7 +657,7 @@ function endMove(p) {
   const m = p.move;
   p.move = null; p.spin = 1;
   if (m.key) hud.mv[m.key].classList.remove('act');
-  if (m.def.m1) { p.chain = (m.i + 1) % 4; p.chainT = .45; }
+  if (m.def.m1) { p.chain = (m.i + 1) % (m.def.n || 4); p.chainT = .45; }
 }
 
 function updatePlayer(dt) {

@@ -35,9 +35,9 @@ for p in sorted(glob.glob(os.path.join(HERE, 'img', '*'))):
         pics[name] = 'data:image/%s;base64,' % ('png' if ext.lower() == '.png' else 'jpeg') + base64.b64encode(open(p, 'rb').read()).decode('ascii')
 blocks.insert(0, '<script>window.JU_PICS = {%s};</script>' % ','.join('"%s":"%s"' % kv for kv in pics.items()))
 # and any sound files the game has been given (the Black Flash voice line, the music for a domain), read from window.JU_SOUNDS.
-# Not the ones cut from a clip of another game (the Vengeful Artist's four hits): those stay in this copy, and the page that is put
-# online makes its own instead (they are kept out of git too: .gitignore)
-HOME_ONLY = ('vengeful-',)
+# Not the ones cut from a clip of another game (the Vengeful Artist's four hits), or taken from one (Jujutsu Shenanigans' hits, if Ratio
+# Man has been given them): those stay in this copy, and the page that is put online makes its own instead (kept out of git too: .gitignore)
+HOME_ONLY = ('vengeful-', 'jjs-')
 sounds = {os.path.splitext(os.path.basename(p))[0]: 'data:audio/mpeg;base64,' + base64.b64encode(open(p, 'rb').read()).decode('ascii')
           for p in sorted(glob.glob(os.path.join(HERE, 'sounds', '*.mp3'))) if not os.path.basename(p).startswith(HOME_ONLY)}
 if sounds:
