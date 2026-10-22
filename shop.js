@@ -123,7 +123,7 @@ function plan(kind) {
   return { slot: s };
 }
 // a question that has to be answered before something is lost. Given several it puts them one after another, and anything but yes to
-// every one of them is no
+// every one of them is no. (A question with `alt` has a third answer between the two, and it gives back 'alt')
 function ask(list) {
   return new Promise(done => {
     const ov = document.createElement('div'), panel = document.getElementById('panel'), was = panel.inert;
@@ -137,14 +137,14 @@ function ask(list) {
       const q = list[i];
       ov.innerHTML = `<div class="ask" role="alertdialog" aria-modal="true" aria-labelledby="askT"><b lang="ja" aria-hidden="true">${q.mark || '断'}</b>
         <small>${q.tag || (list.length > 1 ? `Asked twice · ${i + 1} of ${list.length}` : 'Before you do')}</small><h3 id="askT">${q.title}</h3><p>${q.text}</p>
-        <div class="askb"><button class="keep" data-a="no">${q.no || 'Cancel'}</button><button class="go" data-a="yes">${q.yes || 'Yes'}</button></div></div>`;
+        <div class="askb"><button class="keep" data-a="no">${q.no || 'Cancel'}</button>${q.alt ? `<button class="alt" data-a="alt">${q.alt}</button>` : ''}<button class="go" data-a="yes">${q.yes || 'Yes'}</button></div></div>`;
       ov.querySelector(q.lead ? '.go' : '.keep').focus({ preventScroll: true });      // the safe answer is the one under his hand (unless the question is an invitation)
     };
     ov.className = 'askov';
     ov.addEventListener('click', e => {
       const b = e.target.closest('[data-a]');
       if (!b) return;
-      if (b.dataset.a === 'no') { sfx.back(); end(false); } else if (++i < list.length) { sfx.hover(); put(); } else { sfx.confirm(); end(true); }
+      if (b.dataset.a === 'no') { sfx.back(); end(false); } else if (b.dataset.a === 'alt') { sfx.confirm(); end('alt'); } else if (++i < list.length) { sfx.hover(); put(); } else { sfx.confirm(); end(true); }
     });
     panel.inert = true; document.body.appendChild(ov); addEventListener('keydown', onKey, true); put();
   });
@@ -155,6 +155,16 @@ function row(kind) {
   return `<div class="pockets hold" id="hold">${slotsOf(kind).map(s => { const d = s.id ? D[s.id] : null, on = s.key === sel; return `<button class="pocket hslot${on ? ' on' : ''}${d && s.id === eq ? ' eq' : ''}${s.type === 'base' ? '' : ' ' + s.type}${d ? '' : ' empty'}" data-kind="${kind}" data-slot="${s.key}" data-id="${s.id || ''}" style="--c:${d ? d.col : '#555'}" aria-pressed="${on}" aria-label="Slot ${s.n}: ${d ? d.name : 'empty'}${on ? ', selected' : ''}">
       <small>${s.type === 'lim' ? 'Limited' : s.type === 'ea' ? 'Early Access' : 'Slot ' + s.n}${d && s.type !== 'ea' ? ' · ' + d.odds + '%' : ''}</small><b>${d ? d.name : 'Empty'}</b>
       <i>${s.type === 'lim' ? 'Cannot be spun off' : s.type === 'ea' ? (on ? 'Spun off, its slot goes too' : 'A free slot') : on ? 'Next ' + K.verb + ' lands here' + (d && d.odds <= RARE ? ' · asks twice' : '') : 'Press to select'}</i></button>`; }).join('')}</div>`;
+}
+
+// a technique with gruesome blood in it (def.gore) is said to be so before it is chosen, while the blood is on: back, on, or on with the blood
+// off (the BLOOD switch under SFX does that at any time). rolled: it is his already, and the only question is the blood. Resolves true to go on
+function gory(d, rolled) {
+  if (!d || !d.gore || JU.gore === false) return Promise.resolve(true);
+  const text = `${d.name} is gruesome: there is a lot of blood when he fights. You can turn it off at any time with the BLOOD switch at the top right, under SFX${rolled ? '.' : ', or here.'}`;
+  return ask([rolled ? { title: 'Gruesome blood', mark: '血', tag: 'Warning', text, yes: 'Keep it on', no: 'Turn it off' }
+                     : { title: 'Gruesome blood', mark: '血', tag: 'Warning', text, yes: 'Continue', alt: 'Continue, blood off', no: 'Back' }])
+    .then(a => { if (a === 'alt' || (rolled && !a)) JU.gore = false; return rolled || !!a; });
 }
 
 /* ---------- may it be equipped ---------- */
@@ -285,8 +295,13 @@ document.addEventListener('click', e => {
     return;
   }
   if (!o) return;                                   // the Daily Shop: the thing itself, into a slot and equipped on the spot
-  const f = offers()[+o.dataset.offer], K = KIND[f.kind], key = f.kind + ':' + f.id, p = cost(f.d.odds), r = o.getBoundingClientRect(), mine = owns(f.kind, f.id);
-  if (S.got.includes(key)) return;
+  const f = offers()[+o.dataset.offer];
+  if (S.got.includes(f.kind + ':' + f.id)) return;
+  if (f.kind === 'tech' && f.d.gore && JU.gore !== false) { asking = true; gory(f.d).then(ok => { asking = false; if (ok) deal(f, o); }); return; }      // a gruesome one is said to be so first
+  deal(f, o);
+});
+function deal(f, o) {
+  const K = KIND[f.kind], key = f.kind + ':' + f.id, p = cost(f.d.odds), r = o.getBoundingClientRect(), mine = owns(f.kind, f.id);
   const done = () => { K.equip(f.id); save(); draw(); sfx.bf(); JU.flash(r.left + r.width / 2, r.top + r.height / 2); JU.bolts(r.left + r.width / 2, r.top + r.height / 2, 12); };
   if (mine) { done(); return; }
   if (S.t < p) { refuse(o); return; }
@@ -296,7 +311,7 @@ document.addEventListener('click', e => {
   const qs = [{ title: `Replace ${was.name}?`, text: `${f.d.name} goes into slot ${tgt.n}, and ${was.name} (${was.odds}%) will be gone.`, yes: 'Buy and replace', no: 'Cancel' }];
   if (was.odds <= RARE) qs.push({ title: 'Are you sure?', text: `There is no getting ${was.name} back, short of ${K.verb}ing it again.`, yes: 'Yes, replace it', no: 'Cancel' });
   asking = true; ask(qs).then(yes => { asking = false; if (yes) buy(); });
-});
+}
 
 // beating something pays: a little for a curse, more for a boss, nothing for the training dummy
 const ko0 = H.ko;
@@ -314,9 +329,17 @@ function fee(kind) {
   S.t -= FEES[kind]; save();
   return true;
 }
-JU.shop = { mount, take, has, give, tix, earn, offers, fee, owns, holds, grant, allowed, check, slotsOf, pick, place, plan, ask, row, giveUp, PACKS, FEES, PRICE, RARE,
+// The team's own account keeps a slot for every limited technique and clan there has been, so that it still has each of them after its time
+// is up (the user's ask, Build 0.10). Nobody else gets these: everybody else keeps a limited one only by rolling it while it is here
+function keepAll() {
+  if (!(JU.account && JU.account.team && JU.account.dev)) return;
+  let more = false;
+  for (const kind in KIND) { const D = KIND[kind].defs(); for (const id in D) if (D[id].limited && !S.lim[kind].includes(id)) { S.lim[kind].push(id); more = true; } }
+  if (more) save();
+}
+JU.shop = { mount, take, has, give, tix, earn, offers, fee, owns, holds, grant, allowed, check, slotsOf, pick, place, plan, ask, gory, row, giveUp, PACKS, FEES, PRICE, RARE,
   get PAID() { return paid(); }, get dev() { return dev(); }, get tokens() { return S.t; }, get owned() { return { ct: S.ct, cl: S.cl, tl: S.tl }; },
   get state() { return { slots: { tech: S.slots.tech.slice(), clan: S.slots.clan.slice() }, lim: { tech: S.lim.tech.slice(), clan: S.lim.clan.slice() }, ea: { tech: S.ea.tech.slice(), clan: S.ea.clan.slice() }, sel: Object.assign({}, S.sel), tool: S.own.tool.slice() }; },
   get demon() { return dev() || !!S.dd; } };        // may the dagger's other form be used?
-migrate(); check(); sync();
+migrate(); keepAll(); check(); sync();
 })();

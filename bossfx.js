@@ -52,7 +52,7 @@ function drawPs(dt, back) {
       p.vy -= p.g * dt;
       if (p.dr) { const d = Math.exp(-p.dr * dt); p.vx *= d; p.vy *= d; }
       p.x += p.vx * dt; p.y += p.vy * dt; p.rot += p.vr * dt;
-      if (p.y < 0 && p.k === 4) { if (p.land) decal(p.land, p.x, p.s * rnd(1.8, 3), p.rgb, 6); ps.splice(i, 1); continue; }
+      if (p.y < 0 && p.k === 4) { if (p.land && (p.land !== 'blood' || JU.gore !== false)) decal(p.land, p.x, p.s * rnd(1.8, 3), p.rgb, 6); ps.splice(i, 1); continue; }      // (BLOOD OFF: no pools)
       if (p.y < 0 && p.k === 3) { p.y = 0; p.vy = -p.vy * .3; p.vx *= .5; p.vr *= .4; }
     }
     const u = p.t / p.life, c = F(p.x, Math.max(0, p.y)), k = c[2];

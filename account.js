@@ -24,7 +24,7 @@ const TEAM_SALT = '9ccc5ca0f18acfc6', TEAM_V = '353497485db0c38d6701a02f4965022b
 const TEAM_PUB = 'f763d2e72b4617fd9c00658cdbcb4d0107cd24dee5c0153109e59a41db4a7d7d';      // the public half of the key the team signs with (announcements, admin powers)
 const VOID_BEFORE = 0;                                     // admin powers given before this moment (ms) count for nothing: raising it takes every one of them back
 const NAME = /^[A-Za-z0-9][A-Za-z0-9_]{2,19}$/, MINPW = 6;
-const OWN = /^ju\.(sfx$|accounts$|session$|device$|save\.)/;       // these are not part of anybody's progress
+const OWN = /^ju\.(sfx$|gore$|accounts$|session$|device$|save\.)/;       // these are not part of anybody's progress
 
 /* ---------- SHA-256, and the stretch built on it ---------- */
 const K = new Int32Array(64), H0 = new Int32Array(8), W = new Int32Array(64);

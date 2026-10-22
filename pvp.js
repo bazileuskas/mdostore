@@ -48,7 +48,7 @@ function paint() {
   const ban = d.phase === 'ban', vs = d.phase === 'vs', mineId = ban ? d.bans.me : d.picks.me, theirs = ban ? d.bans.them : d.picks.them;
   const cards = board().map(id => {
     const t = T.TECH[id], banned = !ban && (d.bans.me === id || d.bans.them === id), no = !ban && shut(id), cls = ['dc', banned ? 'ban' : '', no && !banned ? 'no' : '', mineId === id ? 'me' : '', vs && theirs === id ? 'them' : ''].filter(Boolean).join(' ');
-    const tag = banned ? 'Banned' : no ? (t.early ? 'Early Access' : 'Not awakened') : t.awakened ? 'Awakened' : t.early ? 'Early Access' : t.base ? 'No technique' : '';
+    const tag = banned ? 'Banned' : no ? (t.early ? 'Early Access' : 'Not awakened') : t.awakened ? 'Awakened' : t.early ? 'Early Access' : t.base ? 'No technique' : t.gore && JU.gore !== false ? 'Gruesome blood' : '';
     return `<button type="button" class="${cls}" data-id="${id}" style="--c:${t.col}"${banned || no || mineId !== undefined || vs ? ' disabled' : ''}><b lang="ja">${esc(t.mark || (t.jp || '')[0] || '')}</b><span>${esc(t.name)}</span><small>${tag}</small></button>`;
   }).join('');
   const nameOf = id => (id === undefined ? 'choosing…' : id === '' ? (ban ? 'no ban' : '…') : esc(T.TECH[id].name));

@@ -97,6 +97,9 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
   background:rgba(5,4,10,.4);border:1px solid rgba(244,239,228,.22);color:rgba(244,239,228,.6);
   font:400 clamp(11px,1.25vh,18px)/1 var(--f-ui);letter-spacing:.28em;transition:color .15s,border-color .15s}
 .sfx:hover,.sfx:focus-visible{color:#fff;border-color:var(--red);outline:none}
+/* the switches, one over the other: SFX, and BLOOD (off, a wound gives nothing: vengeful.js) */
+.sets{display:flex;flex-direction:column;align-items:stretch;gap:clamp(5px,.8vh,9px)}
+.sets>.sfx+.sfx{margin-top:0}
 /* the account, top right, across from the title: a scroll, rolled up until it is wanted. The SFX switch sits to its left (account.js) */
 .acct{position:absolute;right:clamp(16px,3vw,44px);top:clamp(10px,2.2vh,24px);z-index:3;display:flex;align-items:flex-start;gap:clamp(8px,1vw,18px);opacity:0}
 .ascroll{--ink:#2b1a10;--seal:#a5102a;--edge:clamp(7px,.7vw,12px);position:relative;width:clamp(232px,20vw,390px);padding:0 var(--edge);
@@ -505,6 +508,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 .askb button{padding:.6em 1.2em .52em;cursor:pointer;border:0;outline:2px solid transparent;font:400 1.15em/1 var(--f-display);letter-spacing:.07em;text-transform:uppercase;transition:transform .12s,outline-color .12s}
 .askb .keep{color:#0b0710;background:var(--bone)}
 .askb .go{color:#fff;background:#8a0018}
+.askb .alt{color:#0b0710;background:#d9c8a0}
 .askb button:hover,.askb button:focus-visible{transform:translateY(-3px);outline-color:#ffd23d}
 .pbody .tix{display:flex;align-items:center;gap:.3em .8em;max-width:none;margin:-.2em 0 1em;font:600 .78em/1.2 var(--f-ui);letter-spacing:.18em;text-transform:uppercase;color:rgba(244,239,228,.62)}
 .tix b{min-width:1.9em;padding:.3em .55em .25em;text-align:center;font:400 1.5em/1 var(--f-display);letter-spacing:.04em;color:#0b0710;background:#ffd23d}
@@ -969,7 +973,8 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
   .shopbox{position:absolute;left:var(--pad-x);right:auto;bottom:clamp(8px,3vh,20px);justify-items:start}
   .mbtn.shopb{min-width:0}
   .acct{top:5px}
-  .sfx{margin-top:5px}
+  .sfx{margin-top:5px;padding:4px 9px 3px;font-size:10px}
+  .sets{gap:4px}
   .ascroll{width:clamp(170px,27vw,230px);font-size:10px}
   .ascroll .rod{height:7px}
   .ahead{padding:.35em .8em .3em .6em}
@@ -1019,11 +1024,11 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
   </div>
 
   <div class="side" aria-hidden="true" lang="ja">領域展開</div>
-  <div class="hud tl"><b lang="ja">呪</b>Fan project · Build 0.9 · Switcher Stitcher</div>
+  <div class="hud tl"><b lang="ja">呪</b>Fan project · Build 0.10 · Vengeful Artist</div>
   <div class="hud bl">↑ ↓ Select &nbsp;·&nbsp; Enter Confirm</div>
   <div class="hud br">Title screen</div>
   <div class="acct" id="acct">
-    <button class="sfx" id="sfx" aria-pressed="true">SFX ON</button>
+    <div class="sets"><button class="sfx" id="sfx" aria-pressed="true">SFX ON</button><button class="sfx" id="gore" aria-pressed="true" title="Blood and gore">BLOOD ON</button></div>
     <div class="ascroll" id="ascroll" role="group" aria-label="Account"></div>
   </div>
 </main>
@@ -1179,10 +1184,10 @@ const sfx = (() => {
     } catch (e) {}
     return c;
   };
-  const clip = name => {
+  const clip = (name, vol = .85) => {
     const c = load(name);
     if (!c.ok || !on) return false;
-    try { const n = c.el.cloneNode(); n.volume = .85; const pl = n.play(); if (pl && pl.catch) pl.catch(() => {}); } catch (e) {}
+    try { const n = c.el.cloneNode(); n.volume = Math.min(1, vol); const pl = n.play(); if (pl && pl.catch) pl.catch(() => {}); } catch (e) {}
     return true;
   };
   return {
@@ -1316,6 +1321,18 @@ const sfx = (() => {
       if (!guilty) { voice({ f: [392, 370], dur: .5, vol: .12, type: 'triangle', wet: .5 }); voice({ f: [294, 262], at: .28, dur: .7, vol: .12, type: 'triangle', wet: .5 }); return; }
       this.slam(1);
       for (const f of [73.4, 110, 146.8, 174.6]) voice({ f: [f, f], at: .1, dur: 1.9, vol: .12, type: 'sawtooth', attack: .12, filt: ['lowpass', 900, 220], wet: .6 });
+    },
+    // the Vengeful Artist's spear going in, the first to the fourth strike (i: 0 to 3; v: how loud). The four cut from the user's clip if this
+    // copy has them (sounds/vengeful-hit1..4.mp3, never on the public site); otherwise built: the nib through the air, steel, and what it went
+    // into. The fourth is the heaviest
+    spear(i = 0, v = 1) {
+      if (clip('vengeful-hit' + (i + 1), .85 * v)) return;
+      const big = i === 3, k = 1 + i * .07;
+      voice({ type: 'noise', dur: big ? .26 : .1, vol: (big ? .42 : .3) * v, attack: .002, filt: ['bandpass', 8200 / k, big ? 700 : 1800], q: 1.6, wet: .2 });
+      voice({ f: [2900 * k, 2100 * k], dur: big ? .32 : .16, vol: .045 * v, type: 'triangle', wet: .5 });
+      voice({ f: [4300 * k, 3800 * k], dur: big ? .24 : .1, vol: .025 * v, wet: .4 });
+      voice({ f: [big ? 120 : 210 - i * 25, big ? 30 : 60], dur: big ? .42 : .11, vol: (big ? .55 : .26) * v, wet: big ? .3 : 0 });
+      voice({ type: 'noise', dur: big ? .4 : .08, vol: (big ? .3 : .16) * v, filt: ['lowpass', big ? 1400 : 2400, 200], wet: big ? .4 : 0 });
     },
     // the Executioner's Sword, given: light, if light made a sound
     sword() {
@@ -1872,6 +1889,15 @@ const sfxBtn = $('#sfx');
 const paintSfx = () => { sfxBtn.textContent = sfx.on ? 'SFX ON' : 'SFX OFF'; sfxBtn.setAttribute('aria-pressed', sfx.on); };
 sfxBtn.addEventListener('click', () => { sfx.toggle(); paintSfx(); sfx.hover(); });
 paintSfx();
+// BLOOD: on unless it has been switched off. Off, a wound gives nothing (vengeful.js, bossfx.js); it is asked about before a gruesome
+// technique is chosen (shop.js, gory), and that question can switch it off too (JU.gore = false)
+let gore = true;
+try { gore = localStorage.getItem('ju.gore') !== '0'; } catch (e) {}
+const goreBtn = $('#gore');
+const paintGore = () => { goreBtn.textContent = gore ? 'BLOOD ON' : 'BLOOD OFF'; goreBtn.setAttribute('aria-pressed', gore); };
+const setGore = v => { gore = !!v; try { localStorage.setItem('ju.gore', gore ? '1' : '0'); } catch (e) {} paintGore(); };
+goreBtn.addEventListener('click', () => { setGore(!gore); sfx.hover(); });
+paintGore();
 
 addEventListener('keydown', e => {
   sfx.unlock();
@@ -1929,14 +1955,14 @@ Promise.race([fonts, new Promise(r => setTimeout(r, 1800))]).then(() => {
   }, 420);
 });
 
-window.JU = { sfx, flash, bolts: blackFlash, reduceMotion, startGame, exitGame, openPanel, closePanel };
+window.JU = { sfx, flash, bolts: blackFlash, reduceMotion, startGame, exitGame, openPanel, closePanel, get gore() { return gore; }, set gore(v) { setGore(v); } };
 })();
 </script>
 <script>
 // Load every game script fresh on each page load. The dev server sends no cache headers, so without this a reload
 // could run a mix of old and new files (new menu, old moves) while the game is being worked on.
 ['account.js', 'announce.js', 'game.js', 'fx2.js', 'chars.js', 'street.js', 'walk.js', 'foes.js', 'cuts.js', 'sukuna.js', 'school.js', 'story.js', 'story2.js', 'tech.js', 'tech_a.js',
-  'tech_b.js', 'sets.js', 'story3.js', 'cast2.js', 'script.js', 'naoya.js', 'ch45.js', 'ch67.js', 'clan.js', 'clan_a.js', 'clan_b.js', 'boss.js', 'bossfx.js', 'boss_a.js', 'boss_b.js', 'boss_c.js', 'training.js', 'choso.js', 'domain.js', 'domain2.js', 'mahito.js', 'combo.js', 'combat.js', 'cast3.js', 'ch810.js', 'ch1112.js', 'cast4.js', 'ch1316.js', 'cast5.js', 'ch1721.js', 'combat2.js', 'judge.js', 'awaken.js', 'alimit.js', 'ats.js', 'switcher.js', 'tools.js', 'smark.js', 'cast6.js', 'ch2230.js', 'plants.js', 'clash.js', 'block.js', 'cannon.js', 'tced.js', 'shibuya.js', 'kyoto.js', 'mp.js', 'pvp.js', 'notes.js', 'shop.js', 'touch.js'].forEach(src => {
+  'tech_b.js', 'sets.js', 'story3.js', 'cast2.js', 'script.js', 'naoya.js', 'ch45.js', 'ch67.js', 'clan.js', 'clan_a.js', 'clan_b.js', 'boss.js', 'bossfx.js', 'boss_a.js', 'boss_b.js', 'boss_c.js', 'training.js', 'choso.js', 'domain.js', 'domain2.js', 'mahito.js', 'combo.js', 'combat.js', 'cast3.js', 'ch810.js', 'ch1112.js', 'cast4.js', 'ch1316.js', 'cast5.js', 'ch1721.js', 'combat2.js', 'judge.js', 'awaken.js', 'alimit.js', 'ats.js', 'switcher.js', 'tools.js', 'smark.js', 'cast6.js', 'ch2230.js', 'plants.js', 'clash.js', 'block.js', 'cannon.js', 'tced.js', 'shibuya.js', 'kyoto.js', 'mp.js', 'pvp.js', 'vengeful.js', 'notes.js', 'shop.js', 'touch.js'].forEach(src => {
   const s = document.createElement('script');
   s.src = src + '?v=' + Date.now(); s.async = false;      // async = false keeps them running in this order
   document.body.appendChild(s);

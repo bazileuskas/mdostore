@@ -1,11 +1,12 @@
 /* JUJUTSU UNLIMITEDS — early access: CURSED CANNON. Ryu Ishigori: more cursed energy output than anybody, let out of his hair in a straight line.
    1 Granite Blast, a second between them: let go at once it is 45; held 1.4 seconds, 80; held the full 3, somewhere from 120 to 145.
-     Every quick one heats him. After four he is overheated and no blast will come out until he has combed his hair.
+     Every one heats him: a quick one by a bar, a held one by two (Build 0.10). Four bars and he is overheated, and no blast will come out
+     until he has combed his hair.
    2 Cursed Punches: he walks into it and trades. It takes 90 to 110. It gets its own back: he takes 30 to 40.
    3 Hair Comb: 2.78 seconds with the comb, and the heat is gone. Hit him while he is at it and it is not.
    4 is still to come.
    Right click (or C): underheat. A blast is worth less each time than the one before it (by the same share every time), but ten of them
-   fit where four did. Seen as it is in the anime: the light at the front of his pompadour, both hands on his head, and a white-blue beam */
+   fit where four did; a held one there is five of the ten. Seen as it is in the anime: the light at the front of his pompadour, both hands on his head, and a white-blue beam */
 (() => {
 'use strict';
 
@@ -13,7 +14,8 @@ const E = JU.eng, g = E.g, F = E.F, cam = E.cam, H = E.hooks, POSE = E.POSE, LIN
 const { clamp, lerp, rnd, ease } = E, TAU = Math.PI * 2, { shout } = JU.tech.tk, CYAN = '#7fe9ff', RGB = '127,233,255', HOT = '#ff8a3c', COLD = '#bfe9ff';
 const SIZE = 1.12;                                  // he is a big man
 const TAP = 45, HELD = 80, FULL = [120, 145], T_HELD = 1.4, T_FULL = 3, T_TAP = .16, REACH = 1500;      // Granite Blast: what it does, how long it has to be held for it, and how far it goes
-const LIMIT = 4, UNDER = 10, DECAY = .82;           // quick blasts before he overheats; the same in underheat; and what each one in underheat is worth next to the one before it
+const LIMIT = 4, UNDER = 10, DECAY = .82;           // bars of heat before he overheats; the same in underheat; and what each blast in underheat is worth next to the one before it
+const HELD_HEAT = 2, HELD_UNDER = 5;                // the bars a held blast costs him (a quick one, one), and in underheat
 const COMB_T = 2.78, OUT = [90, 110], IN = [30, 40];      // how long the comb takes; what Cursed Punches gives, and what it costs him
 const shake = v => { cam.shake = Math.max(cam.shake, v); };
 const lit = fn => { g.globalCompositeOperation = 'lighter'; fn(); g.globalCompositeOperation = 'source-over'; };
@@ -21,7 +23,7 @@ const hint = (text, col = CYAN) => E.fx.push({ k: 2, x: E.P1.x, y: E.P1.y + 470,
 const free = p => !p.move && !p.ps && !p.dead && !(p.dashT > 0);
 const AIM = [-.14, -.08, 2.75, 2.5, .5, -.5, 0], RECOIL = [-.34, -.2, 2.45, 2.2, .62, -.3, 0], COMB = [.05, .12, 2.62, .5, .32, -.32, 0];      // both hands on his head; the same, thrown back by it; and one hand up with the comb
 
-let heat = 0, under = false, brawl = null, coolAt = -9;     // quick blasts since the comb; which mode; the exchange of Cursed Punches while it lasts; when he last finished combing
+let heat = 0, under = false, brawl = null, coolAt = -9;     // bars of heat since the comb; which mode; the exchange of Cursed Punches while it lasts; when he last finished combing
 const limit = () => (under ? UNDER : LIMIT), over = () => heat >= limit();
 const worth = () => (under ? DECAY ** heat : 1);
 const holding = () => keys.has('1') || keys.has('hold:strikes');
@@ -82,7 +84,8 @@ function fire(p, m, tier) {
     E.addBlast(o.x, y, RGB, 260 + 400 * sc); V.ring(o.x, y, 160 + 240 * sc, CYAN, .3); V.sparks(o.x, y, 'blue', 10 + 14 * tier);
     if (tier > 1) { V.impact(.16, o.x, y); C.cubes(o.x, 40, 8); }
   }
-  if (!tier && ++heat >= limit()) overheat(p);      // a quick one heats him, and the last of them is one too many
+  heat = Math.min(limit(), heat + (tier ? (under ? HELD_UNDER : HELD_HEAT) : 1));      // a quick one heats him by a bar, a held one by two (five in underheat)
+  if (heat >= limit()) overheat(p);                 // and whatever fills the last of them is one too many
 }
 
 /* ---------- Cursed Punches: what he gives, and what he gets back ---------- */

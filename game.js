@@ -543,7 +543,7 @@ function applyHit(o, face, h) {
   addSpark(o.x - face * 26, o.y + 150 * hs, h.col || '#fff', h.heavy ? 130 : 72);
   addNum(o.x, o.y + 270 * hs, +dmg.toFixed(1), h.heavy ? '#ffd27a' : '#fff');
   if (h.ring) addRing(o.x, '255,150,90', 300);
-  sfx.hit(!!h.heavy);
+  if (!h.mute) sfx.hit(!!h.heavy);         // (mute: the technique that landed it plays a sound of its own)
   if (hooks.hit) hooks.hit(o, face, h);
   if (dead && !o.ko) {
     o.ko = true;

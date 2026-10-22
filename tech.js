@@ -147,12 +147,14 @@ function show(fresh) {
   document.querySelectorAll('.tcard[data-tech]').forEach(c => { c.classList.toggle('on', c.dataset.tech === equipped); c.classList.toggle('lock', !mine(c.dataset.tech)); });
   stamp();
 }
+// (a limited technique that has left is shown only to whoever holds it, and whichever is here now comes first: since Build 0.10 that is the
+// Vengeful Artist, in Blood Brother's place)
 function mount(body) {
   body.innerHTML = `<div class="roll"><button class="paper" id="paper" aria-label="Roll a cursed technique"><b lang="ja">封</b><i>Click to roll</i></button>
     <div class="rres" id="rres" aria-live="polite"></div>
     ${JU.awakened ? '<button class="awkct" id="awkct" aria-label="Awakened cursed techniques"><span lang="ja">覚醒</span>Awaken CT</button>' : ''}</div>
     ${JU.shop ? JU.shop.row('tech') + JU.shop.tix('ct') : ''}
-    ${ORDER.filter(id => TECH[id].limited).map(id => { const t = TECH[id]; return `<button class="tcard lim${mine(id) ? '' : ' lock'}" data-tech="${id}" style="--c:${t.col}" aria-label="Equip ${t.name}, limited time"><b lang="ja">${t.mark || t.jp[0]}</b><span><small>Limited time</small>${t.name}</span><i>${t.who} · ${t.odds}%</i><u></u></button>`; }).join('')}
+    ${ORDER.filter(id => TECH[id].limited && (live(TECH[id]) || mine(id))).sort((a, b) => live(TECH[b]) - live(TECH[a])).map(id => { const t = TECH[id]; return `<button class="tcard lim${mine(id) ? '' : ' lock'}" data-tech="${id}" style="--c:${t.col}" aria-label="Equip ${t.name}, limited time"><b lang="ja">${t.mark || t.jp[0]}</b><span><small>Limited time</small>${t.name}</span><i>${t.who} · ${t.odds}%</i><u></u></button>`; }).join('')}
     ${ORDER.filter(id => TECH[id].early).map(id => { const t = TECH[id]; return `<button class="tcard lim ea${mine(id) ? '' : ' lock'}" data-tech="${id}" style="--c:${t.col}" aria-label="Equip ${t.name}, early access"><b lang="ja">${t.mark || t.jp[0]}</b><span><small>Early Access</small>${t.name}</span><i>${t.who}</i><u>$2.99</u></button>`; }).join('')}
     ${TEASE ? `<button class="tcard lim tease" id="tease" style="--c:#d9c9ff" aria-label="A character still to come. Press for a hint"><b lang="ja">？</b><span><small>Next character</small>? ? ?</span><i>${HINTS[hintAt]}</i><u>Soon</u></button>` : ''}
     <div class="tcards t8">${ORDER.filter(id => !TECH[id].limited && !TECH[id].early && !TECH[id].awakened).map(id => { const t = TECH[id]; return `<button class="tcard${mine(id) ? '' : ' lock'}" data-tech="${id}" style="--c:${t.col}" aria-label="Equip ${t.name}${mine(id) ? '' : ', not yours yet'}"><b lang="ja">${t.mark || t.jp[0]}</b><span>${t.name}</span><i>${t.free ? 'Free' : t.odds + '%'}</i></button>`; }).join('')}</div>`;
@@ -223,6 +225,7 @@ function go(paper) {
     JU.flash(x, y); JU.bolts(x, y, t.odds <= 5 ? 26 : t.odds <= 10 ? 16 : 9);
     if (t.odds <= 10) sfx.bf(); else sfx.confirm();
     show(true); spinning = false;
+    if (t.gore && JU.gore && JU.shop) { asking = true; JU.shop.gory(t, true).then(() => { asking = false; }); }      // rolled a gruesome one: the blood is asked about
     if (at) {                                     // and where it went, and what it cost him
       const lb = document.querySelector('#rres small'), lost = TECH[at.lost];
       rerow(); if (lb) lb.textContent = 'You rolled · ' + (at.key[0] === 'l' ? 'it has a slot of its own' : 'slot ' + (+at.key.slice(1) + 1) + (lost ? ', in place of ' + lost.name : ''));
@@ -247,9 +250,15 @@ document.addEventListener('click', e => {
   if (held) JU.shop.pick('tech', held.key);
   wear(TECH[c.dataset.tech], c);
 });
-// a technique put on, from its slot or from its card
+// a technique put on, from its slot or from its card. A gruesome one (def.gore) is said to be so first, while the blood is on (shop.js, gory)
 function wear(t, el) {
-  const paper = document.getElementById('paper'), r = el.getBoundingClientRect();
+  const r = el.getBoundingClientRect();
+  if (!(t.gore && JU.gore && JU.shop)) { put(t, r); return; }
+  asking = true;
+  JU.shop.gory(t).then(ok => { asking = false; if (ok) put(t, r); });
+}
+function put(t, r) {
+  const paper = document.getElementById('paper');
   clearTimeout(back);
   equipped = t.id; try { localStorage.setItem('ju.tech', t.id); } catch (err) {} noToji(t.id);
   if (paper) { paper.querySelector('b').textContent = t.mark || t.jp[0]; paper.querySelector('i').textContent = t.name; paper.style.setProperty('--c', t.col); }

@@ -5,6 +5,14 @@
 // Newest first. v = the build, jp = the seal stamped beside it, pic = notes/<pic>.jpg, cap = what the picture shows.
 // A new update goes at the top of this list.
 const NOTES = [
+  { v: '0.10', name: 'Vengeful Artist', jp: '筆', date: '22 Oct 2026', pic: 'vengeful', cap: 'Catastrophe: the spear goes in twenty times', items: [
+    'A new limited-time character, in Blood Brother’s place: the Vengeful Artist, a manga artist with a grudge and a spear with a pen nib on the end of it. Roll him from the talisman (2.5%) for the next seven days',
+    'His strikes are the spear’s and reach further than a fist, each with a sound of its own. The fourth sends whatever it hits end over end into the wall, off it and along the floor. Hold jump through the chain and it is an uppercut; in the air, a downslam',
+    'Catastrophe (1): the spear into the target twenty times, 2.5 each, and every one of them keeps it stunned',
+    'Broil (2): a stab for 30, then up it goes on the end of the spear and down into the floor for 40',
+    'Moves 3 and 4 are still to come',
+    'He is gruesome: you are warned before you choose him. The new BLOOD switch at the top right, under SFX, turns the blood off whenever you like',
+    'Cursed Cannon: a held Granite Blast heats him now as well, by two bars, and by five of the ten in underheat. A quick one is still one'] },
   { v: '0.9', name: 'Switcher Stitcher, for everyone', jp: '拍', date: '22 Oct 2026', pic: 'perfectclap', cap: 'A swap, and the Perfect Clap straight after it', items: [
     'Switcher Stitcher is out of early access: anybody can roll it from the talisman now, 3%, and it can turn up in the Daily Shop',
     'Perfect Clap: strike (left click or J) straight after a Boogie Woogie swap and your hands come together again on time. Boogie Woogie is ready again at once, so a good rhythm swaps you over and over',

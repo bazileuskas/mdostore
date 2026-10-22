@@ -17,6 +17,16 @@ The block (hold F), likewise:
     block.mp3            a blow stopped on your guard
     guard-break.mp3      your guard being broken
 
+The Vengeful Artist's four strikes, one sound each (cut from a clip you supplied):
+
+    vengeful-hit1.mp3    the first thrust
+    vengeful-hit2.mp3    the second
+    vengeful-hit3.mp3    the cut
+    vengeful-hit4.mp3    the fourth (and Broil's slam, and the last of Catastrophe's twenty)
+
+    The clip they were cut from is of another game, so these four stay in this copy: they are not committed (.gitignore) and build.py
+    leaves them out of the one-file build. On the public site the game makes four spear sounds of its own.
+
 The names have to match exactly, and these have to be .mp3. For the domain music, .m4a, .ogg or .wav work as well (mahito-domain.m4a and so on).
 
 To use the track from the anime's soundtrack ("Self-Embodiment of Perfection"), save your own copy of it here as mahito-domain.mp3.
