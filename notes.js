@@ -5,6 +5,10 @@
 // Newest first. v = the build, jp = the seal stamped beside it, pic = notes/<pic>.jpg, cap = what the picture shows.
 // A new update goes at the top of this list.
 const NOTES = [
+  { v: '0.9', name: 'Switcher Stitcher, for everyone', jp: '拍', date: '22 Oct 2026', pic: 'perfectclap', cap: 'A swap, and the Perfect Clap straight after it', items: [
+    'Switcher Stitcher is out of early access: anybody can roll it from the talisman now, 3%, and it can turn up in the Daily Shop',
+    'Perfect Clap: strike (left click or J) straight after a Boogie Woogie swap and your hands come together again on time. Boogie Woogie is ready again at once, so a good rhythm swaps you over and over',
+    'Ten Shadows is a little less common to make room for it: 34% where it was 37%'] },
   { v: '0.8', name: 'Queue', jp: '列', date: '22 Oct 2026', pic: 'queue', cap: 'Your name, the queue, and servers with friends', items: [
     'Queue up: a 1v1 against whoever else is queued, anywhere, phone or browser. You wait on the street and the duel comes to you; afterwards, a rematch, the next opponent, or out',
     'A name to play under, on the Play screen',

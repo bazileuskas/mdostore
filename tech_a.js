@@ -168,7 +168,7 @@ const PLANTS = {
   } }
 };
 
-JU.tech.add('ten', { name: 'Ten Shadows', jp: '十種影法術', mark: '影', who: 'Shadow Summoner', odds: 37, col: INDIGO, glow: 'indigo', moves: TEN });
+JU.tech.add('ten', { name: 'Ten Shadows', jp: '十種影法術', mark: '影', who: 'Shadow Summoner', odds: 34, col: INDIGO, glow: 'indigo', moves: TEN });
 JU.tech.add('trans', { name: 'Transfiguration', jp: '無為転変', mark: '魂', who: 'Soul Shaper', odds: 20, col: TEAL, glow: 'teal', moves: TRANS });
 JU.tech.add('plants', { name: 'Disaster Plants', jp: '呪いの花', mark: '花', who: 'Disaster Bloom', odds: 20, col: GREEN, glow: 'green', moves: PLANTS,
   // one basic attack a second, but each lands twice as hard

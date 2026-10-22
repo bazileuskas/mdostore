@@ -1,6 +1,7 @@
-/* JUJUTSU UNLIMITEDS — early access: SWITCHER STITCHER. Aoi Todo: Boogie Woogie, a punch with a very long wind-up behind it, a pebble,
+/* JUJUTSU UNLIMITEDS — SWITCHER STITCHER (early access until Build 0.9; now rolled from the talisman, 3%). The Clapping Brawler: Boogie Woogie, a punch with a very long wind-up behind it, a pebble,
    and Ground Slam: whatever he gets hold of goes through the floor, and the floor comes up in pieces that fall, bounce and can be kicked about.
-   He is bigger and slower with it and his strikes come slower too; every one of them lands half as hard again */
+   He is bigger and slower with it and his strikes come slower too; every one of them lands half as hard again.
+   PERFECT CLAP: a strike (left click or J) pressed straight after a swap is a second clap instead, and Boogie Woogie is ready again at once */
 (() => {
 'use strict';
 
@@ -12,6 +13,8 @@ const hint = text => E.fx.push({ k: 2, x: E.P1.x, y: E.P1.y + 360, n: text, col:
 const free = p => !p.move && !p.ps && !p.dead && !(p.dashT > 0);
 const CLAP = [.1, 0, 1.5, 1.45, .3, -.3, 0], BACK = [-.42, -.12, .7, -1.5, .5, -.55, 0];        // hands together; and the arm drawn back as far as it will go
 let peb = null;                                     // the pebble, for as long as it is anywhere to be swapped with
+const WINDOW = .4;                                  // how long after a swap a strike still counts as the second clap
+let clapAt = -9;                                    // when he last changed places with something
 
 /* ---------- Ground Slam: what is left of the floor afterwards ---------- */
 const LIFT = [-.1, -.2, 2.9, 2.7, .3, -.3, 0];        // both arms straight up, with something heavy on the end of them
@@ -80,7 +83,7 @@ function swap(p, o) {                               // with whoever he is fighti
   if (!a.ground) Object.assign(o, { state: 'air', bounced: false });                              // he was in the air: now it is
   else if (!o.ko && o.state !== 'down') Object.assign(o, { state: 'hurt', stun: .55, act: null, tele: 0 });   // it takes it a moment to work out where it is
   p.face = o.x >= p.x ? 1 : -1; o.face = -p.face;
-  clap(a.x, a.y, b.x, b.y);
+  clap(a.x, a.y, b.x, b.y); clapAt = E.T;
 }
 function toStone(p) {                               // with the pebble: he is wherever it had got to, and it drops where he was standing
   const a = { x: p.x, y: p.y };
@@ -88,7 +91,16 @@ function toStone(p) {                               // with the pebble: he is wh
   p.ground = p.y <= 1; if (p.ground) p.y = 0;
   Object.assign(peb, { x: a.x, y: a.y + 150, vx: 0, vy: 0, t: Math.max(peb.t, 2.9), hit: true });
   p.face = E.P2.x >= p.x ? 1 : -1;
-  clap(a.x, a.y, p.x, p.y);
+  clap(a.x, a.y, p.x, p.y); clapAt = E.T;
+}
+// the second clap, on time: his hands come together again and the technique is ready to go again
+const PERFECT = { name: 'Perfect Clap', dur: .2, run(p, m, t) { p.vx = 0; p.rate = 64; p.target = t < .14 ? CLAP : POSE.idle; } };
+function perfect(p) {
+  const Z = JU.bossfx, x = p.x + p.face * 30, y = p.y + 210 * (p.scale || 1);
+  sfx.gavel(1); sfx.confirm(); shake(12); E.stop(.05);
+  V.ring(x, y, 280, '#ffffff', .3); V.ring(x, y, 190, CYAN, .4); V.sparks(x, y, 'blue', 16);
+  if (Z) { Z.flare(x, y, '122,215,255', 420, .2); Z.flash('122,215,255', .14, .15); Z.shock(p.x, 340, '122,215,255', .35, 10); }
+  E.fx.push({ k: 2, x: p.x, y: p.y + 430, n: 'PERFECT CLAP', col: '#ffffff', t: 0, life: 1 });
 }
 
 const MOVES = {
@@ -162,8 +174,8 @@ const MOVES = {
   } }
 };
 
-JU.tech.add('switcher', { name: 'Switcher Stitcher', jp: '不義遊戯', mark: '拍', who: 'Clapping Brawler', odds: 0, col: CYAN, glow: 'blue', moves: MOVES,
-  early: true, skin: X.TODO, as: ['Clapping Brawler', '拍手'], scale: SIZE });
+JU.tech.add('switcher', { name: 'Switcher Stitcher', jp: '不義遊戯', mark: '拍', who: 'Clapping Brawler', odds: 3, col: CYAN, glow: 'blue', moves: MOVES,
+  hint: '<b>Click</b> / <b>J</b> straight after a swap · Perfect Clap: Boogie Woogie is ready again', skin: X.TODO, as: ['Clapping Brawler', '拍手'], scale: SIZE });      // (released to everybody in 0.9: it was early access)
 const DEF = JU.tech.TECH.switcher, on = () => JU.tech.active === DEF;
 
 /* ---------- wiring ---------- */
@@ -171,6 +183,12 @@ const press0 = H.press, tick0 = H.tick, fx0 = H.fx, under0 = H.under, reset0 = H
 H.press = (a, inScene) => {
   if (!inScene && on()) {
     const p = E.P1;
+    if (a === 'm1' && E.T - clapAt < WINDOW && !p.dead && !p.ps) {      // PERFECT CLAP: a strike straight after a swap is a second clap, and the swap is ready again
+      clapAt = -9; E.cd.strikes = 0;
+      if (p.move) E.endMove(p);
+      p.move = { def: PERFECT, t: 0 }; perfect(p);
+      return true;
+    }
     if (a === 'strikes' && peb && free(p)) {        // the stone is still about: the clap does not wait for its cooldown
       E.cd.strikes = Math.max(E.cd.strikes, 1); p.move = { def: MOVES.strikes, key: 'strikes', t: 0 }; E.hud.mv.strikes.classList.add('act');
       return true;
@@ -225,7 +243,7 @@ H.fx = dt => {
     g.beginPath(); g.ellipse(c[0], c[1], 11 * k, 9 * k, peb.x * .02, 0, TAU); g.fill(); g.stroke();
   }
 };
-H.reset = () => { reset0(); peb = pit = null; slabs.length = 0; flashes.length = 0; };
+H.reset = () => { reset0(); peb = pit = null; slabs.length = 0; flashes.length = 0; clapAt = -9; };
 H.fightStart = (cfg, wave) => {
   start0(cfg, wave); peb = pit = null; slabs.length = 0;
   if (on() && !JU.clan.body()) E.P1.scale = SIZE;   // bigger than he was
