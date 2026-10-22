@@ -173,7 +173,10 @@ function paint(note) {
         <button class="aseal alt" type="submit"><b lang="ja" aria-hidden="true">告</b><span>Send to everyone</span></button></form>` : ''}
       <button class="aseal" id="aout" type="button"><b lang="ja" aria-hidden="true">去</b><span>Log out</span></button>
       ${test ? '<button class="alink" id="afresh" type="button">Start the test account over</button>' : ''}
-      <p class="afine">${me.team ? 'This account signs in from any browser. What it has played is kept in the browser it was played in.' : 'Kept in this browser only.'}</p></div>`;
+      <div class="axfer"><small>Another device</small>
+        <div class="axrow"><button class="aseal alt" id="axsend" type="button"><b lang="ja" aria-hidden="true">送</b><span>Send my progress</span></button><button class="aseal alt" id="axget" type="button"><b lang="ja" aria-hidden="true">受</b><span>Receive</span></button></div>
+        <div id="axbody"></div></div>
+      <p class="afine">${me.team ? 'This account signs in from any browser. What it has played is kept in the browser it was played in: Send my progress takes it to another.' : 'Kept in this browser. Send my progress takes it, and the account, to another device.'}</p></div>`;
     return;
   }
   const up = tab === 'up';
@@ -184,9 +187,13 @@ function paint(note) {
       ${up ? '<label>Password, once more<input id="apass2" type="password" autocomplete="new-password" maxlength="64"></label>' : ''}
       <p class="amsg${admin && !note ? ' ok' : ''}" id="amsg" aria-live="polite">${note || (admin ? 'The team gave you admin powers: everything is unlocked.' : '')}</p>
       <button class="aseal" type="submit"><b lang="ja" aria-hidden="true">${up ? '記' : '入'}</b><span>${up ? 'Register' : 'Log in'}</span></button>
-      <p class="afine">${up ? 'An account is kept in this browser only: it does not follow you to another device, and a forgotten password cannot be recovered. Use one you use nowhere else.'
-        : 'Accounts are kept in this browser only. One made on another device is not here.'}</p>
-    </form>`;
+      <p class="afine">${up ? 'An account is kept in this browser: Send my progress (once you are in) takes it to another device. A forgotten password cannot be recovered. Use one you use nowhere else.'
+        : 'Accounts are kept in the browser they were made in. To bring one here, press Send my progress on the other device and Receive below.'}</p>
+    </form>
+    <div class="axfer"><small>Another device</small>
+        <div class="axrow"><button class="aseal alt" id="axsend" type="button"><b lang="ja" aria-hidden="true">送</b><span>Send my progress</span></button><button class="aseal alt" id="axget" type="button"><b lang="ja" aria-hidden="true">受</b><span>Receive</span></button></div>
+        <div id="axbody"></div></div>
+`;
 }
 function open(on, quiet) {
   clearTimeout(shut);
@@ -255,6 +262,10 @@ function submit() {
 
 box.addEventListener('click', e => {
   const t = e.target.closest('[data-tab]');
+  if (e.target.closest('#axsend')) { xsend(); return; }
+  if (e.target.closest('#axget')) { sfx.hover(); xget(); return; }
+  if (e.target.closest('#axgo')) { xgo(); return; }
+  if (e.target.closest('#axtext')) { xcopy(); return; }
   if (e.target.closest('#ahead')) { open(!box.classList.contains('open')); return; }
   if (t && !busy) { tab = t.dataset.tab; const n = $('#aname').value; sfx.hover(); paint(); $('#aname').value = n; $('#aname').focus({ preventScroll: true }); return; }
   if (e.target.closest('#ahop')) { sfx.confirm(); hop(); return; }
@@ -271,17 +282,157 @@ function cast() {
   busy = true; say('Sending…', true);
   JU.announce.send(text).then(() => { busy = false; t.value = ''; say('Sent to every player.', true); }, err => { busy = false; fail((err && err.message) || 'It could not be sent.'); });
 }
+box.addEventListener('input', e => { if (e.target.id === 'axin') xfer = null; });      // (a new code typed: the second press starts over)
 box.addEventListener('submit', e => { e.preventDefault(); if (e.target.id === 'acast') cast(); else submit(); });
 box.addEventListener('keydown', e => {                     // typing a name must not walk the menu behind it
   e.stopPropagation();
   if (e.key === 'Escape') { open(false); head.focus({ preventScroll: true }); }
+  else if (e.key === 'Enter' && e.target.id === 'axin') { e.preventDefault(); xgo(); }
 });
 box.addEventListener('pointerdown', () => clearTimeout(shut));
 document.addEventListener('pointerdown', e => { if (box.classList.contains('open') && !box.contains(e.target)) open(false, true); });
 addEventListener('storage', e => { if (e.key === 'ju.session') location.reload(); });       // signed in or out in another tab: this one follows
 
+/* ---------- moving to another device: a short code, good for twelve hours ----------
+   Everything this browser has saved for whoever is here (and, for a player's own account, the account itself: its name, salt and the
+   check of its password, never the password) is packed, squeezed, and locked with a key made from an eight-letter code. The locked copy
+   waits on the same public relay the announcements use (ntfy.sh keeps a message twelve hours), in pieces small enough for it, under a
+   name also made from the code: without the code there is nothing to find and nothing to read. The other device types the code, fetches
+   the pieces, unlocks them and puts the progress where it belongs. And if the relay cannot be reached, the same thing as a long text to
+   copy across by hand */
+const RELAY = 'https://ntfy.sh', ABC = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789', CHUNK = 2800;
+const b64 = u8 => { let s = ''; for (let i = 0; i < u8.length; i += 0x8000) s += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000)); return btoa(s); };
+const unb64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+async function squeeze(u8, back) {                         // deflated, where the browser can do it
+  const st = new Blob([u8]).stream().pipeThrough(back ? new DecompressionStream('deflate-raw') : new CompressionStream('deflate-raw'));
+  return new Uint8Array(await new Response(st).arrayBuffer());
+}
+function pack() {
+  const save = {};
+  for (const k of liveKeys()) if (k !== 'ju.admin') save[k] = localStorage.getItem(k);      // (admin powers are made out to this browser: they would not count on another)
+  const who = !me ? { kind: 'guest' } : me.team ? { kind: 'team', as: test ? 'test' : two ? 'two' : 'main' } : { kind: 'player', rec: { name: me.name, salt: me.salt, v: me.v, made: me.made } };
+  return { app: 'ju', ver: 1, at: Date.now(), who, save };
+}
+async function seal(obj) {                                 // [1 if squeezed, else 0] then the thing itself
+  const raw = enc(JSON.stringify(obj));
+  let z = null;
+  if (typeof CompressionStream !== 'undefined') try { z = await squeeze(raw); } catch (e) { z = null; }
+  const out = new Uint8Array(1 + (z || raw).length);
+  out[0] = z ? 1 : 0; out.set(z || raw, 1);
+  return out;
+}
+async function unseal(u8) { const d = u8.subarray(1), raw = u8[0] === 1 ? await squeeze(d, true) : d; return JSON.parse(new TextDecoder().decode(raw)); }
+const keyOf = async code => crypto.subtle.importKey('raw', sha256(enc('ju-transfer-key:' + code)), 'AES-GCM', false, ['encrypt', 'decrypt']);
+const topicOf = code => 'ju-xfer-' + hex(sha256(enc('ju-transfer-topic:' + code))).slice(0, 28);
+const tidy = s => String(s).toUpperCase().replace(/[^A-Z0-9]/g, '');
+async function sendAway() {
+  const code = Array.from(crypto.getRandomValues(new Uint8Array(8)), b => ABC[b % ABC.length]).join('');
+  const body = await seal(pack()), iv = crypto.getRandomValues(new Uint8Array(12));
+  const ct = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, await keyOf(code), body)), all = new Uint8Array(12 + ct.length);
+  all.set(iv); all.set(ct, 12);
+  const text = b64(all), n = Math.ceil(text.length / CHUNK), topic = topicOf(code);
+  if (n > 40) throw new Error('There is too much to send this way. Use the text instead.');
+  for (let i = 0; i < n; i++) {
+    const r = await fetch(`${RELAY}/${topic}`, { method: 'POST', body: JSON.stringify({ i, n, d: text.slice(i * CHUNK, (i + 1) * CHUNK) }) });
+    if (!r.ok) throw new Error(`The relay would not take it (${r.status}). Try again in a minute, or use the text.`);
+  }
+  return code;
+}
+async function fetchBack(code) {
+  const r = await fetch(`${RELAY}/${topicOf(code)}/json?poll=1&since=12h`);
+  if (!r.ok) throw new Error(`The relay did not answer (${r.status}). Try again in a minute.`);
+  const parts = [];
+  let n = 0;
+  for (const line of (await r.text()).split('\n')) {
+    let e, m;
+    try { e = JSON.parse(line); m = e.event === 'message' ? JSON.parse(e.message) : null; } catch (err) { continue; }
+    if (m && typeof m.i === 'number' && typeof m.d === 'string' && m.n > 0 && m.n <= 40) { parts[m.i] = m.d; n = m.n; }
+  }
+  if (!n) throw new Error('Nothing under that code. Check the letters, or make a new code: they last twelve hours.');
+  for (let i = 0; i < n; i++) if (typeof parts[i] !== 'string') throw new Error('Only part of it arrived. Make a new code and try again.');
+  const all = unb64(parts.join(''));
+  let body;
+  try { body = new Uint8Array(await crypto.subtle.decrypt({ name: 'AES-GCM', iv: all.subarray(0, 12) }, await keyOf(code), all.subarray(12))); }
+  catch (e) { throw new Error('That code does not open it. Check the letters.'); }
+  return unseal(body);
+}
+// what arrived: whose progress it is, and where in this browser it goes. `go` is the second press, when something would be replaced
+function arrive(pk, go) {
+  if (!pk || pk.app !== 'ju' || !pk.save || typeof pk.save !== 'object') throw new Error('That is not progress from this game.');
+  const save = {};
+  for (const k in pk.save) if (k.startsWith('ju.') && !OWN.test(k) && k !== 'ju.admin' && typeof pk.save[k] === 'string') save[k] = pk.save[k];
+  const w = pk.who || {};
+  let to, label, add = null;
+  if (w.kind === 'player') {
+    const r = w.rec || {};
+    if (!NAME.test(r.name || '') || typeof r.salt !== 'string' || !/^[0-9a-f]{64}$/.test(r.v || '')) throw new Error('The account in it is damaged.');
+    const id = r.name.toLowerCase();
+    if (rec(r.name) && rec(r.name).team) throw new Error('That name belongs to the team.');
+    if (has(id) && (accounts[id].salt !== r.salt || accounts[id].v !== r.v)) throw new Error(`This browser already has a different account called ${r.name}.`);
+    to = id; label = r.name; add = { name: r.name, salt: r.salt, v: r.v, made: r.made || Date.now() };
+  } else if (w.kind === 'team') { to = w.as === 'test' ? TEST : w.as === 'two' ? TWO : TEAM.toLowerCase(); label = w.as === 'test' ? 'the team’s test account' : w.as === 'two' ? TEAM2 : TEAM; }
+  else { to = GUEST; label = 'a guest'; }
+  const here = slot() === to, there = here ? liveKeys().length > 0 : !!read('ju.save.' + to, null);
+  if (there && !go) return { ask: `This replaces the progress already in this browser for ${here && !me ? 'the guest' : label}. Press again to go ahead.` };
+  if (add) { accounts[to] = add; write('ju.accounts', accounts); }
+  if (here) {                                               // it is whoever is here now: in it goes, over what was here
+    for (const k of liveKeys()) localStorage.removeItem(k);
+    for (const k in save) localStorage.setItem(k, save[k]);
+    hello('moved'); location.reload();
+    return { done: 'Here it is.' };
+  }
+  write('ju.save.' + to, save);                            // waiting for them to sign in
+  return { done: to === GUEST ? 'It is here. Log out to play it.' : `It is here. Log in as ${label} to play it.` };
+}
+let xfer = null;                                           // what has been fetched and is waiting for the second press
+const xb = () => $('#axbody');
+function xsay(text, ok) { const el = $('#axmsg'); if (el) { el.textContent = text; el.classList.toggle('ok', !!ok); } }
+async function xsend() {
+  if (busy) return;
+  busy = true; xfer = null;
+  xb().innerHTML = '<p class="amsg ok" id="axmsg">Packing it up…</p>';
+  try {
+    const code = await sendAway();
+    xb().innerHTML = `<p class="axcode">${code.slice(0, 4)}&thinsp;·&thinsp;${code.slice(4)}</p><p class="afine">Type this on the other device, under Receive, within twelve hours.</p><button class="alink" id="axtext" type="button">Copy it as text instead</button><p class="amsg ok" id="axmsg"></p>`;
+    sfx.confirm();
+  } catch (e) {
+    xb().innerHTML = `<p class="amsg" id="axmsg">${esc((e && e.message) || 'It could not be sent.')}</p><button class="alink" id="axtext" type="button">Copy it as text instead</button>`;
+    sfx.back();
+  }
+  busy = false;
+}
+async function xcopy() {                                   // the whole thing as one long line of text: paste it into Receive on the other device
+  const text = 'JU1:' + b64(await seal(pack()));
+  try { await navigator.clipboard.writeText(text); xsay('Copied. Paste it into Receive on the other device.', true); }
+  catch (e) { xb().insertAdjacentHTML('beforeend', `<textarea class="axlong" readonly rows="3">${text}</textarea>`); const t = xb().querySelector('.axlong'); t.focus(); t.select(); xsay('Copy this text across to the other device.', true); }
+}
+function xget() {
+  xfer = null;
+  xb().innerHTML = '<input id="axin" class="axin" maxlength="20000" placeholder="The code, or the text" spellcheck="false" autocapitalize="characters" autocorrect="off" aria-label="Transfer code"><button class="aseal" id="axgo" type="button"><b lang="ja" aria-hidden="true">受</b><span>Bring it here</span></button><p class="amsg" id="axmsg"></p>';
+  $('#axin').focus({ preventScroll: true });
+}
+async function xgo() {
+  if (busy) return;
+  const raw = ($('#axin') || {}).value || '';
+  busy = true;
+  try {
+    if (!xfer) {
+      xsay('Fetching…', true);
+      const t = raw.trim();
+      if (/^JU1:/i.test(t)) xfer = await unseal(unb64(t.slice(4).replace(/\s+/g, '')));
+      else { const code = tidy(t); if (code.length !== 8) throw new Error('A code is eight letters and numbers.'); xfer = await fetchBack(code); }
+      const r = arrive(xfer, false);
+      if (r.ask) { xsay(r.ask); sfx.hover(); } else { xfer = null; xsay(r.done, true); sfx.confirm(); }
+    } else {
+      const r = arrive(xfer, true);
+      xfer = null; xsay(r.done, true); sfx.confirm();
+    }
+  } catch (e) { xfer = null; xsay((e && e.message) || 'It could not be brought here.'); sfx.back(); }
+  busy = false;
+}
+
 let note = '';
-try { const v = sessionStorage.getItem('ju.hello'); sessionStorage.removeItem('ju.hello'); note = v === 'in' && me ? 'Signed in.' : v === 'out' && !me ? 'Logged out. Your progress stays with your account.' : v === 'test' && test ? 'This is the test account.' : v === 'two' && two && !test ? 'This is ' + TEAM2 + '. Everything is unlocked here too.' : v === 'team' && me && !test ? 'Back on ' + (two ? TEAM2 : 'the team account') + '.' : v === 'fresh' && test ? 'The test account starts over.' : ''; } catch (e) {}
+try { const v = sessionStorage.getItem('ju.hello'); sessionStorage.removeItem('ju.hello'); note = v === 'in' && me ? 'Signed in.' : v === 'out' && !me ? 'Logged out. Your progress stays with your account.' : v === 'test' && test ? 'This is the test account.' : v === 'two' && two && !test ? 'This is ' + TEAM2 + '. Everything is unlocked here too.' : v === 'team' && me && !test ? 'Back on ' + (two ? TEAM2 : 'the team account') + '.' : v === 'fresh' && test ? 'The test account starts over.' : v === 'moved' ? 'Your progress has arrived from the other device.' : ''; } catch (e) {}
 paint(note);
 if (note) { open(true, true); shut = setTimeout(() => open(false, true), 5200); }
 })();

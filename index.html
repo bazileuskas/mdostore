@@ -232,6 +232,15 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 .aseal.alt:hover,.aseal.alt:focus-visible{transform:scale(1.04);background:rgba(43,26,16,.12)}
 .alink{display:block;margin-top:.9em;padding:0 0 .1em;cursor:pointer;color:rgba(43,26,16,.82);background:none;border:0;border-bottom:1px dashed rgba(43,26,16,.6);outline:none;font:600 .8em/1.3 var(--f-ui);letter-spacing:.06em}
 .alink:hover,.alink:focus-visible{color:var(--seal);border-bottom-color:var(--seal)}
+/* moving progress to another device (account.js) */
+.axfer{margin-top:1em;padding-top:.6em;border-top:1px dashed rgba(43,26,16,.45)}
+.axfer>small{display:block;font:600 .72em/1 var(--f-ui);letter-spacing:.24em;text-transform:uppercase;color:var(--seal)}
+.axrow{display:flex;flex-wrap:wrap;gap:0 .5em}
+.axrow .aseal{font-size:.86em}
+.axcode{margin:.5em 0 0;font:400 2.1em/1 var(--f-display);letter-spacing:.12em;color:var(--ink);user-select:all}
+.axin{width:100%;margin-top:.6em;padding:.3em .15em .25em;font:400 max(16px,1.3em)/1.2 var(--f-ui);letter-spacing:.08em;color:var(--ink);background:none;border:0;border-bottom:2px solid rgba(43,26,16,.55);outline:none}
+.axin:focus{border-bottom-color:var(--seal);background:rgba(165,16,42,.07)}
+.axlong{width:100%;margin-top:.5em;font:400 .72em/1.3 monospace;color:var(--ink);background:rgba(255,255,255,.4);border:1px solid rgba(43,26,16,.4)}
 .ascroll.test .ahead b{background:#34558a}
 @keyframes nope{20%{translate:-8px 0}45%{translate:7px 0}70%{translate:-4px 0}}
 .side{position:absolute;right:clamp(10px,2.2vw,36px);top:50%;translate:0 -50%;writing-mode:vertical-rl;pointer-events:none;
@@ -996,7 +1005,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
   </div>
 
   <div class="side" aria-hidden="true" lang="ja">領域展開</div>
-  <div class="hud tl"><b lang="ja">呪</b>Fan project · Build 0.7 · Boss VFX</div>
+  <div class="hud tl"><b lang="ja">呪</b>Fan project · Build 0.7v1 · Transfer Codes</div>
   <div class="hud bl">↑ ↓ Select &nbsp;·&nbsp; Enter Confirm</div>
   <div class="hud br">Title screen</div>
   <div class="acct" id="acct">

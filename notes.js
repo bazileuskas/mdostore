@@ -5,6 +5,11 @@
 // Newest first. v = the build, jp = the seal stamped beside it, pic = notes/<pic>.jpg, cap = what the picture shows.
 // A new update goes at the top of this list.
 const NOTES = [
+  { v: '0.7v1', name: 'Transfer Codes', jp: '送', date: '22 Oct 2026', pic: 'transfer', cap: 'A code, good for twelve hours', items: [
+    'Take your progress to another device: open the scroll in the corner, press Send my progress, and type the eight-letter code on the other device under Receive. It works for twelve hours',
+    'If you are signed in, your account comes with it: log in with the same password on the other device',
+    'No code? Copy it as text instead, and paste the text into Receive',
+    'The progress travels locked: without the code it cannot be found or read. Admin powers stay with the browser they were given to'] },
   { v: '0.7', name: 'Boss VFX', jp: '彩', date: '5 Oct 2026', pic: 'bossfx', cap: 'Mahoraga, adapting: the wheel turns one notch', items: [
     'Every boss in the story has been redrawn. What they do is what it was; what it looks like is not',
     'Each boss has an element of its own now, and its body gives it off the whole fight: Disaster Flame’s fire and embers, Blood Brother’s and Rot Wing’s blood, Thunder God’s lightning, the flicker of King of Curses’s cuts, Soul Shaper’s wisps, Disaster Bloom’s petals, Receipt Man’s receipts. Sorcerer Killer and Heavenly Blade give off nothing at all, because they have no cursed energy: only the air they move',
