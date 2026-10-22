@@ -157,7 +157,8 @@ function mount(body) {
     ${ORDER.filter(id => TECH[id].limited && (live(TECH[id]) || mine(id))).sort((a, b) => live(TECH[b]) - live(TECH[a])).map(id => { const t = TECH[id]; return `<button class="tcard lim${mine(id) ? '' : ' lock'}" data-tech="${id}" style="--c:${t.col}" aria-label="Equip ${t.name}, limited time"><b lang="ja">${t.mark || t.jp[0]}</b><span><small>Limited time</small>${t.name}</span><i>${t.who} · ${t.odds}%</i><u></u></button>`; }).join('')}
     ${ORDER.filter(id => TECH[id].early).map(id => { const t = TECH[id]; return `<button class="tcard lim ea${mine(id) ? '' : ' lock'}" data-tech="${id}" style="--c:${t.col}" aria-label="Equip ${t.name}, early access"><b lang="ja">${t.mark || t.jp[0]}</b><span><small>Early Access</small>${t.name}</span><i>${t.who}</i><u>$2.99</u></button>`; }).join('')}
     ${TEASE ? `<button class="tcard lim tease" id="tease" style="--c:#d9c9ff" aria-label="A character still to come. Press for a hint"><b lang="ja">？</b><span><small>Next character</small>? ? ?</span><i>${HINTS[hintAt]}</i><u>Soon</u></button>` : ''}
-    <div class="tcards t8">${ORDER.filter(id => !TECH[id].limited && !TECH[id].early && !TECH[id].awakened).map(id => { const t = TECH[id]; return `<button class="tcard${mine(id) ? '' : ' lock'}" data-tech="${id}" style="--c:${t.col}" aria-label="Equip ${t.name}${mine(id) ? '' : ', not yours yet'}"><b lang="ja">${t.mark || t.jp[0]}</b><span>${t.name}</span><i>${t.free ? 'Free' : t.odds + '%'}</i></button>`; }).join('')}</div>`;
+    ${ORDER.filter(id => TECH[id].admin && JU.shop && JU.shop.dev).map(id => { const t = TECH[id]; return `<button class="tcard lim ea" data-tech="${id}" style="--c:${t.col}" aria-label="Equip ${t.name}, the team's own"><b lang="ja">${t.mark || t.jp[0]}</b><span><small>Admin only</small>${t.name}</span><i>${t.who}</i><u>Team</u></button>`; }).join('')}
+    <div class="tcards t8">${ORDER.filter(id => !TECH[id].limited && !TECH[id].early && !TECH[id].awakened && !TECH[id].admin).map(id => { const t = TECH[id]; return `<button class="tcard${mine(id) ? '' : ' lock'}" data-tech="${id}" style="--c:${t.col}" aria-label="Equip ${t.name}${mine(id) ? '' : ', not yours yet'}"><b lang="ja">${t.mark || t.jp[0]}</b><span>${t.name}</span><i>${t.free ? 'Free' : t.odds + '%'}</i></button>`; }).join('')}</div>`;
   show(false);
   clearInterval(clock); clock = setInterval(() => { if (document.querySelector('.tcard.lim')) stamp(); else clearInterval(clock); }, 1000);
 }
@@ -204,7 +205,7 @@ function spin(paper) {
 function go(paper) {
   if (spinning || (JU.shop && !JU.shop.take('ct'))) return;
   spinning = true; clearTimeout(back); retix();
-  const result = roll(), faces = ORDER.filter(id => live(TECH[id]) && !TECH[id].early && !TECH[id].awakened && !TECH[id].free), t0 = performance.now(), dur = JU.reduceMotion ? 300 : 3000, turns = 10, face = paper.querySelector('b'), sub = paper.querySelector('i');
+  const result = roll(), faces = ORDER.filter(id => live(TECH[id]) && !TECH[id].early && !TECH[id].awakened && !TECH[id].free && !TECH[id].admin), t0 = performance.now(), dur = JU.reduceMotion ? 300 : 3000, turns = 10, face = paper.querySelector('b'), sub = paper.querySelector('i');
   let lastHalf = -1;
   paper.classList.remove('got'); paper.classList.add('spin');
   (function step(now) {
@@ -268,6 +269,7 @@ function put(t, r) {
 JU.tech = {
   add, TECH, ORDER, SLOTS, mount, apply, revert, roll, charge, tk: { sprite, orb, beam, shout, dot, near },
   equip(id) { equipped = id; try { localStorage.setItem('ju.tech', id); } catch (e) {} noToji(id); },
+  drain() { awk = 0; bar(); },                      // (an awakening that keeps its bar, awkKeep, empties it itself once it has gone off)
   get name() { const t = TECH[equipped]; return t ? t.name : ''; }, get active() { return active; }, get using() { return !!active || based; }, get equipped() { return equipped; }, get skin() { return (active && active.skin) || null; }
 };
 })();

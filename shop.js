@@ -173,6 +173,7 @@ function allowed(id) {
   const t = JU.tech.TECH[id];
   if (!t) return false;
   if (dev() || t.free || (t.early && EARLY_OPEN)) return true;
+  if (t.admin) return false;                        // (the team's own: Mr. Instincto)
   if (t.awakened) { const a = JU.awakened.LIST.find(x => x.id === id); return !!(a && a.open && a.open()); }
   return holds('tech', id);
 }
@@ -196,7 +197,7 @@ function rng(seed) {
 }
 function offers() {
   const T = JU.tech.TECH, C = JU.clan.CLAN, r = rng(today() * 7919 + 13), pick = a => a.splice(r() * a.length | 0, 1)[0];
-  const techs = JU.tech.ORDER.filter(id => T[id].odds <= 10 && !T[id].free && !T[id].early && !T[id].awakened && (!T[id].limited || Date.now() < T[id].limited)).map(id => ({ kind: 'tech', id, d: T[id] }));   // early access is never sold for tokens
+  const techs = JU.tech.ORDER.filter(id => T[id].odds <= 10 && !T[id].free && !T[id].early && !T[id].awakened && !T[id].admin && (!T[id].limited || Date.now() < T[id].limited)).map(id => ({ kind: 'tech', id, d: T[id] }));   // early access is never sold for tokens
   const clans = JU.clan.ORDER.filter(id => C[id].odds <= 10 && !C[id].limited).map(id => ({ kind: 'clan', id, d: C[id] }));
   const out = [pick(techs), pick(clans)];           // always one technique and one clan, and then one more of either
   out.push(pick(techs.concat(clans)));

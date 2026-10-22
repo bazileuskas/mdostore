@@ -5,6 +5,10 @@
 // Newest first. v = the build, jp = the seal stamped beside it, pic = notes/<pic>.jpg, cap = what the picture shows.
 // A new update goes at the top of this list.
 const NOTES = [
+  { v: '0.10v2', name: 'Vengeful Artist: Stronde and the Final Chapter', jp: '話', date: '22 Oct 2026', pic: 'vengeful3', cap: 'The Final Chapter: the page turns', items: [
+    'Stronde (4): he throws a manga panel, and it sticks to the chest of whatever it hits. Press 4 again while it is on: a pale before-image is left where they stood, and they are made to dash, the way you are moving, or either way at random if you are standing still. The panel stays on for 20 seconds',
+    'Final Chapter (G, his awakening): a counter. It only starts with a panel on them; hold it, and whatever hits you turns the page into a scene of its own. A player or a boss takes 300 from it. Anything else does not get up',
+    'In Training the curse never swings, so the Final Chapter goes off on its own a moment after you start it'] },
   { v: '0.10v1', name: 'Vengeful Artist: Echart and Bleed', jp: '血', date: '22 Oct 2026', pic: 'vengeful2', cap: 'Broil: the spear goes in, and the blood comes out', items: [
     'His guard is not a block any more: hold F and whatever comes at him from the front, he steps back out of, leaving a black afterimage to take it. Heavy blows do not break it. Only a blow timed to land just as he settles from the last dodge (he flashes white) catches him, and that one lands in full',
     'Echart (3): the spear held across him for 0.8 seconds. Whatever hits him then is caught on it, and he is in front of whoever did it with the spear through them: 60. Broil within two seconds of that does 20 more',

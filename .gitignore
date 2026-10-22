@@ -4,3 +4,5 @@ __pycache__/
 img/*-original.*
 # sounds cut from a clip of another game (the Vengeful Artist's four hits): this copy only, never on the public site (build.py leaves them out too)
 sounds/vengeful-*.mp3
+# this computer's own (local/team.json keeps the team's account signed in here): never committed, never online
+local/

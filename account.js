@@ -78,10 +78,23 @@ const has = id => Object.prototype.hasOwnProperty.call(accounts, id);
 const isTwo = name => String(name).toLowerCase() === TEAM2.toLowerCase();
 const rec = name => { const id = String(name).toLowerCase(); return id === TEAM.toLowerCase() || isTwo(id) ? { name: TEAM, salt: TEAM_SALT, v: TEAM_V, team: true } : has(id) ? accounts[id] : null; };
 const TEST = TEAM.toLowerCase() + '.test', TWO = TEAM.toLowerCase() + '.2';      // where the test account's save is kept, and the second account's (no name a player can register has a dot in it)
+/* This device is the team's (0.10v2, the user's ask: the sign-in kept getting lost when the browser's storage was cleared). On the computer
+   the game is played from at home, a file beside it says so: local/team.json, never committed and never put online, so it exists on that
+   one machine and nowhere else. Opened there at localhost, the team's account cannot be signed out of: if this browser has forgotten the
+   sign-in it is put back on its own, and Log out is not offered. Its test account and its second account can still be switched to and
+   back. A sign-in put back this way has no key to sign with (announcing, giving admin powers): the password typed once in the scroll gives
+   it one. Taking the file away ends all of it */
+const PIN = (() => {
+  if (location.hostname !== 'localhost') return false;
+  try { const x = new XMLHttpRequest(); x.open('GET', 'local/team.json?' + Date.now(), false); x.send(); return x.status === 200 && JSON.parse(x.responseText).team === true; } catch (e) { return false; }
+})();
 let me = null, test = false, two = false;                  // the account signed in, or nobody; whether the team's account is being its test account; and whether it is its second one
 {
-  const s = read('ju.session', null), r = s && typeof s.n === 'string' && typeof s.k === 'string' ? rec(s.n) : null;
-  if (r && proof(s.k) === r.v) { me = r; test = !!(r.team && s.test); two = !!(r.team && s.two); } else if (s) drop('ju.session');
+  const s = read('ju.session', null), r = s && typeof s.n === 'string' ? rec(s.n) : null;
+  const ok = !!r && ((typeof s.k === 'string' && proof(s.k) === r.v) || (PIN && r.team && s.pin === true));
+  if (ok && (!PIN || r.team)) { me = r; test = !!(r.team && s.test); two = !!(r.team && s.two); }
+  else if (PIN) { me = rec(TEAM); write('ju.session', { n: TEAM, pin: true }); }      // (the team's device: the sign-in this browser forgot, put back)
+  else if (s) drop('ju.session');
 }
 const home = () => (two ? TWO : me.name.toLowerCase());     // whichever of the team's two this is, or a player's own
 const called = () => (two ? TEAM2 : me.name);
@@ -137,6 +150,7 @@ const hello = v => { try { sessionStorage.setItem('ju.hello', v); } catch (e) {}
 async function sign(text) {
   const s = read('ju.session', null);
   if (!me || !me.team || !s) throw new Error('Only the team’s account can announce.');
+  if (typeof s.k !== 'string') throw new Error('Type the team’s password in the scroll once first (this device signed itself in).');
   const der = new Uint8Array(48);
   der.set([0x30, 0x2e, 0x02, 0x01, 0x00, 0x30, 0x05, 0x06, 0x03, 0x2b, 0x65, 0x70, 0x04, 0x22, 0x04, 0x20]); der.set(sha256(enc('ju-announce:' + s.k)), 16);
   const key = await crypto.subtle.importKey('pkcs8', der, { name: 'Ed25519' }, false, ['sign']);
@@ -171,7 +185,9 @@ function paint(note) {
       ${me.team ? `<button class="aseal alt" id="aflip" type="button"><b lang="ja" aria-hidden="true">${test ? '無' : '試'}</b><span>${test ? 'Back to ' + (two ? TEAM2 : 'the team account') : 'Switch to the test account'}</span></button>` : ''}
       ${me.team ? `<form class="acast" id="acast"><label>Announce to every player<textarea id="atext" maxlength="160" rows="2" placeholder="Shown at the top of everybody’s screen"></textarea></label>
         <button class="aseal alt" type="submit"><b lang="ja" aria-hidden="true">告</b><span>Send to everyone</span></button></form>` : ''}
-      <button class="aseal" id="aout" type="button"><b lang="ja" aria-hidden="true">去</b><span>Log out</span></button>
+      ${PIN && me.team && !keyed() ? `<form class="acast" id="akey"><label>The team’s password, once, to announce and give admin powers from here<input id="akeyp" type="password" autocomplete="current-password" maxlength="64"></label>
+        <button class="aseal alt" type="submit"><b lang="ja" aria-hidden="true">鍵</b><span>Unlock</span></button></form>` : ''}
+      ${PIN && me.team ? '<p class="afine">This device is the team’s: it stays signed in, and there is no logging out of it here.</p>' : `<button class="aseal" id="aout" type="button"><b lang="ja" aria-hidden="true">去</b><span>Log out</span></button>`}
       ${test ? '<button class="alink" id="afresh" type="button">Start the test account over</button>' : ''}
       <div class="axfer"><small>Another device</small>
         <div class="axrow"><button class="aseal alt" id="axsend" type="button"><b lang="ja" aria-hidden="true">送</b><span>Send my progress</span></button><button class="aseal alt" id="axget" type="button"><b lang="ja" aria-hidden="true">受</b><span>Receive</span></button></div>
@@ -223,6 +239,7 @@ function login(name, pass) {
   write('ju.session', to2 ? { n: r.name, k, two: true } : { n: r.name, k }); hello('in'); location.reload();
 }
 function logout() {
+  if (PIN && me && me.team) return;                        // (the team's device: there is no logging out of it)
   try { swap(GUEST, true); } catch (e) {}
   drop('ju.session'); hello('out'); location.reload();
 }
@@ -274,6 +291,19 @@ box.addEventListener('click', e => {
   if (fr) { if (fr.dataset.sure) restart(); else { fr.dataset.sure = 1; fr.textContent = 'Sure? Press again: its save is wiped'; sfx.hover(); } return; }      // (asked twice: it cannot be undone)
   if (e.target.closest('#aout')) { sfx.back(); logout(); }
 });
+// (the team's device) a sign-in that put itself back has no key: the password, once, gives it one, and nothing else changes
+function keyed() { const s = read('ju.session', null); return !!s && typeof s.k === 'string'; }
+function unlock() {
+  const s = read('ju.session', null), el = $('#akeyp'), pass = el ? el.value : '';
+  if (!s || !me || !me.team || busy || !pass) return;
+  busy = true; say('Reading the seal…', true);
+  setTimeout(() => {
+    busy = false;
+    const k = stretch(TEAM_SALT, pass);
+    if (proof(k) !== TEAM_V) return fail('Wrong password.');
+    s.k = k; write('ju.session', s); sfx.confirm(); paint('Announcing and admin powers work from here now.');
+  }, 40);
+}
 // the team's word to everybody: signed here, sent and shown by announce.js
 function cast() {
   const t = $('#atext'), text = t.value.trim();
@@ -283,7 +313,7 @@ function cast() {
   JU.announce.send(text).then(() => { busy = false; t.value = ''; say('Sent to every player.', true); }, err => { busy = false; fail((err && err.message) || 'It could not be sent.'); });
 }
 box.addEventListener('input', e => { if (e.target.id === 'axin') xfer = null; });      // (a new code typed: the second press starts over)
-box.addEventListener('submit', e => { e.preventDefault(); if (e.target.id === 'acast') cast(); else submit(); });
+box.addEventListener('submit', e => { e.preventDefault(); if (e.target.id === 'acast') cast(); else if (e.target.id === 'akey') unlock(); else submit(); });
 box.addEventListener('keydown', e => {                     // typing a name must not walk the menu behind it
   e.stopPropagation();
   if (e.key === 'Escape') { open(false); head.focus({ preventScroll: true }); }

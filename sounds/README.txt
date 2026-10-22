@@ -23,9 +23,10 @@ The Vengeful Artist's four strikes, one sound each (cut from a clip you supplied
     vengeful-hit2.mp3    the second
     vengeful-hit3.mp3    the cut
     vengeful-hit4.mp3    the fourth (and Broil's slam, and the last of Catastrophe's twenty)
+    vengeful-ult.mp3     the whole of the Final Chapter, nine seconds (cut from a second clip; its scene is timed to it)
 
-    The clip they were cut from is of another game, so these four stay in this copy: they are not committed (.gitignore) and build.py
-    leaves them out of the one-file build. On the public site the game makes four spear sounds of its own.
+    The clips they were cut from are of another game, so these stay in this copy: they are not committed (.gitignore) and build.py
+    leaves them out of the one-file build. On the public site the game makes spear sounds of its own, and a Final Chapter of its own.
 
 The names have to match exactly, and these have to be .mp3. For the domain music, .m4a, .ogg or .wav work as well (mahito-domain.m4a and so on).
 

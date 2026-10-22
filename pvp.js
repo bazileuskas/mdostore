@@ -25,7 +25,7 @@ try { Object.assign(REC, JSON.parse(localStorage.getItem('ju.pvp') || '{}')); } 
 const keep = () => { try { localStorage.setItem('ju.pvp', JSON.stringify(REC)); } catch (e) {} };
 
 /* ---------- who may be picked ---------- */
-const board = () => T.ORDER.filter(id => T.TECH[id] && !T.TECH[id].awakened);      // (no awakened techniques in a duel, as in the app)
+const board = () => T.ORDER.filter(id => T.TECH[id] && !T.TECH[id].awakened && (!T.TECH[id].admin || (JU.shop && JU.shop.dev)));      // (no awakened techniques in a duel, as in the app)
 // an awakened or Early Access technique is his to pick only if it is his. Everything else is open to both, whatever they hold
 const shut = id => { const t = T.TECH[id]; return !!t.awakened && !(JU.shop && JU.shop.allowed(id)); };
 const free = () => E.root.dataset.mode === 'street' && S.st && S.st.free && !S.st.hold && !S.st.talk && M.on;
@@ -184,7 +184,8 @@ JU.exitGame = () => { abort(); exit0(); };
 function struck(m) {
   if (!F || F.over || typeof m.dmg !== 'number' || !(m.dmg >= 0)) return;
   F.got = m.n | 0;
-  const dmg = Math.min(m.dmg, HP * CAP) * K, face = m.f < 0 ? -1 : 1;
+  const pe = JU.mp && D && JU.mp.peer(D.pid), lethal = !!m.kill && !!pe && pe.a >= 1;      // (only an admin's: anybody else's is capped like any blow)
+  const dmg = lethal ? E.P1.hp + 1 : Math.min(m.dmg, HP * CAP) * K, face = m.f < 0 ? -1 : 1;
   mute = true;
   if (m.kb || m.lift || m.stun) { const a = { dmg, exact: 1, shown: dmg / K, kb: Math.min(+m.kb || 0, 1400), stun: Math.min(+m.stun || .3, 1.2) }; if (m.lift) a.lift = Math.min(+m.lift, 900); Fi.hurt(face, a, 1); }
   else Fi.chip(dmg, '#ff5a6e');                      // nothing behind it: rot, bleeding, a domain's sure-hit
@@ -240,6 +241,7 @@ H.hit = (o, face, h) => {
   const a = F.hit || (F.hit = { kb: 0, lift: 0, stun: 0, f: face });
   a.kb = Math.max(a.kb, h.kb || 0); a.lift = Math.max(a.lift, h.lift || 0); a.stun = Math.max(a.stun, h.stun || 0); a.f = face;
   if (h.bleed) a.bl = (a.bl || 0) + h.bleed;       // (a wound that bleeds: the Vengeful Artist's Broil)
+  if (h.kill) a.kill = 1;                            // (Mr. Instincto: it was meant to finish him)
 };
 H.ko = o => { if (F) { o.ko = false; return true; } return ko0(o); };        // he is down when his own game says he is
 H.tick = dt => {
@@ -253,12 +255,12 @@ H.tick = dt => {
   if (!f.over && (dealt > 0 || f.hit)) {
     const a = f.acc || (f.acc = { dmg: 0, kb: 0, lift: 0, stun: 0, f: p.face, t: E.T });
     a.dmg += dealt;
-    if (f.hit) { a.kb = Math.max(a.kb, f.hit.kb); a.lift = Math.max(a.lift, f.hit.lift); a.stun = Math.max(a.stun, f.hit.stun); a.f = f.hit.f; if (f.hit.bl) a.bl = (a.bl || 0) + f.hit.bl; }
+    if (f.hit) { a.kb = Math.max(a.kb, f.hit.kb); a.lift = Math.max(a.lift, f.hit.lift); a.stun = Math.max(a.stun, f.hit.stun); a.f = f.hit.f; if (f.hit.bl) a.bl = (a.bl || 0) + f.hit.bl; if (f.hit.kill) a.kill = 1; }
   }
   f.hit = null;
   if (f.acc && E.T - f.acc.t >= BUNCH) {             // blows that land together go as one
     const a = f.acc, dmg = Math.min(a.dmg, HP * CAP); f.acc = null;
-    say(d.pid, { a: 'hit', n: ++f.seq, dmg: r2(dmg), kb: Math.round(a.kb), lift: Math.round(a.lift), stun: r2(a.stun), f: a.f, bl: a.bl || 0 });
+    say(d.pid, { a: 'hit', n: ++f.seq, dmg: r2(dmg), kb: Math.round(a.kb), lift: Math.round(a.lift), stun: r2(a.stun), f: a.f, bl: a.bl || 0, kill: a.kill || 0 });
     f.sent.push({ n: f.seq, dmg });
   }
   // him, as his game says he is
