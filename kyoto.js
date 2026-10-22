@@ -125,7 +125,7 @@ function sky() {
     g.lineTo(VW + 300, HY + 2); g.closePath(); g.fill();
   }
   const dx = VW * .68 + pan * 1.6, dy = HY - 128;                                                         // and on one of them, 大, in fire
-  lit(() => glow(GLOW.fire, dx, dy, 240, .5 + .1 * Math.sin(T * 5))); g.font = "86px 'Vessel Syuku','Yu Mincho',serif"; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillStyle = '#ffb04a'; g.fillText('大', dx, dy);
+  lit(() => glow(GLOW.fire, dx, dy, 240, .5 + .1 * Math.sin(T * 5))); g.font = "86px 'Yuji Syuku','Yu Mincho',serif"; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillStyle = '#ffb04a'; g.fillText('大', dx, dy);
   gr = g.createLinearGradient(0, HY - 150, 0, HY); gr.addColorStop(0, 'rgba(255,170,90,0)'); gr.addColorStop(1, 'rgba(255,170,90,.22)');
   g.fillStyle = gr; g.fillRect(-300, HY - 150, VW + 600, 152);
 }

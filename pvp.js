@@ -13,7 +13,7 @@
 
 const E = JU.eng, H = E.hooks, Fi = JU.fights, S = JU.street, M = JU.mp, V = JU.vfx, sfx = JU.sfx, T = JU.tech;
 const HP = 600, CAP = .4, K = 100 / HP;              // what each has in a duel (it was 1200: fights went on too long); the most one blow may take; and what that makes of his own hundred
-const ASK_T = 20, BAN_T = 25, PICK_T = 30, SEND = 1 / 30, BUNCH = .08, QUIET = 10, BREAK = 2.6;
+const ASK_T = 20, BAN_T = 15, PICK_T = 20, SEND = 1 / 30, BUNCH = .08, QUIET = 15, BREAK = 2.6;      // (the same as the app's: decided with the team 2026-10-08)
 const esc = x => String(x).replace(/[<>&"]/g, '');
 const r2 = v => Math.round(v * 100) / 100;
 
@@ -25,9 +25,9 @@ try { Object.assign(REC, JSON.parse(localStorage.getItem('ju.pvp') || '{}')); } 
 const keep = () => { try { localStorage.setItem('ju.pvp', JSON.stringify(REC)); } catch (e) {} };
 
 /* ---------- who may be picked ---------- */
-const board = () => T.ORDER.filter(id => T.TECH[id]);
+const board = () => T.ORDER.filter(id => T.TECH[id] && !T.TECH[id].awakened);      // (no awakened techniques in a duel, as in the app)
 // an awakened or Early Access technique is his to pick only if it is his. Everything else is open to both, whatever they hold
-const shut = id => { const t = T.TECH[id]; return !!(t.awakened || t.early) && !(JU.shop && JU.shop.allowed(id)); };
+const shut = id => { const t = T.TECH[id]; return !!t.awakened && !(JU.shop && JU.shop.allowed(id)); };
 const free = () => E.root.dataset.mode === 'street' && S.st && S.st.free && !S.st.hold && !S.st.talk && M.on;
 const say = (pid, m) => M.to(pid, Object.assign({ t: 'duel' }, m));
 
@@ -285,7 +285,7 @@ H.tick = dt => {
   }
   if (f.over) return;
   if (p.dead || p.hp <= 0) { finish(false); return; }
-  if ((f.quiet += dt) > QUIET) finish(true, `${d.name} stopped answering.`);
+  if ((f.quiet += dt) > QUIET) finish(!M.down, M.down ? 'The connection was lost.' : `${d.name} stopped answering.`);      // (silence is my loss when it is my line that is down)
 };
 H.reset = () => { if (reset0) reset0(); if (D && (D.phase === 'fight' || D.phase === 'over')) { F = null; D = null; T.revert(); } };
 

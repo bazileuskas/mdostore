@@ -6,13 +6,13 @@
 <title>JUJUTSU UNLIMITEDS</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@400;600&family=Vessel+Syuku&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@400;600&family=Yuji+Syuku&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box}
 :root{
   --ink:#05040a; --bone:#f4efe4; --red:#ff2440; --blood:#8a0018; --blue:#38c8ff; --purple:#a55cff;
   --f-display:'Anton',Impact,Haettenschweiler,'Arial Narrow Bold',sans-serif;
-  --f-jp:'Vessel Syuku','Yu Mincho','Hiragino Mincho ProN','MS PMincho',serif;
+  --f-jp:'Yuji Syuku','Yu Mincho','Hiragino Mincho ProN','MS PMincho',serif;
   --f-ui:'Oswald','Segoe UI',system-ui,sans-serif;
   --pad-x:clamp(22px,6.5vw,120px);
   --extrude:
@@ -165,6 +165,20 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 .mp small{display:block;margin-top:.45em;color:rgba(244,239,228,.6)}
 .mp small.gone{margin:0;color:#ff8a98}
 .mp small.fine{color:#ffd23d}
+/* playing online (mp.js, from the phone app): the ping, the queue chip's buttons after a duel, the name to play under */
+.mpwho input{width:min(100%,16em)}
+.mp .mpbtns{display:flex;flex-wrap:wrap;gap:.4em;margin:.1em 0 .45em}
+.mp .mpbtns:empty{display:none}
+.mp .mpbtns button{padding:.3em .7em;border:1px solid #ff5a6e;background:none;color:#ff8a98;font:600 .82em/1 var(--f-ui);letter-spacing:.1em;text-transform:uppercase;cursor:pointer}
+.mp .mpbtns button:hover,.mp .mpbtns button:focus-visible{background:#ff5a6e;color:#fff}
+.mp .mpbtns [data-rm]{border-color:#ffd23d;color:#ffd23d}
+.mp .mpbtns [data-rm]:hover{background:#ffd23d;color:#07060c}
+.mp li em{font-style:normal;color:#ff8a98}
+.game>.ping{position:absolute;left:50%;top:clamp(6px,1.6vh,14px);z-index:7;display:none;translate:-50% 0;padding:.2em .7em .15em;pointer-events:none;font:600 clamp(11px,1.5vh,15px)/1.2 var(--f-ui);letter-spacing:.16em;white-space:nowrap;color:#8dffb0;background:rgba(8,6,14,.72);border-bottom:2px solid currentColor}
+.game>.ping.on{display:block}
+.game>.ping[data-q="ok"]{color:#ffd23d}
+.game>.ping[data-q="bad"]{color:#ff5a6e}
+.game[data-mode="fight"]>.ping{top:clamp(40px,10.5vh,96px)}
 .mp li span{display:flex;flex:none;gap:.35em}
 .mp li em{margin-left:auto;font:600 .72em/1 var(--f-ui);font-style:normal;letter-spacing:.14em;text-transform:uppercase;color:#ffd23d}
 .mp li button[data-adm]{border-color:#ffd23d;color:#ffd23d}
@@ -1005,7 +1019,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
   </div>
 
   <div class="side" aria-hidden="true" lang="ja">領域展開</div>
-  <div class="hud tl"><b lang="ja">呪</b>Fan project · Build 0.7v1 · Transfer Codes</div>
+  <div class="hud tl"><b lang="ja">呪</b>Fan project · Build 0.8 · Queue</div>
   <div class="hud bl">↑ ↓ Select &nbsp;·&nbsp; Enter Confirm</div>
   <div class="hud br">Title screen</div>
   <div class="acct" id="acct">
@@ -1447,7 +1461,7 @@ function drawRing(r, back) {
     for (let i = 0; i < n; i++) {
       const p = ringPoint(r, i / n * TAU + T * .1);
       if (!p || (p.z > pz) !== back) continue;
-      ctx.font = `${Math.max(8, .46 * p.s) | 0}px 'Vessel Syuku','Yu Mincho',serif`;
+      ctx.font = `${Math.max(8, .46 * p.s) | 0}px 'Yuji Syuku','Yu Mincho',serif`;
       ctx.fillStyle = ac(back ? .22 : .85);
       ctx.fillText(r.glyphs[i], p.x, p.y);
     }
@@ -1510,7 +1524,7 @@ function drawCore() {
   g.addColorStop(0, 'rgba(255,255,255,.95)'); g.addColorStop(.5, `rgba(${rgb},.5)`); g.addColorStop(1, 'rgba(255,255,255,.1)');
   ctx.strokeStyle = g; ctx.lineWidth = Math.max(1, r * .03);
   ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, TAU); ctx.stroke();
-  ctx.font = `${r * 1.05 | 0}px 'Vessel Syuku','Yu Mincho',serif`;
+  ctx.font = `${r * 1.05 | 0}px 'Yuji Syuku','Yu Mincho',serif`;
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   ctx.fillStyle = `rgba(${rgb},${.13 + .06 * Math.sin(T * 1.3)})`;
   ctx.fillText('無', p.x, p.y + r * .04);
@@ -1576,7 +1590,7 @@ function drawOfuda(o) {
   if (front) {
     ctx.strokeStyle = ctx.fillStyle = '#a5102a';
     ctx.lineWidth = 2; ctx.strokeRect(4, 4, 32, 92);
-    ctx.font = "26px 'Vessel Syuku','Yu Mincho',serif";
+    ctx.font = "26px 'Yuji Syuku','Yu Mincho',serif";
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillText(o.g, 20, 28);
     ctx.fillRect(18.5, 50, 3, 38); ctx.fillRect(11, 60, 18, 2.5); ctx.fillRect(13, 74, 14, 2.5);
@@ -1905,7 +1919,7 @@ requestAnimationFrame(frame);
 const fonts = document.fonts ? Promise.all([
   document.fonts.load("10px Anton"),
   document.fonts.load("600 10px Oswald"),
-  document.fonts.load("10px 'Vessel Syuku'", '呪術無限領域展開封禁縛壱弐参肆開始式一族制作力に界はない')
+  document.fonts.load("10px 'Yuji Syuku'", '呪術無限領域展開封禁縛壱弐参肆開始式一族制作力に界はない')
 ]).catch(() => {}) : Promise.resolve();
 Promise.race([fonts, new Promise(r => setTimeout(r, 1800))]).then(() => {
   document.body.classList.add('ready');

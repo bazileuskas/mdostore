@@ -53,7 +53,7 @@ const on = (f, hh) => {
   const X = (u, v) => lerp(lerp(a[0], b[0], u), lerp(e[0], c[0], u), v), Y = (u, v) => lerp(lerp(a[1], b[1], u), lerp(e[1], c[1], u), v);
   return (u0, y0, u1, y1) => { const v0 = y0 / hh, v1 = y1 / hh; g.moveTo(X(u0, v0), Y(u0, v0)); g.lineTo(X(u1, v0), Y(u1, v0)); g.lineTo(X(u1, v1), Y(u1, v1)); g.lineTo(X(u0, v1), Y(u0, v1)); g.closePath(); };
 };
-const JP = "'Vessel Syuku','Yu Mincho',serif", EN = 'Anton, Impact, sans-serif';
+const JP = "'Yuji Syuku','Yu Mincho',serif", EN = 'Anton, Impact, sans-serif';
 function text(s, x, y, z, size, col, font) {
   const q = P(x, y, z), px = size * q[2];
   if (px < 5 || q[0] < -500 || q[0] > E.VW + 500) return;

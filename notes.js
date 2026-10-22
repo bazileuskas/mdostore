@@ -5,6 +5,13 @@
 // Newest first. v = the build, jp = the seal stamped beside it, pic = notes/<pic>.jpg, cap = what the picture shows.
 // A new update goes at the top of this list.
 const NOTES = [
+  { v: '0.8', name: 'Queue', jp: '列', date: '22 Oct 2026', pic: 'queue', cap: 'Your name, the queue, and servers with friends', items: [
+    'Queue up: a 1v1 against whoever else is queued, anywhere, phone or browser. You wait on the street and the duel comes to you; afterwards, a rematch, the next opponent, or out',
+    'A name to play under, on the Play screen',
+    'Your ping, at the top of the screen while you are online',
+    'Servers with friends now go through the game’s own server, the same one the phone app uses: no network can refuse them, and if your connection drops for a moment you get your seat back',
+    'Duels are played by the same rules as on the phone: a shorter ban and pick, and no awakened techniques',
+    'The Japanese lettering is back in its brush font'] },
   { v: '0.7v1', name: 'Transfer Codes', jp: '送', date: '22 Oct 2026', pic: 'transfer', cap: 'A code, good for twelve hours', items: [
     'Take your progress to another device: open the scroll in the corner, press Send my progress, and type the eight-letter code on the other device under Receive. It works for twelve hours',
     'If you are signed in, your account comes with it: log in with the same password on the other device',

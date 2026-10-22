@@ -228,7 +228,7 @@ const station = {
     }
     const s0 = P(-240, 470, z - 32), s1 = P(240, 420, z - 32);                      // the station name
     g.fillStyle = '#e8ecf0'; g.fillRect(s0[0], s0[1], s1[0] - s0[0], s1[1] - s0[1]);
-    g.fillStyle = '#12161d'; g.font = `${(s1[1] - s0[1]) * .7}px 'Vessel Syuku','Yu Mincho',serif`; g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.fillStyle = '#12161d'; g.font = `${(s1[1] - s0[1]) * .7}px 'Yuji Syuku','Yu Mincho',serif`; g.textAlign = 'center'; g.textBaseline = 'middle';
     g.fillText('渋谷', (s0[0] + s1[0]) / 2, (s0[1] + s1[1]) / 2);
     box(0, 480, z - 320, 2700, 70, 60, '#0d1016', '#080a0e');                       // a beam under the ceiling, where the lights hang
     for (let i = -4; i <= 4; i++) {                                                 // strip lights, one of them failing
