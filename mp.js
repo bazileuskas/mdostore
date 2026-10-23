@@ -272,7 +272,7 @@ function paint() {
     return;
   }
   const had = chip.querySelector('input'), val = had ? had.value : '', foc = had && document.activeElement === had;
-  chip.innerHTML = `<b>${kind === 'public' ? `Public server <u>${pub}</u>` : `Private server <u>${esc(code)}</u>`}&nbsp;·&nbsp;${n}&nbsp;/&nbsp;${MAX}</b><ul><li>${esc(myName())} (you)${JU.account.admin ? '<em>admin</em>' : ''}</li>${open().map(p => `<li>${esc(p.name)}${p.away ? ' <em>· away</em>' : ''}<span>${boss() && p.dev && p.a !== 2 ? `<button type="button" data-adm="${p.id}" class="${p.a === 1 ? 'has' : ''}" title="${p.a === 1 ? 'Take admin powers back from' : 'Give admin powers to'} ${esc(p.name)}">${sure === p.id ? 'Sure?' : p.a === 1 ? 'Admin ✓' : 'Admin'}</button>` : ''}${JU.pvp ? `<button type="button" data-duel="${p.id}" title="Challenge ${esc(p.name)} to a 1v1">1v1</button>` : ''}</span></li>`).join('')}</ul>
+  chip.innerHTML = `<b>${kind === 'public' ? `Public server <u>${pub}</u>` : `Private server <u>${esc(code)}</u>`}&nbsp;·&nbsp;${n}&nbsp;/&nbsp;${MAX}</b><ul><li>${esc(myName())} (you)${JU.account.admin ? '<em>admin</em>' : ''}</li>${open().map(p => `<li>${esc(p.name)}${p.away ? ' <em>· away</em>' : ''}<span>${boss() && p.dev && p.a !== 2 ? `<button type="button" data-adm="${p.id}" class="${p.a === 1 ? 'has' : ''}" title="${p.a === 1 ? 'Take admin powers back from' : 'Give admin powers to'} ${esc(p.name)}">${sure === p.id ? 'Sure?' : p.a === 1 ? 'Admin ✓' : 'Admin'}</button>` : ''}${JU.pvp ? `<button type="button" data-duel="${p.id}" title="Challenge ${esc(p.name)} to a 1v1">1v1</button>` : ''}</span></li>`).join('')}</ul>${JU.raid ? JU.raid.chip() : ''}
     <input maxlength="80" placeholder="/ to say something" aria-label="Say something to the server">${noteEl || (n < 2 ? (kind === 'public' ? '<small>Nobody else here yet. Anybody who picks a public server can drop in.</small>' : '<small>Give your friends the code above: Free Exploration, Private server, and they type it in.</small>') : JU.pvp ? '<small>1v1: challenge somebody to a duel.</small>' : '')}`;
   const inp = chip.querySelector('input'); inp.value = val; if (foc) inp.focus();
 }
@@ -285,8 +285,9 @@ chip.addEventListener('keydown', e => {              // typing here is typing, n
 });
 chip.addEventListener('pointerdown', e => e.stopPropagation());
 chip.addEventListener('click', e => {
-  const b = e.target.closest('[data-duel]'), nx = e.target.closest('[data-next]'), r = e.target.closest('[data-rm]'), out = e.target.closest('[data-out]'), ad = e.target.closest('[data-adm]');
-  if (ad) grant(ad.dataset.adm); else if (nx) next(); else if (r) rematch(); else if (out) JU.exitGame(); else if (b && JU.pvp) { JU.pvp.invite(b.dataset.duel); b.blur(); }
+  const b = e.target.closest('[data-duel]'), nx = e.target.closest('[data-next]'), r = e.target.closest('[data-rm]'), out = e.target.closest('[data-out]'), ad = e.target.closest('[data-adm]'), rd = e.target.closest('[data-raid]');
+  if (rd && JU.raid) { JU.raid.click(rd.dataset.raid); rd.blur(); }
+  else if (ad) grant(ad.dataset.adm); else if (nx) next(); else if (r) rematch(); else if (out) JU.exitGame(); else if (b && JU.pvp) { JU.pvp.invite(b.dataset.duel); b.blur(); }
 });
 addEventListener('keydown', e => { if (on && !quick && e.key === '/' && E.root.dataset.mode === 'street' && !(e.target instanceof HTMLInputElement)) { const inp = chip.querySelector('input'); if (inp) { e.preventDefault(); e.stopPropagation(); E.keys.clear(); inp.focus(); } } }, true);
 
@@ -321,7 +322,7 @@ const exit0 = JU.exitGame;
 JU.exitGame = () => { leave(); exit0(); };            // leaving the game leaves the server
 
 const to = (pid, m) => peers.has(pid) && post({ t: 'to', pid, m });
-const M = JU.mp = { card, codeCard, join, joinPublic, host, queue, leave, tick, fighters, draw, MAX, to, hear(t, fn) { heard[t] = fn; }, peer: pid => peers.get(pid), paint, myName,
+const M = JU.mp = { card, codeCard, join, joinPublic, host, queue, leave, tick, fighters, draw, MAX, to, hear(t, fn) { const was = heard[t]; heard[t] = was ? (p, s) => { was(p, s); fn(p, s); } : fn; }, peer: pid => peers.get(pid), paint, myName,
   all(m) { for (const pid of peers.keys()) to(pid, m); },      // (to everybody on the server)
   get kind() { return on ? kind : ''; }, get code() { return code; }, get pub() { return pub; },
   cut() { if (ws) ws.close(); },                     // (drops the line on purpose, for trying what a lost connection does: JU.mp.cut() in the console)

@@ -6,7 +6,7 @@
 <title>JUJUTSU UNLIMITEDS</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@400;600&family=Yuji+Syuku&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Comic+Neue:wght@700&family=Oswald:wght@400;600&family=Yuji+Syuku&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box}
 :root{
@@ -168,6 +168,14 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 .mp small{display:block;margin-top:.45em;color:rgba(244,239,228,.6)}
 .mp small.gone{margin:0;color:#ff8a98}
 .mp small.fine{color:#ffd23d}
+/* raids (raid.js): the button in a public server's list, and the raid's own line at the top of the fight */
+.mp .mpraid{display:block;width:100%;margin:.1em 0 .55em;padding:.5em .6em;border:1px solid #ff5a6e;background:rgba(255,36,64,.16);color:#ffd0d6;font:600 .9em/1 var(--f-ui);letter-spacing:.12em;text-transform:uppercase;cursor:pointer}
+.mp .mpraid:hover,.mp .mpraid:focus-visible{background:#ff5a6e;color:#fff}
+.game>.raidhud{position:absolute;left:50%;top:clamp(70px,13vh,130px);z-index:3;display:none;gap:.15em;justify-items:center;translate:-50% 0;padding:.45em 1.1em .55em;pointer-events:none;border-bottom:3px solid #ff5a6e;background:rgba(8,6,14,.78);color:#f4efe4;font:500 clamp(11px,min(1.15vw,2.1vh),18px)/1.2 var(--f-ui);text-align:center}
+.game[data-mode="fight"]>.raidhud.on{display:grid}
+.raidhud b{font:400 1.5em/1 var(--f-display);letter-spacing:.14em;text-transform:uppercase;color:#ff8a98}
+.raidhud span{letter-spacing:.12em;text-transform:uppercase}
+.raidhud i{font-style:normal;font-size:.85em;color:rgba(244,239,228,.65)}
 /* playing online (mp.js, from the phone app): the ping, the queue chip's buttons after a duel, the name to play under */
 .mpwho input{width:min(100%,16em)}
 .mp .mpbtns{display:flex;flex-wrap:wrap;gap:.4em;margin:.1em 0 .45em}
@@ -437,6 +445,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
   transform:skewX(-8deg);font:400 clamp(10px,min(1.15vw,2vh),22px)/1.05 var(--f-display);letter-spacing:.06em;text-transform:uppercase}
 .mv kbd{font:600 .8em/1 var(--f-ui);letter-spacing:.1em;color:var(--red)}
 .mv b{font-weight:400}
+.mv small.cnt{position:absolute;right:.55em;bottom:.35em;z-index:1;font:600 .74em/1 var(--f-ui);letter-spacing:.08em;color:#ffd27a;text-shadow:0 0 6px rgba(255,210,122,.6)}
 .mv::after{content:"";position:absolute;inset:0;background:rgba(0,0,0,.72);transform-origin:bottom;transform:scaleY(var(--cd,0))}
 .mv.act{border-color:#fff;background:rgba(255,36,64,.55)}
 .mv.rdy{animation:rdy .35s ease-out}
@@ -982,6 +991,8 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 .game[data-tech="cannon"] .tc .t-alt{display:grid}
 .tc .t-ratio{right:calc(var(--rx) + var(--b)*1.36);bottom:calc(var(--by) + var(--b)*2.12);width:calc(var(--b)*.7);border-color:#ffd27a;color:#ffd27a;font-size:.8em}
 .game[data-tech="ratio"] .tc .t-ratio{display:grid}
+.tc .t-rika{right:calc(var(--rx) + var(--b)*1.36);bottom:calc(var(--by) + var(--b)*2.12);width:calc(var(--b)*.7);border-color:#c9a0ff;color:#c9a0ff;font-size:.8em}
+.game[data-tech="reaper"] .tc .t-rika{display:grid}
 .tc .t-clan{right:calc(var(--rx) + var(--b)*2.1)}
 .tc .t-t{right:calc(var(--rx) + var(--b)*2.84)}
 .tc .t-v{right:calc(var(--rx) + var(--b)*3.58)}
@@ -1083,7 +1094,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
   </div>
 
   <div class="side" aria-hidden="true" lang="ja">領域展開</div>
-  <div class="hud tl"><b lang="ja">呪</b>Fan project · Build 0.14 · Private Servers</div>
+  <div class="hud tl"><b lang="ja">呪</b>Fan project · Build 0.15 · Ratio Awk × Love Reaper</div>
   <div class="hud bl">↑ ↓ Select &nbsp;·&nbsp; Enter Confirm</div>
   <div class="hud br">Title screen</div>
   <div class="acct" id="acct">
@@ -1225,7 +1236,7 @@ const sfx = (() => {
       node.connect(f); node = f;
     }
     env.gain.setValueAtTime(.0001, t); env.gain.exponentialRampToValueAtTime(o.vol, t + (o.attack || .003)); env.gain.exponentialRampToValueAtTime(.0001, t + dur);
-    node.connect(env); env.connect(a.destination);
+    node.connect(env); env.connect(o.out || a.destination);
     if (o.wet) { const w = a.createGain(); w.gain.value = o.wet; env.connect(w); w.connect(room()); }
     if (o.type === 'noise') src.start(t, Math.random()); else src.start(t);
     src.stop(t + dur + .05);
@@ -1430,6 +1441,70 @@ const sfx = (() => {
     evade() { voice({ type: 'noise', dur: .22, vol: .3, attack: .01, filt: ['bandpass', 1200, 5200], q: 1.2, wet: .2 }); voice({ f: [900, 1900], dur: .14, vol: .06, type: 'triangle' }); },
     // a limb going: a dull crack
     snap() { voice({ type: 'noise', dur: .05, vol: .45, filt: ['highpass', 1500] }); voice({ f: [420, 160], dur: .08, vol: .25, type: 'square', filt: ['lowpass', 1800] }); voice({ f: [140, 50], dur: .16, vol: .35 }); },
+    // the Black Flash past the ordinary one (Ratio Man's last of the chain, ratio.js): the crack, black lightning falling off it, all the air
+    // in the place at once, crackling, a ring in the ears, and the floor going a moment later. Built, so it is there online too (v: how loud)
+    bfMax(v = 1) {
+      voice({ type: 'noise', dur: .07, vol: .7 * v, filt: ['highpass', 2400], wet: .4 });
+      voice({ f: [3200, 140], dur: .55, vol: .2 * v, type: 'sawtooth', filt: ['bandpass', 4200, 600], q: 1.4, wet: .4 });
+      voice({ f: [1650, 90], dur: .35, vol: .12 * v, type: 'square', filt: ['lowpass', 5000, 400] });
+      voice({ f: [110, 22], dur: 1.9, vol: .85 * v, wet: .5 });
+      voice({ f: [55, 18], dur: 2.2, vol: .5 * v, type: 'triangle', attack: .02 });
+      voice({ type: 'noise', dur: 2, vol: .55 * v, attack: .01, filt: ['lowpass', 1800, 60], wet: .7 });
+      voice({ f: [2093, 2000], dur: 1.2, vol: .05 * v, wet: .8 }); voice({ f: [3136, 3050], dur: .9, vol: .03 * v, wet: .8 });
+      for (let i = 0; i < 10; i++) voice({ type: 'noise', at: .05 + Math.random() * .9, dur: .02 + Math.random() * .05, vol: (.12 + Math.random() * .12) * v, filt: ['bandpass', 1500 + Math.random() * 5000], q: 4 });
+      voice({ f: [80, 30], at: .45, dur: .9, vol: .45 * v, wet: .5 }); voice({ type: 'noise', at: .45, dur: .6, vol: .3 * v, filt: ['lowpass', 900, 80], wet: .6 });
+    },
+    // music, built here and played round and round for as long as it is wanted: tune(name) starts it and gives back { stop() }, which
+    // fades it out. The copy at home plays sounds/home-<name>.mp3 instead, when there is one (never on the public site).
+    // 'overtime': Ratio Man's awakening. Quick and tense, in D minor: drums, a walking bass, strings under it and a motif over them, four bars
+    tune(name) {
+      const none = { stop() {} };
+      if (!on) return none;
+      const c = HOME && load('home-' + name);
+      if (c && c.ok) {
+        const el = c.el.cloneNode(); el.loop = true; el.volume = .6;
+        try { const pl = el.play(); if (pl && pl.catch) pl.catch(() => {}); } catch (e) {}
+        return { stop() { let k = 0; const iv = setInterval(() => { el.volume = Math.max(0, .6 * (1 - ++k / 8)); if (k >= 8) { clearInterval(iv); el.pause(); } }, 100); } };
+      }
+      if (!a || name !== 'overtime') return none;
+      const bus = a.createGain(), t0 = a.currentTime;
+      bus.gain.setValueAtTime(.0001, t0); bus.gain.exponentialRampToValueAtTime(.34, t0 + .5); bus.connect(a.destination);
+      const S16 = 60 / 132 / 4, BAR = S16 * 16, f = m => 440 * Math.pow(2, (m - 69) / 12);
+      const ROOT = [38, 34, 36, 33], CH = [[62, 65, 69], [58, 62, 65], [60, 64, 67], [57, 61, 64]];      // Dm, B flat, C, A: round again
+      const BASS = [[0, 0, 2], [2, 0, 1], [3, 12, 1], [4, 0, 2], [6, 7, 2], [8, 0, 2], [10, 12, 1], [11, 0, 1], [12, 7, 2], [14, 10, 2]];      // [sixteenth, above the root, how long]
+      const LEAD = [[0, 74, 3], [3, 77, 3], [6, 76, 2], [8, 74, 4], [12, 69, 4], [16, 70, 3], [19, 74, 3], [22, 77, 2], [24, 76, 4], [28, 74, 4], [32, 72, 3], [35, 76, 3], [38, 79, 2],
+        [40, 77, 4], [44, 76, 4], [48, 81, 2], [50, 79, 2], [52, 77, 2], [54, 76, 2], [56, 73, 4], [60, 76, 4]];
+      let next = t0 + .08, step = 0, alive = true;
+      const pump = () => {                         // what is due in the next third of a second, put down now
+        if (!alive) return;
+        while (next < a.currentTime + .35) {
+          const at = Math.max(0, next - a.currentTime), s = step % 64, bar = s >> 4, b = s & 15, o = { out: bus };
+          if (b === 0 || b === 6 || b === 8 || b === 11) voice(Object.assign({ f: [130, 42], at, dur: .16, vol: .55 }, o));
+          if (b === 4 || b === 12) { voice(Object.assign({ type: 'noise', at, dur: .12, vol: .3, filt: ['bandpass', 1900], q: .9 }, o)); voice(Object.assign({ f: [210, 160], at, dur: .07, vol: .12, type: 'triangle' }, o)); }
+          if (!(b & 1)) voice(Object.assign({ type: 'noise', at, dur: b & 2 ? .05 : .03, vol: b & 2 ? .09 : .05, filt: ['highpass', 7000] }, o));
+          for (const [st, iv, len] of BASS) if (st === b) voice(Object.assign({ f: [f(ROOT[bar] + iv), f(ROOT[bar] + iv)], at, dur: len * S16 * .95, vol: .3, type: 'sawtooth', filt: ['lowpass', 520, 300] }, o));
+          if (b === 0) for (const m of CH[bar]) voice(Object.assign({ f: [f(m), f(m)], at, dur: BAR * .98, vol: .05, type: 'sawtooth', attack: .25, filt: ['lowpass', 1300, 900] }, o));
+          for (const [st, m, len] of LEAD) if (st === s) { voice(Object.assign({ f: [f(m), f(m)], at, dur: len * S16 * .9, vol: .07, type: 'square', filt: ['lowpass', 2600, 1800] }, o)); voice(Object.assign({ f: [f(m + 12), f(m + 12)], at, dur: len * S16 * .6, vol: .025, type: 'triangle' }, o)); }
+          next += S16; step++;
+        }
+      };
+      pump();
+      const iv = setInterval(pump, 100);
+      return { stop() { if (!alive) return; alive = false; clearInterval(iv); const t = a.currentTime; bus.gain.cancelScheduledValues(t); bus.gain.setValueAtTime(Math.max(.0001, bus.gain.value), t); bus.gain.exponentialRampToValueAtTime(.0001, t + .8); setTimeout(() => bus.disconnect(), 1200); } };
+    },
+    // Rika (reaper.js): 0 a growl, from something much bigger than the room; 1 her scream
+    rika(kind = 0) {
+      if (!kind) {
+        voice({ f: [62, 52], dur: 1.1, vol: .4, type: 'sawtooth', attack: .12, filt: ['lowpass', 380, 220], wet: .5 });
+        voice({ f: [65.5, 55], dur: 1, vol: .3, type: 'sawtooth', attack: .15, filt: ['lowpass', 420, 240], wet: .5 });
+        voice({ type: 'noise', dur: .9, vol: .16, attack: .1, filt: ['bandpass', 420, 260], q: 3, wet: .4 });
+        return;
+      }
+      voice({ f: [240, 140], dur: 1.1, vol: .22, type: 'sawtooth', attack: .05, filt: ['bandpass', 1300, 800], q: 2.5, wet: .6 });
+      voice({ f: [255, 150], dur: 1, vol: .18, type: 'square', attack: .08, filt: ['bandpass', 2200, 1100], q: 3, wet: .6 });
+      voice({ type: 'noise', dur: 1, vol: .3, attack: .04, filt: ['bandpass', 1800, 900], q: 1.5, wet: .5 });
+      voice({ f: [80, 30], dur: .9, vol: .5, wet: .5 });
+    },
     // a sound file of the player's own, by name: false when there is none (vengeful.js plays the Final Chapter's whole track this way)
     file(name, vol) { return clip(name, vol); },
     // the Final Chapter, built (when the clip its track was cut from is not here): 0 the counter's clang, 1 the ink thrown off him, 2 the page
@@ -2070,7 +2145,7 @@ window.JU = { sfx, flash, bolts: blackFlash, reduceMotion, startGame, exitGame, 
 // Load every game script fresh on each page load. The dev server sends no cache headers, so without this a reload
 // could run a mix of old and new files (new menu, old moves) while the game is being worked on.
 ['account.js', 'announce.js', 'game.js', 'fx2.js', 'chars.js', 'street.js', 'walk.js', 'foes.js', 'cuts.js', 'sukuna.js', 'school.js', 'story.js', 'story2.js', 'tech.js', 'tech_a.js',
-  'tech_b.js', 'sets.js', 'story3.js', 'cast2.js', 'script.js', 'naoya.js', 'ch45.js', 'ch67.js', 'clan.js', 'clan_a.js', 'clan_b.js', 'boss.js', 'bossfx.js', 'boss_a.js', 'boss_b.js', 'boss_c.js', 'training.js', 'choso.js', 'domain.js', 'domain2.js', 'mahito.js', 'combo.js', 'combat.js', 'cast3.js', 'ch810.js', 'ch1112.js', 'cast4.js', 'ch1316.js', 'cast5.js', 'ch1721.js', 'combat2.js', 'judge.js', 'awaken.js', 'alimit.js', 'ats.js', 'switcher.js', 'tools.js', 'smark.js', 'cast6.js', 'ch2230.js', 'plants.js', 'clash.js', 'block.js', 'cannon.js', 'tced.js', 'shibuya.js', 'kyoto.js', 'evasive.js', 'kokusen.js', 'mp.js', 'pvp.js', 'vengeful.js', 'haruta.js', 'ratio.js', 'notes.js', 'shop.js', 'ps.js', 'touch.js'].forEach(src => {
+  'tech_b.js', 'sets.js', 'story3.js', 'cast2.js', 'script.js', 'naoya.js', 'ch45.js', 'ch67.js', 'clan.js', 'clan_a.js', 'clan_b.js', 'boss.js', 'bossfx.js', 'boss_a.js', 'boss_b.js', 'boss_c.js', 'training.js', 'choso.js', 'domain.js', 'domain2.js', 'mahito.js', 'combo.js', 'combat.js', 'cast3.js', 'ch810.js', 'ch1112.js', 'cast4.js', 'ch1316.js', 'cast5.js', 'ch1721.js', 'combat2.js', 'judge.js', 'awaken.js', 'alimit.js', 'ats.js', 'switcher.js', 'tools.js', 'smark.js', 'cast6.js', 'ch2230.js', 'plants.js', 'clash.js', 'block.js', 'cannon.js', 'tced.js', 'shibuya.js', 'kyoto.js', 'evasive.js', 'kokusen.js', 'mp.js', 'pvp.js', 'vengeful.js', 'haruta.js', 'ratio.js', 'reaper.js', 'notes.js', 'shop.js', 'ps.js', 'raid.js', 'touch.js'].forEach(src => {
   const s = document.createElement('script');
   s.src = src + '?v=' + Date.now(); s.async = false;      // async = false keeps them running in this order
   document.body.appendChild(s);

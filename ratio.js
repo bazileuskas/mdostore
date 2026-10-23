@@ -16,13 +16,14 @@
    red), and Collapsed Fist is a Black Flash, 190; a Ratio again, and Collapsed Fist again, another; and then Ratio Kick, plain, is the last
    of it: 190, and a Black Flash past the ordinary kind (kokusen.js). Its sound at home is the anime's (sounds/home-nanami-final.mp3:
    myinstants' "Mahito Black Flash Effect (Season 2, Episode 20)"), never on the public site.
+   OVERTIME (Build 0.15): his awakening, G with the bar full. Below, over Ratio Flash.
    RATIO, the passive: E, and a line over his head with a mark on it at seven to three, tilted (never more than 20 degrees either way). E again
    as the ring crosses the red and the Ratio is his for ten seconds: the fifth strike of a chain is a Black Flash, and so is Cleaving Rush,
    which then breaks any guard, and Collapsed Fist lands harder (each of the three once) */
 (() => {
 'use strict';
 
-const E = JU.eng, g = E.g, F = E.F, cam = E.cam, H = E.hooks, POSE = E.POSE, LINE = E.LINE, V = JU.vfx, sfx = JU.sfx, M = E.MOVES, Z = JU.bossfx, Fi = JU.fights, EV = JU.evasive;
+const E = JU.eng, g = E.g, F = E.F, cam = E.cam, H = E.hooks, POSE = E.POSE, LINE = E.LINE, TOR = E.TOR, ZP = E.ZP, V = JU.vfx, sfx = JU.sfx, M = E.MOVES, Z = JU.bossfx, Fi = JU.fights, EV = JU.evasive;
 const { rnd, clamp, lerp } = E, TAU = Math.PI * 2, { shout } = JU.tech.tk, NANAMI = JU.cast2.NANAMI;
 const shake = v => { cam.shake = Math.max(cam.shake, v); };
 const exact = (o, n) => n / (o.dr || 1);            // a hit worth the stated amount, whatever the target is made of
@@ -36,8 +37,10 @@ const UP_T = 1.3, CHARGE = .4, REACH = 900, GAP = .15;      // how long after hi
 const RED = .7, TOL = .06, TILT = 20, QTE_CD = 3, ARMED_T = 10;      // the mark, seven to three along; how near the ring has to be to it; the most the line tilts (degrees); after a miss; how long a Ratio lasts
 const HOME = /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
 const SOUNDS = ['ratio-hit1', 'ratio-hit2', 'ratio-hit3', 'ratio-hit4', 'ratio-hit5', 'ratio-kick', 'ratio-swing1', 'ratio-swing2', 'ratio-swing3'];
-const JJS = ['jjs-hit1', 'jjs-hit2', 'jjs-hit3', 'jjs-hit4', 'jjs-hit5'], NET = ['home-nanami-bf', 'home-nanami-punch', 'home-nanami-final'];
-const finalSound = () => { if (!(HOME && sfx.file('home-nanami-final', 1))) { sfx.bf(); sfx.cannon(2); } };      // the chain's last kick
+const JJS = ['jjs-hit1', 'jjs-hit2', 'jjs-hit3', 'jjs-hit4', 'jjs-hit5'], NET = ['home-nanami-bf', 'home-nanami-punch', 'home-nanami-final', 'home-overtime'];
+// the chain's last kick, and Overtime's last: the Black Flash past the ordinary kind, built (sfx.bfMax) so it is heard online too; at home the clip
+// goes over it as well (Build 0.15: it had been the clip or the plain Black Flash)
+const finalSound = () => { if (HOME && sfx.file('home-nanami-final', 1)) sfx.bfMax(.55); else sfx.bfMax(); };
 const bfSound = () => { if (!(HOME && sfx.file('home-nanami-bf', 1))) sfx.bf(); };      // his Black Flash: the clip at home, the built one online
 
 /* ================= the blade: longer than his forearm and as wide as a hand, wrapped in pale cloth with dark spots, on a black grip ================= */
@@ -87,7 +90,10 @@ const PZ = {
   rtLow: [.16, 0, .4, .2, .45, -.4, 0],          rtRise: [-.06, -.22, 2.9, 1.9, .5, -.3, 0],    // the uppercut
   rtDrive: [.5, .2, .75, .45, .7, -.5, 0],                                                       // the slam
   rtCrouch: [-.22, 0, .55, .35, .5, -.6, 0],     rtRush: [.6, -.12, 1.5, -.7, 1, -.95, 0],      rtFollow: [.42, 0, 1.05, -.3, .62, -.5, 0],
-  rtKick: [-.42, 0, .5, -.8, 1.7, -.12, 0],      rtHigh: [-.55, -.1, .7, -1, 2.35, -.1, 0],     rtAxe: [-.3, .1, .9, -.6, 2.9, -.2, 0]
+  rtKick: [-.42, 0, .5, -.8, 1.7, -.12, 0],      rtHigh: [-.55, -.1, .7, -1, 2.35, -.1, 0],     rtAxe: [-.3, .1, .9, -.6, 2.9, -.2, 0],
+  otTug: [.04, -.1, .7, 2.6, .3, -.3, 0],        otPull: [.1, .08, .9, 1.45, .32, -.32, 0],     // Overtime: the knot pulled loose, and the tie off
+  otWrap: [.06, .18, 1.25, 1.55, .3, -.3, 0],    otFist: [.22, -.06, .8, 2.05, .5, -.42, 0],    // round the fist, and the fist up
+  otStand: [-.02, .14, .35, .3, .26, -.26, 0]                                                    // and at the end of it, the blade down
 };
 Object.assign(POSE, PZ);                            // (the plain strikes find their poses by name)
 
@@ -130,7 +136,7 @@ function dent(p, m) {                               // where he comes down
 }
 function m1(i) {
   const p = E.P1;
-  if (p.skin !== NANAMI) return true;               // in somebody else's body (a clan's): the ordinary strikes
+  if (!isNanami(p.skin)) return true;               // in somebody else's body (a clan's): the ordinary strikes
   prime();
   const bf = i === 4 && !!(armed && armed.m1);      // a Ratio on him: the fifth is a Black Flash, whichever fifth it is
   p.move = { def: i < 4 ? CUTS[i] : !p.ground ? DOWN : jumping() ? UP : bf ? FIN_BF : FIN, i, t: 0, bf: bf ? 1 : 0 };
@@ -392,8 +398,308 @@ const MOVES = {
   manji: { name: 'Coming soon', cd: 1, dur: .01, run() {} }
 };
 
+/* ================= OVERTIME (Build 0.15): his awakening. G with the bar full ================= */
+// He has done the hours he is paid for. "sigh, i gotta work over time" in a speech bubble (the user's own box, img/bubble.png, the words in
+// Comic Sans), the tie comes off his neck and goes round the fist without the blade, and then forty-five seconds of it: he hits harder (x1.2),
+// to music of his own (built here, sfx.tune('overtime'); at home sounds/home-overtime.mp3 instead, if one is put there). 1 and 2 are new:
+//   1 Ratio Flash, and under its name 1/4. With a Ratio on him (E, and E on the red) it is a Black Flash, and the Ratio is spent: 2/4. A Ratio
+//     again and it is a kick, a Black Flash, that throws them up: 3/4. A Ratio again, and from the air (jump first), a Black Flash coming down
+//     on them: 4/4. And a Ratio once more: the one that kills. The line across them breaks, and he stands in front of what is left of them,
+//     and clocks out. Each next step has to come within ten seconds of the last. Without a Ratio it is a cut with the blade, and counts for nothing
+//   2 Overtime Barrage: the wrapped fist, eight times, and once more as hard as he can
+const OT_T = 45, INTRO = 2.6, OT_POW = 1.2, STEP_T = 10, FLASH = [110, 120, 130], FLASH_PLAIN = 35, BARRAGE = [5, 40];      // how long it lasts; the tie going on first; how much harder he hits; how long each step of Ratio Flash waits; its Black Flashes; without a Ratio; the Barrage's punches and its last
+const TIE = '#e0c040', TIE2 = '#b8962a', TIE_DOT = '#5a4310';
+const SAY = 'sigh, i gotta work over time', COMIC = "'Comic Sans MS','Comic Neue','Chalkboard SE',cursive";
+// in Overtime: nothing at his neck but the shirt, and the fist without the blade wrapped in the tie
+const NANAMI_OT = Object.assign({}, NANAMI, {
+  armB: [NANAMI.armB[0], NANAMI.armB[1], TIE2, TIE, .36],
+  chest() {
+    g.fillStyle = '#5b83c4'; g.beginPath(); g.moveTo(8, -TOR); g.lineTo(30, -TOR); g.lineTo(30, -TOR + 40); g.closePath(); g.fill();
+    g.fillStyle = '#eef0f4'; g.beginPath(); g.moveTo(16, -TOR); g.lineTo(30, -TOR); g.lineTo(30, -TOR + 10); g.closePath(); g.fill();
+  } });
+const isNanami = s => s === NANAMI || s === NANAMI_OT;
+let ot = null;                                      // Overtime, while it lasts: { t (seconds left), intro (true while the tie goes on), step (Ratio Flash: 1 to 4), stepT (seconds left for the next), music, paused (the fight held for the tie), cine (the bars are up) }
+const otOn = () => !!(ot && !ot.intro);
+let watch = 0;                                      // (a clock that ends it if the fight is left with it still going)
+
+// the speech bubble: the user's box, in fast with a wobble, and the words in it. s: seconds it has been up; life: how long it stays
+const BUBBLE = new Image();
+BUBBLE.src = (window.JU_PICS && window.JU_PICS.bubble) || 'img/bubble.png';
+function bubble(p, s, life, text) {
+  if (!BUBBLE.naturalWidth || s < 0 || s > life) return;
+  const c = F(p.x + p.face * 170, p.y + 335 * (p.scale || 1)), k = c[2];
+  const pop = s < .08 ? s / .08 * 1.14 : s < .16 ? 1.14 - (s - .08) / .08 * .2 : s < .24 ? .94 + (s - .16) / .08 * .06 : 1;
+  const w = 150 * k * pop, h = w * BUBBLE.naturalHeight / BUBBLE.naturalWidth;
+  g.save(); g.globalAlpha = clamp((life - s) / .2, 0, 1);
+  g.drawImage(BUBBLE, c[0] - w / 2, c[1] - h / 2, w, h);
+  const fs = Math.max(1, Math.round(27 * k * pop));
+  g.font = `700 ${fs}px ${COMIC}`; g.fillStyle = '#111'; g.textAlign = 'center'; g.textBaseline = 'middle';
+  const lines = [];
+  let line = '';
+  for (const wd of text.split(' ')) { const tr = line ? line + ' ' + wd : wd; if (line && g.measureText(tr).width > w * .84) { lines.push(line); line = wd; } else line = tr; }
+  if (line) lines.push(line);
+  lines.forEach((ln, i) => g.fillText(ln, c[0], c[1] + (i - (lines.length - 1) / 2) * fs * 1.22));
+  g.restore();
+}
+
+// the tie: off his neck, round the fist, and the fist up. The fight waits for it (not a duel's)
+const WRAP = PZ.otWrap.slice();
+const TIE_ON = { dur: INTRO, run(p, m, t) {
+  p.vx = 0; p.rate = 20;
+  if (t < .45) p.target = PZ.otTug;
+  else if (t < .85) p.target = PZ.otPull;
+  else if (t < 1.9) { const w = Math.sin((t - .85) * 15); WRAP[3] = 1.55 + .35 * w; WRAP[2] = 1.25 + .08 * w; p.target = WRAP; p.rate = 30; }      // the other hand going round and round it
+  else p.target = t < 2.35 ? PZ.otFist : POSE.idle;
+  if (!m.a && t > .3) { m.a = 1; sfx.swish(1); }
+  if (!m.b && t > .85) { m.b = 1; p.skin = NANAMI_OT; sfx.swish(.7); }      // off his neck
+  if (m.b && t < 1.9) { const n = Math.floor((t - .85) / .26); if (n !== m.n) { m.n = n; sfx.swish(.5); } }
+  if (!m.d && t > 1.95) { m.d = 1; clockIn(p); }
+} };
+function awaken(p) {
+  if (ot || !isNanami(p.skin)) return;
+  ot = { t: OT_T, intro: true, step: 1, stepT: 0, music: null, paused: false, cine: false };
+  qte = null; nc = null;
+  if (!duel()) { if (!Fi.fight.paused) { Fi.fight.paused = true; ot.paused = true; } p.inv = Math.max(p.inv || 0, INTRO + .2); }
+  p.move = { def: TIE_ON, t: 0 };
+  E.zoomIn(INTRO); sfx.charge();
+  clearInterval(watch); watch = setInterval(() => { if (ot && E.root.dataset.mode !== 'fight') endOT(true); if (!ot) clearInterval(watch); }, 250);
+}
+function clockIn(p) {
+  ot.intro = false;
+  if (ot.paused) { ot.paused = false; Fi.fight.paused = false; }
+  labels(true);
+  ot.music = sfx.tune('overtime');
+  E.banner('時間外労働', 'OVERTIME'); sfx.charge(); sfx.punch(4, 1.2); shake(22); E.zoomIn(.5);
+  const w = E.hand(p, false);
+  V.ring(w[0], w[1], 260, GOLD, .35); V.sparks(w[0], w[1], 'gold', 16); E.addBlast(w[0], w[1], GRGB, 260);
+  if (Z) { Z.flash(GRGB, .3, .25); Z.flare(w[0], w[1], GRGB, 420, .3); }
+}
+function endOT(quiet) {
+  const o = ot;
+  if (!o) return;
+  ot = null; clearInterval(watch); shown = -1;
+  if (o.music) o.music.stop();
+  if (o.paused && Fi.fight.paused) Fi.fight.paused = false;
+  if (o.cine) E.root.classList.remove('cine');
+  const p = E.P1;
+  if (p.skin === NANAMI_OT) p.skin = NANAMI;
+  p.z = undefined;
+  labels(false);
+  if (on()) JU.tech.drain();
+  if (!quiet && on()) E.fx.push({ k: 2, x: p.x, y: p.y + 420, n: 'CLOCKED OUT', col: '#a9a4ae', t: 0, life: 1.2 });
+}
+// the hotbar in Overtime: Ratio Flash and the Barrage in 1 and 2, and Ratio Flash's step under its name
+function labels(v) {
+  if (!on()) return;
+  for (const k of ['strikes', 'crush']) { const d = v ? OTM[k] : MOVES[k]; E.hud.mv[k].querySelector('b').textContent = d.name; E.CD[k] = d.cd; E.cd[k] = 0; }
+  count();
+}
+function count() {
+  const el = E.hud.mv.strikes;
+  let s = el.querySelector('small.cnt');
+  if (!otOn() || !on()) { if (s) s.remove(); return; }
+  if (!s) { s = document.createElement('small'); s.className = 'cnt'; el.appendChild(s); }
+  const txt = ot.step + '/4';
+  if (s.textContent !== txt) s.textContent = txt;
+}
+// the awakening bar while it lasts: the time left
+const awkEl = document.getElementById('awk');
+let shown = -1;
+function awkBar() {
+  if (!otOn() || !on()) return;
+  const s = Math.max(0, Math.ceil(ot.t));
+  if (s === shown) return;
+  shown = s; awkEl.style.setProperty('--a', Math.max(0, ot.t / OT_T)); awkEl.classList.remove('full');
+  awkEl.lastElementChild.textContent = 'Overtime · ' + s + 's';
+}
+
+/* ---------- Ratio Flash ---------- */
+// a Black Flash of Ratio Flash's has landed: the Ratio is spent, and the next step is open for ten seconds
+function flashed(p, o) {
+  E.blackFlash(bfSound); weakCut(o); armed = null;
+  ot.step = Math.min(4, ot.step + 1); ot.stepT = STEP_T; count();
+  E.fx.push({ k: 2, x: p.x, y: p.y + 470, n: ot.step + ' / 4', col: GOLD, t: 0, life: 1.4 });
+  cue(ot.step === 3 ? 'RATIO, JUMP, THEN 1' : ot.step === 4 ? 'ONE MORE RATIO, THEN 1' : 'RATIO, THEN 1');
+}
+function slashHit(p, o, red) {                      // the blade through them, gold or red
+  const f = p.face, hs = o.scale || 1, x = o.x, y = o.y + 165 * hs, ang = f > 0 ? -.12 : Math.PI + .12;
+  sfx.punch(4, 1.1); sfx.cut(1.4); shake(red ? 28 : 20); E.zoomIn(.3);
+  V.slash(x, y, ang, 600, red ? INK : GOLD, 16); V.slash(x, y + 12, ang, 640, '#ffffff', 6);
+  V.sparks(x, y, red ? 'red' : 'gold', 14); V.ring(x, y, 250, red ? INK : GOLD, .25);
+  if (Z) Z.flare(x, y, red ? IRGB : GRGB, 380, .18);
+}
+function dashCut(p, m, t, o, dmg, red) {            // in low, through them with the blade, and on past
+  if (t < .08) { p.target = PZ.rtCrouch; p.vx = 0; return; }
+  if (t < .26) {
+    p.target = PZ.rtRush; p.vx = p.face * (red ? 2400 : 1900); smear(p, red ? 'red' : 'gold');
+    if (!m.sw) { m.sw = 1; sfx.swipe(2); if (red) sfx.cut(1); }
+    if (!m.done && E.tryHit(p, { reach: 225, dmg: exact(o, dmg), kb: 600, lift: 280, stun: .9, stop: red ? .3 : .12, heavy: 1, col: red ? INK : GOLD, fixed: 1, mute: 1, brk: red ? 1 : 0 })) { m.done = 1; slashHit(p, o, red); if (red) flashed(p, o); }
+    return;
+  }
+  p.vx = 0; p.target = t < .45 ? PZ.rtFollow : POSE.idle;
+  if (t > .7) E.endMove(p);
+}
+function flashKick(p, m, t, o) {                    // 2/4: a kick, a Black Flash, and up they go
+  const f = p.face;
+  if (t < .14) { p.target = POSE.kickWind; p.vx = 0; const w = foot(p); V.mote(w[0], w[1], 'red'); return; }
+  p.target = t < .42 ? PZ.rtHigh : POSE.idle; p.vx = t < .24 ? f * 700 : 0;
+  if (!m.sw) { m.sw = 1; sfx.swipe(2); E.fx.push({ k: 4, x: p.x + f * 70, y: p.y + 190, face: f, r: 140, col: 'rgba(255,36,64,.95)', t: 0, life: .2 }); }
+  if (!m.done && t < .32 && E.tryHit(p, { reach: 235, dmg: exact(o, FLASH[1]), kb: 260, lift: 1180, stun: .9, stop: .3, heavy: 1, col: INK, fixed: 1, mute: 1 })) { m.done = 1; kickHit(p, o, 1); flashed(p, o); }
+  if (t > .75) E.endMove(p);
+}
+function flashAir(p, m, t, o) {                     // 3/4: from the air, down on them
+  if (m.land !== undefined) { p.vx = 0; p.target = t < m.land + .2 ? PZ.rtDrive : POSE.idle; if (t > m.land + .34) E.endMove(p); return; }
+  if (p.ground && t > .02) { m.land = t; p.vy = 0; dent(p, m); return; }
+  if (t < .12) { p.target = PZ.rtWind4; p.vy = Math.max(p.vy, 80); p.vx *= .88; return; }
+  if (!m.aim) { m.aim = 1; p.face = o.x >= p.x ? 1 : -1; sfx.swipe(2); m.vx = clamp((o.x - p.face * 75 - p.x) / Math.max(.1, p.y / 1900), -1700, 1700); }
+  p.target = PZ.rtDrive; p.vy = -1900; p.vx = m.vx; smear(p, 'red');
+  if (!m.done && E.tryHit(p, { reach: 230, dmg: exact(o, FLASH[2]), kb: 160, stun: .9, stop: .3, heavy: 1, col: INK, fixed: 1, mute: 1 })) {
+    m.done = 1; m.bf = 1; slashHit(p, o, true); flashed(p, o);
+    if (!o.poise && !o.ko && !duel()) Object.assign(o, { ground: false, state: 'air', y: Math.max(o.y, 26), vy: -1900, vx: p.face * 160, bounced: false });      // and into the floor
+  }
+}
+// 4/4, and a Ratio: the one that kills. The line across them breaks
+function shatter(o, ang) {
+  const hs = o.scale || 1, cx = o.x, cy = o.y + 172 * hs, L = 125 * hs;
+  const bits = Array.from({ length: 10 }, (_, i) => { const u = -1 + (i + .5) / 5; return { x: cx + Math.cos(ang) * L * u, y: cy - Math.sin(ang) * L * u, vx: rnd(-520, 520), vy: rnd(200, 900), r: rnd(-14, 14), a: ang, l: L / 5 * .9 }; });
+  V.custom(1.3, (u, dt) => {
+    g.save(); g.lineCap = 'round'; g.globalAlpha = 1 - u * u;
+    for (const b of bits) {
+      b.vy -= 2200 * dt; b.x += b.vx * dt; b.y += b.vy * dt; b.a += b.r * dt;
+      const p0 = F(b.x - Math.cos(b.a) * b.l / 2, b.y + Math.sin(b.a) * b.l / 2), p1 = F(b.x + Math.cos(b.a) * b.l / 2, b.y - Math.sin(b.a) * b.l / 2);
+      g.beginPath(); g.moveTo(p0[0], p0[1]); g.lineTo(p1[0], p1[1]);
+      g.strokeStyle = 'rgba(7,6,12,.75)'; g.lineWidth = 6 * p0[2]; g.stroke(); g.strokeStyle = '#ffecbe'; g.lineWidth = 2.5 * p0[2]; g.stroke();
+    }
+    g.restore();
+  });
+  E.fx.push({ k: 2, x: o.x, y: o.y + 420 * hs, n: 'RATIO  BREAK', col: GOLD, t: 0, life: 1.6 });
+}
+function flashKill(p, m, t, o) {
+  const f = p.face;
+  if (m.done) return after(p, m, t, o);
+  if (t < .5) {                                     // gathering it, the line across them burning
+    p.target = PZ.rtWind5; p.vx = 0; p.rate = 26;
+    if (!m.c) { m.c = 1; sfx.rise(.5); if (Z) Z.dim(.55, .9); }
+    const w = E.hand(p, true); V.mote(w[0], w[1], 'red'); V.mote(w[0], w[1], 'gold');
+    return;
+  }
+  if (t < .68) {
+    p.target = PZ.rtCut5; p.vx = f * 2600; smear(p, 'red');
+    const gap = (o.x - p.x) * f;
+    if (gap > -40 && gap < 270 && can(o) && Math.abs(o.y - p.y) < 220) { m.done = 1; m.at = t; m.away = f; kill(p, o); }
+    return;
+  }
+  p.vx = 0; p.target = POSE.idle;                   // nothing there: the Ratio is still his
+  if (t > .9) E.endMove(p);
+}
+function kill(p, o) {
+  const ang = armed ? armed.ang : .8;
+  armed = null;
+  shatter(o, ang);
+  const k = (o.dr || 1) * (H.power ? Math.max(.01, H.power({ dmg: 1, fixed: 1 }, o)) : 1);      // (whatever it would be cut down by, it is all of what they have)
+  E.applyHit(o, p.face, { dmg: Math.max(1, o.hp) * 1.01 / k, kb: 300, lift: 260, stun: 1, stop: .2, heavy: 1, col: INK, fixed: 1, mute: 1, kill: 1 });
+  JU.kokusen.insane(o, { snd: () => { finalSound(); sfx.cut(2.2); }, acc: GRGB, name: 'OVERTIME', size: 340, split: -ang });
+}
+// and then: on past them, back toward us, and standing in front of what is left of them with the blade down. The bars come down for it
+const WALKBACK = [0, .05, .9, .7, .35, -.35, 0];
+function after(p, m, t, o) {
+  const s = t - m.at, f = m.away;
+  p.face = f; p.vx = 0;
+  if (s < .25) { p.target = PZ.rtCut5; p.x += f * 900 * (1 - s / .25) / 60; return; }
+  if (!m.cine) {
+    m.cine = 1; ot.cine = true; E.root.classList.add('cine'); E.zoomIn(1.4);
+    if (!duel() && !Fi.fight.paused) { Fi.fight.paused = true; ot.paused = true; }
+  }
+  const u = clamp((s - .25) / .45, 0, 1), e = u * u * (3 - 2 * u);
+  p.z = ZP - 170 * e; p.x += (o.x + f * 70 - p.x) * Math.min(1, .12 * e);
+  p.target = s < .7 ? WALKBACK : PZ.otStand; p.rate = 14;
+  if (s > .9 && !m.glint) { m.glint = 1; const c = [p.x + f * 22, p.y + 228]; V.sparks(c[0], c[1], 'gold', 6); E.addSpark(c[0], c[1], '#fff4d8', 60); sfx.tap(1); }
+  if (s > 1.55) { E.endMove(p); endOT(); }
+}
+
+/* ---------- Overtime Barrage: the wrapped fist ---------- */
+const fists = [];
+function barrage(p, m, t) {
+  const o = E.P2, f = p.face, D = .09;
+  if (t < .15) { p.target = POSE.divWind; p.vx = f * 160; p.rate = 30; return; }
+  const n = Math.floor((t - .15) / D);
+  p.rate = 50;
+  if (n < 8) {
+    p.target = n & 1 ? POSE.jab : POSE.cross; p.vx = f * 110;
+    if (n !== m.n) {
+      m.n = n; sfx.swipe(n & 1);
+      const w = E.hand(p, false); fists.push({ x: w[0] + f * rnd(20, 90), y: w[1] + rnd(-50, 50), face: f, t: 0 });
+      if (E.tryHit(p, { reach: 180, dmg: exact(o, BARRAGE[0]), kb: 50, stun: .55, stop: .02, col: TIE, fixed: 1, mute: 1 })) { sfx.punch(n % 4, .8); V.sparks(o.x - f * 20, o.y + 170 * (o.scale || 1), 'gold', 3); }
+    }
+    return;
+  }
+  if (!m.last) {
+    m.last = 1; sfx.swipe(2);
+    for (let i = 0; i < 3; i++) { const w = E.hand(p, false); fists.push({ x: w[0] + f * (40 + i * 40), y: w[1], face: f, t: -i * .03, big: 1 }); }
+    if (E.tryHit(p, { reach: 205, dmg: exact(o, BARRAGE[1]), kb: 980, lift: 380, stun: .9, stop: .16, heavy: 1, col: GOLD, fixed: 1, mute: 1 })) {
+      const x = o.x - f * 20, y = o.y + 165 * (o.scale || 1);
+      sfx.punch(4, 1.2); shake(24); E.zoomIn(.3); E.addBlast(x, y, GRGB, 300); V.ring(x, y, 280, GOLD, .3); V.sparks(x, y, 'gold', 16);
+      if (Z) Z.flare(x, y, GRGB, 400, .2);
+    }
+  }
+  p.target = t < .15 + 8 * D + .3 ? POSE.cross : POSE.idle; p.vx = 0;
+  if (t > 1.35) E.endMove(p);
+}
+function drawFists(dt) {
+  for (let i = fists.length - 1; i >= 0; i--) {
+    const q = fists[i];
+    if ((q.t += dt) > .16) { fists.splice(i, 1); continue; }
+    if (q.t < 0) continue;
+    const c = F(q.x, q.y), k = c[2] * (q.big ? 1.9 : 1.45), a = 1 - q.t / .16;
+    g.save(); g.translate(c[0], c[1]); g.scale(q.face * k, k); g.globalAlpha = .8 * a;
+    g.fillStyle = 'rgba(255,236,170,.35)'; g.fillRect(-46, -6, 30, 12);      // the blur behind it
+    g.fillStyle = TIE; g.strokeStyle = LINE; g.lineWidth = 3; g.beginPath(); g.roundRect(-16, -13, 30, 26, 6); g.fill(); g.stroke();
+    g.fillStyle = TIE_DOT; for (const [x, y] of [[-8, -6], [2, 2], [8, -7], [-4, 7]]) { g.beginPath(); g.arc(x, y, 2, 0, TAU); g.fill(); }
+    g.restore();
+  }
+}
+// the tie, as it comes off him: from the knot to his hand, and then round and round the fist
+function drawTie(p, m) {
+  const t = m.t;
+  if (t < .45 || t > 1.95) return;
+  const w = E.hand(p, false), h = F(w[0], w[1]), k = h[2];
+  g.save(); g.lineCap = 'round'; g.lineJoin = 'round';
+  if (t < .85) {                                    // pulled loose, and off
+    const n = F(p.x + p.face * 20, p.y + 182), u = (t - .45) / .4, mx = (n[0] + h[0]) / 2, my = Math.max(n[1], h[1]) + 30 * k * (1 - u);
+    g.beginPath(); g.moveTo(n[0], n[1]); g.quadraticCurveTo(mx, my, h[0], h[1]);
+    g.strokeStyle = LINE; g.lineWidth = 10 * k; g.stroke(); g.strokeStyle = TIE; g.lineWidth = 6 * k; g.stroke();
+  } else {                                          // round the fist, more of it each time
+    const u = (t - .85) / 1.05, turns = 1 + Math.floor(u * 4), spin = (t - .85) * 15;
+    for (let i = 0; i < turns; i++) {
+      g.beginPath(); g.ellipse(h[0], h[1] + (i - 1.5) * 6 * k, 19 * k, 7 * k, .5, spin + i, spin + i + Math.PI * 1.4);
+      g.strokeStyle = LINE; g.lineWidth = 8 * k; g.stroke(); g.strokeStyle = i & 1 ? TIE2 : TIE; g.lineWidth = 5 * k; g.stroke();
+    }
+    const tail = [0, 1, 2].map(i => [h[0] - p.face * (14 + i * 14) * k, h[1] + (10 + Math.sin(spin + i) * 9) * k]);      // the end of it, not yet round
+    g.beginPath(); g.moveTo(h[0], h[1]); for (const [x, y] of tail) g.lineTo(x, y);
+    g.strokeStyle = LINE; g.lineWidth = 9 * k; g.stroke(); g.strokeStyle = TIE; g.lineWidth = 5 * k; g.stroke();
+  }
+  g.restore();
+}
+
+const OTM = {
+  strikes: { name: 'Ratio Flash', cd: 2, dur: 3.2, glow: 'gold', run(p, m, t) {
+    const o = E.P2;
+    if (!m.kind) {
+      m.kind = !armed || !ot ? 'plain' : ['bf', 'kick', 'air', 'kill'][ot.step - 1];
+      if (m.kind === 'air' && p.ground) m.kind = 'plain';
+      sfx.charge(); shout(p, m.kind === 'plain' ? '七三' : m.kind === 'kill' ? '十劃' : '黒閃', m.kind === 'plain' ? GOLD : INK);
+    }
+    if (m.kind === 'plain') dashCut(p, m, t, o, FLASH_PLAIN, false);
+    else if (m.kind === 'bf') dashCut(p, m, t, o, FLASH[0], true);
+    else if (m.kind === 'kick') flashKick(p, m, t, o);
+    else if (m.kind === 'air') flashAir(p, m, t, o);
+    else flashKill(p, m, t, o);
+  } },
+  crush: { name: 'Overtime Barrage', cd: 9, dur: 1.4, glow: 'gold', run: barrage }
+};
+
 JU.tech.add('ratio', { name: 'Ratio Man', jp: '十劃', mark: '七', who: 'Ratio Technique', odds: 0, col: GOLD, glow: 'gold', moves: MOVES,
-  early: true, skin: NANAMI, as: ['Ratio Man', '十劃'], m1,
+  early: true, skin: NANAMI, as: ['Ratio Man', '十劃'], m1, awaken, awkName: 'Overtime', awkKeep: true,
   hint: '<b>E</b> Ratio, <b>E</b> again on the red: a Black Flash on the 5th strike and on <b>1</b>, <b>3</b> harder · <b>2</b> in the air, or after an uppercut · after <b>1</b>\'s Black Flash: Ratio, <b>3</b>, Ratio, <b>3</b>, <b>2</b>' });
 const DEF = JU.tech.TECH.ratio, on = () => JU.tech.active === DEF;
 const LAUNCHERS = new Set([UP, FIN, FIN_BF, MOVES.strikes]);      // what Ratio Kick can be thrown straight out of: the uppercut, the fifth strike, Cleaving Rush
@@ -402,7 +708,9 @@ const free = p => !p.move && !p.ps && !p.dead && !(p.dashT > 0);
 /* ---------- wiring ---------- */
 let primed = false;
 function prime() { if (!primed) { primed = true; sfx.preload(HOME ? SOUNDS.concat(JJS, NET) : SOUNDS); } }
-const moveFx0 = H.moveFx, press0 = H.press, tick0 = H.tick, fx0 = H.fx, under0 = H.under, reset0 = H.reset, start0 = H.fightStart;
+const moveFx0 = H.moveFx, press0 = H.press, tick0 = H.tick, fx0 = H.fx, under0 = H.under, reset0 = H.reset, start0 = H.fightStart, move0 = H.move, pow0 = H.power;
+H.move = k => (otOn() && on() && OTM[k]) || (move0 ? move0(k) : null);      // in Overtime, 1 and 2 are its own
+H.power = (h, o) => (pow0 ? pow0(h, o) : 1) * (otOn() && on() && o === E.P2 ? OT_POW : 1);
 H.moveFx = (p, m) => {
   if (moveFx0) moveFx0(p, m);
   if (p === E.P1 && m.def.rt && m.done && !m.snd) { m.snd = 1; landed(p, m); }
@@ -410,9 +718,14 @@ H.moveFx = (p, m) => {
 H.press = (a, inScene) => {
   if (!inScene && on() && E.root.dataset.mode === 'fight') {
     const p = E.P1;
+    if (ot && (ot.intro || ot.cine)) return true;      // the tie going on, or the end of it being watched: nothing else for a moment
     if (a === 'ok') { if (!p.dead) { if (qte && !qte.res) judge(p); else call(p); } return true; }      // E: the meter, and E again to stop it
+    if (otOn() && a === 'strikes' && E.cd.strikes <= 0 && free(p)) {
+      if (ot.step === 3 && armed && p.ground) { cue('JUMP, THEN 1'); return true; }      // the third one is from the air
+      if (!p.ground) { E.cd.strikes = E.CD.strikes; p.move = { def: OTM.strikes, key: 'strikes', t: 0 }; E.hud.mv.strikes.classList.add('act'); return true; }
+    }
     const m = p.move, cancel = m && m.done && LAUNCHERS.has(m.def) && !p.ps && !p.dead;      // straight out of whatever threw them, once it has landed: it does not wait for him to finish it
-    if (a === 'crush' && E.cd.crush <= 0 && (cancel || (!p.ground && free(p)))) {      // (and Ratio Kick can be started in the air)
+    if (!otOn() && a === 'crush' && E.cd.crush <= 0 && (cancel || (!p.ground && free(p)))) {      // (and Ratio Kick can be started in the air. Not in Overtime: 2 is its Barrage)
       if (cancel) E.endMove(p);
       E.cd.crush = E.CD.crush; p.move = { def: MOVES.crush, key: 'crush', t: 0 }; E.hud.mv.crush.classList.add('act');
       return true;
@@ -431,6 +744,15 @@ H.tick = dt => {
   if (up && E.T - up.at > UP_T) up = null;
   if (nc && ((nc.t -= dt) <= 0 || E.P2.ko)) nc = null;
   if (E.P1.dead) qte = armed = nc = null;
+  if (ot) {                                         // Overtime: its clock, and Ratio Flash's
+    if (!ot.intro && !ot.cine) {
+      ot.t -= dt;
+      if (ot.step > 1 && (ot.stepT -= dt) <= 0) { ot.step = 1; count(); cue('RATIO FLASH  ·  1/4'); }
+      if (Math.random() < dt * 14) { const p = E.P1; V.mote(p.x + rnd(-60, 60), p.y + rnd(40, 260), 'gold'); }
+    }
+    if (E.P1.dead || ot.t <= 0) endOT(E.P1.dead);
+    else awkBar();
+  }
 };
 H.under = dt => {
   under0(dt);
@@ -443,8 +765,10 @@ H.under = dt => {
 H.fx = dt => {
   fx0(dt);
   if (slabs.length) drawSlabs(dt);
-  const p = E.P1, o = E.P2, mine = on() && p.skin === NANAMI;
-  for (const f of [o, p]) if (f.skin === NANAMI && !(f.alpha < .05)) blade(f, f === p && mine && armed ? (p.move && p.move.bf ? 'red' : 'gold') : null);
+  if (fists.length) drawFists(dt);
+  const p = E.P1, o = E.P2, mine = on() && isNanami(p.skin);
+  for (const f of [o, p, ...(JU.raid ? JU.raid.allies() : [])]) if (isNanami(f.skin) && !(f.alpha < .05)) blade(f, f === p && mine && armed ? (p.move && p.move.bf ? 'red' : 'gold') : null);
+  if (ot && p.move && p.move.def === TIE_ON) { drawTie(p, p.move); bubble(p, p.move.t - .1, 2.2, SAY); }
   if (!mine) return;
   if (armed && !o.ko && !(o.alpha < .05)) drawWeak(o);
   if (qte) drawMeter(p);
@@ -461,12 +785,16 @@ H.fx = dt => {
     g.restore();
   }
 };
-const clear = () => { qte = armed = up = nc = null; qcd = 0; trail.length = slabs.length = 0; };
+const clear = () => { endOT(true); qte = armed = up = nc = null; qcd = 0; trail.length = slabs.length = fists.length = 0; };
 H.reset = () => { reset0(); clear(); };
 H.fightStart = (cfg, wave) => { start0(cfg, wave); if (!wave) clear(); else qte = null; if (on()) prime(); };
+
+const exit0 = JU.exitGame;
+JU.exitGame = () => { endOT(true); exit0(); };
 
 JU.ratio = { MOVES, CUTS, FIN, UP, DOWN, RED, TOL, TILT, RUSH, KICK, AIR, TRI, TRI_MORE, M1D, M1_BF, FIST, FIST_R, get slabs() { return slabs.length; },
   get qte() { return qte && { u: +clamp(qte.t / qte.dur, 0, 1).toFixed(3), dur: qte.dur, tilt: +(qte.tilt * 180 / Math.PI).toFixed(1), res: qte.res }; },
   get armed() { return armed && { m1: armed.m1, rush: armed.rush, fist: armed.fist, t: +armed.t.toFixed(1) }; }, set armed(v) { armed = v ? { m1: true, rush: true, fist: true, t: ARMED_T, ang: .8 } : null; },
-  get up() { return up && { at: up.at }; }, get qcd() { return qcd; }, get chain() { return nc && { n: nc.n, t: +nc.t.toFixed(2), ratio: nc.ratio }; } };
+  get up() { return up && { at: up.at }; }, get qcd() { return qcd; }, get chain() { return nc && { n: nc.n, t: +nc.t.toFixed(2), ratio: nc.ratio }; },
+  OTM, NANAMI_OT, get ot() { return ot && { t: +ot.t.toFixed(1), intro: ot.intro, step: ot.step, stepT: +ot.stepT.toFixed(1), cine: ot.cine }; }, endOT };
 })();

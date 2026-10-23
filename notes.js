@@ -5,6 +5,14 @@
 // Newest first. v = the build, jp = the seal stamped beside it, pic = notes/<pic>.jpg, cap = what the picture shows.
 // A new update goes at the top of this list.
 const NOTES = [
+  { v: '0.15', name: 'Ratio Awk × Love Reaper', jp: '純愛', date: '23 Oct 2026', pic: 'reaper', cap: 'Rika, all of her, throwing him at them', items: [
+    'Love Reaper, in Early Access: Yuta, with a katana, and Rika behind him, 85% see-through, until she is wanted. Right click switches to her moveset and back (on a touch screen, the Rika button)',
+    'Cleaving Love (1): with the katana, a barrage of cuts, 90 in all. With Rika, she throws him at them with the sword out in front: it cuts them (80), she slams them into the floor (20), and he cuts them again (30). After her version it waits 20 seconds. 2, 3 and 4 are still to come',
+    'Rika is drawn new: her hair, her mouth, her arms and claws, and sounds of her own. Chapter 15 has the new Rika too',
+    'Ratio Man has an awakening, Overtime (G with the bar full): "sigh, i gotta work over time" in a speech bubble, the tie comes off his neck and goes round his fist, and then 45 seconds of hitting 20% harder to music of its own',
+    'In Overtime, 1 is Ratio Flash, with 1/4 under it. With a perfect Ratio it is a Black Flash (2/4); a Ratio again, a kicking Black Flash (3/4); a Ratio again and from the air, another (4/4); and one more Ratio: a one-shot. The ratio breaks, and he stands in front of what is left of them. 2 is Overtime Barrage: the wrapped fist, eight times and once more as hard as he can',
+    'The last Black Flash of Ratio Man’s chain (and of Overtime) has a sound of its own, and it plays online too',
+    'Raids, in public servers: "Start a raid" in the list of who is on the server, and everybody else there has ten seconds to join. Three waves of curses and then Mahoraga, several at once and from both sides; the more players, the more of them and the harder they are. Go down and you are back at the next wave with half your health; everybody down and the raid has failed. Clear it for 50 tokens each'] },
   { v: '0.14', name: 'Private Servers', jp: '私設', date: '23 Oct 2026', pic: 'servers', cap: 'Up on an arch of pillars, and a friend on the crates', items: [
     'Free Exploration now asks where to. A public server: anybody playing can drop in, five to a server, and when one is full the next one opens. Or a private server: your own, under a code to give your friends (or type a friend’s code to join theirs)',
     'A private server has the + menu (the + at the right of the screen, or P): fly (Space up, Ctrl down), no cooldowns, god mode, an awakening that is always full, moon gravity, damage ×2, ×5 or ×10, the game at half speed or up to twice as fast, and your health set to whatever you like',

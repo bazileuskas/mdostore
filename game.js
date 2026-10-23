@@ -717,8 +717,10 @@ function updatePlayer(dt) {
   blend(p, dt);
 }
 
-function updateFoe(dt) {
-  const o = P2, p = P1;
+// o: the opponent, or (in a raid, raid.js) any of the others there are; one somebody else's game runs (net) is only moved as it says
+function updateFoe(dt, o = P2) {
+  const p = P1;
+  if (o.net) { if (hooks.netFoe) hooks.netFoe(o, dt); blend(o, dt); return; }
   o.lastHit += dt; o.rate = 16;
   if (o.inv > 0) o.inv -= dt;
   const fk = hooks.foeRate ? hooks.foeRate(o) : 1;   // slowed: it thinks, walks and swings at this share of its usual speed
@@ -769,6 +771,8 @@ function update(dt, real) {
     for (const k in cd) if (cd[k] > 0) cd[k] = Math.max(0, cd[k] - dt);
     for (let i = timers.length - 1; i >= 0; i--) { const t = timers[i]; if ((t.t -= dt) <= 0) { timers.splice(i, 1); t.fn(); } }
     updatePlayer(dt); updateFoe(dt);
+    const more = hooks.foes && hooks.foes();     // (more than one at a time: a raid's, raid.js)
+    if (more) for (const x of more) if (x !== P2) updateFoe(dt, x);
     // bodies can't overlap (a dash slips through)
     const dx = P2.x - P1.x, min = 39 + 39 * (P2.scale || 1);
     if (P1.ground && P2.ground && P2.state !== 'down' && P1.dashT <= 0 && Math.abs(dx) < min && Math.abs(P1.y - P2.y) < 120) {
@@ -978,6 +982,7 @@ JU.eng = {
   get px() { return DPR * S * cam.zoom; },          // (what a shadowBlur of one view unit has to be set to)
   stop(t) { stopT = Math.max(stopT, t); }, slow(t) { slowT = Math.max(slowT, t); }, zoomIn(t) { zoomT = Math.max(zoomT, t); },
   setScene(sc) { scene = sc; root.dataset.mode = sc ? sc.mode : 'fight'; },
+  setFoe(o) { P2 = o; },                          // which of several is the one he is fighting (raid.js)
   get VW() { return VW; }, get VH() { return VH; }, get GY() { return GY; }, get HY() { return HY; }, get S() { return S; },
   get T() { return T; }, get ZNEAR() { return ZNEAR; }, get P1() { return P1; }, get P2() { return P2; }
 };
