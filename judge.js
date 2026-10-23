@@ -66,7 +66,7 @@ function drawGhosts(dt) {                           // a dark shape of him with 
     h.t += dt;
     if (h.t >= .3) { ghosts.splice(i, 1); continue; }
     const a = 1 - h.t / .3, c = F(h.f.x, h.f.y + 160);
-    g.save(); g.filter = 'brightness(0)'; E.drawFighter(h.f, .5 * a); g.restore(); g.filter = 'none';
+    E.drawFighter(E.over(h.f, E.flat('#000000')), .5 * a);
     lit(() => E.glow(E.GLOW.red, c[0], c[1], 380 * c[2], .45 * a));
   }
 }

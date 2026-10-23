@@ -104,18 +104,19 @@ function grip(f) {
   const a = f.pose[2] - f.pose[6], w = E.hand(f, true), dx = Math.sin(a) * f.face * (f.spin === undefined ? 1 : f.spin), dy = -Math.cos(a);
   return { dx, dy, at: (L, v = 0) => [w[0] + dx * L - dy * v, w[1] + dy * L + dx * v] };
 }
-function drawSpear(f) {
-  const s = grip(f), pt = (L, v) => F(...s.at(L, v)), k = pt(0)[2], st = stain;
+function drawSpear(f, tone) {                      // (tone: all of it one colour, for a shade of him)
+  const s = grip(f), pt = (L, v) => F(...s.at(L, v)), k = pt(0)[2], st = tone ? 0 : stain, C = col => tone || col;
   const rod = (L0, L1, wd, col) => { const a = pt(L0), b = pt(L1); g.beginPath(); g.moveTo(a[0], a[1]); g.lineTo(b[0], b[1]); g.strokeStyle = LINE; g.lineWidth = (wd + 4) * k; g.stroke(); g.strokeStyle = col; g.lineWidth = wd * k; g.stroke(); };
   const shape = (pts, fill, edge) => {
     g.beginPath(); pts.forEach(([L, v], i) => { const c = pt(L, v); if (i) g.lineTo(c[0], c[1]); else g.moveTo(c[0], c[1]); }); g.closePath();
     g.fillStyle = fill; g.fill(); if (edge) { g.lineWidth = 2.5 * k; g.strokeStyle = LINE; g.stroke(); }
   };
   g.lineCap = 'round'; g.lineJoin = 'round';
-  rod(BUTT, FERRULE, 7, SHAFT);                     // the staff, black lacquer
-  rod(BUTT, BUTT + 10, 9, GOLD);                    // a cap on the end of it
-  rod(FERRULE, BASE + 2, 12, GOLD);                 // and the holder the nib sits in
-  shape([[BASE, -12], [BASE + 24, -16], [TIP - 16, -5], [TIP, 0], [TIP - 16, 5], [BASE + 24, 16], [BASE, 12]], NIB, true);       // the nib: a G-pen's
+  rod(BUTT, FERRULE, 7, C(SHAFT));                  // the staff, black lacquer
+  rod(BUTT, BUTT + 10, 9, C(GOLD));                 // a cap on the end of it
+  rod(FERRULE, BASE + 2, 12, C(GOLD));              // and the holder the nib sits in
+  shape([[BASE, -12], [BASE + 24, -16], [TIP - 16, -5], [TIP, 0], [TIP - 16, 5], [BASE + 24, 16], [BASE, 12]], C(NIB), true);       // the nib: a G-pen's
+  if (tone) { g.lineCap = 'butt'; return; }
   if (st > .02) {                                   // what it has been through, and (with the blood on) running back down it
     g.globalAlpha = Math.min(1, st); shape([[BASE + 38, -12], [TIP - 16, -5], [TIP, 0], [TIP - 16, 5], [BASE + 38, 12]], wet(), false);
     if (gore() && st > .4) { const a = pt(BASE + 40, 0), b = pt(BASE - 14, 0); g.strokeStyle = BLOOD; g.lineWidth = 4 * k; g.beginPath(); g.moveTo(a[0], a[1]); g.lineTo(lerp(a[0], b[0], st), lerp(a[1], b[1], st)); g.stroke(); }
@@ -647,25 +648,28 @@ function dodge(p, face, always) {
   E.fx.push({ k: 2, x: p.x, y: p.y + 330, n: 'DODGE', col: always ? '#ff8a98' : '#cfc6ff', t: 0, life: .5 });
   return true;
 }
+// (drawn flat, in one colour, and lit round the edge with a shadow: through a canvas filter, as they were, every dodge made the game crawl)
+const DARK = E.flat('#000000', '#0b0712'), PALE = E.flat('#a9a6b3', '#d3d0db'), HALO = 'rgba(140,90,255,.75)';
+function drawShade(f, a, pale) {
+  const spear = SPEARMEN.has(f.skin), tone = pale ? '#c4c1cc' : '#000000';
+  g.save();
+  if (!pale) { g.shadowColor = HALO; g.shadowBlur = 5 * E.px; }
+  E.drawFighter(E.over(f, pale ? PALE : DARK), a);
+  if (spear) { g.globalAlpha = a; drawSpear(f, tone); g.globalAlpha = 1; }
+  g.restore();
+}
 function drawShades(dt) {                           // under the fighters: the afterimages, black with a little violet round them (or pale, the enemy's)
   if (!shades.length && !(on() && guardUp())) return;
   for (let i = shades.length - 1; i >= 0; i--) {
     const s = shades[i];
     if ((s.t += dt) >= s.life) { shades.splice(i, 1); continue; }
-    const a = (s.pale ? .55 : .8) * (1 - s.t / s.life) ** 1.2;
-    g.save(); g.filter = s.pale ? 'grayscale(1) brightness(1.7) contrast(.55)' : 'brightness(0) drop-shadow(0 0 5px rgba(140,90,255,.75))';
-    E.drawFighter(s.f, a);
-    if (SPEARMEN.has(s.f.skin)) { g.globalAlpha = a; drawSpear(s.f); g.globalAlpha = 1; }
-    g.filter = 'none'; g.restore();
+    drawShade(s.f, (s.pale ? .55 : .8) * (1 - s.t / s.life) ** 1.2, s.pale);
   }
   const p = E.P1;
   if (!(on() && guardUp() && !p.dead)) return;
-  g.save(); g.filter = 'brightness(0) drop-shadow(0 0 5px rgba(140,90,255,.75))';
   for (const d of [-1, 1]) {                        // the guard: him, not quite where he is, either side
-    const f = { skin: p.skin, x: p.x - p.face * (16 + 8 * Math.sin(E.T * 9 + d)) * (d > 0 ? 1 : .5), y: p.y, z: p.z, face: p.face, spin: 1, scale: p.scale, pose: p.pose, alpha: 1 };
-    E.drawFighter(f, .22); g.globalAlpha = .22; drawSpear(f); g.globalAlpha = 1;
+    drawShade({ skin: p.skin, x: p.x - p.face * (16 + 8 * Math.sin(E.T * 9 + d)) * (d > 0 ? 1 : .5), y: p.y, z: p.z, face: p.face, spin: 1, scale: p.scale, pose: p.pose, alpha: 1 }, .22, false);
   }
-  g.filter = 'none'; g.restore();
 }
 
 /* ================= 4: Stronde (0.10v2) ================= */
@@ -881,7 +885,7 @@ function filmRender(dt, real) {
     g.fillStyle = '#000';
     for (let i = 0; i < 56; i++) { const an = i / 56 * TAU + Math.sin(i * 7.7) * .05, r0 = 90 + (i * 37 % 120), r1 = Math.max(VW, VH) * 1.2, w = 2 + (i % 4) * 3; g.beginPath(); g.moveTo(c[0] + Math.cos(an) * r0, c[1] + Math.sin(an) * r0); g.lineTo(c[0] + Math.cos(an) * r1 - Math.sin(an) * w, c[1] + Math.sin(an) * r1 + Math.cos(an) * w); g.lineTo(c[0] + Math.cos(an) * r1 + Math.sin(an) * w, c[1] + Math.sin(an) * r1 - Math.cos(an) * w); g.closePath(); g.fill(); }
     g.translate(VW / 2, E.GY - 120 - cam.lift); g.scale(cam.zoom, cam.zoom); g.translate(-VW / 2, -(E.GY - 120));
-    g.filter = 'brightness(0)'; E.drawFighter(f.o, 1); E.drawFighter(f.p, 1); drawSpear(f.p); g.filter = 'none';
+    E.drawFighter(E.over(f.o, DARK), 1); E.drawFighter(E.over(f.p, DARK), 1); drawSpear(f.p, '#000000');      // (flat black: not a filter)
     g.restore();
   }
   const flash = t < .1 ? 1 - t / .1 : t > 2.62 && t < 2.72 ? 1 - (t - 2.62) / .1 : t > 8.22 && t < 8.32 ? 1 - (t - 8.22) / .1 : 0;

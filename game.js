@@ -668,7 +668,7 @@ function updatePlayer(dt) {
   if (hooks.playerPre && hooks.playerPre(p, o, dt)) { /* knocked about: foes.js is driving */ }
   else if (p.dashT > 0) {
     p.dashT -= dt; p.vx = p.dashDir * (p.dashV || 1050); p.target = POSE.dash; p.rate = 34;
-    if ((p.ghostT -= dt) <= 0) { p.ghostT = .028; ghosts.push({ skin: p.skin, x: p.x, y: p.y, face: p.face, spin: 1, pose: p.pose.slice(), t: 0, tint: p.dashTint }); }
+    if ((p.ghostT -= dt) <= 0) { p.ghostT = .028; ghosts.push({ skin: p.dashTint ? FRAMES : p.skin, x: p.x, y: p.y, face: p.face, spin: 1, scale: p.scale, pose: p.pose.slice(), t: 0, tint: p.dashTint }); }
     if (p.dashT <= 0) p.vx *= .2;
   } else if (p.move) {
     const m = p.move;
@@ -799,13 +799,25 @@ function shadow(f) {
   g.fillStyle = `rgba(0,0,0,${.5 * k * (f.alpha === undefined ? 1 : f.alpha)})`;
   g.beginPath(); g.ellipse(q[0], q[1] + 5 * q[2], 64 * r, 13 * r, 0, 0, TAU); g.fill();
 }
+// A fighter in flat colour (side, front: the two tones of each block), for afterimages, flashes and silhouettes. Never a canvas filter for
+// those: one on every block of a fighter costs a full-screen pass each, and a dash's frames or a dodge's shades made the whole game crawl
+const flats = {};
+function flat(side, front = side) {
+  const key = side + '|' + front;
+  return flats[key] || (flats[key] = { torso: [side, front], armF: [side, front, side, front, .22], armB: [side, side, side, side, .22],
+    legF: [side, front, side, front, .18], legB: [side, side, side, side, .18], chest() {}, head() { headBase(side, front); } });
+}
+// the same fighter, standing as he is, in another skin
+const over = (f, skin) => ({ skin, x: f.x, y: f.y, z: f.z, face: f.face, spin: f.spin === undefined ? 1 : f.spin, scale: f.scale, pose: f.pose });
+const FLASH = flat('#e6e2ee', '#ffffff'), FRAMES = flat('#1e56c8', '#4fa2ff');      // a hit's flash; the blue frames a dash can leave
 function drawBody(f) {
-  const rim = hooks.rim ? hooks.rim(f) : null;      // a technique may light the edge of him ({ col, blur }) or wash all of him one colour ({ filter })
-  if (f.flash > 0) g.filter = 'brightness(2.6) saturate(.2)'; else if (rim && rim.filter) g.filter = rim.filter;
+  const rim = hooks.rim ? hooks.rim(f) : null;      // a technique may light the edge of him ({ col, blur }) or wash all of him one colour ({ wash, a })
   if (rim && rim.col) { g.shadowColor = rim.col; g.shadowBlur = rim.blur * DPR * S * cam.zoom; }
   drawFighter(f, f.alpha);
   if (rim && rim.col) { g.shadowBlur = 0; g.shadowColor = 'rgba(0,0,0,0)'; }
-  if (f.flash > 0 || (rim && rim.filter)) g.filter = 'none';
+  const a = f.alpha === undefined ? 1 : f.alpha;    // hit: white for an instant. Washed: that colour over all of him
+  if (f.flash > 0) drawFighter(over(f, FLASH), .8 * a);
+  else if (rim && rim.wash) drawFighter(over(f, flat(rim.wash)), (rim.a === undefined ? .8 : rim.a) * a);
 }
 
 function render(fdt, extra) {
@@ -823,11 +835,7 @@ function render(fdt, extra) {
   if (extra) ghosts.length = 0;
   if (more) cast.sort((a, b) => (b.z || ZP) - (a.z || ZP));
   for (const f of cast) shadow(f);
-  for (const gh of ghosts) {
-    if (gh.tint) g.filter = 'brightness(.7) sepia(1) hue-rotate(170deg) saturate(7)';   // Projection Sorcery leaves blue frames behind
-    drawFighter(gh, (gh.tint ? .62 : .34) * (1 - gh.t / .22));
-    if (gh.tint) g.filter = 'none';
-  }
+  for (const gh of ghosts) drawFighter(gh, (gh.tint ? .62 : .34) * (1 - gh.t / .22));      // (a tinted one is blue: Projection Sorcery's frames, and an Evasive's)
   for (const f of cast) drawBody(f);
 
   // cursed energy on the fists while a technique is out
@@ -964,7 +972,8 @@ JU.eng = {
   ZP, CAM_Y, TOR, LINE, lerp, clamp, rnd, ease,
   renderArena: render,
   hooks, F, hand, tryHit, applyHit, after, endMove, arena, MOVES, CD, cd, hud, fx, K, CURSE, SHRINE,
-  addSpark, addRing, addNum, addDust, addBlast, blackFlash,
+  addSpark, addRing, addNum, addDust, addBlast, blackFlash, flat, over,
+  get px() { return DPR * S * cam.zoom; },          // (what a shadowBlur of one view unit has to be set to)
   stop(t) { stopT = Math.max(stopT, t); }, slow(t) { slowT = Math.max(slowT, t); }, zoomIn(t) { zoomT = Math.max(zoomT, t); },
   setScene(sc) { scene = sc; root.dataset.mode = sc ? sc.mode : 'fight'; },
   get VW() { return VW; }, get VH() { return VH; }, get GY() { return GY; }, get HY() { return HY; }, get S() { return S; },

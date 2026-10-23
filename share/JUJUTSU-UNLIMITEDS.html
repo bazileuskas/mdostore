@@ -3238,7 +3238,7 @@ function updatePlayer(dt) {
   if (hooks.playerPre && hooks.playerPre(p, o, dt)) { /* knocked about: foes.js is driving */ }
   else if (p.dashT > 0) {
     p.dashT -= dt; p.vx = p.dashDir * (p.dashV || 1050); p.target = POSE.dash; p.rate = 34;
-    if ((p.ghostT -= dt) <= 0) { p.ghostT = .028; ghosts.push({ skin: p.skin, x: p.x, y: p.y, face: p.face, spin: 1, pose: p.pose.slice(), t: 0, tint: p.dashTint }); }
+    if ((p.ghostT -= dt) <= 0) { p.ghostT = .028; ghosts.push({ skin: p.dashTint ? FRAMES : p.skin, x: p.x, y: p.y, face: p.face, spin: 1, scale: p.scale, pose: p.pose.slice(), t: 0, tint: p.dashTint }); }
     if (p.dashT <= 0) p.vx *= .2;
   } else if (p.move) {
     const m = p.move;
@@ -3369,13 +3369,25 @@ function shadow(f) {
   g.fillStyle = `rgba(0,0,0,${.5 * k * (f.alpha === undefined ? 1 : f.alpha)})`;
   g.beginPath(); g.ellipse(q[0], q[1] + 5 * q[2], 64 * r, 13 * r, 0, 0, TAU); g.fill();
 }
+// A fighter in flat colour (side, front: the two tones of each block), for afterimages, flashes and silhouettes. Never a canvas filter for
+// those: one on every block of a fighter costs a full-screen pass each, and a dash's frames or a dodge's shades made the whole game crawl
+const flats = {};
+function flat(side, front = side) {
+  const key = side + '|' + front;
+  return flats[key] || (flats[key] = { torso: [side, front], armF: [side, front, side, front, .22], armB: [side, side, side, side, .22],
+    legF: [side, front, side, front, .18], legB: [side, side, side, side, .18], chest() {}, head() { headBase(side, front); } });
+}
+// the same fighter, standing as he is, in another skin
+const over = (f, skin) => ({ skin, x: f.x, y: f.y, z: f.z, face: f.face, spin: f.spin === undefined ? 1 : f.spin, scale: f.scale, pose: f.pose });
+const FLASH = flat('#e6e2ee', '#ffffff'), FRAMES = flat('#1e56c8', '#4fa2ff');      // a hit's flash; the blue frames a dash can leave
 function drawBody(f) {
-  const rim = hooks.rim ? hooks.rim(f) : null;      // a technique may light the edge of him ({ col, blur }) or wash all of him one colour ({ filter })
-  if (f.flash > 0) g.filter = 'brightness(2.6) saturate(.2)'; else if (rim && rim.filter) g.filter = rim.filter;
+  const rim = hooks.rim ? hooks.rim(f) : null;      // a technique may light the edge of him ({ col, blur }) or wash all of him one colour ({ wash, a })
   if (rim && rim.col) { g.shadowColor = rim.col; g.shadowBlur = rim.blur * DPR * S * cam.zoom; }
   drawFighter(f, f.alpha);
   if (rim && rim.col) { g.shadowBlur = 0; g.shadowColor = 'rgba(0,0,0,0)'; }
-  if (f.flash > 0 || (rim && rim.filter)) g.filter = 'none';
+  const a = f.alpha === undefined ? 1 : f.alpha;    // hit: white for an instant. Washed: that colour over all of him
+  if (f.flash > 0) drawFighter(over(f, FLASH), .8 * a);
+  else if (rim && rim.wash) drawFighter(over(f, flat(rim.wash)), (rim.a === undefined ? .8 : rim.a) * a);
 }
 
 function render(fdt, extra) {
@@ -3393,11 +3405,7 @@ function render(fdt, extra) {
   if (extra) ghosts.length = 0;
   if (more) cast.sort((a, b) => (b.z || ZP) - (a.z || ZP));
   for (const f of cast) shadow(f);
-  for (const gh of ghosts) {
-    if (gh.tint) g.filter = 'brightness(.7) sepia(1) hue-rotate(170deg) saturate(7)';   // Projection Sorcery leaves blue frames behind
-    drawFighter(gh, (gh.tint ? .62 : .34) * (1 - gh.t / .22));
-    if (gh.tint) g.filter = 'none';
-  }
+  for (const gh of ghosts) drawFighter(gh, (gh.tint ? .62 : .34) * (1 - gh.t / .22));      // (a tinted one is blue: Projection Sorcery's frames, and an Evasive's)
   for (const f of cast) drawBody(f);
 
   // cursed energy on the fists while a technique is out
@@ -3534,7 +3542,8 @@ JU.eng = {
   ZP, CAM_Y, TOR, LINE, lerp, clamp, rnd, ease,
   renderArena: render,
   hooks, F, hand, tryHit, applyHit, after, endMove, arena, MOVES, CD, cd, hud, fx, K, CURSE, SHRINE,
-  addSpark, addRing, addNum, addDust, addBlast, blackFlash,
+  addSpark, addRing, addNum, addDust, addBlast, blackFlash, flat, over,
+  get px() { return DPR * S * cam.zoom; },          // (what a shadowBlur of one view unit has to be set to)
   stop(t) { stopT = Math.max(stopT, t); }, slow(t) { slowT = Math.max(slowT, t); }, zoomIn(t) { zoomT = Math.max(zoomT, t); },
   setScene(sc) { scene = sc; root.dataset.mode = sc ? sc.mode : 'fight'; },
   get VW() { return VW; }, get VH() { return VH; }, get GY() { return GY; }, get HY() { return HY; }, get S() { return S; },
@@ -3671,9 +3680,9 @@ function post() {                          // whole-screen effects, on real time
       }
       g.stroke();
       g.save(); g.translate(VW / 2, E.GY - 120 - cam.lift); g.scale(cam.zoom, cam.zoom); g.translate(-VW / 2, -(E.GY - 120));
-      g.filter = dark ? 'brightness(0) invert(1)' : 'brightness(0)';
-      for (const f of [E.P2, E.P1]) if (f.alpha === undefined || f.alpha > .05) E.drawFighter(f);
-      g.filter = 'none'; g.restore();
+      const sk = E.flat(dark ? '#ffffff' : '#000000');      // (flat silhouettes: a canvas filter over every block of them is far too slow)
+      for (const f of [E.P2, E.P1]) if (f.alpha === undefined || f.alpha > .05) E.drawFighter(E.over(f, sk));
+      g.restore();
     }
   }
   if (splitT > 0) {                        // the picture itself is cut in two and the halves slide apart
@@ -4785,9 +4794,8 @@ function drawFrame(real) {
     }
   }
   g.translate(VW / 2, gy - cam.lift); g.scale(cam.zoom, cam.zoom); g.translate(-VW / 2, -gy);
-  g.filter = first ? 'brightness(0)' : 'brightness(0) invert(1)';
-  for (const p of [E.P2, E.P1]) if (p.alpha === undefined || p.alpha > .05) E.drawFighter(p);
-  g.filter = 'none';
+  const sk = E.flat(first ? '#000000' : '#ffffff');      // (flat silhouettes, not a canvas filter: that is far too slow)
+  for (const p of [E.P2, E.P1]) if (p.alpha === undefined || p.alpha > .05) E.drawFighter(E.over(p, sk));
   g.restore();
 }
 // a character brushed onto the air for a moment: the name of what has just been done (解 for Dismantle, 捌 for Cleave)
@@ -9310,7 +9318,7 @@ const rim0 = H.rim;
 H.rim = f => {
   if (f !== E.P1 || JU.tech.active !== DEF || f.dead) return rim0 ? rim0(f) : null;
   const m = f.move, busy = m && (m.def.bb || m.def === MOVES.manji), since = E.T - flashAt;
-  return { col: '#ff1f3d', blur: (busy ? 11 : hot() ? 9 : 6) + 2 * Math.sin(E.T * 8), filter: since < .32 ? `brightness(${(1.2 + .9 * (1 - since / .32)).toFixed(2)}) sepia(1) saturate(7) hue-rotate(-38deg)` : null };
+  return { col: '#ff1f3d', blur: (busy ? 11 : hot() ? 9 : 6) + 2 * Math.sin(E.T * 8), wash: since < .32 ? '#ff2a40' : null, a: .55 + .4 * (1 - since / .32) };
 };
 // the four strikes, with blood hardened over whatever is doing the striking: a spike off the first fist, an edge off each of the next two,
 // and a wider one off his foot. They reach a little further than a bare hand does
@@ -12335,7 +12343,7 @@ function drawGhosts(dt) {                           // a dark shape of him with 
     h.t += dt;
     if (h.t >= .3) { ghosts.splice(i, 1); continue; }
     const a = 1 - h.t / .3, c = F(h.f.x, h.f.y + 160);
-    g.save(); g.filter = 'brightness(0)'; E.drawFighter(h.f, .5 * a); g.restore(); g.filter = 'none';
+    E.drawFighter(E.over(h.f, E.flat('#000000')), .5 * a);
     lit(() => E.glow(E.GLOW.red, c[0], c[1], 380 * c[2], .45 * a));
   }
 }
@@ -18206,7 +18214,7 @@ const E = JU.eng, g = E.g, F = E.F, cam = E.cam, H = E.hooks, POSE = E.POSE, V =
 const { clamp } = E;
 const EV_CD = 20, EV_T = .2, EV_V = 1300, EV_INV = .6, EV_AWAY = 360;      // how long it takes to come back; the dash it is (seconds, speed); how long nothing touches him; how far a foe's takes it
 const BL_T = 6, BL_MAX = 5, BL_CUT = .6;            // a Broken Limb: how long from the latest stack; how many stacks there can be; and what each leaves of a blow
-const CYAN = '#7fe9ff', BLC = '#ff8a3d', TINT = 'brightness(1.3) sepia(1) hue-rotate(150deg) saturate(5)';
+const CYAN = '#7fe9ff', BLC = '#ff8a3d', COLD = E.flat('#2f9fc8', '#8af0ff');      // (what an afterimage of it is drawn in)
 const duel = () => !!(Fi.fight.cfg && Fi.fight.cfg.pvp);
 const say = (f, text, col, life, up) => E.fx.push({ k: 2, x: f.x, y: f.y + up * (f.scale || 1), n: text, col, t: 0, life });
 
@@ -18230,8 +18238,8 @@ const knocked = p => p.ps === 'air' || p.ps === 'down' || (p.ps === 'hurt' && sl
 const ready = p => !p.dead && knocked(p) && evT <= 0 && !limbed(p) && !Fi.fight.paused;
 // where somebody was, left behind in a cold colour and fading
 function ghost(f, life = .4, pose) {
-  const s = { skin: f.skin, x: f.x, y: f.y, z: f.z, face: f.face, spin: 1, scale: f.scale, pose: (pose || f.pose).slice() };
-  V.custom(life, u => { g.save(); g.filter = TINT; E.drawFighter(s, .6 * (1 - u)); g.filter = 'none'; g.restore(); }, 0, true);
+  const s = { skin: COLD, x: f.x, y: f.y, z: f.z, face: f.face, spin: 1, scale: f.scale, pose: (pose || f.pose).slice() };
+  V.custom(life, u => E.drawFighter(s, .6 * (1 - u)), 0, true);
   return s;
 }
 function evade(p) {
@@ -19077,18 +19085,19 @@ function grip(f) {
   const a = f.pose[2] - f.pose[6], w = E.hand(f, true), dx = Math.sin(a) * f.face * (f.spin === undefined ? 1 : f.spin), dy = -Math.cos(a);
   return { dx, dy, at: (L, v = 0) => [w[0] + dx * L - dy * v, w[1] + dy * L + dx * v] };
 }
-function drawSpear(f) {
-  const s = grip(f), pt = (L, v) => F(...s.at(L, v)), k = pt(0)[2], st = stain;
+function drawSpear(f, tone) {                      // (tone: all of it one colour, for a shade of him)
+  const s = grip(f), pt = (L, v) => F(...s.at(L, v)), k = pt(0)[2], st = tone ? 0 : stain, C = col => tone || col;
   const rod = (L0, L1, wd, col) => { const a = pt(L0), b = pt(L1); g.beginPath(); g.moveTo(a[0], a[1]); g.lineTo(b[0], b[1]); g.strokeStyle = LINE; g.lineWidth = (wd + 4) * k; g.stroke(); g.strokeStyle = col; g.lineWidth = wd * k; g.stroke(); };
   const shape = (pts, fill, edge) => {
     g.beginPath(); pts.forEach(([L, v], i) => { const c = pt(L, v); if (i) g.lineTo(c[0], c[1]); else g.moveTo(c[0], c[1]); }); g.closePath();
     g.fillStyle = fill; g.fill(); if (edge) { g.lineWidth = 2.5 * k; g.strokeStyle = LINE; g.stroke(); }
   };
   g.lineCap = 'round'; g.lineJoin = 'round';
-  rod(BUTT, FERRULE, 7, SHAFT);                     // the staff, black lacquer
-  rod(BUTT, BUTT + 10, 9, GOLD);                    // a cap on the end of it
-  rod(FERRULE, BASE + 2, 12, GOLD);                 // and the holder the nib sits in
-  shape([[BASE, -12], [BASE + 24, -16], [TIP - 16, -5], [TIP, 0], [TIP - 16, 5], [BASE + 24, 16], [BASE, 12]], NIB, true);       // the nib: a G-pen's
+  rod(BUTT, FERRULE, 7, C(SHAFT));                  // the staff, black lacquer
+  rod(BUTT, BUTT + 10, 9, C(GOLD));                 // a cap on the end of it
+  rod(FERRULE, BASE + 2, 12, C(GOLD));              // and the holder the nib sits in
+  shape([[BASE, -12], [BASE + 24, -16], [TIP - 16, -5], [TIP, 0], [TIP - 16, 5], [BASE + 24, 16], [BASE, 12]], C(NIB), true);       // the nib: a G-pen's
+  if (tone) { g.lineCap = 'butt'; return; }
   if (st > .02) {                                   // what it has been through, and (with the blood on) running back down it
     g.globalAlpha = Math.min(1, st); shape([[BASE + 38, -12], [TIP - 16, -5], [TIP, 0], [TIP - 16, 5], [BASE + 38, 12]], wet(), false);
     if (gore() && st > .4) { const a = pt(BASE + 40, 0), b = pt(BASE - 14, 0); g.strokeStyle = BLOOD; g.lineWidth = 4 * k; g.beginPath(); g.moveTo(a[0], a[1]); g.lineTo(lerp(a[0], b[0], st), lerp(a[1], b[1], st)); g.stroke(); }
@@ -19620,25 +19629,28 @@ function dodge(p, face, always) {
   E.fx.push({ k: 2, x: p.x, y: p.y + 330, n: 'DODGE', col: always ? '#ff8a98' : '#cfc6ff', t: 0, life: .5 });
   return true;
 }
+// (drawn flat, in one colour, and lit round the edge with a shadow: through a canvas filter, as they were, every dodge made the game crawl)
+const DARK = E.flat('#000000', '#0b0712'), PALE = E.flat('#a9a6b3', '#d3d0db'), HALO = 'rgba(140,90,255,.75)';
+function drawShade(f, a, pale) {
+  const spear = SPEARMEN.has(f.skin), tone = pale ? '#c4c1cc' : '#000000';
+  g.save();
+  if (!pale) { g.shadowColor = HALO; g.shadowBlur = 5 * E.px; }
+  E.drawFighter(E.over(f, pale ? PALE : DARK), a);
+  if (spear) { g.globalAlpha = a; drawSpear(f, tone); g.globalAlpha = 1; }
+  g.restore();
+}
 function drawShades(dt) {                           // under the fighters: the afterimages, black with a little violet round them (or pale, the enemy's)
   if (!shades.length && !(on() && guardUp())) return;
   for (let i = shades.length - 1; i >= 0; i--) {
     const s = shades[i];
     if ((s.t += dt) >= s.life) { shades.splice(i, 1); continue; }
-    const a = (s.pale ? .55 : .8) * (1 - s.t / s.life) ** 1.2;
-    g.save(); g.filter = s.pale ? 'grayscale(1) brightness(1.7) contrast(.55)' : 'brightness(0) drop-shadow(0 0 5px rgba(140,90,255,.75))';
-    E.drawFighter(s.f, a);
-    if (SPEARMEN.has(s.f.skin)) { g.globalAlpha = a; drawSpear(s.f); g.globalAlpha = 1; }
-    g.filter = 'none'; g.restore();
+    drawShade(s.f, (s.pale ? .55 : .8) * (1 - s.t / s.life) ** 1.2, s.pale);
   }
   const p = E.P1;
   if (!(on() && guardUp() && !p.dead)) return;
-  g.save(); g.filter = 'brightness(0) drop-shadow(0 0 5px rgba(140,90,255,.75))';
   for (const d of [-1, 1]) {                        // the guard: him, not quite where he is, either side
-    const f = { skin: p.skin, x: p.x - p.face * (16 + 8 * Math.sin(E.T * 9 + d)) * (d > 0 ? 1 : .5), y: p.y, z: p.z, face: p.face, spin: 1, scale: p.scale, pose: p.pose, alpha: 1 };
-    E.drawFighter(f, .22); g.globalAlpha = .22; drawSpear(f); g.globalAlpha = 1;
+    drawShade({ skin: p.skin, x: p.x - p.face * (16 + 8 * Math.sin(E.T * 9 + d)) * (d > 0 ? 1 : .5), y: p.y, z: p.z, face: p.face, spin: 1, scale: p.scale, pose: p.pose, alpha: 1 }, .22, false);
   }
-  g.filter = 'none'; g.restore();
 }
 
 /* ================= 4: Stronde (0.10v2) ================= */
@@ -19854,7 +19866,7 @@ function filmRender(dt, real) {
     g.fillStyle = '#000';
     for (let i = 0; i < 56; i++) { const an = i / 56 * TAU + Math.sin(i * 7.7) * .05, r0 = 90 + (i * 37 % 120), r1 = Math.max(VW, VH) * 1.2, w = 2 + (i % 4) * 3; g.beginPath(); g.moveTo(c[0] + Math.cos(an) * r0, c[1] + Math.sin(an) * r0); g.lineTo(c[0] + Math.cos(an) * r1 - Math.sin(an) * w, c[1] + Math.sin(an) * r1 + Math.cos(an) * w); g.lineTo(c[0] + Math.cos(an) * r1 + Math.sin(an) * w, c[1] + Math.sin(an) * r1 - Math.cos(an) * w); g.closePath(); g.fill(); }
     g.translate(VW / 2, E.GY - 120 - cam.lift); g.scale(cam.zoom, cam.zoom); g.translate(-VW / 2, -(E.GY - 120));
-    g.filter = 'brightness(0)'; E.drawFighter(f.o, 1); E.drawFighter(f.p, 1); drawSpear(f.p); g.filter = 'none';
+    E.drawFighter(E.over(f.o, DARK), 1); E.drawFighter(E.over(f.p, DARK), 1); drawSpear(f.p, '#000000');      // (flat black: not a filter)
     g.restore();
   }
   const flash = t < .1 ? 1 - t / .1 : t > 2.62 && t < 2.72 ? 1 - (t - 2.62) / .1 : t > 8.22 && t < 8.32 ? 1 - (t - 8.22) / .1 : 0;
@@ -20290,7 +20302,7 @@ function bleedTick(dt) {
 }
 
 /* ================= the moves ================= */
-const trail = [];                                   // Rush: him, a moment ago, pink
+const trail = [], TRAIL = E.flat(PINKD, PINK);      // Rush: him, a moment ago, pink
 function rushHit(p, o) {
   const f = p.face, hs = o.scale || 1, x = o.x, y = o.y + 165 * hs;
   sfx.splatter(1.1); sfx.cut(1.4); shake(26); E.zoomIn(.35); E.stop(.08);
@@ -20384,7 +20396,7 @@ H.under = dt => {
   for (let i = trail.length - 1; i >= 0; i--) {     // Rush: where he was, a moment ago, in pink
     const s = trail[i];
     if ((s.t += dt) >= .22) { trail.splice(i, 1); continue; }
-    g.save(); g.filter = 'brightness(.6) sepia(1) saturate(6) hue-rotate(290deg)'; E.drawFighter(s.f, .55 * (1 - s.t / .22)); g.filter = 'none'; g.restore();
+    E.drawFighter(E.over(s.f, TRAIL), .55 * (1 - s.t / .22));
   }
 };
 H.fx = dt => {
@@ -20618,6 +20630,7 @@ function weakCut(o) {
 
 /* ================= the moves ================= */
 const trail = [];                                   // Cleaving Rush and the kicks' chase: him, a moment ago
+const TRAILS = { gold: E.flat('#b8892a', GOLD), red: E.flat('#8a0f22', INK), blue: E.flat('#1d6fb8', BLUE) };
 function smear(p, kind) { trail.push({ f: { skin: p.skin, x: p.x, y: p.y, z: p.z, face: p.face, spin: 1, scale: p.scale, pose: p.pose.slice() }, t: 0, kind }); if (trail.length > 12) trail.shift(); }
 function rushHit(p, o, bf) {
   const f = p.face, hs = o.scale || 1, x = o.x, y = o.y + 165 * hs, ang = f > 0 ? -.12 : Math.PI + .12;
@@ -20808,8 +20821,7 @@ H.under = dt => {
   for (let i = trail.length - 1; i >= 0; i--) {     // where he was, a moment ago: gold for the Rush, red for a Black Flash one, blue chasing a kick
     const s = trail[i];
     if ((s.t += dt) >= .22) { trail.splice(i, 1); continue; }
-    g.save(); g.filter = s.kind === 'blue' ? 'brightness(.8) sepia(1) hue-rotate(160deg) saturate(6)' : s.kind === 'red' ? 'brightness(.6) sepia(1) saturate(8) hue-rotate(-30deg)' : 'brightness(.9) sepia(1) saturate(4)';
-    E.drawFighter(s.f, .55 * (1 - s.t / .22)); g.filter = 'none'; g.restore();
+    E.drawFighter(E.over(s.f, TRAILS[s.kind] || TRAILS.gold), .55 * (1 - s.t / .22));
   }
 };
 H.fx = dt => {

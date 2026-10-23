@@ -199,7 +199,7 @@ function bleedTick(dt) {
 }
 
 /* ================= the moves ================= */
-const trail = [];                                   // Rush: him, a moment ago, pink
+const trail = [], TRAIL = E.flat(PINKD, PINK);      // Rush: him, a moment ago, pink
 function rushHit(p, o) {
   const f = p.face, hs = o.scale || 1, x = o.x, y = o.y + 165 * hs;
   sfx.splatter(1.1); sfx.cut(1.4); shake(26); E.zoomIn(.35); E.stop(.08);
@@ -293,7 +293,7 @@ H.under = dt => {
   for (let i = trail.length - 1; i >= 0; i--) {     // Rush: where he was, a moment ago, in pink
     const s = trail[i];
     if ((s.t += dt) >= .22) { trail.splice(i, 1); continue; }
-    g.save(); g.filter = 'brightness(.6) sepia(1) saturate(6) hue-rotate(290deg)'; E.drawFighter(s.f, .55 * (1 - s.t / .22)); g.filter = 'none'; g.restore();
+    E.drawFighter(E.over(s.f, TRAIL), .55 * (1 - s.t / .22));
   }
 };
 H.fx = dt => {

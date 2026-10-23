@@ -13,7 +13,7 @@ const E = JU.eng, g = E.g, F = E.F, cam = E.cam, H = E.hooks, POSE = E.POSE, V =
 const { clamp } = E;
 const EV_CD = 20, EV_T = .2, EV_V = 1300, EV_INV = .6, EV_AWAY = 360;      // how long it takes to come back; the dash it is (seconds, speed); how long nothing touches him; how far a foe's takes it
 const BL_T = 6, BL_MAX = 5, BL_CUT = .6;            // a Broken Limb: how long from the latest stack; how many stacks there can be; and what each leaves of a blow
-const CYAN = '#7fe9ff', BLC = '#ff8a3d', TINT = 'brightness(1.3) sepia(1) hue-rotate(150deg) saturate(5)';
+const CYAN = '#7fe9ff', BLC = '#ff8a3d', COLD = E.flat('#2f9fc8', '#8af0ff');      // (what an afterimage of it is drawn in)
 const duel = () => !!(Fi.fight.cfg && Fi.fight.cfg.pvp);
 const say = (f, text, col, life, up) => E.fx.push({ k: 2, x: f.x, y: f.y + up * (f.scale || 1), n: text, col, t: 0, life });
 
@@ -37,8 +37,8 @@ const knocked = p => p.ps === 'air' || p.ps === 'down' || (p.ps === 'hurt' && sl
 const ready = p => !p.dead && knocked(p) && evT <= 0 && !limbed(p) && !Fi.fight.paused;
 // where somebody was, left behind in a cold colour and fading
 function ghost(f, life = .4, pose) {
-  const s = { skin: f.skin, x: f.x, y: f.y, z: f.z, face: f.face, spin: 1, scale: f.scale, pose: (pose || f.pose).slice() };
-  V.custom(life, u => { g.save(); g.filter = TINT; E.drawFighter(s, .6 * (1 - u)); g.filter = 'none'; g.restore(); }, 0, true);
+  const s = { skin: COLD, x: f.x, y: f.y, z: f.z, face: f.face, spin: 1, scale: f.scale, pose: (pose || f.pose).slice() };
+  V.custom(life, u => E.drawFighter(s, .6 * (1 - u)), 0, true);
   return s;
 }
 function evade(p) {

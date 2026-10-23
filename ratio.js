@@ -215,6 +215,7 @@ function weakCut(o) {
 
 /* ================= the moves ================= */
 const trail = [];                                   // Cleaving Rush and the kicks' chase: him, a moment ago
+const TRAILS = { gold: E.flat('#b8892a', GOLD), red: E.flat('#8a0f22', INK), blue: E.flat('#1d6fb8', BLUE) };
 function smear(p, kind) { trail.push({ f: { skin: p.skin, x: p.x, y: p.y, z: p.z, face: p.face, spin: 1, scale: p.scale, pose: p.pose.slice() }, t: 0, kind }); if (trail.length > 12) trail.shift(); }
 function rushHit(p, o, bf) {
   const f = p.face, hs = o.scale || 1, x = o.x, y = o.y + 165 * hs, ang = f > 0 ? -.12 : Math.PI + .12;
@@ -405,8 +406,7 @@ H.under = dt => {
   for (let i = trail.length - 1; i >= 0; i--) {     // where he was, a moment ago: gold for the Rush, red for a Black Flash one, blue chasing a kick
     const s = trail[i];
     if ((s.t += dt) >= .22) { trail.splice(i, 1); continue; }
-    g.save(); g.filter = s.kind === 'blue' ? 'brightness(.8) sepia(1) hue-rotate(160deg) saturate(6)' : s.kind === 'red' ? 'brightness(.6) sepia(1) saturate(8) hue-rotate(-30deg)' : 'brightness(.9) sepia(1) saturate(4)';
-    E.drawFighter(s.f, .55 * (1 - s.t / .22)); g.filter = 'none'; g.restore();
+    E.drawFighter(E.over(s.f, TRAILS[s.kind] || TRAILS.gold), .55 * (1 - s.t / .22));
   }
 };
 H.fx = dt => {

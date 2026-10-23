@@ -271,7 +271,7 @@ const rim0 = H.rim;
 H.rim = f => {
   if (f !== E.P1 || JU.tech.active !== DEF || f.dead) return rim0 ? rim0(f) : null;
   const m = f.move, busy = m && (m.def.bb || m.def === MOVES.manji), since = E.T - flashAt;
-  return { col: '#ff1f3d', blur: (busy ? 11 : hot() ? 9 : 6) + 2 * Math.sin(E.T * 8), filter: since < .32 ? `brightness(${(1.2 + .9 * (1 - since / .32)).toFixed(2)}) sepia(1) saturate(7) hue-rotate(-38deg)` : null };
+  return { col: '#ff1f3d', blur: (busy ? 11 : hot() ? 9 : 6) + 2 * Math.sin(E.T * 8), wash: since < .32 ? '#ff2a40' : null, a: .55 + .4 * (1 - since / .32) };
 };
 // the four strikes, with blood hardened over whatever is doing the striking: a spike off the first fist, an edge off each of the next two,
 // and a wider one off his foot. They reach a little further than a bare hand does

@@ -125,9 +125,9 @@ function post() {                          // whole-screen effects, on real time
       }
       g.stroke();
       g.save(); g.translate(VW / 2, E.GY - 120 - cam.lift); g.scale(cam.zoom, cam.zoom); g.translate(-VW / 2, -(E.GY - 120));
-      g.filter = dark ? 'brightness(0) invert(1)' : 'brightness(0)';
-      for (const f of [E.P2, E.P1]) if (f.alpha === undefined || f.alpha > .05) E.drawFighter(f);
-      g.filter = 'none'; g.restore();
+      const sk = E.flat(dark ? '#ffffff' : '#000000');      // (flat silhouettes: a canvas filter over every block of them is far too slow)
+      for (const f of [E.P2, E.P1]) if (f.alpha === undefined || f.alpha > .05) E.drawFighter(E.over(f, sk));
+      g.restore();
     }
   }
   if (splitT > 0) {                        // the picture itself is cut in two and the halves slide apart

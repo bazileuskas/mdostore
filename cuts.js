@@ -244,9 +244,8 @@ function drawFrame(real) {
     }
   }
   g.translate(VW / 2, gy - cam.lift); g.scale(cam.zoom, cam.zoom); g.translate(-VW / 2, -gy);
-  g.filter = first ? 'brightness(0)' : 'brightness(0) invert(1)';
-  for (const p of [E.P2, E.P1]) if (p.alpha === undefined || p.alpha > .05) E.drawFighter(p);
-  g.filter = 'none';
+  const sk = E.flat(first ? '#000000' : '#ffffff');      // (flat silhouettes, not a canvas filter: that is far too slow)
+  for (const p of [E.P2, E.P1]) if (p.alpha === undefined || p.alpha > .05) E.drawFighter(E.over(p, sk));
   g.restore();
 }
 // a character brushed onto the air for a moment: the name of what has just been done (解 for Dismantle, 捌 for Cleave)
