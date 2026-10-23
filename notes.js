@@ -5,6 +5,12 @@
 // Newest first. v = the build, jp = the seal stamped beside it, pic = notes/<pic>.jpg, cap = what the picture shows.
 // A new update goes at the top of this list.
 const NOTES = [
+  { v: '0.12v1', name: 'Sugar', jp: '糖', date: '23 Oct 2026', pic: 'sugar', cap: 'Sugar: the last one, straight up', items: [
+    'Cursed Cannon’s fourth move, Sugar: a barrage of eight small blasts, 7 each, and then the last one from down low and straight up: a blast uppercut, 60, that throws whatever it hits into the air. It heats you as a held blast does, and it will not come out while you are overheated',
+    'Cursed Cannon is out of Early Access: it can be rolled from the talisman (3%, from Ten Shadows, now 31%) and turns up in the Daily Shop. Whoever had it in Early Access keeps it',
+    'Ratio Man’s third move, Collapsed Fist: a punch with blue in it, 80 and three stacks of Broken Limb. With a Ratio on him it is 120 and five, and whatever was above them comes down on top of them',
+    'Broken Limb now goes up to five stacks',
+    'The Vessel’s Black Flash finisher and Ratio Man’s Black Flashes have new sounds in the copy at home'] },
   { v: '0.12', name: 'Ratio Man (Early Access)', jp: '七', date: '22 Oct 2026', pic: 'ratio', cap: 'Seven to three: the Ratio, and the line it shows him', items: [
     'A new Early Access character, Ratio Man, with a blade like a butcher’s, wrapped in spotted cloth. His strikes are five, not four, and each lands with a punch of its own',
     'Cleaving Rush (1): a dash with the blade. 70, and a Broken Limb',

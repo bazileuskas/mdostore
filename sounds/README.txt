@@ -46,6 +46,13 @@ one-file build: never on the public site):
 
     jjs-hit1.mp3 .. jjs-hit5.mp3   the first strike to the fifth
 
+Clips from the anime found online (myinstants), at home only, kept out of git and out of the one-file build: never on the public site,
+where the game's built sounds play instead:
+
+    home-yuji-bf.mp3       the Vessel's Black Flash finisher ("yuji's black flash")
+    home-nanami-bf.mp3     Ratio Man's Black Flashes ("Black Flash SFX")
+    home-nanami-punch.mp3  Ratio Man's Collapsed Fist ("Anime Brutal Punch")
+
 The names have to match exactly, and these have to be .mp3. For the domain music, .m4a, .ogg or .wav work as well (mahito-domain.m4a and so on).
 
 To use the track from the anime's soundtrack ("Self-Embodiment of Perfection"), save your own copy of it here as mahito-domain.mp3.

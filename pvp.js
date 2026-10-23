@@ -197,7 +197,7 @@ function struck(m) {
   else Fi.chip(dmg, '#ff5a6e');                      // nothing behind it: rot, bleeding, a domain's sure-hit
   mute = false;
   if (m.bl > 0 && H.bled) H.bled(Math.min(3, m.bl | 0));      // and it left me bleeding
-  if (landed && m.bli > 0 && H.limbed) H.limbed(Math.min(2, m.bli | 0));      // or with a Broken Limb (Ratio Man's: evasive.js)
+  if (landed && m.bli > 0 && H.limbed) H.limbed(Math.min(5, m.bli | 0));      // or with a Broken Limb (Ratio Man's: evasive.js)
 }
 // what his blows threw up, drawn here as well
 const RAW = {};

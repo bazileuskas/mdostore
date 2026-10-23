@@ -6,5 +6,7 @@ img/*-original.*
 sounds/vengeful-*.mp3
 # and Jujutsu Shenanigans' hits, if Ratio Man is given them at home: the same
 sounds/jjs-*.mp3
+# and clips from the anime found online (home-*: Yuji's Black Flash finisher, Ratio Man's Black Flash and punch): the same
+sounds/home-*.mp3
 # this computer's own (local/team.json keeps the team's account signed in here): never committed, never online
 local/

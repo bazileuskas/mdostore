@@ -3,7 +3,8 @@
    at once, with no stun, a moment in which nothing touches him, and a dash. Then it takes twenty seconds to come back (the line along the top
    of the Dash slot). Whatever he is fighting has one too, and can use it to get out of a blow it sees coming (JU.evasive.foe).
    A BROKEN LIMB (B L) is what Ratio Man's blade and kick leave behind (ratio.js). For six seconds from the latest stack whoever has it cannot
-   block, dash or use their Evasive, and their blows do 40% less; a second stack takes 40% off what is left. In a duel it is sent with the
+   block, dash or use their Evasive, and their blows do 40% less; every stack after the first takes 40% off what is left (up to five: Collapsed
+   Fist leaves three at once, or five). In a duel it is sent with the
    blow, like bleeding, and whoever has it takes it off his own blows (so it is never taken off twice) */
 (() => {
 'use strict';
@@ -11,7 +12,7 @@
 const E = JU.eng, g = E.g, F = E.F, cam = E.cam, H = E.hooks, POSE = E.POSE, V = JU.vfx, sfx = JU.sfx, Fi = JU.fights, keys = E.keys;
 const { clamp } = E;
 const EV_CD = 20, EV_T = .2, EV_V = 1300, EV_INV = .6, EV_AWAY = 360;      // how long it takes to come back; the dash it is (seconds, speed); how long nothing touches him; how far a foe's takes it
-const BL_T = 6, BL_MAX = 2, BL_CUT = .6;            // a Broken Limb: how long from the latest stack; how many stacks there can be; and what each leaves of a blow
+const BL_T = 6, BL_MAX = 5, BL_CUT = .6;            // a Broken Limb: how long from the latest stack; how many stacks there can be; and what each leaves of a blow
 const CYAN = '#7fe9ff', BLC = '#ff8a3d', TINT = 'brightness(1.3) sepia(1) hue-rotate(150deg) saturate(5)';
 const duel = () => !!(Fi.fight.cfg && Fi.fight.cfg.pvp);
 const say = (f, text, col, life, up) => E.fx.push({ k: 2, x: f.x, y: f.y + up * (f.scale || 1), n: text, col, t: 0, life });

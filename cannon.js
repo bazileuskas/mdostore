@@ -1,10 +1,12 @@
-/* JUJUTSU UNLIMITEDS — early access: CURSED CANNON. Ryu Ishigori: more cursed energy output than anybody, let out of his hair in a straight line.
+/* JUJUTSU UNLIMITEDS — CURSED CANNON (early access until Build 0.12v1; now rolled from the talisman, 3%). Ryu Ishigori: more cursed energy output
+   than anybody, let out of his hair in a straight line.
    1 Granite Blast, a second between them: let go at once it is 45; held 1.4 seconds, 80; held the full 3, somewhere from 120 to 145.
      Every one heats him: a quick one by a bar, a held one by two (Build 0.10). Four bars and he is overheated, and no blast will come out
      until he has combed his hair.
    2 Cursed Punches: he walks into it and trades. It takes 90 to 110. It gets its own back: he takes 30 to 40.
    3 Hair Comb: 2.78 seconds with the comb, and the heat is gone. Hit him while he is at it and it is not.
-   4 is still to come.
+   4 Sugar: a barrage, eight small blasts one on top of the other (7 each), and the last from underneath him, straight up: a blast uppercut
+     (60) that throws whatever it hits up into the air. All of it heats him as a held blast does; none of it comes out overheated.
    Right click (or C): underheat. A blast is worth less each time than the one before it (by the same share every time), but ten of them
    fit where four did; a held one there is five of the ten. Seen as it is in the anime: the light at the front of his pompadour, both hands on his head, and a white-blue beam */
 (() => {
@@ -17,11 +19,13 @@ const TAP = 45, HELD = 80, FULL = [120, 145], T_HELD = 1.4, T_FULL = 3, T_TAP = 
 const LIMIT = 4, UNDER = 10, DECAY = .82;           // bars of heat before he overheats; the same in underheat; and what each blast in underheat is worth next to the one before it
 const HELD_HEAT = 2, HELD_UNDER = 5;                // the bars a held blast costs him (a quick one, one), and in underheat
 const COMB_T = 2.78, OUT = [90, 110], IN = [30, 40];      // how long the comb takes; what Cursed Punches gives, and what it costs him
+const SUGAR_N = 8, SUGAR_GAP = .11, SUGAR_AT = .24, SUGAR_SHOT = 7, SUGAR_UP = 60;      // Sugar: how many in the barrage, how far apart, when the first goes; each one; and the last
 const shake = v => { cam.shake = Math.max(cam.shake, v); };
 const lit = fn => { g.globalCompositeOperation = 'lighter'; fn(); g.globalCompositeOperation = 'source-over'; };
 const hint = (text, col = CYAN) => E.fx.push({ k: 2, x: E.P1.x, y: E.P1.y + 470, n: text, col, t: 0, life: 1.3 });
 const free = p => !p.move && !p.ps && !p.dead && !(p.dashT > 0);
 const AIM = [-.14, -.08, 2.75, 2.5, .5, -.5, 0], RECOIL = [-.34, -.2, 2.45, 2.2, .62, -.3, 0], COMB = [.05, .12, 2.62, .5, .32, -.32, 0];      // both hands on his head; the same, thrown back by it; and one hand up with the comb
+const DUCK = [.62, .38, 2.3, 2, .95, -.8, 0], UPSHOT = [-.46, -.5, 2.95, 2.7, .35, -.22, 0];      // Sugar's last: down low with his head down, and then all of him straight up after it
 
 let heat = 0, under = false, brawl = null, coolAt = -9;     // bars of heat since the comb; which mode; the exchange of Cursed Punches while it lasts; when he last finished combing
 const limit = () => (under ? UNDER : LIMIT), over = () => heat >= limit();
@@ -108,6 +112,41 @@ function blow(p, o, b, last) {
   E.addSpark(p.x + f * 20, p.y + 190 * SIZE, '#ff5a6e', 90); V.ring(p.x + f * 20, p.y + 190 * SIZE, 100, '#ff2440', .18); sfx.hit(false); E.stop(.05); shake(9);
 }
 
+/* ---------- Sugar: the barrage, and the blast uppercut at the end of it ---------- */
+const alive = o => !o.ko && !(o.alpha < 1) && o.state !== 'down' && o.state !== 'up' && !(o.inv > 0);
+function volley(p, m, i) {                          // one of the eight: a thin blast, a little off the line each time
+  const f = p.face, o = E.P2, a = line(p), hs = o.scale || 1, dx = (o.x - p.x) * f, j = (i % 3 - 1) * 24, z = muzzle(p);
+  a.y1 = Math.max(0, a.y1 + j); a.x1 += rnd(-20, 20);
+  sfx.zap(); shake(7);
+  beam(a, under ? 14 : 18, .16, 0);
+  V.ring(z[0], z[1], 70, CYAN, .12);
+  if (alive(o) && dx > -30 && dx < REACH) {
+    const y = o.y + 160 * hs + j * .5;
+    E.applyHit(o, f, { dmg: SUGAR_SHOT * m.k / (o.dr || 1), kb: 40, stun: .32, stop: .02, col: CYAN, fixed: 1, mute: 1 });
+    E.addBlast(o.x, y, RGB, 150); V.sparks(o.x, y, 'blue', 4);
+  } else if (a.floor) { const x = clamp(a.x1, -1040, 1040); E.addBlast(x, 40, RGB, 120); V.rocks(x, 0, 2); }
+}
+// the last: from down low in front of him, up through whatever is there (always rising) and on into the sky. It goes up with it
+function upper(p, m) {
+  const f = p.face, o = E.P2, hs = o.scale || 1, x0 = p.x + f * 120 * SIZE, y0 = p.y + 60 * SIZE, dx = (o.x - x0) * f, there = alive(o) && dx > -40 && dx < REACH;
+  const tx = there ? o.x : x0 + f * 300, ty = there ? o.y + 170 * hs : y0 + 520;
+  let ux = tx - x0, uy = ty - y0;
+  const n = Math.hypot(ux, uy) || 1;
+  ux /= n; uy /= n;
+  if (uy < .22) { uy = .22; ux = Math.sign(ux || f) * Math.sqrt(1 - uy * uy); }
+  const a = { x0, y0, x1: x0 + ux * 1700, y1: y0 + uy * 1700 }, off = Math.abs((tx - x0) * uy - (ty - y0) * ux);      // (and how far off it the middle of them is)
+  sfx.cannon(2); shake(36); E.zoomIn(.5);
+  beam(a, under ? 60 : 76, .55, 2);
+  V.crack(x0, 220); V.rocks(x0, 0, 12); E.addBlast(x0, 40, RGB, 360); E.addDust(x0);
+  if (there && off < 110 * hs) {
+    const y = o.y + 170 * hs;
+    E.applyHit(o, f, { dmg: SUGAR_UP * m.k / (o.dr || 1), kb: 140, lift: 1350, stun: .9, stop: .24, heavy: 1, ring: 1, col: CYAN, fixed: 1 });
+    E.addBlast(o.x, y, RGB, 520); V.ring(o.x, y, 360, CYAN, .35); V.sparks(o.x, y, 'blue', 26); V.impact(.16, o.x, y); C.cubes(o.x, 40, 8);
+  }
+  heat = Math.min(limit(), heat + (under ? HELD_UNDER : HELD_HEAT));      // all of it heats him as a held blast does
+  if (heat >= limit()) overheat(p);
+}
+
 const MOVES = {
   // 1 — Granite Blast. Held: see the top of this file
   strikes: { name: 'Granite Blast', cd: 1, dur: 4.2, run(p, m, t) {
@@ -168,12 +207,35 @@ const MOVES = {
     m.done = 1; heat = 0; coolAt = E.T;
     sfx.tap(1); V.ring(z[0], z[1], 170, '#ffffff', .3); V.sparks(z[0], z[1], 'white', 8); shout(p, 'COOL', COLD);
   } },
-  // 4 — not yet
-  manji: { name: 'Coming soon', cd: 1, dur: .01, run() {} }
+  // 4 — Sugar: the barrage, then down low and the last one straight up
+  manji: { name: 'Sugar', cd: 12, dur: 2.6, run(p, m, t) {
+    const o = E.P2, end = SUGAR_AT + SUGAR_N * SUGAR_GAP;
+    p.rate = 40; p.vx = 0;
+    if (!m.c) { m.c = 1; m.k = worth(); m.n = 0; sfx.charge(); shout(p, 'SUGAR', CYAN); }
+    if (t < end && !o.ko) p.face = o.x >= p.x ? 1 : -1;      // he keeps it on whatever he is fighting
+    if (t < SUGAR_AT) { p.target = AIM; const z = muzzle(p); V.mote(z[0], z[1], 'blue'); return; }
+    if (t < end) {
+      while (m.n < SUGAR_N && t >= SUGAR_AT + m.n * SUGAR_GAP) { volley(p, m, m.n); m.n++; p.pose = RECOIL.slice(); }      // each one jerks his head back
+      p.target = AIM;
+      return;
+    }
+    if (t < end + .24) {                            // down, gathering it under him, and in under whatever he is fighting so that it goes up through it
+      p.target = DUCK; p.rate = 30;
+      if (!m.d) { m.d = 1; sfx.rise(.24); sfx.whoosh(); }
+      const dt = t - (m.lt || t), gap = (o.x - p.x) * p.face;
+      if (alive(o) && gap > 220 && gap < REACH) p.x += (o.x - p.face * 220 - p.x) * (1 - Math.exp(-dt * 18));
+      m.lt = t;
+      V.mote(p.x + p.face * 120 * SIZE, p.y + 60 * SIZE, 'blue');
+      return;
+    }
+    if (!m.up) { m.up = 1; upper(p, m); p.pose = UPSHOT.slice(); }
+    p.target = t < end + .55 ? UPSHOT : POSE.idle; p.vx = t < end + .3 ? -p.face * 260 : 0;
+    if (t > end + .8) E.endMove(p);
+  } }
 };
 
-JU.tech.add('cannon', { name: 'Cursed Cannon', jp: 'グラニテブラスト', mark: '砲', who: 'Granite Cannon', odds: 0, col: CYAN, glow: 'blue', moves: MOVES,
-  early: true, skin: JU.cast6.ISHIGORI, as: ['Granite Cannon', '砲'], scale: SIZE, hint: '<b>Hold 1</b> Granite Blast · <b>Right click</b> / <b>C</b> underheat' });
+JU.tech.add('cannon', { name: 'Cursed Cannon', jp: 'グラニテブラスト', mark: '砲', who: 'Granite Cannon', odds: 3, col: CYAN, glow: 'blue', moves: MOVES,
+  skin: JU.cast6.ISHIGORI, as: ['Granite Cannon', '砲'], scale: SIZE, hint: '<b>Hold 1</b> Granite Blast · <b>Right click</b> / <b>C</b> underheat' });      // (released to everybody in 0.12v1: it was early access)
 const DEF = JU.tech.TECH.cannon, on = () => JU.tech.active === DEF;
 
 /* ---------- wiring ---------- */
@@ -188,9 +250,8 @@ H.press = (a, inScene) => {
   if (a === 'alt') { if (!inScene && on() && !E.P1.dead) { toggle(); return true; } return press0 ? press0(a, inScene) : false; }
   if (!inScene && on()) {
     const p = E.P1;
-    if (a === 'manji') { if (free(p)) hint('4  ·  COMING SOON'); return true; }
-    if (a === 'strikes' && over()) {                // nothing comes out: his hair has to cool first
-      if (free(p) && E.cd.strikes <= 0) { const z = muzzle(p); E.cd.strikes = .5; sfx.steam(); hint('OVERHEATED  ·  3  HAIR COMB', HOT); for (let i = 0; i < 4; i++) V.puff('white', z[0] + rnd(-20, 20), z[1] + rnd(0, 20), rnd(-40, 40), rnd(160, 320), rnd(24, 44), rnd(.4, .7)); }
+    if ((a === 'strikes' || a === 'manji') && over()) {      // nothing comes out, Granite Blast or Sugar: his hair has to cool first
+      if (free(p) && E.cd[a] <= 0) { const z = muzzle(p); E.cd[a] = .5; sfx.steam(); hint('OVERHEATED  ·  3  HAIR COMB', HOT); for (let i = 0; i < 4; i++) V.puff('white', z[0] + rnd(-20, 20), z[1] + rnd(0, 20), rnd(-40, 40), rnd(160, 320), rnd(24, 44), rnd(.4, .7)); }
       return true;
     }
   }

@@ -562,14 +562,14 @@ function divergentBlast(face) {
   sfx.blast();
 }
 
-function blackFlash() {
+function blackFlash(snd) {                          // (snd: a sound of its own for it, in place of the usual one)
   if (bfT > .3) return;
   const o = P2, c = F(o.x, o.y + 150), cx = c[0] * S, cy = c[1] * S;
   slowT = .6; bfT = .5; zoomT = .7; cam.shake = 34;
   addBlast(o.x, o.y + 150, '255,36,64', 300); addRing(o.x, '255,36,64', 420);
   JU.flash(cx, cy); JU.bolts(cx, cy, 18);
   banner('黒閃', 'BLACK FLASH', 'bf');
-  sfx.bf();
+  (snd || sfx.bf)();
   if (hooks.bf) hooks.bf(o);
 }
 

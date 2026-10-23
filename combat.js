@@ -86,9 +86,12 @@ H.fx = dt => {                                      // the same timing ring the 
 };
 
 /* ---------- the Black Flash finisher: the killing blow holds its target where it was hit while the sparks keep coming ---------- */
-// The voice line is a sound file of your own, not shipped with the game: sounds/blackflash.mp3 (the one-file build carries it in window.JU_SOUNDS)
-const HOLD = 1.5;
+// The voice line is a sound file of your own, not shipped with the game: sounds/blackflash.mp3 (the one-file build carries it in window.JU_SOUNDS).
+// The Vessel's own finisher (no technique on him) sounds like the anime's at home: sounds/home-yuji-bf.mp3, a clip found online (myinstants,
+// "yuji's black flash"), never on the public site, where the built one plays as before
+const HOLD = 1.5, HOME = /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
 let voice = null, mute = false;
+if (HOME) sfx.preload(['home-yuji-bf']);
 function shout() {
   const b = document.getElementById('sfx');
   if (mute || (b && b.getAttribute('aria-pressed') === 'false')) return;
@@ -102,8 +105,9 @@ H.bf = o => {
   const x = o.x, y = o.y + 150 * (o.scale || 1), c = F(x, y), sx = c[0] * E.S, sy = c[1] * E.S;
   E.stop(HOLD); E.zoomIn(HOLD);
   for (let i = 0; i < 14; i++) { const a = rnd(0, TAU), l = rnd(240, 640); V.bolt(x, y, x + Math.cos(a) * l, y + Math.sin(a) * l, INK, .5, rnd(3, 7), '#060205'); }
-  for (const s of [.3, .6, .9, 1.2]) setTimeout(() => { if (JU.game.state.running) { JU.bolts(sx, sy, 10); sfx.hit(true); } }, s * 1000);
-  shout(); sfx.charge();
+  const clip = HOME && !JU.tech.active && sfx.file('home-yuji-bf', 1);      // his own finisher, as it sounds in the anime (at home)
+  for (const s of [.3, .6, .9, 1.2]) setTimeout(() => { if (JU.game.state.running) { JU.bolts(sx, sy, 10); if (!clip) sfx.hit(true); } }, s * 1000);
+  shout(); if (!clip) sfx.charge();
 };
 
 JU.combat = { SLAM, AIR };
