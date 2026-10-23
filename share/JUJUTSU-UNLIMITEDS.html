@@ -1080,13 +1080,11 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
   <div class="awk" id="awk"><i></i><span>Awakening</span></div>
   <div class="ghint">
     <span><b>A D</b> Move · <b>W</b> Jump · <b>Click / J</b> Strike</span>
-    <span><b>3</b> again as the ring closes · Black Flash</span>
-    <span><b>Q</b> Dash through an attack to dodge it</span>
-    <span><b>Q</b> Knocked up or down · Evasive, every 20 s</span>
-    <span><b>F</b> Hold to block · a heavy blow breaks it</span>
     <span><b>Esc</b> Title</span>
-    <span id="clanHint"></span>
-    <span id="techHint"></span>
+    <!-- the basics only, at the user's word: no Black Flash timing, dodging, blocking or a technique's or clan's own instructions
+         (those two are still filled in, hidden: touch.js reads which clan is on from #clanHint) -->
+    <span id="clanHint" hidden></span>
+    <span id="techHint" hidden></span>
   </div>
   <div class="obj" id="obj"></div>
   <div class="bars" aria-hidden="true"><i></i><i></i></div>
