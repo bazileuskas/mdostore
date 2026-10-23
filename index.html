@@ -1242,13 +1242,17 @@ const sfx = (() => {
     src.stop(t + dur + .05);
   };
   // a sound file of the player's own, if one with that name has been put in sounds/ (the one-file build carries them in window.JU_SOUNDS).
-  // It is played instead of the built sound. No file: false, and the built sound plays
+  // It is played instead of the built sound. No file: false, and the built sound plays.
+  // A few of the copy at home's clips (home-*, never put on the site) are played everywhere else straight from where they are posted
+  // publicly, myinstants (Build 0.15v1, the user's ask): [where, and how far into it the copy at home's starts, in seconds]
+  const WEB = { 'home-yuji-bf': ['https://www.myinstants.com/media/sounds/yujis-black-flash.mp3', 0],                // "yuji's black flash"
+    'home-yuji-final': ['https://www.myinstants.com/media/sounds/kokusen-itadori-vs-mahito.mp3', 2.75] };            // "Kokusen (Itadori VS Mahito)"
   const clips = {};
   const load = name => {
     if (clips[name]) return clips[name];
-    const c = clips[name] = { el: null, ok: false };
+    const web = !HOME && WEB[name], c = clips[name] = { el: null, ok: false, at: web ? web[1] : 0 };
     try {
-      c.el = new Audio((window.JU_SOUNDS && window.JU_SOUNDS[name]) || 'sounds/' + name + '.mp3'); c.el.preload = 'auto';
+      c.el = new Audio(web ? web[0] : (window.JU_SOUNDS && window.JU_SOUNDS[name]) || 'sounds/' + name + '.mp3'); c.el.preload = 'auto';
       c.el.addEventListener('canplaythrough', () => { c.ok = true; }, { once: true });
       c.el.addEventListener('error', () => { c.ok = false; });
     } catch (e) {}
@@ -1257,7 +1261,7 @@ const sfx = (() => {
   const clip = (name, vol = .85) => {
     const c = load(name);
     if (!c.ok || !on) return false;
-    try { const n = c.el.cloneNode(); n.volume = Math.min(1, vol); const pl = n.play(); if (pl && pl.catch) pl.catch(() => {}); } catch (e) {}
+    try { const n = c.el.cloneNode(); n.volume = Math.min(1, vol); if (c.at) n.currentTime = c.at; const pl = n.play(); if (pl && pl.catch) pl.catch(() => {}); } catch (e) {}
     return true;
   };
   return {

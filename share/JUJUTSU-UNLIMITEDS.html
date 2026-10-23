@@ -1242,13 +1242,17 @@ const sfx = (() => {
     src.stop(t + dur + .05);
   };
   // a sound file of the player's own, if one with that name has been put in sounds/ (the one-file build carries them in window.JU_SOUNDS).
-  // It is played instead of the built sound. No file: false, and the built sound plays
+  // It is played instead of the built sound. No file: false, and the built sound plays.
+  // A few of the copy at home's clips (home-*, never put on the site) are played everywhere else straight from where they are posted
+  // publicly, myinstants (Build 0.15v1, the user's ask): [where, and how far into it the copy at home's starts, in seconds]
+  const WEB = { 'home-yuji-bf': ['https://www.myinstants.com/media/sounds/yujis-black-flash.mp3', 0],                // "yuji's black flash"
+    'home-yuji-final': ['https://www.myinstants.com/media/sounds/kokusen-itadori-vs-mahito.mp3', 2.75] };            // "Kokusen (Itadori VS Mahito)"
   const clips = {};
   const load = name => {
     if (clips[name]) return clips[name];
-    const c = clips[name] = { el: null, ok: false };
+    const web = !HOME && WEB[name], c = clips[name] = { el: null, ok: false, at: web ? web[1] : 0 };
     try {
-      c.el = new Audio((window.JU_SOUNDS && window.JU_SOUNDS[name]) || 'sounds/' + name + '.mp3'); c.el.preload = 'auto';
+      c.el = new Audio(web ? web[0] : (window.JU_SOUNDS && window.JU_SOUNDS[name]) || 'sounds/' + name + '.mp3'); c.el.preload = 'auto';
       c.el.addEventListener('canplaythrough', () => { c.ok = true; }, { once: true });
       c.el.addEventListener('error', () => { c.ok = false; });
     } catch (e) {}
@@ -1257,7 +1261,7 @@ const sfx = (() => {
   const clip = (name, vol = .85) => {
     const c = load(name);
     if (!c.ok || !on) return false;
-    try { const n = c.el.cloneNode(); n.volume = Math.min(1, vol); const pl = n.play(); if (pl && pl.catch) pl.catch(() => {}); } catch (e) {}
+    try { const n = c.el.cloneNode(); n.volume = Math.min(1, vol); if (c.at) n.currentTime = c.at; const pl = n.play(); if (pl && pl.catch) pl.catch(() => {}); } catch (e) {}
     return true;
   };
   return {
@@ -10378,11 +10382,12 @@ H.fx = dt => {                                      // the same timing ring the 
 
 /* ---------- the Black Flash finisher: the killing blow holds its target where it was hit while the sparks keep coming ---------- */
 // The voice line is a sound file of your own, not shipped with the game: sounds/blackflash.mp3 (the one-file build carries it in window.JU_SOUNDS).
-// The Vessel's own finisher (no technique on him) sounds like the anime's at home: sounds/home-yuji-bf.mp3, a clip found online (myinstants,
-// "yuji's black flash"), never on the public site, where the built one plays as before
-const HOLD = 1.5, HOME = /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
+// The Vessel's own finisher (no technique on him) sounds like the anime's: a clip found online (myinstants, "yuji's black flash"). At home
+// it is sounds/home-yuji-bf.mp3; everywhere else (Build 0.15v1) it is played from myinstants itself, never copied onto the site. If it
+// cannot be had, the built one plays as before
+const HOLD = 1.5;
 let voice = null, mute = false;
-if (HOME) sfx.preload(['home-yuji-bf']);
+sfx.preload(['home-yuji-bf']);
 function shout() {
   const b = document.getElementById('sfx');
   if (mute || (b && b.getAttribute('aria-pressed') === 'false')) return;
@@ -10396,7 +10401,7 @@ H.bf = o => {
   const x = o.x, y = o.y + 150 * (o.scale || 1), c = F(x, y), sx = c[0] * E.S, sy = c[1] * E.S;
   E.stop(HOLD); E.zoomIn(HOLD);
   for (let i = 0; i < 14; i++) { const a = rnd(0, TAU), l = rnd(240, 640); V.bolt(x, y, x + Math.cos(a) * l, y + Math.sin(a) * l, INK, .5, rnd(3, 7), '#060205'); }
-  const clip = HOME && !JU.tech.active && sfx.file('home-yuji-bf', 1);      // his own finisher, as it sounds in the anime (at home)
+  const clip = !JU.tech.active && sfx.file('home-yuji-bf', 1);      // his own finisher, as it sounds in the anime
   for (const s of [.3, .6, .9, 1.2]) setTimeout(() => { if (JU.game.state.running) { JU.bolts(sx, sy, 10); if (!clip) sfx.hit(true); } }, s * 1000);
   shout(); if (!clip) sfx.charge();
 };
@@ -18540,16 +18545,16 @@ JU.evasive = { foe, limb, limbed, stacks, cut, ghost, EV_CD, BL_T, BL_MAX, BL_CU
      3  dash, then F held, and Divergent Fist from behind the guard (3, and 3 again on the timing)
      4  the same again, and then 4: Manji Kick, the last of them, and the biggest
    Each Black Flash after the first is 190, and so is the kick. Then Divergent Fist and Manji Kick are gone for thirty seconds.
-   Its sounds at home are the anime's: the Black Flashes, myinstants' "yuji's black flash" (sounds/home-yuji-bf.mp3), the kick
-   "Kokusen (Itadori VS Mahito)" (home-yuji-final.mp3). Never on the public site, where the built ones play */
+   Its sounds are the anime's: the Black Flashes, myinstants' "yuji's black flash" (sounds/home-yuji-bf.mp3 at home), the kick
+   "Kokusen (Itadori VS Mahito)" (home-yuji-final.mp3). Online (Build 0.15v1) both are played from myinstants itself, never copied onto
+   the site; if they cannot be had, the built ones play */
 (() => {
 'use strict';
 
 const E = JU.eng, g = E.g, F = E.F, cam = E.cam, H = E.hooks, POSE = E.POSE, LINE = E.LINE, V = JU.vfx, sfx = JU.sfx, Z = JU.bossfx, C = JU.cut, M = E.MOVES, keys = E.keys;
 const { rnd, clamp } = E, TAU = Math.PI * 2, INK = '#ff2440', IRGB = '255,36,64';
 const CHAIN_T = 4, FIN_T = 1.6, DMG = 190, LOCK = 30, STEP = 150;      // how long each step of the chain stays open; the last kick's; what each of them does; how long it shuts things after; how far past them a dash takes him
-const HOME = /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
-if (HOME) sfx.preload(['home-yuji-bf', 'home-yuji-final']);
+sfx.preload(['home-yuji-bf', 'home-yuji-final']);
 const RED_FRAMES = E.flat('#3a0008', '#ff2440');    // what a dash leaves behind, in the chain
 
 /* ================= the Black Flash past the ordinary one ================= */
@@ -18594,8 +18599,8 @@ function refill(n) {                                // the dash, a broken guard,
   if (JU.block && JU.block.state.broken > 0) JU.block.brk(0);
   if (n >= 3) E.cd.manji = 0;
 }
-const chainSound = () => { if (!(HOME && sfx.file('home-yuji-bf', 1))) sfx.bf(); };
-const finalSound = () => { if (!(HOME && sfx.file('home-yuji-final', 1))) { sfx.bf(); sfx.slam(2); sfx.blast(); } };
+const chainSound = () => { if (!sfx.file('home-yuji-bf', 1)) sfx.bf(); };
+const finalSound = () => { if (!sfx.file('home-yuji-final', 1)) { sfx.bf(); sfx.slam(2); sfx.blast(); } };
 
 // the last of it: a turn that takes him to them, and Manji Kick with everything left in him behind it. It finds them where they are,
 // in the air or on the floor

@@ -6,16 +6,16 @@
      3  dash, then F held, and Divergent Fist from behind the guard (3, and 3 again on the timing)
      4  the same again, and then 4: Manji Kick, the last of them, and the biggest
    Each Black Flash after the first is 190, and so is the kick. Then Divergent Fist and Manji Kick are gone for thirty seconds.
-   Its sounds at home are the anime's: the Black Flashes, myinstants' "yuji's black flash" (sounds/home-yuji-bf.mp3), the kick
-   "Kokusen (Itadori VS Mahito)" (home-yuji-final.mp3). Never on the public site, where the built ones play */
+   Its sounds are the anime's: the Black Flashes, myinstants' "yuji's black flash" (sounds/home-yuji-bf.mp3 at home), the kick
+   "Kokusen (Itadori VS Mahito)" (home-yuji-final.mp3). Online (Build 0.15v1) both are played from myinstants itself, never copied onto
+   the site; if they cannot be had, the built ones play */
 (() => {
 'use strict';
 
 const E = JU.eng, g = E.g, F = E.F, cam = E.cam, H = E.hooks, POSE = E.POSE, LINE = E.LINE, V = JU.vfx, sfx = JU.sfx, Z = JU.bossfx, C = JU.cut, M = E.MOVES, keys = E.keys;
 const { rnd, clamp } = E, TAU = Math.PI * 2, INK = '#ff2440', IRGB = '255,36,64';
 const CHAIN_T = 4, FIN_T = 1.6, DMG = 190, LOCK = 30, STEP = 150;      // how long each step of the chain stays open; the last kick's; what each of them does; how long it shuts things after; how far past them a dash takes him
-const HOME = /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
-if (HOME) sfx.preload(['home-yuji-bf', 'home-yuji-final']);
+sfx.preload(['home-yuji-bf', 'home-yuji-final']);
 const RED_FRAMES = E.flat('#3a0008', '#ff2440');    // what a dash leaves behind, in the chain
 
 /* ================= the Black Flash past the ordinary one ================= */
@@ -60,8 +60,8 @@ function refill(n) {                                // the dash, a broken guard,
   if (JU.block && JU.block.state.broken > 0) JU.block.brk(0);
   if (n >= 3) E.cd.manji = 0;
 }
-const chainSound = () => { if (!(HOME && sfx.file('home-yuji-bf', 1))) sfx.bf(); };
-const finalSound = () => { if (!(HOME && sfx.file('home-yuji-final', 1))) { sfx.bf(); sfx.slam(2); sfx.blast(); } };
+const chainSound = () => { if (!sfx.file('home-yuji-bf', 1)) sfx.bf(); };
+const finalSound = () => { if (!sfx.file('home-yuji-final', 1)) { sfx.bf(); sfx.slam(2); sfx.blast(); } };
 
 // the last of it: a turn that takes him to them, and Manji Kick with everything left in him behind it. It finds them where they are,
 // in the air or on the floor
