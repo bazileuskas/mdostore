@@ -10,12 +10,13 @@
      with their Evasive), then 25, 25 and 45, the last a second Broken Limb on top of the first.
    3 Collapsed Fist (0.12v1): the hand without the blade, with blue in it. 80 and three stacks of Broken Limb; with a Ratio on him, 120 and five.
      Whatever it lands on, what is above it comes down on top of them. Its punch at home is a clip found online (sounds/home-nanami-punch.mp3,
-     myinstants' "Anime Brutal Punch"), and so are his Black Flashes (home-nanami-bf.mp3, "Black Flash SFX"): never on the public site.
+     myinstants' "Anime Brutal Punch"), never on the public site; and so are his Black Flashes (home-nanami-bf.mp3, "Black Flash SFX"),
+     which online (since 0.15v1) are played from myinstants itself, never copied onto the site.
    4 is still to come.
    THE CHAIN (Build 0.13): Cleaving Rush's Black Flash opens it, and keeps it open four seconds at a time: a Ratio again (E, and E on the
    red), and Collapsed Fist is a Black Flash, 190; a Ratio again, and Collapsed Fist again, another; and then Ratio Kick, plain, is the last
    of it: 190, and a Black Flash past the ordinary kind (kokusen.js). Its sound at home is the anime's (sounds/home-nanami-final.mp3:
-   myinstants' "Mahito Black Flash Effect (Season 2, Episode 20)"), never on the public site.
+   myinstants' "Mahito Black Flash Effect (Season 2, Episode 20)"; online it is played from there, since 0.15v1).
    OVERTIME (Build 0.15): his awakening, G with the bar full. Below, over Ratio Flash.
    RATIO, the passive: E, and a line over his head with a mark on it at seven to three, tilted (never more than 20 degrees either way). E again
    as the ring crosses the red and the Ratio is his for ten seconds: the fifth strike of a chain is a Black Flash, and so is Cleaving Rush,
@@ -40,8 +41,8 @@ const SOUNDS = ['ratio-hit1', 'ratio-hit2', 'ratio-hit3', 'ratio-hit4', 'ratio-h
 const JJS = ['jjs-hit1', 'jjs-hit2', 'jjs-hit3', 'jjs-hit4', 'jjs-hit5'], NET = ['home-nanami-bf', 'home-nanami-punch', 'home-nanami-final', 'home-overtime'];
 // the chain's last kick, and Overtime's last: the Black Flash past the ordinary kind, built (sfx.bfMax) so it is heard online too; at home the clip
 // goes over it as well (Build 0.15: it had been the clip or the plain Black Flash)
-const finalSound = () => { if (HOME && sfx.file('home-nanami-final', 1)) sfx.bfMax(.55); else sfx.bfMax(); };
-const bfSound = () => { if (!(HOME && sfx.file('home-nanami-bf', 1))) sfx.bf(); };      // his Black Flash: the clip at home, the built one online
+const finalSound = () => { if (sfx.file('home-nanami-final', 1)) sfx.bfMax(.55); else sfx.bfMax(); };
+const bfSound = () => { if (!sfx.file('home-nanami-bf', 1)) sfx.bf(); };      // his Black Flash: the clip (from myinstants, online), or the built one if it cannot be had
 
 /* ================= the blade: longer than his forearm and as wide as a hand, wrapped in pale cloth with dark spots, on a black grip ================= */
 // pt(L, v): a point of it on screen, L along it from his fist and v across it (+ the spine, - the edge, whichever way he faces)
@@ -707,7 +708,7 @@ const free = p => !p.move && !p.ps && !p.dead && !(p.dashT > 0);
 
 /* ---------- wiring ---------- */
 let primed = false;
-function prime() { if (!primed) { primed = true; sfx.preload(HOME ? SOUNDS.concat(JJS, NET) : SOUNDS); } }
+function prime() { if (!primed) { primed = true; sfx.preload(HOME ? SOUNDS.concat(JJS, NET) : SOUNDS.concat(['home-nanami-bf', 'home-nanami-final'])); } }      // (online: his Black Flashes, from myinstants)
 const moveFx0 = H.moveFx, press0 = H.press, tick0 = H.tick, fx0 = H.fx, under0 = H.under, reset0 = H.reset, start0 = H.fightStart, move0 = H.move, pow0 = H.power;
 H.move = k => (otOn() && on() && OTM[k]) || (move0 ? move0(k) : null);      // in Overtime, 1 and 2 are its own
 H.power = (h, o) => (pow0 ? pow0(h, o) : 1) * (otOn() && on() && o === E.P2 ? OT_POW : 1);

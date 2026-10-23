@@ -4,7 +4,8 @@
    PERFECT CLAP: a strike (left click or J) pressed straight after a swap is a second clap instead, and Boogie Woogie is ready again at once.
    BLACK FLASH (Build 0.13): straight after changing places with the pebble, Stitcher Punch has a fifth of a second behind it instead of most of
    one, and it is a Black Flash, past the ordinary kind (kokusen.js): 190. Boogie Woogie is gone for twenty seconds after. Its sound at home is
-   the anime's, the scene with its music (sounds/home-todo-bf.mp3: myinstants' "todo black flash jjk"), never on the public site */
+   the anime's, the scene with its music (myinstants' "todo black flash jjk": sounds/home-todo-bf.mp3 at home; online, since 0.15v1,
+   played from myinstants itself, never copied onto the site. If it cannot be had, the built sound plays) */
 (() => {
 'use strict';
 
@@ -20,8 +21,7 @@ const WINDOW = .4;                                  // how long after a swap a s
 let clapAt = -9;                                    // when he last changed places with something
 const KOKU_T = 1, KOKU_DMG = 190, LOCK = 20;         // the Black Flash: how long after the swap with the stone it is there; what it does; how long Boogie Woogie is gone after
 let stoneAt = -9, lockT = 0;                        // when he last changed places with the stone; and how long Boogie Woogie has left to be gone
-const HOME = /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
-if (HOME) sfx.preload(['home-todo-bf']);
+sfx.preload(['home-todo-bf']);
 
 /* ---------- Ground Slam: what is left of the floor afterwards ---------- */
 const LIFT = [-.1, -.2, 2.9, 2.7, .3, -.3, 0];        // both arms straight up, with something heavy on the end of them
@@ -116,7 +116,7 @@ const KOKU = { name: 'Stitcher Punch', dur: 1.3, glow: 'red', run(p, m, t) {
   const W = .2, o = E.P2;
   if (t < W) {
     p.vx = 0; p.rate = 40; p.target = BACK;
-    if (!m.c) { m.c = 1; m.clip = HOME && sfx.file('home-todo-bf', 1); if (!m.clip) sfx.charge(); shout(p, '黒閃', '#ff5a6e'); }      // (the clip's own crack comes a fifth of a second in: as the punch lands)
+    if (!m.c) { m.c = 1; m.clip = sfx.file('home-todo-bf', 1); if (!m.clip) sfx.charge(); shout(p, '黒閃', '#ff5a6e'); }      // (the clip's own crack comes a fifth of a second in: as the punch lands)
     const w = E.hand(p, false); V.mote(w[0], w[1], 'red'); V.mote(w[0], w[1], 'blue');
     return;
   }

@@ -5,6 +5,10 @@
 // Newest first. v = the build, jp = the seal stamped beside it, pic = notes/<pic>.jpg, cap = what the picture shows.
 // A new update goes at the top of this list.
 const NOTES = [
+  { v: '0.15v1', name: 'Bastards Qusion', jp: '奇跡', date: '23 Oct 2026', pic: 'bastards', cap: 'Bastards Qusion: the barrage, before the last of it sends them flying', items: [
+    'Miracle Dork’s third move, Bastards Qusion: a quick barrage, with the sword or with his fists while it is away, 70 in all, and the last hit launches them forward',
+    'A TUT Miracle Dork Combo: after Bastards Qusion, call the sword back (2 while it is thrown) and it flies to them wherever they are and drags them back to you, 60. Then Lucky Cut (1) straight after, sword or no sword: 20 harder, and five stacks of bleeding',
+    'The anime’s Black Flash sounds, Yuji’s, Todo’s and Ratio Man’s, now play on every device, not only on one computer'] },
   { v: '0.15', name: 'Ratio Awk × Love Reaper', jp: '純愛', date: '23 Oct 2026', pic: 'reaper', cap: 'Rika, all of her, throwing him at them', items: [
     'Love Reaper, in Early Access: Yuta, with a katana, and Rika behind him, 85% see-through, until she is wanted. Right click switches to her moveset and back (on a touch screen, the Rika button)',
     'Cleaving Love (1): with the katana, a barrage of cuts, 90 in all. With Rika, she throws him at them with the sword out in front: it cuts them (80), she slams them into the floor (20), and he cuts them again (30). After her version it waits 20 seconds. 2, 3 and 4 are still to come',

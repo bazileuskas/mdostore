@@ -6,7 +6,11 @@
      in the way, 40 more. The throw has a sound of its own, and the return is that sound backwards (index.html, sfx.blade).
      While it is away his strikes are punches, slower and steady, and every third one that lands is a miracle; and 1 is Lucky Cut, which if
      it lands is an uppercut: 50, a stack of bleeding (the same bleeding as the Vengeful Artist's Broil), and 30 more as it bleeds.
-   3 and 4 are still to come.
+   3 Bastards Qusion (0.15v1): a quick barrage, with the sword or (while it is away) his fists, 70 in all, and the last of it sends them
+     flying on. A TUT MIRACLE DORK COMBO: while they are still on their way (or lying where they came down), the sword coming back to his
+     hand hooks them and brings them back with it, 60 instead of 40; and a Lucky Cut straight after that (1, sword or no sword) is 20
+     harder and leaves five stacks of bleeding.
+   4 is still to come.
    MIRACLES, the passive: six triangles under his health bar. A blow that would kill him spends them instead: the harder it is the more (one
    to five), and he lives through it with a quarter of his health. Not enough of them for that blow, and it kills him */
 (() => {
@@ -19,6 +23,7 @@ const exact = (o, n) => n / (o.dr || 1);            // a hit worth the stated am
 const gore = () => JU.gore !== false;
 const PINK = '#ff7ab6', PINKD = '#b8487e', GOLDB = '#ffd86b', GOLDD = '#b8892a', GRGB = '255,216,107';
 const RUSH = 60, THROWN = 40, BACK = 40, LUCKY = 50, LUCKY_BLEED = 30, MAXM = 6, HEAL = .25;      // what each thing does; how many miracles he can hold; and what one leaves him with
+const BQ = [7, 10], BQ_CD = 8, DRAG = 60, COMBO_DMG = 20, COMBO_BLEED = 5, HOOK_T = 3.5, COMBO_T = 3;      // Bastards Qusion: its hits and each one's; its wait; the sword bringing them back; the combo's Lucky Cut, harder, and its bleeding; how long after the barrage the sword can hook them; and after that, for the Lucky Cut
 const SPLATS = ['gore-splat1', 'gore-splat2', 'gore-splat3'];
 
 /* ================= how he looks: blond and all over the place, a brown hoodie over a pink shirt, and the face of somebody things happen to ================= */
@@ -93,6 +98,8 @@ function throwSword(p) {
 function recall() {                                 // 2 again: back to his hand
   if (!blade || blade.phase === 'back') return;
   blade.phase = 'back'; blade.hitBack = false; sfx.blade(true);
+  const o = E.P2;
+  if (hook && hook.o === o && E.T - hook.at < HOOK_T && !o.ko) blade.via = o;      // what Bastards Qusion sent flying: the sword goes by way of them, wherever they are
   if (Z) Z.flare(blade.x, blade.y, GRGB, 180, .12);
 }
 function bladeHit(o, f, dmg) {                      // what the sword does to whatever it goes through, either way
@@ -115,13 +122,28 @@ function flyBlade(dt) {
   } else if (b.phase === 'drop') {                  // off whatever it hit, and down into the floor point first
     b.vy -= 2600 * dt; b.y += b.vy * dt; b.x = clamp(b.x + b.f * 160 * dt, -1000, 1000); b.ang += 18 * dt;
     if (b.y <= 70) { b.y = 70; b.phase = 'stuck'; b.ang = b.f > 0 ? 1.9 : 1.24; E.addDust(b.x); V.rocks(b.x, 0, 4); sfx.land(); }
-  } else if (b.phase === 'back') {                  // back to his hand, through anything in the way
-    const p = E.P1, w = E.hand(p, true), dx = w[0] - b.x, dy = w[1] - b.y, d = Math.hypot(dx, dy) || 1, step = Math.min(d, 2400 * dt), x0 = b.x;
+  } else if (b.phase === 'back') {                  // back to his hand, through anything in the way (and first by way of whatever Bastards Qusion sent flying)
+    const p = E.P1, v = b.via && b.via === E.P2 && !b.via.ko ? b.via : null, w = v ? [v.x, v.y + 165 * (v.scale || 1)] : E.hand(p, true);
+    const dx = w[0] - b.x, dy = w[1] - b.y, d = Math.hypot(dx, dy) || 1, step = Math.min(d, 2400 * dt), x0 = b.x;
     b.x += dx / d * step; b.y += dy / d * step; b.ang -= 26 * dt;
+    if (v) { if (d < 70) { b.via = null; b.hitBack = true; drag(v, p.x >= v.x ? 1 : -1); } return; }      // through them, and they come back along with it
+    b.via = null;
     const f = Math.sign(b.x - x0) || 1;
-    if (!b.hitBack && live && (o.x - x0) * (o.x - b.x) <= 0 && Math.abs(b.y - (o.y + 165 * hs)) < 170 * hs) { b.hitBack = true; bladeHit(o, f, BACK); }
+    const hooked = !!hook && hook.o === o && E.T - hook.at < HOOK_T && !o.ko && !(o.alpha < 1);      // sent flying by Bastards Qusion (lying where they came down counts)
+    if (!b.hitBack && (live || hooked) && (o.x - x0) * (o.x - b.x) <= 0 && Math.abs(b.y - (o.y + 165 * hs)) < 170 * hs) { b.hitBack = true; if (hooked) drag(o, f); else bladeHit(o, f, BACK); }
     if (d < 50) { blade = null; held = true; relabel(); sfx.cut(.8); V.sparks(w[0], w[1], 'gold', 6); }
   }
+}
+
+// the combo: the sword coming back has hooked them, and they come with it, to his feet. 60, and a Lucky Cut is open for three seconds
+let hook = null, combo = null;                       // what Bastards Qusion sent flying, and when: { o, at }; the Lucky Cut's window: { o, t }
+function drag(o, f) {
+  const p = E.P1, hs = o.scale || 1, x = o.x, y = o.y + 165 * hs, d = Math.max(0, Math.abs(o.x - p.x) - 130);
+  hook = null;
+  E.applyHit(o, f, { dmg: exact(o, DRAG), kb: clamp(d / .5, 300, 1700), lift: 380, stun: .9, stop: .14, heavy: 1, col: GOLDB, fixed: 1, mute: 1 });      // (as far as it takes to land them at his feet)
+  sfx.splatter(); shake(22); E.zoomIn(.25);
+  V.slash(x, y, f > 0 ? 0 : Math.PI, 440, GOLDB, 12); V.sparks(x, y, 'gold', 12); FX.gush(x, y, f, 12, 1); FX.pop(x, y + 170, 'グイッ', 58, GOLDB);
+  if (!o.ko) { combo = { o, t: COMBO_T }; E.fx.push({ k: 2, x: p.x, y: p.y + 420, n: '1 · LUCKY CUT', col: PINK, t: 0, life: 1.8 }); }
 }
 
 /* ================= his strikes: the sword's, or (while it is away) his fists ================= */
@@ -212,7 +234,11 @@ const MOVES = {
   // 1 — Rush, with the sword. Without it: Lucky Cut
   strikes: { name: 'Rush', cd: 7, dur: 2, glow: 'gold', run(p, m, t) {
     const o = E.P2, f = p.face;
-    if (m.kind === undefined) { m.kind = held ? 'rush' : 'lucky'; sfx.charge(); shout(p, m.kind === 'rush' ? '突進' : '幸運', m.kind === 'rush' ? GOLDB : PINK); }
+    if (m.kind === undefined) {
+      m.kind = combo && combo.o === o && !o.ko ? 'combo' : held ? 'rush' : 'lucky';
+      if (m.kind === 'combo') combo = null;
+      sfx.charge(); shout(p, m.kind === 'rush' ? '突進' : '幸運', m.kind === 'rush' ? GOLDB : PINK);
+    }
     p.rate = 50;
     if (m.kind === 'rush') {
       if (t < .1) { p.target = POSE.haCrouch; p.vx = 0; return; }
@@ -232,12 +258,23 @@ const MOVES = {
     if (t < .13) { p.target = POSE.vaLow || POSE.crushWind; p.vx = 0; return; }
     p.target = t < .42 ? (POSE.vaRise || POSE.jump) : POSE.idle; p.vx = t < .22 ? f * 260 : 0;
     if (!m.sw) { m.sw = 1; sfx.whoosh(); V.slash(p.x + f * 110, p.y + 220, f > 0 ? 1.2 : Math.PI - 1.2, 380, PINK, 13); }
-    if (!m.done && t < .3 && E.tryHit(p, { reach: 175, dmg: exact(o, LUCKY), kb: 80, lift: 1100, stun: .9, stop: .12, heavy: 1, col: PINK, fixed: 1, mute: 1, bleed: 1 })) {
+    const cb = m.kind === 'combo', hh = { reach: cb ? 230 : 175, dmg: exact(o, LUCKY + (cb ? COMBO_DMG : 0)), kb: 80, lift: 1100, stun: .9, stop: cb ? .2 : .12, heavy: 1, col: PINK, fixed: 1, mute: 1, bleed: cb ? COMBO_BLEED : 1 };
+    let landed = false;
+    if (!m.done && t < .3) {
+      if (!cb) landed = E.tryHit(p, hh);
+      else { const gap = (o.x - p.x) * f; if (gap > -60 && gap < hh.reach && Math.abs(o.y - p.y) < 220 && !o.ko && !(o.alpha < 1)) { E.applyHit(o, f, hh); landed = true; } }      // (the combo's scoops them up off the floor too)
+    }
+    if (landed) {
       m.done = 1;
       const hs = o.scale || 1, x = o.x, y = o.y + 165 * hs;
       sfx.splatter(); shake(22); E.zoomIn(.3);
       V.sparks(x, y, 'gold', 10); V.ring(x, y, 220, PINK, .25); FX.gush(x, y, f, 14, 1); FX.pop(x, y + 170, 'ラッキー', 56, PINK);
-      if (!o.ko) { VA.wound(o); bleedFor(o, LUCKY_BLEED); }
+      if (!o.ko) { for (let i = cb ? COMBO_BLEED : 1; i > 0; i--) VA.wound(o); bleedFor(o, LUCKY_BLEED); }
+      if (cb) {                                    // A TUT MIRACLE DORK COMBO
+        E.banner('奇跡', 'A TUT MIRACLE DORK COMBO', 'xs'); sfx.tap(1); sfx.confirm(); E.zoomIn(.5); shake(30);
+        V.ring(x, y, 420, GOLDB, .4); V.sparks(x, y, 'gold', 20); FX.gush(x, y, f, 24, 1.3); FX.blood(x, y, f, 12);
+        if (Z) { Z.flash(GRGB, .25, .2); Z.flare(x, y, GRGB, 460, .25); }
+      }
     }
     if (t > .62) E.endMove(p);
   } },
@@ -248,13 +285,39 @@ const MOVES = {
     m.s = 1;
     if (held) throwSword(p);
   } },
-  div: { name: 'Coming soon', cd: 1, dur: .01, run() {} },
+  // 3 — Bastards Qusion: a quick barrage, with the sword or (while it is away) his fists, and the last of it sends them flying on
+  div: { name: 'Bastards Qusion', cd: BQ_CD, dur: 1.2, glow: 'gold', run(p, m, t) {
+    const o = E.P2, f = p.face, D = .075, gap = (o.x - p.x) * f;
+    if (!m.s) { m.s = 1; m.sword = held; sfx.charge(); shout(p, 'バスタード', PINK); }
+    p.rate = 52;
+    if (t < .1) { p.target = POSE.haCrouch; p.vx = gap > 170 ? f * 1400 : 0; return; }
+    const n = Math.floor((t - .1) / D);
+    if (n < BQ[0]) {
+      p.vx = gap > 190 ? f * 260 : 0;
+      p.target = m.sword ? (n & 1 ? POSE.haCutB : POSE.haCutA) : (n & 1 ? POSE.cross : POSE.jab);
+      if (n !== m.n) {
+        m.n = n;
+        const last = n === BQ[0] - 1, hs = o.scale || 1, x = o.x - f * 20 + rnd(-20, 20), y = o.y + 165 * hs + rnd(-50, 50);
+        if (m.sword) { sfx.cut(.7 + Math.random() * .4); V.slash(x, y, rnd(0, TAU), last ? 460 : rnd(220, 320), n % 3 ? GOLDB : PINK, last ? 13 : 7); } else sfx.whoosh();
+        const h = last ? { reach: 220, dmg: exact(o, BQ[1]), kb: 1300, lift: 520, stun: .9, stop: .12, heavy: 1, col: PINK, fixed: 1, mute: 1 }
+                       : { reach: 210, dmg: exact(o, BQ[1]), kb: 40, stun: .5, stop: .025, col: m.sword ? GOLDB : '#ffffff', fixed: 1, mute: 1 };
+        if (E.tryHit(p, h)) {
+          if (m.sword) sfx.splat(); else sfx.hit(last);
+          V.sparks(x, y, 'gold', last ? 12 : 3);
+          if (gore()) FX.splash(x, y, f, last ? 6 : 2, .7);
+          if (last) { shake(24); E.zoomIn(.3); V.ring(o.x, o.y + 165 * hs, 260, PINK, .3); FX.pop(o.x, o.y + 335 * hs, 'ドカッ', 60, PINK); hook = { o, at: E.T }; }
+        }
+      }
+      return;
+    }
+    p.vx = 0; p.target = t < .95 ? (m.sword ? POSE.haCutC : POSE.cross) : POSE.idle;
+  } },
   manji: { name: 'Coming soon', cd: 1, dur: .01, run() {} }
 };
 
 JU.tech.add('haruta', { name: 'Miracle Dork', jp: '奇跡', mark: '奇', who: 'Miracles', odds: 0, col: PINK, glow: 'gold', moves: MOVES,
   early: true, gore: true, skin: HARUTA, as: ['Miracle Dork', '奇跡'], m1,
-  hint: '<b>2</b> again: the sword comes back · without it: punches, every 3rd a miracle · <b>1</b> is Lucky Cut' });
+  hint: '<b>2</b> again: the sword comes back · without it: punches, every 3rd a miracle · <b>1</b> is Lucky Cut · <b>3</b>, then the sword back through them, then <b>1</b>: the combo' });
 const DEF = JU.tech.TECH.haruta, on = () => JU.tech.active === DEF;
 
 /* ---------- wiring ---------- */
@@ -271,6 +334,11 @@ H.moveFx = (p, m) => {
 }
 H.press = (a, inScene) => {
   if (!inScene && on() && a === 'crush' && blade && blade.phase !== 'back' && !E.P1.dead) { recall(); return true; }
+  const p = E.P1;
+  if (!inScene && on() && a === 'strikes' && combo && E.root.dataset.mode === 'fight' && !p.move && !p.ps && !p.dead && !(p.dashT > 0)) {      // the combo's Lucky Cut, now, whatever 1's wait
+    E.cd.strikes = E.CD.strikes; p.move = { def: MOVES.strikes, key: 'strikes', t: 0 }; E.hud.mv.strikes.classList.add('act');
+    return true;
+  }
   return press0 ? press0(a, inScene) : false;
 };
 H.guard = (face, a, mul = 1) => {
@@ -287,6 +355,8 @@ H.tick = dt => {
   tick0(dt);
   if (blade) flyBlade(dt);
   if (dots.length) bleedTick(dt);
+  if (hook && E.T - hook.at > HOOK_T) hook = null;
+  if (combo && ((combo.t -= dt) <= 0 || combo.o !== E.P2 || combo.o.ko)) combo = null;
 };
 H.under = dt => {
   under0(dt);
@@ -301,9 +371,9 @@ H.fx = dt => {
   for (const f of [E.P2, E.P1]) if (f.skin === HARUTA && !(f.alpha < .05) && (f !== E.P1 || held)) drawHeld(f);
   if (blade) drawLoose();
 };
-const clear = () => { held = true; blade = null; dots.length = trail.length = 0; punches = 0; };
+const clear = () => { held = true; blade = null; dots.length = trail.length = 0; punches = 0; hook = combo = null; };
 H.reset = () => { reset0(); clear(); miracles = 0; paint(); };
 H.fightStart = (cfg, wave) => { start0(cfg, wave); clear(); if (!wave) miracles = 0; paint(); relabel(); if (on()) prime(); };
 
-JU.haruta = { HARUTA, MOVES, CUTS, FISTS, MAXM, get held() { return held; }, get blade() { return blade && { phase: blade.phase, x: Math.round(blade.x) }; }, get miracles() { return miracles; }, set miracles(n) { miracles = clamp(n | 0, 0, MAXM); paint(); }, get punches() { return punches; } };
+JU.haruta = { HARUTA, MOVES, CUTS, FISTS, MAXM, get hook() { return hook && { at: hook.at }; }, get combo() { return combo && { t: +combo.t.toFixed(2) }; }, get held() { return held; }, get blade() { return blade && { phase: blade.phase, x: Math.round(blade.x) }; }, get miracles() { return miracles; }, set miracles(n) { miracles = clamp(n | 0, 0, MAXM); paint(); }, get punches() { return punches; } };
 })();
