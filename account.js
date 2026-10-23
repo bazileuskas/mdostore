@@ -22,6 +22,7 @@
 const sfx = JU.sfx, TEAM = 'TheUnlimitedsTeam', TEAM2 = 'TheUnlimitedsTeam2', GUEST = '_guest', ROUNDS = 120000;
 const TEAM_SALT = '9ccc5ca0f18acfc6', TEAM_V = '353497485db0c38d6701a02f4965022b8ca9ebd8c795d4887103df9112005a09';
 const TEAM_PUB = 'f763d2e72b4617fd9c00658cdbcb4d0107cd24dee5c0153109e59a41db4a7d7d';      // the public half of the key the team signs with (announcements, admin powers)
+const HOME_PUB = '904a1edf74b98f8416360eb59a4338711ec86f1ec8d6d12b7e8f96f9af3fefc5';      // and of the team's own computer's (Build 0.15v1: its other half is in local/team.json there, and nowhere else)
 const VOID_BEFORE = 0;                                     // admin powers given before this moment (ms) count for nothing: raising it takes every one of them back
 const NAME = /^[A-Za-z0-9][A-Za-z0-9_]{2,19}$/, MINPW = 6;
 const OWN = /^ju\.(sfx$|gore$|accounts$|session$|device$|save\.)/;       // these are not part of anybody's progress
@@ -82,11 +83,21 @@ const TEST = TEAM.toLowerCase() + '.test', TWO = TEAM.toLowerCase() + '.2';     
    the game is played from at home, a file beside it says so: local/team.json, never committed and never put online, so it exists on that
    one machine and nowhere else. Opened there at localhost, the team's account cannot be signed out of: if this browser has forgotten the
    sign-in it is put back on its own, and Log out is not offered. Its test account and its second account can still be switched to and
-   back. A sign-in put back this way has no key to sign with (announcing, giving admin powers): the password typed once in the scroll gives
-   it one. Taking the file away ends all of it */
+   back. Announcing and giving admin powers are signed there with a key of that computer's own, kept in the same file (Build 0.15v1, the
+   user's ask: no password typed for them any more); every game takes that key's signature as it takes the team's. Without the key in the
+   file a sign-in put back this way has nothing to sign with, and the password, typed once in the scroll, gives it one. Taking the file
+   away ends all of it */
+let HOME_KEY = '';                                        // (the team's computer: what it signs with, from local/team.json)
 const PIN = (() => {
   if (location.hostname !== 'localhost') return false;
-  try { const x = new XMLHttpRequest(); x.open('GET', 'local/team.json?' + Date.now(), false); x.send(); return x.status === 200 && JSON.parse(x.responseText).team === true; } catch (e) { return false; }
+  try {
+    const x = new XMLHttpRequest(); x.open('GET', 'local/team.json?' + Date.now(), false); x.send();
+    if (x.status !== 200) return false;
+    const j = JSON.parse(x.responseText);
+    if (j.team !== true) return false;
+    if (typeof j.key === 'string' && /^[0-9a-f]{64}$/.test(j.key)) HOME_KEY = j.key;
+    return true;
+  } catch (e) { return false; }
 })();
 let me = null, test = false, two = false;                  // the account signed in, or nobody; whether the team's account is being its test account; and whether it is its second one
 {
@@ -104,11 +115,14 @@ const slot = () => (me ? (test ? TEST : home()) : GUEST);
 let DEVICE = read('ju.device', '');                        // this browser, as a name the team's note can be made out to
 if (typeof DEVICE !== 'string' || !/^[0-9a-f]{16}$/.test(DEVICE)) { DEVICE = hex(crypto.getRandomValues(new Uint8Array(8))); write('ju.device', DEVICE); }
 const unhex = h => Uint8Array.from(h.match(/../g), x => parseInt(x, 16));
-async function signed(text, sig) {                         // did the team sign this
+async function signed(text, sig) {                         // did the team sign this (with the sign-in's key, or its computer's)
   try {
     if (typeof sig !== 'string' || !/^[0-9a-f]{128}$/.test(sig)) return false;
-    const key = await crypto.subtle.importKey('raw', unhex(TEAM_PUB), { name: 'Ed25519' }, false, ['verify']);
-    return await crypto.subtle.verify({ name: 'Ed25519' }, key, unhex(sig), enc(text));
+    for (const pub of [TEAM_PUB, HOME_PUB]) {
+      const key = await crypto.subtle.importKey('raw', unhex(pub), { name: 'Ed25519' }, false, ['verify']);
+      if (await crypto.subtle.verify({ name: 'Ed25519' }, key, unhex(sig), enc(text))) return true;
+    }
+    return false;
   } catch (e) { return false; }
 }
 let admin = false, ui = false;
@@ -150,14 +164,15 @@ const hello = v => { try { sessionStorage.setItem('ju.hello', v); } catch (e) {}
 async function sign(text) {
   const s = read('ju.session', null);
   if (!me || !me.team || !s) throw new Error('Only the team’s account can announce.');
-  if (typeof s.k !== 'string') throw new Error('Type the team’s password in the scroll once first (this device signed itself in).');
+  const seed = typeof s.k === 'string' ? sha256(enc('ju-announce:' + s.k)) : PIN && HOME_KEY ? unhex(HOME_KEY) : null;      // the sign-in's key; or, on the team's computer, its own
+  if (!seed) throw new Error('Type the team’s password in the scroll once first (this device signed itself in).');
   const der = new Uint8Array(48);
-  der.set([0x30, 0x2e, 0x02, 0x01, 0x00, 0x30, 0x05, 0x06, 0x03, 0x2b, 0x65, 0x70, 0x04, 0x22, 0x04, 0x20]); der.set(sha256(enc('ju-announce:' + s.k)), 16);
+  der.set([0x30, 0x2e, 0x02, 0x01, 0x00, 0x30, 0x05, 0x06, 0x03, 0x2b, 0x65, 0x70, 0x04, 0x22, 0x04, 0x20]); der.set(seed, 16);
   const key = await crypto.subtle.importKey('pkcs8', der, { name: 'Ed25519' }, false, ['sign']);
   return hex(new Uint8Array(await crypto.subtle.sign({ name: 'Ed25519' }, key, enc(text))));
 }
 
-JU.account = Object.freeze({ TEAM, TEAM2, get name() { return me ? called() : ''; }, get two() { return two; }, get dev() { return !!(me && me.team && !test) || admin; }, get admin() { return admin; }, device: DEVICE, PUB: TEAM_PUB, take, get test() { return test; }, get team() { return !!(me && me.team); }, get signedIn() { return !!me; }, sign });
+JU.account = Object.freeze({ TEAM, TEAM2, get name() { return me ? called() : ''; }, get two() { return two; }, get dev() { return !!(me && me.team && !test) || admin; }, get admin() { return admin; }, device: DEVICE, PUB: TEAM_PUB, PUBS: [TEAM_PUB, HOME_PUB], take, get test() { return test; }, get team() { return !!(me && me.team); }, get signedIn() { return !!me; }, sign });
 
 /* ---------- the scroll ---------- */
 const box = document.getElementById('ascroll');
@@ -185,7 +200,7 @@ function paint(note) {
       ${me.team ? `<button class="aseal alt" id="aflip" type="button"><b lang="ja" aria-hidden="true">${test ? '無' : '試'}</b><span>${test ? 'Back to ' + (two ? TEAM2 : 'the team account') : 'Switch to the test account'}</span></button>` : ''}
       ${me.team ? `<form class="acast" id="acast"><label>Announce to every player<textarea id="atext" maxlength="160" rows="2" placeholder="Shown at the top of everybody’s screen"></textarea></label>
         <button class="aseal alt" type="submit"><b lang="ja" aria-hidden="true">告</b><span>Send to everyone</span></button></form>` : ''}
-      ${PIN && me.team && !keyed() ? `<form class="acast" id="akey"><label>The team’s password, once, to announce and give admin powers from here<input id="akeyp" type="password" autocomplete="current-password" maxlength="64"></label>
+      ${PIN && me.team && !keyed() && !HOME_KEY ? `<form class="acast" id="akey"><label>The team’s password, once, to announce and give admin powers from here<input id="akeyp" type="password" autocomplete="current-password" maxlength="64"></label>
         <button class="aseal alt" type="submit"><b lang="ja" aria-hidden="true">鍵</b><span>Unlock</span></button></form>` : ''}
       ${PIN && me.team ? '<p class="afine">This device is the team’s: it stays signed in, and there is no logging out of it here.</p>' : `<button class="aseal" id="aout" type="button"><b lang="ja" aria-hidden="true">去</b><span>Log out</span></button>`}
       ${test ? '<button class="alink" id="afresh" type="button">Start the test account over</button>' : ''}

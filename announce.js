@@ -1,17 +1,18 @@
 /* JUJUTSU UNLIMITEDS — announcements from the team, shown at the top of every player's screen within a second or two of being sent.
    The game has no server of its own, so they travel over a public relay (ntfy.sh): every open copy of the game listens to one topic, and the
    team's account posts to it from the scroll in the corner. Anybody can post to a public topic, so every announcement is signed (Ed25519)
-   with a key made from the team's sign-in (account.js), and a game shows only what checks out against the public half kept here. One more
+   with a key made from the team's sign-in (account.js), or with the team's own computer's, and a game shows only what checks out against
+   the public half of one of them. One more
    than ten minutes old is not shown either, so nothing can be played back later. A browser that cannot check a signature shows nothing */
 (() => {
 'use strict';
 
-const HOST = 'https://ntfy.sh', PUB = JU.account.PUB, MAXLEN = 160, FRESH = 600, STAY = 11000;
-let topic = 'jujutsu-unlimiteds-024aef04681f', es = null, key = null, showing = false, hide = 0;
+const HOST = 'https://ntfy.sh', PUBS = JU.account.PUBS || [JU.account.PUB], MAXLEN = 160, FRESH = 600, STAY = 11000;
+let topic = 'jujutsu-unlimiteds-024aef04681f', es = null, keys = null, showing = false, hide = 0;
 const queue = [], sfx = JU.sfx, enc = s => new TextEncoder().encode(s);
 const unhex = h => new Uint8Array(h.match(/../g).map(b => parseInt(b, 16)));
 const seen = () => { try { return JSON.parse(localStorage.getItem('juannounce.seen') || '[]'); } catch (e) { return []; } };
-const pub = async () => key || (key = await crypto.subtle.importKey('raw', unhex(PUB), { name: 'Ed25519' }, false, ['verify']));
+const pubs = async () => keys || (keys = await Promise.all(PUBS.map(h => crypto.subtle.importKey('raw', unhex(h), { name: 'Ed25519' }, false, ['verify']))));
 
 /* ---------- the banner ---------- */
 const el = document.createElement('div');
@@ -36,7 +37,7 @@ async function take(raw) {
   const got = seen(), id = d.s.slice(0, 20);
   if (got.includes(id)) return;                                                // already shown here
   let ok = false;
-  try { ok = await crypto.subtle.verify({ name: 'Ed25519' }, await pub(), unhex(d.s), enc('ju-announce|' + d.t + '|' + d.m)); } catch (e) {}
+  try { for (const k of await pubs()) if (!ok) ok = await crypto.subtle.verify({ name: 'Ed25519' }, k, unhex(d.s), enc('ju-announce|' + d.t + '|' + d.m)); } catch (e) {}
   if (!ok) return;                                                             // not the team's: dropped without a word
   got.push(id); try { localStorage.setItem('juannounce.seen', JSON.stringify(got.slice(-30))); } catch (e) {}
   queue.push(d.m); next();
