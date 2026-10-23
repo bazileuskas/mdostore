@@ -52,6 +52,9 @@ where the game's built sounds play instead:
     home-yuji-bf.mp3       the Vessel's Black Flash finisher ("yuji's black flash")
     home-nanami-bf.mp3     Ratio Man's Black Flashes ("Black Flash SFX")
     home-nanami-punch.mp3  Ratio Man's Collapsed Fist ("Anime Brutal Punch")
+    home-todo-bf.mp3       the Clapping Brawler's Black Flash, the scene with its music ("todo black flash jjk")
+    home-yuji-final.mp3    the last kick of the Vessel's chain ("Kokusen (Itadori VS Mahito)")
+    home-nanami-final.mp3  the last kick of Ratio Man's chain ("Mahito Black Flash Effect (Season 2, Episode 20)")
 
 The names have to match exactly, and these have to be .mp3. For the domain music, .m4a, .ogg or .wav work as well (mahito-domain.m4a and so on).
 

@@ -12,6 +12,10 @@
      Whatever it lands on, what is above it comes down on top of them. Its punch at home is a clip found online (sounds/home-nanami-punch.mp3,
      myinstants' "Anime Brutal Punch"), and so are his Black Flashes (home-nanami-bf.mp3, "Black Flash SFX"): never on the public site.
    4 is still to come.
+   THE CHAIN (Build 0.13): Cleaving Rush's Black Flash opens it, and keeps it open four seconds at a time: a Ratio again (E, and E on the
+   red), and Collapsed Fist is a Black Flash, 190; a Ratio again, and Collapsed Fist again, another; and then Ratio Kick, plain, is the last
+   of it: 190, and a Black Flash past the ordinary kind (kokusen.js). Its sound at home is the anime's (sounds/home-nanami-final.mp3:
+   myinstants' "Mahito Black Flash Effect (Season 2, Episode 20)"), never on the public site.
    RATIO, the passive: E, and a line over his head with a mark on it at seven to three, tilted (never more than 20 degrees either way). E again
    as the ring crosses the red and the Ratio is his for ten seconds: the fifth strike of a chain is a Black Flash, and so is Cleaving Rush,
    which then breaks any guard, and Collapsed Fist lands harder (each of the three once) */
@@ -27,11 +31,13 @@ const GOLD = '#ffd27a', GRGB = '255,210,122', BLUE = '#4fc3ff', BRGB = '79,195,2
 const CLOTH = '#efe8d8', CLOTH2 = '#d6ccb6', DOT = '#262a3a', GRIP = '#25201c', GRIP2 = '#4d4138', METER = '#a9a4ae';
 const RUSH = 70, RUSH_BF = 105, KICK = 80, AIR = [30, 45], TRI = [25, 25, 30], TRI_MORE = 15, M1D = [4, 4, 4, 5, 8], SLAM = 12, M1_BF = 40;      // what each thing does
 const FIST = [80, 3], FIST_R = [120, 5];            // Collapsed Fist: what it does, and how many stacks of Broken Limb; and with a Ratio on him
+const FIST_BF = 190, KICK_FIN = 190, CHAIN_T = 4;   // the chain: Collapsed Fist as a Black Flash; the Ratio Kick it ends on; how long each step of it stays open
 const UP_T = 1.3, CHARGE = .4, REACH = 900, GAP = .15;      // how long after his uppercut a Ratio Kick still follows it; its wind-up then; how far he goes after them; and between kicks
 const RED = .7, TOL = .06, TILT = 20, QTE_CD = 3, ARMED_T = 10;      // the mark, seven to three along; how near the ring has to be to it; the most the line tilts (degrees); after a miss; how long a Ratio lasts
 const HOME = /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
 const SOUNDS = ['ratio-hit1', 'ratio-hit2', 'ratio-hit3', 'ratio-hit4', 'ratio-hit5', 'ratio-kick', 'ratio-swing1', 'ratio-swing2', 'ratio-swing3'];
-const JJS = ['jjs-hit1', 'jjs-hit2', 'jjs-hit3', 'jjs-hit4', 'jjs-hit5'], NET = ['home-nanami-bf', 'home-nanami-punch'];
+const JJS = ['jjs-hit1', 'jjs-hit2', 'jjs-hit3', 'jjs-hit4', 'jjs-hit5'], NET = ['home-nanami-bf', 'home-nanami-punch', 'home-nanami-final'];
+const finalSound = () => { if (!(HOME && sfx.file('home-nanami-final', 1))) { sfx.bf(); sfx.cannon(2); } };      // the chain's last kick
 const bfSound = () => { if (!(HOME && sfx.file('home-nanami-bf', 1))) sfx.bf(); };      // his Black Flash: the clip at home, the built one online
 
 /* ================= the blade: longer than his forearm and as wide as a hand, wrapped in pale cloth with dark spots, on a black grip ================= */
@@ -144,8 +150,10 @@ function landed(p, m) {
 let qte = null;                                     // the meter while it is up: { t, dur, tilt, res ('hit' | 'miss'), at (where the ring was), rt (since) }
 let armed = null;                                   // the Ratio, while it is his: { m1, rush (each a Black Flash still to come), fist (Collapsed Fist harder), t, ang (the line on them) }
 let qcd = 0;                                        // seconds before the meter can be called again, after a miss
+let nc = null;                                      // the chain, while it is open: { n (Black Flashes so far), t (seconds left for the next), ratio (a Ratio landed since the last) }
+const wants = () => !!(nc && !nc.ratio && nc.n < 3);      // the chain is waiting on a Ratio
 function call(p) {
-  if (armed) { shout(p, 'RATIO READY', GOLD); return; }
+  if (armed && !wants()) { shout(p, 'RATIO READY', GOLD); return; }
   if (qte || qcd > 0) return;
   qte = { t: 0, dur: rnd(.85, 1.05), tilt: rnd(-TILT, TILT) * Math.PI / 180, res: null, at: 0, rt: 0 };
   sfx.tick(0);
@@ -159,9 +167,17 @@ function judge(p) {
     sfx.tap(1); sfx.charge(); shake(8);
     E.fx.push({ k: 2, x: p.x, y: p.y + 570, n: 'RATIO  7 : 3', col: GOLD, t: 0, life: 1.3 });
     if (Z) Z.flare(p.x, p.y + 480, GRGB, 260, .2);
+    if (wants()) { nc.ratio = true; cue('3  ·  COLLAPSED FIST'); }
   } else miss();
 }
-function miss() { qte.res = 'miss'; qte.rt = 0; qcd = QTE_CD; sfx.tap(0); }
+function miss() { qte.res = 'miss'; qte.rt = 0; qcd = nc ? .6 : QTE_CD; sfx.tap(0); }      // (in the chain there is no time to lose)
+const cue = text => E.fx.push({ k: 2, x: E.P1.x, y: E.P1.y + 430, n: text, col: '#ff8a98', t: 0, life: 2 });
+// a Black Flash of the chain's has landed: the next is open
+function link(n) {
+  nc = { n, t: CHAIN_T, ratio: false }; qcd = 0;
+  if (n < 3) { E.cd.div = 0; cue('E  ·  RATIO, THEN 3'); } else { E.cd.crush = 0; cue('2  ·  RATIO KICK'); }
+  if (n > 1) E.fx.push({ k: 2, x: E.P1.x, y: E.P1.y + 470, n: 'BLACK FLASH  ×' + n, col: GOLD, t: 0, life: 1.4 });
+}
 function spend(k) {
   if (!armed) return;
   armed[k] = false;
@@ -223,7 +239,7 @@ function rushHit(p, o, bf) {
   V.slash(x, y, ang, 600, bf ? INK : GOLD, 16); V.slash(x, y + 12, ang, 640, '#ffffff', 6);
   V.sparks(x, y, bf ? 'red' : 'gold', 14); V.ring(x, y, 250, bf ? INK : GOLD, .25);
   if (Z) Z.flare(x, y, bf ? IRGB : GRGB, 380, .18);
-  if (bf) { spend('rush'); E.blackFlash(bfSound); weakCut(o); }
+  if (bf) { spend('rush'); E.blackFlash(bfSound); weakCut(o); if (!o.ko) link(1); }
 }
 // where his front foot is, near enough, for the light on it
 function foot(p) { const a = p.pose[4] - p.pose[6]; return [p.x + p.face * (10 + Math.sin(a) * 99), p.y + 99 - Math.cos(a) * 99]; }
@@ -282,7 +298,7 @@ function ground(p, m, t, o) {                       // on the floor, at somethin
   if (t < .16) { p.target = POSE.kickWind; p.vx = 0; charge(p, 1); return; }
   p.target = t < .38 ? PZ.rtKick : POSE.idle; p.vx = t < .26 ? f * 420 : 0;
   if (!m.sw) { m.sw = 1; sfx.swipe(2); arc(p, 150, 120); }
-  if (!m.done && t < .3 && E.tryHit(p, { reach: 205, dmg: exact(o, KICK), kb: 820, lift: 380, stun: .9, stop: .14, heavy: 1, col: BLUE, fixed: 1, mute: 1, limb: 1 })) { m.done = 1; kickHit(p, o, 1); }
+  if (!m.done && t < .3 && E.tryHit(p, { reach: 205, dmg: exact(o, m.fin ? KICK_FIN : KICK), kb: m.fin ? 1500 : 820, lift: m.fin ? 700 : 380, stun: .9, stop: .14, heavy: 1, col: m.fin ? INK : BLUE, fixed: 1, mute: 1, limb: 1 })) { m.done = 1; kickHit(p, o, 1); if (m.fin) lastKick(o); }
   if (t > .7) E.endMove(p);
 }
 function kick(p, m, o, n, of) {                     // one of the two (or three) in the air
@@ -290,13 +306,18 @@ function kick(p, m, o, n, of) {                     // one of the two (or three)
   p.target = n === 1 ? PZ.rtKick : last ? PZ.rtAxe : PZ.rtHigh;
   sfx.swipe(last ? 2 : n & 1); arc(p, 170, 110 + 25 * n);
   if (m.dodged || !can(o) || Math.abs(o.x - p.x) > 260 || Math.abs(o.y - p.y) > 240) return;      // nothing there: they got out of it
+  const fin = m.fin && last;
   const h = m.kind === 'tri'
     ? { dmg: exact(o, TRI[n - 1] + (last ? TRI_MORE : 0)), kb: last ? 1150 : 120, lift: last ? 420 : 640, stun: .9, stop: last ? .18 : .08, heavy: 1, col: BLUE, fixed: 1, mute: 1, brk: 1,
         limb: n === 1 || (last && limbs(o) >= 1) ? 1 : 0 }       // the first leaves a Broken Limb, and the last a second on top of it
     : { dmg: exact(o, AIR[n - 1]), kb: last ? 560 : 120, lift: last ? 820 : 640, stun: .9, stop: .1, heavy: 1, col: BLUE, fixed: 1, mute: 1, brk: 1, limb: n === 1 ? 1 : 0 };
+  if (fin) Object.assign(h, { dmg: exact(o, KICK_FIN), kb: 1500, lift: 700, col: INK });      // the chain's last
   E.applyHit(o, p.face, h);
   kickHit(p, o, n / of);
+  if (fin) lastKick(o);
 }
+// the chain's last kick landing: a Black Flash past the ordinary kind, blue in its lightning
+function lastKick(o) { JU.kokusen.insane(o, { snd: finalSound, acc: BRGB, name: 'BLACK FLASH  ×4', size: 330 }); }
 function aloftKicks(p, m, t, o) {                   // after them, wherever they are, and two kicks; or three, straight after his uppercut
   const dt = t - (m.lt || 0), of = m.kind === 'tri' ? 3 : 2, W = m.kind === 'tri' ? CHARGE : .08;
   m.lt = t;
@@ -344,19 +365,28 @@ const MOVES = {
     if (!m.kind) {
       m.kind = up && up.o === o && E.T - up.at < UP_T && aloft(o) && !o.ko ? 'tri' : !p.ground || (aloft(o) && !o.ko) ? 'air' : 'ground';
       up = null; m.dodgeAt = rnd(.12, CHARGE - .06);
-      sfx.charge(); shout(p, m.kind === 'tri' ? '比率' : '七三', BLUE);
+      m.fin = nc && nc.n === 3 ? 1 : 0; nc = null;      // the chain's last
+      sfx.charge(); shout(p, m.fin ? '黒閃' : m.kind === 'tri' ? '比率' : '七三', m.fin ? INK : BLUE);
     }
     p.rate = 46;
     if (m.kind === 'ground') ground(p, m, t, o); else aloftKicks(p, m, t, o);
   } },
   // 3 — Collapsed Fist: the hand without the blade. With a Ratio on him it lands harder and leaves more
   div: { name: 'Collapsed Fist', cd: 9, dur: 1.1, glow: 'blue', run(p, m, t) {
-    const o = E.P2, f = p.face, W = .3, [dmg, n] = m.r ? FIST_R : FIST;
-    if (m.r === undefined) { m.r = armed && armed.fist ? 1 : 0; sfx.charge(); shout(p, m.r ? '瓦落瓦落' : '崩', m.r ? GOLD : BLUE); }
+    const o = E.P2, f = p.face, W = .3;
+    if (m.r === undefined) {
+      m.bf = nc && nc.ratio && nc.n < 3 ? 1 : 0;      // the chain's: a Ratio landed since its last Black Flash, and this is one too
+      if (!m.bf) nc = null;
+      m.r = m.bf || (armed && armed.fist) ? 1 : 0; sfx.charge(); shout(p, m.bf ? '黒閃' : m.r ? '瓦落瓦落' : '崩', m.bf ? INK : m.r ? GOLD : BLUE);
+    }
+    const [dmg, n] = m.bf ? [FIST_BF, FIST_R[1]] : m.r ? FIST_R : FIST;
     if (t < W) { p.target = POSE.divWind; p.vx = 0; p.rate = 26; const w = E.hand(p, false); V.mote(w[0], w[1], m.r ? 'gold' : 'blue'); return; }
     p.rate = 46; p.target = t < W + .22 ? POSE.div : POSE.idle; p.vx = t < W + .1 ? f * 420 : 0;
     if (!m.sw) { m.sw = 1; sfx.swipe(2); arc(p, 175, 100); }
-    if (!m.done && t < W + .12 && E.tryHit(p, { reach: 195, dmg: exact(o, dmg), kb: 520, lift: 420, stun: .9, stop: .2, heavy: 1, col: BLUE, fixed: 1, mute: 1, limb: n })) { m.done = 1; collapse(p, o, m.r); }
+    if (!m.done && t < W + .12 && E.tryHit(p, { reach: 195, dmg: exact(o, dmg), kb: 520, lift: 420, stun: .9, stop: m.bf ? .3 : .2, heavy: 1, col: m.bf ? INK : BLUE, fixed: 1, mute: 1, limb: n })) {
+      m.done = 1; collapse(p, o, m.r);
+      if (m.bf) { const k = nc.n + 1; E.blackFlash(bfSound); weakCut(o); if (o.ko) nc = null; else link(k); }
+    }
     if (t > W + .6) E.endMove(p);
   } },
   manji: { name: 'Coming soon', cd: 1, dur: .01, run() {} }
@@ -364,7 +394,7 @@ const MOVES = {
 
 JU.tech.add('ratio', { name: 'Ratio Man', jp: '十劃', mark: '七', who: 'Ratio Technique', odds: 0, col: GOLD, glow: 'gold', moves: MOVES,
   early: true, skin: NANAMI, as: ['Ratio Man', '十劃'], m1,
-  hint: '<b>E</b> Ratio, <b>E</b> again on the red: a Black Flash on the 5th strike and on <b>1</b>, <b>3</b> harder · <b>2</b> in the air, or after an uppercut' });
+  hint: '<b>E</b> Ratio, <b>E</b> again on the red: a Black Flash on the 5th strike and on <b>1</b>, <b>3</b> harder · <b>2</b> in the air, or after an uppercut · after <b>1</b>\'s Black Flash: Ratio, <b>3</b>, Ratio, <b>3</b>, <b>2</b>' });
 const DEF = JU.tech.TECH.ratio, on = () => JU.tech.active === DEF;
 const LAUNCHERS = new Set([UP, FIN, FIN_BF, MOVES.strikes]);      // what Ratio Kick can be thrown straight out of: the uppercut, the fifth strike, Cleaving Rush
 const free = p => !p.move && !p.ps && !p.dead && !(p.dashT > 0);
@@ -399,7 +429,8 @@ H.tick = dt => {
   }
   if (armed && (armed.t -= dt) <= 0) { armed = null; if (on()) E.fx.push({ k: 2, x: E.P1.x, y: E.P1.y + 400, n: 'RATIO FADES', col: '#a9a4ae', t: 0, life: .9 }); }
   if (up && E.T - up.at > UP_T) up = null;
-  if (E.P1.dead) qte = armed = null;
+  if (nc && ((nc.t -= dt) <= 0 || E.P2.ko)) nc = null;
+  if (E.P1.dead) qte = armed = nc = null;
 };
 H.under = dt => {
   under0(dt);
@@ -417,13 +448,25 @@ H.fx = dt => {
   if (!mine) return;
   if (armed && !o.ko && !(o.alpha < .05)) drawWeak(o);
   if (qte) drawMeter(p);
+  if (nc) {
+    const c = F(p.x, p.y + 400), k = c[2], u = Math.max(0, nc.t / CHAIN_T);
+    g.save();
+    for (let i = 0; i < 4; i++) {
+      const x = c[0] + (i - 1.5) * 26 * k, y = c[1], r = (i === 3 ? 11 : 9) * k, done = i < nc.n;
+      g.beginPath(); g.moveTo(x, y - r); g.lineTo(x + r, y); g.lineTo(x, y + r); g.lineTo(x - r, y); g.closePath();
+      g.fillStyle = done ? INK : i === 3 ? 'rgba(79,195,255,.35)' : 'rgba(8,6,14,.7)'; g.fill(); g.lineWidth = 2 * k; g.strokeStyle = done ? '#ffffff' : 'rgba(255,255,255,.35)'; g.stroke();
+    }
+    g.fillStyle = 'rgba(8,6,14,.7)'; g.fillRect(c[0] - 52 * k, c[1] + 16 * k, 104 * k, 5 * k);
+    g.fillStyle = nc.ratio ? GOLD : INK; g.fillRect(c[0] - 52 * k, c[1] + 16 * k, 104 * k * u, 5 * k);
+    g.restore();
+  }
 };
-const clear = () => { qte = armed = up = null; qcd = 0; trail.length = slabs.length = 0; };
+const clear = () => { qte = armed = up = nc = null; qcd = 0; trail.length = slabs.length = 0; };
 H.reset = () => { reset0(); clear(); };
 H.fightStart = (cfg, wave) => { start0(cfg, wave); if (!wave) clear(); else qte = null; if (on()) prime(); };
 
 JU.ratio = { MOVES, CUTS, FIN, UP, DOWN, RED, TOL, TILT, RUSH, KICK, AIR, TRI, TRI_MORE, M1D, M1_BF, FIST, FIST_R, get slabs() { return slabs.length; },
   get qte() { return qte && { u: +clamp(qte.t / qte.dur, 0, 1).toFixed(3), dur: qte.dur, tilt: +(qte.tilt * 180 / Math.PI).toFixed(1), res: qte.res }; },
   get armed() { return armed && { m1: armed.m1, rush: armed.rush, fist: armed.fist, t: +armed.t.toFixed(1) }; }, set armed(v) { armed = v ? { m1: true, rush: true, fist: true, t: ARMED_T, ang: .8 } : null; },
-  get up() { return up && { at: up.at }; }, get qcd() { return qcd; } };
+  get up() { return up && { at: up.at }; }, get qcd() { return qcd; }, get chain() { return nc && { n: nc.n, t: +nc.t.toFixed(2), ratio: nc.ratio }; } };
 })();

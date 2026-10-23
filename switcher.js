@@ -1,7 +1,10 @@
 /* JUJUTSU UNLIMITEDS — SWITCHER STITCHER (early access until Build 0.9; now rolled from the talisman, 3%). The Clapping Brawler: Boogie Woogie, a punch with a very long wind-up behind it, a pebble,
    and Ground Slam: whatever he gets hold of goes through the floor, and the floor comes up in pieces that fall, bounce and can be kicked about.
    He is bigger and slower with it and his strikes come slower too; every one of them lands half as hard again.
-   PERFECT CLAP: a strike (left click or J) pressed straight after a swap is a second clap instead, and Boogie Woogie is ready again at once */
+   PERFECT CLAP: a strike (left click or J) pressed straight after a swap is a second clap instead, and Boogie Woogie is ready again at once.
+   BLACK FLASH (Build 0.13): straight after changing places with the pebble, Stitcher Punch has a fifth of a second behind it instead of most of
+   one, and it is a Black Flash, past the ordinary kind (kokusen.js): 190. Boogie Woogie is gone for twenty seconds after. Its sound at home is
+   the anime's, the scene with its music (sounds/home-todo-bf.mp3: myinstants' "todo black flash jjk"), never on the public site */
 (() => {
 'use strict';
 
@@ -15,6 +18,10 @@ const CLAP = [.1, 0, 1.5, 1.45, .3, -.3, 0], BACK = [-.42, -.12, .7, -1.5, .5, -
 let peb = null;                                     // the pebble, for as long as it is anywhere to be swapped with
 const WINDOW = .4;                                  // how long after a swap a strike still counts as the second clap
 let clapAt = -9;                                    // when he last changed places with something
+const KOKU_T = 1, KOKU_DMG = 190, LOCK = 20;         // the Black Flash: how long after the swap with the stone it is there; what it does; how long Boogie Woogie is gone after
+let stoneAt = -9, lockT = 0;                        // when he last changed places with the stone; and how long Boogie Woogie has left to be gone
+const HOME = /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
+if (HOME) sfx.preload(['home-todo-bf']);
 
 /* ---------- Ground Slam: what is left of the floor afterwards ---------- */
 const LIFT = [-.1, -.2, 2.9, 2.7, .3, -.3, 0];        // both arms straight up, with something heavy on the end of them
@@ -91,7 +98,8 @@ function toStone(p) {                               // with the pebble: he is wh
   p.ground = p.y <= 1; if (p.ground) p.y = 0;
   Object.assign(peb, { x: a.x, y: a.y + 150, vx: 0, vy: 0, t: Math.max(peb.t, 2.9), hit: true });
   p.face = E.P2.x >= p.x ? 1 : -1;
-  clap(a.x, a.y, p.x, p.y); clapAt = E.T;
+  clap(a.x, a.y, p.x, p.y); clapAt = stoneAt = E.T;
+  if (E.cd.crush <= 0) E.fx.push({ k: 2, x: p.x, y: p.y + 470, n: '2  ·  BLACK FLASH', col: '#ff5a6e', t: 0, life: KOKU_T });      // the punch is there to be thrown, a Black Flash
 }
 // the second clap, on time: his hands come together again and the technique is ready to go again
 const PERFECT = { name: 'Perfect Clap', dur: .2, run(p, m, t) { p.vx = 0; p.rate = 64; p.target = t < .14 ? CLAP : POSE.idle; } };
@@ -102,6 +110,25 @@ function perfect(p) {
   if (Z) { Z.flare(x, y, '122,215,255', 420, .2); Z.flash('122,215,255', .14, .15); Z.shock(p.x, 340, '122,215,255', .35, 10); }
   E.fx.push({ k: 2, x: p.x, y: p.y + 430, n: 'PERFECT CLAP', col: '#ffffff', t: 0, life: 1 });
 }
+
+// straight after the swap with the stone: Stitcher Punch with almost nothing behind it, and it is a Black Flash
+const KOKU = { name: 'Stitcher Punch', dur: 1.3, glow: 'red', run(p, m, t) {
+  const W = .2, o = E.P2;
+  if (t < W) {
+    p.vx = 0; p.rate = 40; p.target = BACK;
+    if (!m.c) { m.c = 1; m.clip = HOME && sfx.file('home-todo-bf', 1); if (!m.clip) sfx.charge(); shout(p, '黒閃', '#ff5a6e'); }      // (the clip's own crack comes a fifth of a second in: as the punch lands)
+    const w = E.hand(p, false); V.mote(w[0], w[1], 'red'); V.mote(w[0], w[1], 'blue');
+    return;
+  }
+  p.rate = 60; p.target = t < W + .34 ? POSE.div : POSE.idle; p.vx = t < W + .1 ? p.face * 700 : 0;
+  if (m.s) return;
+  m.s = t;
+  const x = p.x + p.face * 210;
+  V.crack(x, 320); V.rocks(x, 0, 12);
+  if (E.tryHit(p, { reach: 340, dmg: KOKU_DMG / (o.dr || 1), kb: 1600, lift: 640, stun: .9, stop: .3, heavy: 1, col: '#ff2440', fixed: 1, mute: 1 }))
+    JU.kokusen.insane(o, { snd: m.clip ? () => {} : () => { sfx.bf(); sfx.blast(); }, acc: '122,215,255', name: 'BLACK FLASH', size: 320 });
+  else { sfx.blast(); shake(30); }
+} };
 
 const MOVES = {
   // 1 — Boogie Woogie. If the pebble is still in play it is the pebble he changes places with
@@ -183,13 +210,19 @@ const press0 = H.press, tick0 = H.tick, fx0 = H.fx, under0 = H.under, reset0 = H
 H.press = (a, inScene) => {
   if (!inScene && on()) {
     const p = E.P1;
+    if (a === 'crush' && E.T - stoneAt < KOKU_T && E.cd.crush <= 0 && !p.dead && !p.ps && (free(p) || (p.move && (p.move.def === MOVES.strikes || p.move.def === PERFECT)))) {      // the Black Flash
+      stoneAt = -9; if (p.move) E.endMove(p);
+      E.cd.crush = MOVES.crush.cd; lockT = LOCK; E.cd.strikes = Math.max(E.cd.strikes, LOCK);
+      p.move = { def: KOKU, key: 'crush', t: 0 }; E.hud.mv.crush.classList.add('act');
+      return true;
+    }
     if (a === 'm1' && E.T - clapAt < WINDOW && !p.dead && !p.ps) {      // PERFECT CLAP: a strike straight after a swap is a second clap, and the swap is ready again
-      clapAt = -9; E.cd.strikes = 0;
+      clapAt = -9; if (lockT <= 0) E.cd.strikes = 0;
       if (p.move) E.endMove(p);
       p.move = { def: PERFECT, t: 0 }; perfect(p);
       return true;
     }
-    if (a === 'strikes' && peb && free(p)) {        // the stone is still about: the clap does not wait for its cooldown
+    if (a === 'strikes' && peb && free(p) && lockT <= 0) {      // the stone is still about: the clap does not wait for its cooldown (unless a Black Flash has taken it)
       E.cd.strikes = Math.max(E.cd.strikes, 1); p.move = { def: MOVES.strikes, key: 'strikes', t: 0 }; E.hud.mv.strikes.classList.add('act');
       return true;
     }
@@ -201,6 +234,7 @@ H.m1rate = () => (rate0 ? rate0() : 1) * (on() ? M1_RATE : 1);
 H.tick = dt => {
   tick0(dt);
   rubble(dt);
+  if (lockT > 0) { lockT -= dt; E.cd.strikes = Math.max(E.cd.strikes, lockT); }      // Boogie Woogie, gone after the Black Flash
   if (!on()) return;
   const p = E.P1, o = E.P2, dir = (E.keys.has('d') || E.keys.has('arrowright') ? 1 : 0) - (E.keys.has('a') || E.keys.has('arrowleft') ? 1 : 0);
   if (free(p) && p.ground && dir) p.x = clamp(p.x - dir * 360 * (1 - SLOW) * dt, -965, 965);     // that much of every step is taken back off him
@@ -219,9 +253,9 @@ H.tick = dt => {
   }
   if (s.t > 3.4) peb = null;
 };
-function fistShape(c, k, a, face) {                 // the fist that arrives with the punch
+function fistShape(c, k, a, face, rgb = '122,215,255', edge = 'rgba(220,245,255,.9)') {      // the fist that arrives with the punch
   g.save(); g.translate(c[0], c[1]); g.scale(face * k, k); g.globalAlpha = a;
-  g.fillStyle = 'rgba(122,215,255,.42)'; g.strokeStyle = 'rgba(220,245,255,.9)'; g.lineWidth = 4; g.lineJoin = 'round';
+  g.fillStyle = `rgba(${rgb},.42)`; g.strokeStyle = edge; g.lineWidth = 4; g.lineJoin = 'round';
   g.beginPath(); g.roundRect(-150, -110, 300, 220, 46); g.fill(); g.stroke();
   g.beginPath(); for (const y of [-56, 0, 56]) { g.moveTo(150, y); g.lineTo(70, y); } g.moveTo(-40, -110); g.lineTo(-40, -30); g.lineTo(60, -30); g.stroke();
   g.restore(); g.globalAlpha = 1;
@@ -236,6 +270,10 @@ H.fx = dt => {
     if (!m.s) { const u = Math.min(1, m.t / .9), w = E.hand(p, false), c = F(w[0] - p.face * 60, w[1] + 10); fistShape(c, c[2] * (.25 + .6 * u), .35 + .5 * u, p.face); }   // growing behind him
     else { const u = Math.min(1, (m.t - m.s) / .28), c = F(p.x + p.face * lerp(120, 360, u), p.y + 180); fistShape(c, c[2] * 1.15, 1 - u, p.face); }                 // and then in front of him
   }
+  if (m && m.def === KOKU) {                         // the same fist, red, and no time at all to grow
+    if (!m.s) { const u = Math.min(1, m.t / .2), w = E.hand(p, false), c = F(w[0] - p.face * 60, w[1] + 10); fistShape(c, c[2] * (.4 + .5 * u), .5 + .5 * u, p.face, '255,36,64', 'rgba(20,0,6,.95)'); }
+    else { const u = Math.min(1, (m.t - m.s) / .3), c = F(p.x + p.face * lerp(120, 380, u), p.y + 180); fistShape(c, c[2] * 1.3, 1 - u, p.face, '255,36,64', 'rgba(20,0,6,.95)'); }
+  }
   if (peb) {
     const c = F(peb.x, peb.y), k = c[2];
     g.globalCompositeOperation = 'lighter'; E.glow(E.GLOW.blue, c[0], c[1], 70 * k, .5); g.globalCompositeOperation = 'source-over';
@@ -243,7 +281,7 @@ H.fx = dt => {
     g.beginPath(); g.ellipse(c[0], c[1], 11 * k, 9 * k, peb.x * .02, 0, TAU); g.fill(); g.stroke();
   }
 };
-H.reset = () => { reset0(); peb = pit = null; slabs.length = 0; flashes.length = 0; clapAt = -9; };
+H.reset = () => { reset0(); peb = pit = null; slabs.length = 0; flashes.length = 0; clapAt = stoneAt = -9; lockT = 0; };
 H.fightStart = (cfg, wave) => {
   start0(cfg, wave); peb = pit = null; slabs.length = 0;
   if (on() && !JU.clan.body()) E.P1.scale = SIZE;   // bigger than he was
@@ -274,5 +312,5 @@ function streetDraw() {
   }
 }
 
-JU.switcher = { MOVES, streetKey, streetDraw, get pebble() { return peb; }, get slabs() { return slabs.length; } };
+JU.switcher = { MOVES, KOKU, streetKey, streetDraw, get pebble() { return peb; }, get slabs() { return slabs.length; }, get lock() { return +lockT.toFixed(2); } };
 })();

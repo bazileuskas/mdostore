@@ -562,14 +562,14 @@ function divergentBlast(face) {
   sfx.blast();
 }
 
-function blackFlash(snd) {                          // (snd: a sound of its own for it, in place of the usual one)
+function blackFlash(snd) {                          // (snd: a sound of its own for it, in place of the usual one; or hooks.bfSound may have one)
   if (bfT > .3) return;
   const o = P2, c = F(o.x, o.y + 150), cx = c[0] * S, cy = c[1] * S;
   slowT = .6; bfT = .5; zoomT = .7; cam.shake = 34;
   addBlast(o.x, o.y + 150, '255,36,64', 300); addRing(o.x, '255,36,64', 420);
   JU.flash(cx, cy); JU.bolts(cx, cy, 18);
   banner('黒閃', 'BLACK FLASH', 'bf');
-  (snd || sfx.bf)();
+  (snd || (hooks.bfSound && hooks.bfSound()) || sfx.bf)();
   if (hooks.bf) hooks.bf(o);
 }
 
@@ -668,7 +668,7 @@ function updatePlayer(dt) {
   if (hooks.playerPre && hooks.playerPre(p, o, dt)) { /* knocked about: foes.js is driving */ }
   else if (p.dashT > 0) {
     p.dashT -= dt; p.vx = p.dashDir * (p.dashV || 1050); p.target = POSE.dash; p.rate = 34;
-    if ((p.ghostT -= dt) <= 0) { p.ghostT = .028; ghosts.push({ skin: p.dashTint ? FRAMES : p.skin, x: p.x, y: p.y, face: p.face, spin: 1, scale: p.scale, pose: p.pose.slice(), t: 0, tint: p.dashTint }); }
+    if ((p.ghostT -= dt) <= 0) { p.ghostT = .028; ghosts.push({ skin: p.dashTint ? (p.dashTint.torso ? p.dashTint : FRAMES) : p.skin, x: p.x, y: p.y, face: p.face, spin: 1, scale: p.scale, pose: p.pose.slice(), t: 0, tint: p.dashTint }); }
     if (p.dashT <= 0) p.vx *= .2;
   } else if (p.move) {
     const m = p.move;

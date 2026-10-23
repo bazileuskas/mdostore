@@ -5,6 +5,12 @@
 // Newest first. v = the build, jp = the seal stamped beside it, pic = notes/<pic>.jpg, cap = what the picture shows.
 // A new update goes at the top of this list.
 const NOTES = [
+  { v: '0.13', name: 'Black Flashes', jp: '黒閃', date: '23 Oct 2026', pic: 'kokusen', cap: 'The Vessel’s fifth: the last kick of the chain', items: [
+    'The Vessel can chain four Black Flashes. Every Black Flash puts your dash, a broken guard and Divergent Fist straight back. Then: dash behind them (a dash at them now takes you past) and land another; dash, hold F and land one from behind your guard; do that again; and press 4 for the last of it, a Manji Kick. Each Black Flash after the first is 190, and so is the kick. Afterwards Divergent Fist and Manji Kick are gone for 30 seconds',
+    'Switcher Stitcher: straight after swapping with the pebble, press 2. Stitcher Punch comes out after a fifth of a second and is a Black Flash, 190. Boogie Woogie is gone for 20 seconds after',
+    'Ratio Man can chain them too: Cleaving Rush’s Black Flash, then a perfect Ratio and Collapsed Fist as a Black Flash (190), another perfect Ratio and another Collapsed Fist Black Flash, and to end it a Ratio Kick (190)',
+    'The last blow of each of them is a bigger Black Flash than any before: the screen goes black and red, lightning everywhere, the floor breaks and 黒閃 is stamped across it',
+    'In the copy at home they sound like the anime'] },
   { v: '0.12v1', name: 'Sugar', jp: '糖', date: '23 Oct 2026', pic: 'sugar', cap: 'Sugar: the last one, straight up', items: [
     'Cursed Cannon’s fourth move, Sugar: a barrage of eight small blasts, 7 each, and then the last one from down low and straight up: a blast uppercut, 60, that throws whatever it hits into the air. It heats you as a held blast does, and it will not come out while you are overheated',
     'Cursed Cannon is out of Early Access: it can be rolled from the talisman (3%, from Ten Shadows, now 31%) and turns up in the Daily Shop. Whoever had it in Early Access keeps it',
