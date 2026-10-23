@@ -584,7 +584,7 @@ T0.tick = (dt, real, p, st) => {                                                
 const start0 = H.fightStart, reset0 = H.reset;
 H.fightStart = (cfg, wave) => {
   if (start0) start0(cfg, wave);
-  if (!wave && M.bless && S.world === world && cfg && !cfg.dummy) { const p = E.P1; p.max = Math.round(p.max * 1.5); p.hp = p.max; M.bless = 0; save(); E.fx.push({ k: 2, x: p.x, y: p.y + 420, n: 'REVERSED TECHNIQUE  ·  +50% HEALTH', col: '#b08cff', t: 0, life: 1.8 }); }
+  if (!wave && M.bless && S.world === world && cfg && !cfg.dummy && !cfg.ps) { const p = E.P1; p.max = Math.round(p.max * 1.5); p.hp = p.max; M.bless = 0; save(); E.fx.push({ k: 2, x: p.x, y: p.y + 420, n: 'REVERSED TECHNIQUE  ·  +50% HEALTH', col: '#b08cff', t: 0, life: 1.8 }); }
 };
 H.reset = () => { if (reset0) reset0(); if (mapOpen) { mapOpen = false; removeEventListener('keydown', onKey, true); } metro.classList.remove('on'); armed = true; };
 

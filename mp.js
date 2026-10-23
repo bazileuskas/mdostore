@@ -17,6 +17,9 @@ const server = () => { try { return localStorage.getItem('ju.app.server') || DOJ
 const peers = new Map();                             // everybody else in the room: id -> { id, name, st, f, say, sayT, ct, a, away }
 const heard = {};                                   // what else may come down the line besides where somebody is: a challenge, a duel (pvp.js)
 let ws = null, id = '', code = '', on = false, armed = '', quick = false, phase = '', waiting = 0, match = null, asked = false, wasBusy = false;
+let kind = '', pub = 1;                             // a server's kind: 'public' (anybody's: public-1, public-2 ... the first with room) or 'private' (by a code)
+const PUBS = 40;                                    // how many public servers there are to try
+const fresh = () => Array.from(crypto.getRandomValues(new Uint8Array(6)), b => 'abcdefghjkmnpqrstuvwxyz23456789'[b % 31]).join('');
 let loop = 0, note = '', noteOk = false, noteT = 0, mine = { c: '', ct: 0 }, last = [0, 0], sayT = 0, retry = 0, backoff = 1, down = false, downAt = 0;
 try { code = localStorage.getItem('jump.code') || ''; } catch (e) {}
 let nick = '';                                      // the name he typed on the Play screen: it comes before an account's, and is kept on this device
@@ -96,13 +99,16 @@ function hear(m) {
       if (!q || q.id === id) continue;
       seen.add(q.id);
       const p = peers.get(q.id);
-      if (p) p.name = String(q.name || p.name).slice(0, 20); else { make(q.id, q.name); sfx.confirm(); to(q.id, { t: 'id', d: JU.account.device }); }
+      if (p) p.name = String(q.name || p.name).slice(0, 20); else { const np = make(q.id, q.name); sfx.confirm(); to(q.id, { t: 'id', d: JU.account.device }); if (heard.come) heard.come(np); }      // (come: what he needs to know, from us: ps.js sends what has been built)
     }
     for (const pid of [...peers.keys()]) if (!seen.has(pid)) drop(pid);
     if (typeof m.code === 'string' && !quick) code = m.code;
     paint();
   }
-  else if (m.t === 'full') leave('That server is full: five are in it already.');
+  else if (m.t === 'full') {
+    if (kind === 'public' && pub < PUBS) { pub++; code = 'public-' + pub; post({ t: 'room', code }); paint(); }      // that one is full: the next
+    else leave(kind === 'public' ? 'Every public server is full. Try again in a moment.' : 'That server is full: five are in it already.');
+  }
   else if (m.t === 'queued') { phase = 'queue'; waiting = m.n | 0; match = null; asked = false; rm.me = rm.them = false; paint(); }
   else if (m.t === 'match') { phase = 'matched'; match = { pid: String(m.pid), name: String(m.name || 'Player').slice(0, 20), host: !!m.host, t: E.T, gone: false }; asked = false; rm.me = rm.them = false; sfx.confirm(); paint(); }
   else if (m.t === 'st') { const p = peers.get(m.from); if (p) state(p, m.s); }
@@ -139,16 +145,19 @@ function paintPing() {
 // pvp.js puts the challenge on screen with Accept and Decline; in a queued duel it is accepted on the next frame
 function accept() { setTimeout(() => { const b = document.querySelector('.duel.on [data-d="yes"]'); if (b) b.click(); }, 50); }      // (a timer, not a frame: a browser tab at the back has no frames)
 
-function join(c) {                                  // a server by code, as before
+function join(c, k) {                               // a server by code, as before (k: what kind it is. A code that is not a public one is a private server)
   if (on) leave();
   code = String(c || code).trim().toLowerCase().slice(0, 16);
+  kind = k || (/^public-\d+$/.test(code) ? 'public' : 'private');
   if (!code || !window.WebSocket) { note = code ? 'This device cannot join a server.' : 'Type a server code first.'; return false; }
-  try { localStorage.setItem('jump.code', code); } catch (e) {}
+  if (kind === 'private') try { localStorage.setItem('jump.code', code); } catch (e) {}
   quick = false; on = true; note = ''; phase = 'room'; down = false;
   connect(() => post({ t: 'room', code }));
   loop = setInterval(send, RATE); paint();
   return true;
 }
+function joinPublic() { pub = 1; return join('public-1', 'public'); }      // the first public server with room in it (the rest: 'full', above)
+function host() { return join(fresh(), 'private'); }                       // a private server of his own, under a code nobody else has
 function queue() {                                  // the queue: the server pairs whoever is waiting
   if (on) leave();
   if (!window.WebSocket) { note = 'This device cannot play online.'; return false; }
@@ -174,7 +183,7 @@ heard.rm = (p, s) => { if (match && p.id === match.pid && phase === 'done') { rm
 function settle() { if (rm.me && rm.them) { phase = 'matched'; asked = false; match.t = E.T; rm.me = rm.them = false; paint(); } }
 function leave(why) {
   if (!on) return;
-  on = false; armed = ''; quick = false; phase = ''; match = null; asked = false; down = false; clearInterval(loop); clearTimeout(retry);
+  on = false; armed = ''; quick = false; kind = ''; phase = ''; match = null; asked = false; down = false; clearInterval(loop); clearTimeout(retry);
   post({ t: 'leave' });
   for (const pid of [...peers.keys()]) drop(pid);
   note = why || ''; noteT = why ? 8 : 0; paint();
@@ -186,7 +195,7 @@ function send() {
   if (!me || !peers.size) return;
   const street = E.root.dataset.mode === 'street', moving = Math.abs(me.x - last[0]) + Math.abs(me.z - last[1]) > 1.5;
   last = [me.x, me.z];
-  post({ t: 'st', s: { w: S.world.name || 'tokyo', x: Math.round(me.x), z: Math.round(me.z), f: me.face, m: moving ? 1 : 0, r: E.keys.has('shift') ? 1.7 : 1, b: street ? 0 : 1,
+  post({ t: 'st', s: { w: S.world.name || 'tokyo', x: Math.round(me.x), y: Math.round(me.y), z: Math.round(me.z), f: me.face, m: moving ? 1 : 0, r: E.keys.has('shift') ? 1.7 : 1, b: street ? 0 : 1,
     k: (JU.tech.active && JU.tech.active.id) || '', h: JU.clan.body() ? JU.clan.equipped || '' : '', d: JU.pvp && JU.pvp.busy ? 1 : 0, a: boss() ? 2 : JU.account && JU.account.admin ? 1 : 0, n: myName(), c: mine.c, ct: mine.ct } });
 }
 const lookOf = st => { const t = JU.tech.TECH[st.k], toji = st.h === 'toji' && JU.tools && JU.tools.TOJI; return { skin: toji || (t && t.skin) || E.YUJI, scale: toji ? 1.05 : (t && t.scale) || 1 }; };
@@ -204,7 +213,7 @@ function fighters() {
   return out;
 }
 function tick(dt) {
-  if (armed && !on) { const a = armed; armed = ''; if (a === 'quick') queue(); else join(code); }
+  if (armed && !on) { const a = armed; armed = ''; if (a === 'quick') queue(); else if (a === 'public') joinPublic(); else if (a === 'private') host(); else join(code); }
   if (sayT > 0) sayT -= dt;
   if (noteT > 0 && (noteT -= dt) <= 0) { note = ''; paint(); }
   if (quick && on) {
@@ -220,7 +229,8 @@ function tick(dt) {
     const f = p.f, st = p.st;
     if (!f || !st) continue;
     const k = 1 - Math.exp(-dt * 12);                 // he is drawn where he was last heard to be, and walks there rather than jumping
-    f.x += (st.x - f.x) * k; f.z += (st.z - f.z) * k; f.face = st.f || f.face; f.y = f.ground0 = W.gy(f.z, f.x);
+    f.x += (st.x - f.x) * k; f.z += (st.z - f.z) * k; f.face = st.f || f.face; f.ground0 = W.gy(f.z, f.x);
+    f.y = typeof st.y === 'number' ? f.y + (st.y - f.y) * k : f.ground0;      // (up off the ground, if he is flying or standing on something built)
     C.stroll(f, !!st.m && !st.b, dt, st.r || 1);
   }
 }
@@ -262,8 +272,8 @@ function paint() {
     return;
   }
   const had = chip.querySelector('input'), val = had ? had.value : '', foc = had && document.activeElement === had;
-  chip.innerHTML = `<b>Server <u>${esc(code)}</u> · ${n} / ${MAX}</b><ul><li>${esc(myName())} (you)${JU.account.admin ? '<em>admin</em>' : ''}</li>${open().map(p => `<li>${esc(p.name)}${p.away ? ' <em>· away</em>' : ''}<span>${boss() && p.dev && p.a !== 2 ? `<button type="button" data-adm="${p.id}" class="${p.a === 1 ? 'has' : ''}" title="${p.a === 1 ? 'Take admin powers back from' : 'Give admin powers to'} ${esc(p.name)}">${sure === p.id ? 'Sure?' : p.a === 1 ? 'Admin ✓' : 'Admin'}</button>` : ''}${JU.pvp ? `<button type="button" data-duel="${p.id}" title="Challenge ${esc(p.name)} to a 1v1">1v1</button>` : ''}</span></li>`).join('')}</ul>
-    <input maxlength="80" placeholder="/ to say something" aria-label="Say something to the server">${noteEl || (n < 2 ? '<small>Waiting for the others. They type the same code.</small>' : JU.pvp ? '<small>1v1: challenge somebody to a duel.</small>' : '')}`;
+  chip.innerHTML = `<b>${kind === 'public' ? `Public server <u>${pub}</u>` : `Private server <u>${esc(code)}</u>`}&nbsp;·&nbsp;${n}&nbsp;/&nbsp;${MAX}</b><ul><li>${esc(myName())} (you)${JU.account.admin ? '<em>admin</em>' : ''}</li>${open().map(p => `<li>${esc(p.name)}${p.away ? ' <em>· away</em>' : ''}<span>${boss() && p.dev && p.a !== 2 ? `<button type="button" data-adm="${p.id}" class="${p.a === 1 ? 'has' : ''}" title="${p.a === 1 ? 'Take admin powers back from' : 'Give admin powers to'} ${esc(p.name)}">${sure === p.id ? 'Sure?' : p.a === 1 ? 'Admin ✓' : 'Admin'}</button>` : ''}${JU.pvp ? `<button type="button" data-duel="${p.id}" title="Challenge ${esc(p.name)} to a 1v1">1v1</button>` : ''}</span></li>`).join('')}</ul>
+    <input maxlength="80" placeholder="/ to say something" aria-label="Say something to the server">${noteEl || (n < 2 ? (kind === 'public' ? '<small>Nobody else here yet. Anybody who picks a public server can drop in.</small>' : '<small>Give your friends the code above: Free Exploration, Private server, and they type it in.</small>') : JU.pvp ? '<small>1v1: challenge somebody to a duel.</small>' : '')}`;
   const inp = chip.querySelector('input'); inp.value = val; if (foc) inp.focus();
 }
 chip.addEventListener('keydown', e => {              // typing here is typing, not walking
@@ -285,10 +295,11 @@ const card = () => `<div class="mpcard mpwho"><b><label for="mpName">Your name</
     <div class="mprow"><input id="mpName" maxlength="16" placeholder="Player" value="${esc(named())}" spellcheck="false" autocomplete="off" autocapitalize="words" enterkeyhint="done" aria-label="Your name"></div></div>
   <div class="mpcard"><b>Queue</b><span lang="ja">列</span>
     <i>A 1v1 against whoever is queued up, anywhere in the world: a ban each, a technique each, no clans, no cursed tools. You wait on the street, and the duel comes to you.</i>
-    <div class="mprow"><button class="mode mpgo" data-mode="free" data-mp="quick"><b>Queue up</b></button></div></div>
-  <div class="mpcard"><b>Play with friends</b><span lang="ja">共闘</span>
-    <i>Up to ${MAX} people in the same Free Exploration, and One v Ones against any of them. Pick a server code with your friends, and everybody types the same one.</i>
-    <div class="mprow"><input id="mpCode" maxlength="16" placeholder="Server code" value="${esc(code)}" spellcheck="false" autocapitalize="off" aria-label="Server code"><button class="mode mpgo" data-mode="free" data-mp="room"><b>Join server</b></button><button class="mpnew" id="mpNew" type="button">New code</button></div>
+    <div class="mprow"><button class="mode mpgo" data-mode="free" data-mp="quick"><b>Queue up</b></button></div></div>`;
+// a friend's private server, by its code (in Free Exploration's choice: ps.js)
+const codeCard = () => `<div class="mpcard"><b>Join a private server</b><span lang="ja">参加</span>
+    <i>Type the code a friend gives you (the top right of their screen).</i>
+    <div class="mprow"><input id="mpCode" maxlength="16" placeholder="Server code" value="${esc(kind === 'public' ? '' : code)}" spellcheck="false" autocapitalize="off" aria-label="Server code"><button class="mode mpgo" data-mode="free" data-mp="room"><b>Join</b></button></div>
     <small id="mpNote">${esc(note)}</small></div>`;
 document.addEventListener('input', e => {             // the name is kept as it is typed
   if (e.target.id !== 'mpName') return;
@@ -310,7 +321,9 @@ const exit0 = JU.exitGame;
 JU.exitGame = () => { leave(); exit0(); };            // leaving the game leaves the server
 
 const to = (pid, m) => peers.has(pid) && post({ t: 'to', pid, m });
-const M = JU.mp = { card, join, queue, leave, tick, fighters, draw, MAX, to, hear(t, fn) { heard[t] = fn; }, peer: pid => peers.get(pid), paint, myName,
+const M = JU.mp = { card, codeCard, join, joinPublic, host, queue, leave, tick, fighters, draw, MAX, to, hear(t, fn) { heard[t] = fn; }, peer: pid => peers.get(pid), paint, myName,
+  all(m) { for (const pid of peers.keys()) to(pid, m); },      // (to everybody on the server)
+  get kind() { return on ? kind : ''; }, get code() { return code; }, get pub() { return pub; },
   cut() { if (ws) ws.close(); },                     // (drops the line on purpose, for trying what a lost connection does: JU.mp.cut() in the console)
   get on() { return on; }, get id() { return id; }, get quick() { return quick; }, get down() { return down; },
   get state() { return { on, quick, phase, code, match, down, rm: { ...rm }, peers: [...peers.values()].map(p => ({ id: p.id, name: p.name, away: p.away, st: p.st })) }; } };

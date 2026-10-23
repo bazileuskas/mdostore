@@ -5,6 +5,13 @@
 // Newest first. v = the build, jp = the seal stamped beside it, pic = notes/<pic>.jpg, cap = what the picture shows.
 // A new update goes at the top of this list.
 const NOTES = [
+  { v: '0.14', name: 'Private Servers', jp: '私設', date: '23 Oct 2026', pic: 'servers', cap: 'Up on an arch of pillars, and a friend on the crates', items: [
+    'Free Exploration now asks where to. A public server: anybody playing can drop in, five to a server, and when one is full the next one opens. Or a private server: your own, under a code to give your friends (or type a friend’s code to join theirs)',
+    'A private server has the + menu (the + at the right of the screen, or P): fly (Space up, Ctrl down), no cooldowns, god mode, an awakening that is always full, moon gravity, damage ×2, ×5 or ×10, the game at half speed or up to twice as fast, and your health set to whatever you like',
+    'Dummies from the menu: a plain one, one with 1 health, an immortal one, one that attacks you, one that blocks from the front (a heavy blow breaks its guard) and one that uses its Evasive to get out of uppercuts and slams. Their health can be set too',
+    'And: a fight with any curse or boss, a ride to any district that is open to you, and the curses cleared off the street (or brought back)',
+    'Build mode: crates, concrete, walls, pillars, platforms and neon blocks. Click to put one down, right click to take it away, R to turn it, 1 to 6 for which. Everybody on the server sees them and can walk round them and stand on them, and the camera goes up with you. What you build is kept on your device for that server’s code',
+    'None of it pays tokens or counts for anything, and none of it works in a 1v1'] },
   { v: '0.13', name: 'Black Flashes', jp: '黒閃', date: '23 Oct 2026', pic: 'kokusen', cap: 'The Vessel’s fifth: the last kick of the chain', items: [
     'The Vessel can chain four Black Flashes. Every Black Flash puts your dash, a broken guard and Divergent Fist straight back. Then: dash behind them (a dash at them now takes you past) and land another; dash, hold F and land one from behind your guard; do that again; and press 4 for the last of it, a Manji Kick. Each Black Flash after the first is 190, and so is the kick. Afterwards Divergent Fist and Manji Kick are gone for 30 seconds',
     'Switcher Stitcher: straight after swapping with the pebble, press 2. Stitcher Punch comes out after a fifth of a second and is a Black Flash, 190. Boogie Woogie is gone for 20 seconds after',

@@ -526,6 +526,7 @@ function tryHit(p, h) {
 }
 
 function applyHit(o, face, h) {
+  if (hooks.shield && hooks.shield(o, face, h)) return;      // (it got its guard up in time: a blocking dummy, ps.js)
   const dmg = h.dmg * (o.dr || 1) * (hooks.power ? hooks.power(h, o) : 1), hs = o.scale || 1, dead = o.hp - dmg <= 0;
   o.hp = Math.max(0, o.hp - dmg); o.lastHit = 0; o.flash = .09;
   if (o.poise && !dead) o.vx += face * h.kb * .12;          // too heavy to stagger: it only flinches
@@ -706,7 +707,7 @@ function updatePlayer(dt) {
   p.ground0 = fy;
   if (!p.ground) {
     p.plat = false;
-    p.vy -= GRAV * dt; p.y += p.vy * dt;
+    p.vy -= GRAV * (hooks.gravity ? hooks.gravity(p) : 1) * dt; p.y += p.vy * dt;      // (gravity: none while he flies, less on the moon: ps.js)
     if (p.y <= fy && p.vy <= 0) { p.y = fy; p.vy = 0; p.ground = true; p.plat = fy > 0; addDust(p.x); sfx.land(); }
   }
   const edge = hooks.bound ? hooks.bound() : BOUND;   // something may have made the arena bigger for him
@@ -885,6 +886,7 @@ function frame(now) {
   let dt = real;
   if (stopT > 0) { stopT -= real; dt = 0; }
   else if (slowT > 0) { slowT -= real; dt = real * .22; }
+  if (hooks.speed) dt *= hooks.speed();             // (the game's own speed, set in a private server: ps.js)
   cam.shake = Math.max(0, cam.shake - real * 70);
   if (bfT > 0) bfT -= real;
   if (scene) scene.update(dt, real); else update(dt, real);

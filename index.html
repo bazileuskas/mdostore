@@ -186,6 +186,48 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 .mp li em{margin-left:auto;font:600 .72em/1 var(--f-ui);font-style:normal;letter-spacing:.14em;text-transform:uppercase;color:#ffd23d}
 .mp li button[data-adm]{border-color:#ffd23d;color:#ffd23d}
 .mp li button[data-adm].has,.mp li button[data-adm]:hover,.mp li button[data-adm]:focus-visible{background:#ffd23d;color:#0b0710}
+/* servers (ps.js): Free Exploration's choice; in a private server the + button and its menu, a line of news, the build bar, and up and down
+   for flying on a touch screen */
+.srv{display:grid;gap:clamp(10px,1.6vh,18px)}
+.psplus{position:absolute;right:clamp(10px,1.6vw,26px);top:50%;z-index:11;display:none;place-items:center;width:clamp(42px,6.4vh,60px);height:clamp(42px,6.4vh,60px);translate:0 -50%;padding:0;border:2px solid #ffd23d;border-radius:50%;background:rgba(8,6,14,.86);color:#ffd23d;font:600 clamp(26px,4.4vh,38px)/1 var(--f-ui);cursor:pointer;transition:background .15s,color .15s}
+.psplus:hover,.psplus:focus-visible{background:#ffd23d;color:#0b0710}
+.game.ps:is([data-mode="street"],[data-mode="fight"]):not(.cine):not(.dom) .psplus{display:grid}
+.game>.pspanel{position:absolute;right:0;top:0;bottom:0;z-index:13;pointer-events:auto;width:min(400px,94vw);box-sizing:border-box;overflow-y:auto;overscroll-behavior:contain;padding:14px 14px 26px;background:rgba(8,6,14,.95);border-left:3px solid #ffd23d;color:#f4efe4;font:500 clamp(12px,min(1.15vw,2vh),15px)/1.3 var(--f-ui);transform:translateX(105%);transition:transform .22s ease;visibility:hidden}
+.game>.pspanel.on{transform:none;visibility:visible}
+.pspanel header{display:flex;align-items:baseline;gap:.6em;margin-bottom:.3em}
+.pspanel header b{font:400 1.7em/1 var(--f-display);letter-spacing:.06em;text-transform:uppercase;color:#ffd23d}
+.pspanel header u{text-decoration:none;font-weight:600;letter-spacing:.18em;color:#fff}
+.pspanel header button{margin-left:auto;padding:.3em .6em;border:1px solid rgba(244,239,228,.4);background:none;color:#f4efe4;font:600 1em/1 var(--f-ui);cursor:pointer}
+.pspanel header button:hover{border-color:#fff}
+.pspanel h4{margin:1em 0 .45em;font:600 .78em/1 var(--f-ui);letter-spacing:.24em;text-transform:uppercase;color:#7fe9ff}
+.psgrid{display:grid;grid-template-columns:1fr 1fr;gap:.35em}
+.psgrid button{display:grid;align-content:start;gap:.12em;min-height:3.1em;padding:.5em .6em;text-align:left;border:1px solid rgba(244,239,228,.2);background:rgba(255,255,255,.04);color:#f4efe4;font:inherit;cursor:pointer}
+.psgrid button b{font-weight:600;letter-spacing:.02em}
+.psgrid button i{font-style:normal;font-size:.8em;line-height:1.25;color:rgba(244,239,228,.58)}
+.psgrid button:hover,.psgrid button:focus-visible{border-color:#fff;background:rgba(255,255,255,.08)}
+.psgrid button.on{border-color:#ffd23d;background:rgba(255,210,61,.15)}
+.psgrid button.on b{color:#ffd23d}
+.psgrid button:disabled{opacity:.38;cursor:default}
+.psrow{display:flex;flex-wrap:wrap;align-items:center;gap:.35em;margin-top:.45em}
+.psrow label{display:flex;align-items:center;gap:.4em;color:rgba(244,239,228,.75)}
+.psrow input{width:6em;padding:.4em .5em;border:1px solid rgba(244,239,228,.3);background:rgba(0,0,0,.5);color:#f4efe4;font:inherit}
+.psrow input:focus{outline:1px solid #7fe9ff}
+.psrow button{padding:.42em .65em;border:1px solid rgba(127,233,255,.6);background:none;color:#7fe9ff;font:600 .9em/1 var(--f-ui);letter-spacing:.04em;cursor:pointer}
+.psrow button:hover,.psrow button:focus-visible{background:#7fe9ff;color:#06121a}
+.game>.pstoast{position:absolute;left:50%;bottom:clamp(96px,17vh,170px);z-index:12;max-width:80vw;translate:-50% 8px;opacity:0;pointer-events:none;padding:.45em 1em;border-left:3px solid #ffd23d;background:rgba(8,6,14,.9);color:#f4efe4;font:600 clamp(12px,min(1.3vw,2.3vh),18px)/1.25 var(--f-ui);letter-spacing:.05em;transition:opacity .2s,translate .2s}
+.game>.pstoast.on{opacity:1;translate:-50% 0}
+.game>.psbuild{position:absolute;left:50%;bottom:clamp(10px,2.4vh,26px);z-index:10;display:none;pointer-events:auto;max-width:96vw;translate:-50% 0;flex-wrap:wrap;justify-content:center;gap:.35em;font:500 clamp(10px,min(1.05vw,1.9vh),15px)/1.1 var(--f-ui)}
+.game.psb[data-mode="street"]:not(.cine) .psbuild{display:flex}
+.psbuild>button{display:grid;gap:.25em;min-width:5.2em;padding:.45em .55em;border:2px solid rgba(244,239,228,.25);border-bottom:4px solid var(--c);background:rgba(8,6,14,.86);color:#f4efe4;font:inherit;cursor:pointer}
+.psbuild>button kbd{font:600 .8em/1 var(--f-ui);color:#ffd23d}
+.psbuild>button.on{border-color:#ffd23d;background:rgba(255,210,61,.18)}
+.psbuild span{display:flex;gap:.35em;align-items:stretch}
+.psbuild span button{padding:.45em .7em;border:1px solid rgba(127,233,255,.6);background:rgba(8,6,14,.86);color:#7fe9ff;font:600 1em/1 var(--f-ui);cursor:pointer}
+.psbuild span button:hover{background:#7fe9ff;color:#06121a}
+.game>.psflyb{position:absolute;pointer-events:auto;left:calc(var(--sx,16px) + clamp(110px,32vh,170px));bottom:clamp(14px,4vh,40px);z-index:10;display:none;flex-direction:column;gap:.5em}
+.touch .game.psf:is([data-mode="street"],[data-mode="fight"]) .psflyb{display:flex}
+.psflyb button{width:clamp(44px,12vh,64px);height:clamp(44px,12vh,64px);border:2px solid #7fe9ff;border-radius:50%;background:rgba(8,6,14,.7);color:#7fe9ff;font:600 1.2em/1 var(--f-ui);touch-action:none}
+.psflyb button:active{background:#7fe9ff;color:#06121a}
 /* One v Ones (pvp.js): a line at the top, the challenge, the board the two ban and pick from */
 .dtoast{position:absolute;left:50%;top:clamp(54px,11vh,110px);z-index:9;max-width:min(92vw,44em);padding:.5em 1em;translate:-50% -12px;opacity:0;pointer-events:none;border-left:3px solid var(--c,#7fe9ff);background:rgba(8,6,14,.9);color:#f4efe4;font:500 clamp(12px,min(1.3vw,2.4vh),20px)/1.3 var(--f-ui);letter-spacing:.06em;transition:opacity .25s,translate .25s}
 .dtoast.on{opacity:1;translate:-50% 0}
@@ -1041,7 +1083,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
   </div>
 
   <div class="side" aria-hidden="true" lang="ja">領域展開</div>
-  <div class="hud tl"><b lang="ja">呪</b>Fan project · Build 0.13 · Black Flashes</div>
+  <div class="hud tl"><b lang="ja">呪</b>Fan project · Build 0.14 · Private Servers</div>
   <div class="hud bl">↑ ↓ Select &nbsp;·&nbsp; Enter Confirm</div>
   <div class="hud br">Title screen</div>
   <div class="acct" id="acct">
@@ -2028,7 +2070,7 @@ window.JU = { sfx, flash, bolts: blackFlash, reduceMotion, startGame, exitGame, 
 // Load every game script fresh on each page load. The dev server sends no cache headers, so without this a reload
 // could run a mix of old and new files (new menu, old moves) while the game is being worked on.
 ['account.js', 'announce.js', 'game.js', 'fx2.js', 'chars.js', 'street.js', 'walk.js', 'foes.js', 'cuts.js', 'sukuna.js', 'school.js', 'story.js', 'story2.js', 'tech.js', 'tech_a.js',
-  'tech_b.js', 'sets.js', 'story3.js', 'cast2.js', 'script.js', 'naoya.js', 'ch45.js', 'ch67.js', 'clan.js', 'clan_a.js', 'clan_b.js', 'boss.js', 'bossfx.js', 'boss_a.js', 'boss_b.js', 'boss_c.js', 'training.js', 'choso.js', 'domain.js', 'domain2.js', 'mahito.js', 'combo.js', 'combat.js', 'cast3.js', 'ch810.js', 'ch1112.js', 'cast4.js', 'ch1316.js', 'cast5.js', 'ch1721.js', 'combat2.js', 'judge.js', 'awaken.js', 'alimit.js', 'ats.js', 'switcher.js', 'tools.js', 'smark.js', 'cast6.js', 'ch2230.js', 'plants.js', 'clash.js', 'block.js', 'cannon.js', 'tced.js', 'shibuya.js', 'kyoto.js', 'evasive.js', 'kokusen.js', 'mp.js', 'pvp.js', 'vengeful.js', 'haruta.js', 'ratio.js', 'notes.js', 'shop.js', 'touch.js'].forEach(src => {
+  'tech_b.js', 'sets.js', 'story3.js', 'cast2.js', 'script.js', 'naoya.js', 'ch45.js', 'ch67.js', 'clan.js', 'clan_a.js', 'clan_b.js', 'boss.js', 'bossfx.js', 'boss_a.js', 'boss_b.js', 'boss_c.js', 'training.js', 'choso.js', 'domain.js', 'domain2.js', 'mahito.js', 'combo.js', 'combat.js', 'cast3.js', 'ch810.js', 'ch1112.js', 'cast4.js', 'ch1316.js', 'cast5.js', 'ch1721.js', 'combat2.js', 'judge.js', 'awaken.js', 'alimit.js', 'ats.js', 'switcher.js', 'tools.js', 'smark.js', 'cast6.js', 'ch2230.js', 'plants.js', 'clash.js', 'block.js', 'cannon.js', 'tced.js', 'shibuya.js', 'kyoto.js', 'evasive.js', 'kokusen.js', 'mp.js', 'pvp.js', 'vengeful.js', 'haruta.js', 'ratio.js', 'notes.js', 'shop.js', 'ps.js', 'touch.js'].forEach(src => {
   const s = document.createElement('script');
   s.src = src + '?v=' + Date.now(); s.async = false;      // async = false keeps them running in this order
   document.body.appendChild(s);

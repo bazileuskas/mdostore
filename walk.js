@@ -117,6 +117,7 @@ function start(opts) {
 function update(dt, real) {
   const p = me;
   if (st.free) JU.clan.street(dt);
+  if (st.free && JU.ps) JU.ps.street(dt, real, p);      // a private server's: flying, building
   if (st.free && JU.mp) JU.mp.tick(real);            // whoever else is on the server with him
   let mx = 0, mz = 0, run = 1;
   if (st.goto) {                                 // a cutscene is walking him to a mark
@@ -133,11 +134,14 @@ function update(dt, real) {
   }
   const fastK = st.free && JU.awakened ? JU.awakened.streetTick(dt) : 1;   // Top Speed, out here: nothing while he runs his laps, a lot once he is up to speed
   run *= fastK;
-  const sx = mx * 330 * run * dt, sz = mz * 290 * run * dt;
-  if (st.goto || W.free(p.x + sx, p.z)) p.x += sx;
-  if (st.goto || W.free(p.x, p.z + sz)) p.z += sz;
+  const sx = mx * 330 * run * dt, sz = mz * 290 * run * dt, built = st.free && JU.ps;
+  const open = (x, z) => W.free(x, z) && !(built && JU.ps.blocked(x, z, p.y));      // (and nothing built in the way: ps.js)
+  if (st.goto || open(p.x + sx, p.z)) p.x += sx;
+  if (st.goto || open(p.x, p.z + sz)) p.z += sz;
   if (Math.abs(mx) > .15) p.face = mx > 0 ? 1 : -1;
-  p.y = p.ground0 = lerp(p.y, W.gy(p.z, p.x), 1 - Math.exp(-dt * 18));      // step up and down the kerbs
+  const gy = built ? JU.ps.ground(p.x, p.z, p.y, W.gy(p.z, p.x)) : W.gy(p.z, p.x);      // the ground under him, or the top of what he is standing on
+  if (built && JU.ps.flying) { p.y = JU.ps.fly(p.y, gy, dt); p.ground0 = gy; }
+  else p.y = p.ground0 = lerp(p.y, gy, 1 - Math.exp(-dt * 18));      // step up and down the kerbs
   C.stroll(p, !!(mx || mz), dt, run);
 
   for (const n of npcs) {
@@ -231,6 +235,7 @@ function render() {
   const sh = JU.reduceMotion ? 0 : cam.shake;
   g.save();
   g.translate(VW / 2 + rnd(-sh, sh), HY + 70 + rnd(-sh, sh)); g.scale(cam.zoom, cam.zoom); g.translate(-VW / 2, -(HY + 70));
+  if (st.free && JU.ps) JU.ps.lift(W);            // up after him, in a private server: flying, or up on something built
 
   W.sky(); W.ground(); W.alley();
   // during a cutscene the camera is pushed right in, so passers-by on the near pavement would fill the frame
@@ -238,6 +243,7 @@ function render() {
   const deep = [], list = [];                    // what stands back beyond the building line (an alley, a square) is drawn before the buildings
   for (const it of W.props) (it.z > W.Z1 + 20 ? deep : list).push(it);
   for (const f of people) (f.z > W.Z1 + 20 ? deep : list).push({ z: f.z, f });
+  if (st.free && JU.ps) for (const it of JU.ps.props(W)) (it.z > W.Z1 + 20 ? deep : list).push(it);      // what has been built here, and where the next block would go
   deep.sort((a, b) => b.z - a.z);
   for (const it of deep) it.f ? person(it.f) : it.draw();
   W.buildings();
@@ -274,11 +280,12 @@ function render() {
 
 const scene = { mode: 'street', update, render, press(a) {
   if (st.talk) { JU.story.press(a); return; }                          // somebody is speaking: the key turns their page
+  if (st.free && JU.ps && JU.ps.key(a)) return;                       // building, in a private server
   if (st.free && st.near && !st.hold && E.T >= (st.wait || 0) && (a === 'ok' || a === 'm1')) { sfx.confirm(); st.near.use(st.near); return; }   // E (or a click): whatever is within reach
   if (st.free && JU.awakened && JU.awakened.streetKey(a)) return;      // R + 2 with Awakened Projection: Top Speed, out on the street
   if (st.free && JU.switcher && JU.switcher.streetKey(a)) return;      // R with Switcher Stitcher: Boogie Woogie with whoever is nearest
   if (!(st.free && JU.clan.key(a))) JU.story.press(a);
 } };
-JU.street = { start, scene, setObj, fight, talk, travel, status,
+JU.street = { start, scene, setObj, fight, talk, travel, status, respawn() { if (st.free) spawnCurses(); },
   get world() { return W; }, get me() { return me; }, get megumi() { return megumi; }, get st() { return st; }, get npcs() { return npcs; }, get curses() { return curses; }, get cast() { return cast; } };
 })();

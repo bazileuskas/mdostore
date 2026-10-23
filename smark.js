@@ -191,7 +191,7 @@ const clear = () => { shrine = arrow = null; quick = quickCd = pendR = 0; };
 H.reset = () => { reset0(); clear(); };
 H.fightStart = (cfg, wave) => { if (!wave) clear(); start0(cfg, wave); };
 // what it will have to be earned with, counted from now on
-H.ko = o => { const res = ko0(o), cfg = Fi.fight.cfg; if (cfg && !cfg.dummy) { S.kills++; save(); } return res; };
+H.ko = o => { const res = ko0(o), cfg = Fi.fight.cfg; if (cfg && !cfg.dummy && !cfg.ps) { S.kills++; save(); } return res; };
 H.bf = o => { bf0(o); const cfg = Fi.fight.cfg; if (JU.clan.active && JU.clan.active.id === 'sukuna' && !(cfg && cfg.dummy)) { S.bf++; save(); } };
 
 const open = () => !!(JU.account && JU.account.dev) || !NEED || (JU.clan.equipped === 'sukuna' && S.bf >= WANT.bf && S.kills >= WANT.kills);      // (the team's account has it regardless)

@@ -319,7 +319,7 @@ H.fightStart = (cfg, wave) => { clear(); start0(cfg, wave); };
 // what it will have to be earned with: the Maki boss gives up a Projection Frame v2 one time in twenty
 H.ko = o => {
   const res = ko0(o), cfg = Fi.fight.cfg;
-  if (cfg && !cfg.dummy && o.ai && JU.tech.active && JU.tech.active.id === 'ten') {      // exorcised with Ten Shadows: it counts toward awakening them
+  if (cfg && !cfg.dummy && !cfg.ps && o.ai && JU.tech.active && JU.tech.active.id === 'ten') {      // exorcised with Ten Shadows: it counts toward awakening them
     const was = S.tsKills >= TS_KILLS && S.tsBoss >= TS_BOSS, boss = !!o.ai.d.kit;
     S.tsKills++; if (boss) S.tsBoss++; save();
     if (!was && S.tsKills >= TS_KILLS && S.tsBoss >= TS_BOSS) { sfx.bf(); E.fx.push({ k: 2, x: o.x, y: 470, n: 'AWAKENED TEN SHADOWS  ·  UNLOCKED', col: '#8f9bff', t: 0, life: 3 }); }

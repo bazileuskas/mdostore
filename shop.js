@@ -318,7 +318,7 @@ function deal(f, o) {
 const ko0 = H.ko;
 H.ko = o => {
   const res = ko0(o), cfg = JU.fights.fight.cfg;
-  if (cfg && !cfg.dummy && o.ai) earn(o.ai.d.kit ? BOSS : WIN, o);
+  if (cfg && !cfg.dummy && !cfg.ps && o.ai) earn(o.ai.d.kit ? BOSS : WIN, o);      // (ps: a private server's menu fight)
   return res;
 };
 
