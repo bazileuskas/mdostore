@@ -572,12 +572,72 @@ function strike() {                                 // the duel is over: either 
 }
 
 /* ---------- wiring ---------- */
+
+/* ---------- E (Build 0.16): the gavel thrown. It hits them and waits over them; E again and it comes down on them again, and back to his
+   hand. Nothing hit, and it waits where it got to. While it is away his strikes are his fists, and his moves wait for it ---------- */
+const TOSS = [14, 20], TOSS_CD = 8, TOSS_V = 1700, TOSS_FAR = 1000, HOVER_T = 3.5;      // what it does going out, and coming down; its wait; how fast; how far; how long it waits up there
+let toss = null, tossCd = 0;                        // the gavel while it is away: { x, y, vx, ang, phase ('out' | 'hover' | 'smash' | 'back'), t, o (whoever it is waiting over), x0 }
+const TOSS_MOVE = { dur: .35, glow: 'gold', run(p, m, t) {
+  p.vx = 0; p.target = t < .12 ? POSE.hookWind : POSE.hook;
+  if (t < .12 || m.s) return;
+  m.s = 1;
+  const w = E.hand(p, true);
+  toss = { x: w[0], y: Math.max(140, w[1]), vx: p.face * TOSS_V, ang: 0, phase: 'out', t: 0, o: null, x0: w[0] };
+  sfx.swish(2);
+} };
+function tossPress(p) {
+  if (trial || duel || sword) return false;        // (the court, the execution, the sword in his hand: E is theirs)
+  if (toss) { if (toss.phase === 'hover') { toss.phase = 'smash'; sfx.swish(2.2); } return true; }
+  if (tossCd > 0) { sfx.back(); return true; }
+  if (p.move || p.ps || p.dead || p.dashT > 0) return true;
+  p.move = { def: TOSS_MOVE, key: 'esp', t: 0 }; E.hud.mv.esp.classList.add('act');
+  return true;
+}
+function thump(o, dmg, s, big) {                    // the gavel landing on them
+  const x = o.x, y = o.y + tall(o), f = x >= E.P1.x ? 1 : -1;
+  E.applyHit(o, f, { dmg: dmg / (o.dr || 1), kb: big ? 420 : 160, lift: big ? 520 : 0, stun: .8, stop: big ? .14 : .08, heavy: big ? 1 : 0, col: GOLD, fixed: 1, mute: 1 });
+  sfx.gavel(s); bang(x, y, .6 + .3 * s); V.sparks(x, y, 'gold', 8);
+  if (big) { crimson(.6, .3); imprint(o.x, 120); dust(o.x, 8, .7); floorRing(o.x, 300); shake(24); }
+}
+function flyToss(dt) {
+  const s = toss, o = E.P2, p = E.P1, hs = o.scale || 1, there = !o.ko && !(o.alpha < 1);
+  s.t += dt; s.ang += (s.phase === 'hover' ? 5 : 22) * dt;
+  if (s.phase === 'out') {
+    s.x += s.vx * dt;
+    if (there && Math.abs(s.x - o.x) < 70 * hs && Math.abs(s.y - (o.y + tall(o))) < 170 * hs) { thump(o, TOSS[0], 1.5, false); s.phase = 'hover'; s.o = o; s.t = 0; }
+    else if (Math.abs(s.x - s.x0) > TOSS_FAR || Math.abs(s.x) > 1000) { s.phase = 'hover'; s.t = 0; }
+  } else if (s.phase === 'hover') {                 // over them, turning slowly, waiting for E
+    const w = s.o && !s.o.ko ? s.o : null, tx = w ? w.x : s.x, ty = w ? w.y + 420 * hs : Math.max(s.y, 300), q = 1 - Math.exp(-dt * 8);
+    s.x += (tx - s.x) * q; s.y += (ty + Math.sin(E.T * 5) * 14 - s.y) * q;
+    if (s.t > HOVER_T) s.phase = 'back';
+  } else if (s.phase === 'smash') {                 // down on them, wherever they have got to
+    const dx = o.x - s.x, dy = o.y + tall(o) - s.y, d = Math.hypot(dx, dy) || 1, st = Math.min(d, 2600 * dt);
+    s.x += dx / d * st; s.y += dy / d * st;
+    if (d < 60 || !there) { if (there) thump(o, TOSS[1], 2.4, true); s.phase = 'back'; }
+  } else {                                          // and back to his hand
+    const w = E.hand(p, true), dx = w[0] - s.x, dy = w[1] - s.y, d = Math.hypot(dx, dy) || 1, st = Math.min(d, 2200 * dt);
+    s.x += dx / d * st; s.y += dy / d * st;
+    if (d < 50) { toss = null; tossCd = TOSS_CD; sfx.gavel(1); }
+  }
+}
+function drawToss() {                               // the gavel in the air, end over end
+  const s = toss, c = F(s.x, s.y), k = c[2], sz = 1.5;
+  if (s.phase !== 'hover') lit(() => E.glow(E.GLOW.gold, c[0], c[1], 170 * k, .35));
+  g.save(); g.translate(c[0], c[1]); g.rotate(s.ang); g.lineCap = 'round';
+  g.strokeStyle = LINE; g.lineWidth = 12 * k; g.beginPath(); g.moveTo(-6 * k, 0); g.lineTo(-80 * k, 0); g.stroke();
+  g.strokeStyle = '#6a2217'; g.lineWidth = 7 * k; g.stroke();
+  head(30 * sz * k, 74 * sz * k, 3);
+  g.restore();
+  if (s.phase === 'hover') { g.save(); g.font = `${Math.round(32 * k * (1 + .1 * Math.sin(E.T * 10)))}px Anton, Impact, sans-serif`; g.textAlign = 'center'; g.lineWidth = 5 * k; g.strokeStyle = LINE; g.strokeText('E', c[0], c[1] - 80 * k); g.fillStyle = GOLD; g.fillText('E', c[0], c[1] - 80 * k); g.restore(); }
+}
+
 const DEF = JU.tech.TECH.judge, on = () => JU.tech.active === DEF;
 const moveFx0 = H.moveFx, fx0 = H.fx, under0 = H.under, press0 = H.press, post0 = H.post, awaken0 = H.awaken, reset0 = H.reset, start0 = H.fightStart;
 let size = 1, primed = false;
 H.press = (a, inScene) => {
   if (trial) { const i = ['strikes', 'crush', 'div'].indexOf(a); if (i >= 0) plead(i); return true; }     // nothing else happens while the court sits
   if (duel) { if (a === 'm1' || a === 'jump' || a === 'ok') tap(); return true; }
+  if (toss && on() && ['strikes', 'crush', 'div', 'manji'].includes(a)) { E.fx.push({ k: 2, x: E.P1.x, y: E.P1.y + 420, n: 'THE GAVEL IS OUT', col: GOLD, t: 0, life: .8 }); return true; }      // (they all want it in his hand)
   return press0 ? press0(a, inScene) : false;
 };
 H.awaken = p => {                                   // with the sword in his hand, G is the execution
@@ -600,12 +660,14 @@ H.post = dt => {
   if (cutFx) drawCut(real);
   if (trial) runTrial(); else if (duel) runDuel();
 };
-const clear = () => { if (trial) adjourn(); if (duel) E.root.classList.remove('dom'); duel = cutFx = null; sword = false; redLvl = 0; bits.length = ghosts.length = 0; };
+const clear = () => { if (trial) adjourn(); if (duel) E.root.classList.remove('dom'); duel = cutFx = null; sword = false; redLvl = 0; bits.length = ghosts.length = 0; toss = null; tossCd = 0; };
+const tick0j = H.tick;
+H.tick = dt => { tick0j(dt); if (tossCd > 0) tossCd = Math.max(0, tossCd - dt); if (toss) flyToss(dt); };
 H.reset = () => { reset0(); clear(); };
 H.fightStart = (cfg, wave) => { if (!wave) clear(); start0(cfg, wave); };
 H.moveFx = (p, m) => {
   moveFx0(p, m);
-  if (!on() || !m.def.m1) return;
+  if (!on() || !m.def.m1 || toss) return;          // (the gavel is out: his fists, as they are)
   if (m.def === M.m1[m.i]) m.def = GAVEL[m.i];      // an ordinary strike has just begun: it is a gavel strike instead
   const s = m.def.gv || 1.8, f = p.face, o = E.P2, hx = o.x - f * 22, hy = o.y + tall(o);
   if (m.sw && !m.gs) { const A = ARCS[m.i] || ARCS[0]; m.gs = 1; sfx.swish(s); sweep(p.x + f * 18, p.y + 183, f, 91 + 70 * Math.min(s, 2.2), A[0], A[1], 62 * s, .18 + .02 * s); }
@@ -631,12 +693,15 @@ H.fx = dt => {
     text('G  ·  EXECUTE', c[0], c[1], 24 * c[2], GOLD);
     return;
   }
+  if (toss) { drawToss(); return; }                 // (thrown: it is out there, not in his hand)
   if (m && m.gv) { size = m.gv.s; gavel(p, m.gv); return; }      // a move sizes it for itself
   size += ((m && m.def.m1 ? m.def.gv || 1.8 : 1) - size) * Math.min(1, dt * 24);
   gavel(p, { s: size, len: 70 });
 };
 
 JU.judge = { GAVEL, MOVES, EXEC, plead, head, rank, terms, set sword(v) { sword = !!v; },
+  esp: { name: () => (toss && toss.phase === 'hover' ? 'Bring it down' : 'Gavel Toss'), jp: '槌投げ', col: GOLD, get left() { return toss ? 0 : tossCd; }, max: TOSS_CD, press: tossPress, nocd() { tossCd = 0; } },      // E (especial.js)
+  get toss() { return toss && { phase: toss.phase, x: Math.round(toss.x), y: Math.round(toss.y) }; },
   get state() { return { sword, red: redLvl, bits: bits.length, trial: trial && { phase: trial.phase, round: trial.round, score: trial.score, lean: trial.lean, pick: trial.pick, out: trial.out, me: trial.me, foe: trial.foe },
     duel: duel && { phase: duel.phase, i: duel.i, t: duel.t, mine: duel.mine.slice(), theirs: duel.theirs.slice(), won: duel.won, beat: duel.i < 3 ? beat(duel) : 0, ring: ringT(duel), q: duel.q } }; } };
 })();

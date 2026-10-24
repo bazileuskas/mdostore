@@ -378,7 +378,7 @@ H.tick = dt => {
     if (o.knockT > .15 && E.T - (o.evPs || -9) > EV_DUMMY && JU.evasive) { o.evPs = E.T; o.evAt = undefined; JU.evasive.foe(o, 1); }
   }
   if (!live()) return;
-  if (O.nocd) { for (const k in E.cd) E.cd[k] = 0; if (JU.evasive && JU.evasive.cd > 0) JU.evasive.cd = 0; }
+  if (O.nocd) { for (const k in E.cd) E.cd[k] = 0; if (JU.evasive && JU.evasive.cd > 0) JU.evasive.cd = 0; if (JU.especial) JU.especial.cd = 0; }
   if (O.god && !p.dead) { p.hp = p.max; Fi.fight.floor = Math.max(Fi.fight.floor || 0, 1); }
   if (O.awk) JU.tech.charge(100);
 };

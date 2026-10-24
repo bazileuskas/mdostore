@@ -5,6 +5,20 @@
 // Newest first. v = the build, jp = the seal stamped beside it, pic = notes/<pic>.jpg, cap = what the picture shows.
 // A new update goes at the top of this list.
 const NOTES = [
+  { v: '0.16', name: 'E Specials', jp: '特技', date: '24 Oct 2026', pic: 'especial', cap: 'Four of them: Black Hole, Wood Ball, a Pachinko jackpot and Dragon-Bone', items: [
+    'Every cursed technique has something on E now. On a touch screen it is the E on the hotbar, which says what it is and shows how long it has to wait. Ratio Man’s E is still the Ratio, and Blood Brother has none',
+    'The Vessel: Cancel. E straight after starting a move calls it off, as long as it has not hit anybody yet, and its cooldown goes with it. A quiet circle round him says so',
+    'Cursed Judge: Gavel Toss. The gavel is thrown at them (14) and hangs over them; E again brings it down on them (20) and it comes back to his hand. No moves while it is out',
+    'Miracle Dork: Drop Sword. It goes into the floor and hurts nobody. Z and X push it left and right along the floor (on a touch screen, the arrows), and a Lucky Cut while it is under them is the sword’s own, up out of the floor, wherever he is. E again and it comes back',
+    'Love Reaper: Pure Love. Rika fires a beam out of her mouth, 45',
+    'Ten Shadows: Shadow Swim, down into his own shadow and up out of theirs behind them, the Divine Dogs first (22). Awakened Ten Shadows: Nue: Thunder, three bolts from Nue overhead (34)',
+    'Limitless: Blink, behind them in an instant and Lapse: Blue pulling them in (16). Awakened Limitless: Unlimited Infinity, a pulse that throws them off, and for a moment nothing touches him: whatever tries is thrown back (20)',
+    'Projection Sorcery: 24 FPS, six passes through them in a blink (35). Awakened Projection: Time Cell, a frame shut round them, seven laps of it and then the glass breaks (36)',
+    'Shrine: Shrine Flicker, the shrine there behind him for a moment and a storm of cuts (30). Mark of the King: King’s Cross, two cuts the size of the arena (30)',
+    'Transfiguration: Soul Touch, their soul pulled half out of them and stitched back (26). Disaster Plants: Wood Ball, roots up out of the floor and shut round them, squeezing, then bursting into flowers (36)',
+    'Switcher Stitcher: Feint Clap, the clap with no swap, and he is on them while they flinch (22). Cursed Cannon: Vent, every bar of heat let out at once, more for more heat. True Cursed Energy Discharge: Granite Zero, a blast from right up close (40). Vengeful Artist and Mr. Instincto: Splatter Art, five gobs thrown, and the last leaves them bleeding (30)',
+    'The story’s four have one too: Maki’s Dragon-Bone (a blow that lands on the blade goes into it, and out of the hilt behind one cut, up to 50), Yuta’s Cursed Speech ("Don’t move", and they don’t, 26), Hakari’s Pachinko (three reels: a jackpot is 27 and a third of his bar) and Yuki’s Black Hole (32)',
+    'On a phone the hotbar sits next to the stick now, and leaves dashing to the Dash button'] },
   { v: '0.15v1', name: 'Bastards Qusion', jp: '奇跡', date: '23 Oct 2026', pic: 'bastards', cap: 'Bastards Qusion: the barrage, before the last of it sends them flying', items: [
     'Miracle Dork’s third move, Bastards Qusion: a quick barrage, with the sword or with his fists while it is away, 70 in all, and the last hit launches them forward',
     'A TUT Miracle Dork Combo: after Bastards Qusion, call the sword back (2 while it is thrown) and it flies to them wherever they are and drags them back to you, 60. Then Lucky Cut (1) straight after, sword or no sword: 20 harder, and five stacks of bleeding',

@@ -13,6 +13,7 @@
 const E = JU.eng, g = E.g, F = E.F, P = E.P, cam = E.cam, H = E.hooks, POSE = E.POSE, LINE = E.LINE, TOR = E.TOR, ZP = E.ZP, V = JU.vfx, sfx = JU.sfx, M = E.MOVES, Z = JU.bossfx, Fi = JU.fights, K = JU.cast4;
 const { rnd, clamp, lerp } = E, TAU = Math.PI * 2, { shout } = JU.tech.tk;
 const shake = v => { cam.shake = Math.max(cam.shake, v); };
+const lit = fn => { g.globalCompositeOperation = 'lighter'; fn(); g.globalCompositeOperation = 'source-over'; };
 const exact = (o, n) => n / (o.dr || 1);            // a hit worth the stated amount, whatever the target is made of
 const duel = () => !!(Fi.fight.cfg && Fi.fight.cfg.pvp);
 const LILAC = '#c9a0ff', LRGB = '201,160,255', STEEL = '#e8f0ff', BONE = '#ddd8e6', BONE2 = '#aaa2bb', HAIR = '#120e17', MOUTH = '#1a0610';
@@ -134,6 +135,7 @@ function rikaPose(dt) {
     const t = A.t;
     q = t < .32 ? { arm: lerp(.2, .55, t / .32), raise: .25, mouth: Math.min(1, t * 4) } : t < .5 ? { arm: 1.2, raise: .1, mouth: 1 } : { arm: .9, raise: 0, mouth: .7 };
   } else if (A && A.kind === 'slam') { want = 1; q = { arm: .6, raise: A.t < .14 ? .9 : .3, mouth: .9 }; }
+  else if (A && A.kind === 'beam') { want = 1; q = { arm: .35 + .25 * Math.min(1, A.t), raise: .55, mouth: Math.min(1, A.t * 1.5) }; }
   rk.a += (want - rk.a) * (1 - Math.exp(-dt * (want > rk.a ? 12 : 3)));
   if (rk.flare > 0) rk.flare -= dt;
   return q;
@@ -245,6 +247,49 @@ const CL_R = { name: 'Cleaving Love', cd: CD_RIKA, dur: 2.6, glow: 'purple', run
   if (s > 1.25) E.endMove(p);
 } };
 
+
+/* ================= E (Build 0.16): PURE LOVE. Rika, all of her, and what she has in her let out of her mouth in one beam ================= */
+const LOVE = 45, LOVE_CD = 22;
+function mouth(p) {                                 // where her mouth is, on the screen (drawRika's head, and the mouth in it)
+  const bob = Math.sin(E.T * 1.6) * 14, s = 1.08, wx = p.x - p.face * 125 + p.face * 100 * s, wy = p.y + 10 + bob + 440 * s;
+  return P(wx, wy, ZP + 160);
+}
+const BEAM = { name: 'Pure Love', jp: '純愛', col: LILAC, cd: LOVE_CD, dur: 1.9, run(p, m, t) {
+  const o = E.P2, f = p.face;
+  p.vx = 0; p.target = t < 1.4 ? POSE.manjiWind : POSE.idle;      // (him still: this is all hers)
+  if (!m.s) {
+    m.s = 1; rk.act = { kind: 'beam', t: 0 }; sfx.rika(1); if (Z) Z.dim(.6, 1.4);
+    V.custom(1, u => {                              // gathering in her mouth: a ball of it, growing, white at the heart
+      const a = mouth(p), k = a[2], r = (30 + 120 * u * u) * k;
+      lit(() => { E.glow(E.GLOW.purple, a[0], a[1], r * 5, .9); E.glow(E.GLOW.white, a[0], a[1], r * 1.6, .8); });
+      g.fillStyle = '#ffffff'; g.beginPath(); g.arc(a[0], a[1], r * .45, 0, TAU); g.fill();
+    }, .3);
+  }
+  if (t >= 1 && !m.fire) {
+    m.fire = 1;
+    const there = !o.ko && !(o.alpha < 1) && (o.x - p.x) * f > -60 && Math.abs(o.x - p.x) < 1500;
+    sfx.blast(); sfx.cannon(2); shake(36); E.zoomIn(.5);
+    if (Z) { Z.flash(LRGB, .4, .3); Z.flash('255,255,255', .3, .12); }
+    const x1 = there ? o.x : p.x + f * 1500, y1 = there ? o.y + 160 * (o.scale || 1) : 120;
+    V.custom(.6, u => {                             // the beam: purple, and white at its heart, from her mouth to whatever it meets
+      const a = mouth(p), b = F(x1, y1), k = b[2], w = 110 * k * (u < .15 ? u / .15 : 1 - (u - .15) * .9), al = Math.min(1, (1 - u) * 2.2);
+      g.save(); g.lineCap = 'round';
+      lit(() => {
+        g.strokeStyle = `rgba(${LRGB},${.35 * al})`; g.lineWidth = w * 2.6; g.beginPath(); g.moveTo(a[0], a[1]); g.lineTo(b[0], b[1]); g.stroke();
+        g.strokeStyle = `rgba(255,140,220,${.5 * al})`; g.lineWidth = w * 1.4; g.stroke();
+        E.glow(E.GLOW.purple, a[0], a[1], 520 * k * al, al); E.glow(E.GLOW.purple, b[0], b[1], 640 * k * al, al);
+      });
+      g.globalAlpha = al; g.strokeStyle = '#ffffff'; g.lineWidth = w * .55; g.beginPath(); g.moveTo(a[0], a[1]); g.lineTo(b[0], b[1]); g.stroke();
+      g.restore();
+    });
+    if (there) {
+      E.applyHit(o, f, { dmg: exact(o, LOVE), kb: 1200, lift: 420, stun: .9, stop: .2, heavy: 1, col: LILAC, fixed: 1, mute: 1 });
+      V.ring(x1, y1, 420, LILAC, .4); V.sparks(x1, y1, 'purple', 20); V.crack(o.x, 320);
+      if (Z) Z.boom(x1, y1, 160, LRGB, { n: 24, smoke: '40,20,60', hot: '255,230,250' });
+    }
+  }
+} };
+
 const MOVES = {
   get strikes() { return rk.mode === 'rika' ? CL_R : CL_K; },
   crush: { name: 'Coming soon', cd: 1, dur: .01, run() {} },
@@ -274,7 +319,7 @@ H.tick = dt => {
   labels();
   q = rikaPose(dt);
   const A = rk.act, p = E.P1;
-  if (A && ((A.kind === 'throw' && !(p.move && p.move.def === CL_R)) || (A.kind === 'slam' && A.t > .9))) rk.act = null;
+  if (A && ((A.kind === 'throw' && !(p.move && p.move.def === CL_R)) || (A.kind === 'slam' && A.t > .9) || (A.kind === 'beam' && !(p.move && p.move.def === BEAM)))) rk.act = null;
   if (rk.a > .5 && Math.random() < dt * 20) V.puff('purple', p.x - p.face * 125 + rnd(-90, 90), p.y + rnd(20, 380), 0, rnd(60, 180), 40, .6);
 };
 H.under = dt => {
@@ -302,5 +347,6 @@ const clear = () => { rk.act = null; rk.flare = 0; rk.a = SEE; trail.length = 0;
 H.reset = () => { reset0(); clear(); };
 H.fightStart = (cfg, wave) => { start0(cfg, wave); if (!wave) clear(); };
 
-JU.reaper = { MOVES, CL_K, CL_R, REAPER, drawRika, get mode() { return rk.mode; }, set mode(v) { rk.mode = v === 'rika' ? 'rika' : 'katana'; labels(); }, get rika() { return { a: +rk.a.toFixed(2), act: rk.act && rk.act.kind }; } };
+JU.reaper = { MOVES, CL_K, CL_R, REAPER, drawRika, esp: BEAM,      // (esp: E, especial.js)
+  get mode() { return rk.mode; }, set mode(v) { rk.mode = v === 'rika' ? 'rika' : 'katana'; labels(); }, get rika() { return { a: +rk.a.toFixed(2), act: rk.act && rk.act.kind }; } };
 })();

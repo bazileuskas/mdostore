@@ -11,6 +11,8 @@
      hand hooks them and brings them back with it, 60 instead of 40; and a Lucky Cut straight after that (1, sword or no sword) is 20
      harder and leaves five stacks of bleeding.
    4 is still to come.
+   E (Build 0.16): the sword dropped at his feet, point down in the floor. That hurts nobody. Z and X push it along the floor, left and
+     right; and a Lucky Cut while it is under them is the sword's own, from the floor up, wherever he is. E again (or 2) and it comes back.
    MIRACLES, the passive: six triangles under his health bar. A blow that would kill him spends them instead: the harder it is the more (one
    to five), and he lives through it with a quarter of his health. Not enough of them for that blow, and it kills him */
 (() => {
@@ -134,6 +136,25 @@ function flyBlade(dt) {
     if (d < 50) { blade = null; held = true; relabel(); sfx.cut(.8); V.sparks(w[0], w[1], 'gold', 6); }
   }
 }
+
+// E: down it goes, at his feet (it hurts nobody); and E again, back to his hand
+function dropPress(p) {
+  if (blade) { recall(); return true; }
+  if (!held || p.move || p.ps || p.dead || p.dashT > 0) return true;
+  const w = E.hand(p, true);
+  blade = { x: w[0] + p.face * 30, y: w[1], f: p.face, ang: 0, phase: 'drop', x0: w[0], t: 0, vy: 0, hitOut: true, hitBack: false, dropped: true };
+  held = false; relabel(); sfx.whoosh();
+  return true;
+}
+function steer(dt) {                                // Z and X: the sword pushed along the floor
+  const b = blade, k = E.keys, dir = (k.has('x') || k.has('hold:swr') ? 1 : 0) - (k.has('z') || k.has('hold:swl') ? 1 : 0);
+  if (b.flick !== undefined) { b.flick += dt; b.y = 70 + Math.sin(Math.min(1, b.flick / .32) * Math.PI) * 170; if (b.flick > .32) { delete b.flick; b.y = 70; } }      // (its Lucky Cut: up out of the floor and back)
+  if (!dir || b.flick !== undefined) return;
+  b.x = clamp(b.x + dir * 760 * dt, -980, 980); b.f = dir; b.ang = dir > 0 ? 1.9 : 1.24;
+  if (Math.random() < dt * 30) V.sparks(b.x, 12, 'gold', 1);
+  if ((b.scrape = (b.scrape || 0) - dt) <= 0) { b.scrape = .14; sfx.comb(); }
+}
+const steerable = () => !!(blade && blade.dropped && blade.phase === 'stuck');
 
 // the combo: the sword coming back has hooked them, and they come with it, to his feet. 60, and a Lucky Cut is open for three seconds
 let hook = null, combo = null;                       // what Bastards Qusion sent flying, and when: { o, at }; the Lucky Cut's window: { o, t }
@@ -261,7 +282,9 @@ const MOVES = {
     const cb = m.kind === 'combo', hh = { reach: cb ? 230 : 175, dmg: exact(o, LUCKY + (cb ? COMBO_DMG : 0)), kb: 80, lift: 1100, stun: .9, stop: cb ? .2 : .12, heavy: 1, col: PINK, fixed: 1, mute: 1, bleed: cb ? COMBO_BLEED : 1 };
     let landed = false;
     if (!m.done && t < .3) {
-      if (!cb) landed = E.tryHit(p, hh);
+      const remote = !cb && steerable() && !o.ko && !(o.alpha < 1) && Math.abs(blade.x - o.x) < 120 * (o.scale || 1);      // the sword, steered under them: the cut is its own
+      if (remote) { E.applyHit(o, Math.sign(o.x - blade.x) || f, hh); landed = true; blade.flick = 0; V.slash(blade.x, 150, -Math.PI / 2, 420, GOLDB, 13); V.slash(blade.x, 150, -Math.PI / 2, 460, '#ffffff', 5, .03); sfx.cut(1.4); }
+      else if (!cb) landed = E.tryHit(p, hh);
       else { const gap = (o.x - p.x) * f; if (gap > -60 && gap < hh.reach && Math.abs(o.y - p.y) < 220 && !o.ko && !(o.alpha < 1)) { E.applyHit(o, f, hh); landed = true; } }      // (the combo's scoops them up off the floor too)
     }
     if (landed) {
@@ -356,6 +379,8 @@ H.tick = dt => {
   if (blade) flyBlade(dt);
   if (dots.length) bleedTick(dt);
   if (hook && E.T - hook.at > HOOK_T) hook = null;
+  if (steerable()) steer(dt);
+  E.root.classList.toggle('swdrop', on() && steerable());      // (the arrows for it on a touch screen)
   if (combo && ((combo.t -= dt) <= 0 || combo.o !== E.P2 || combo.o.ko)) combo = null;
 };
 H.under = dt => {
@@ -375,5 +400,7 @@ const clear = () => { held = true; blade = null; dots.length = trail.length = 0;
 H.reset = () => { reset0(); clear(); miracles = 0; paint(); };
 H.fightStart = (cfg, wave) => { start0(cfg, wave); clear(); if (!wave) miracles = 0; paint(); relabel(); if (on()) prime(); };
 
-JU.haruta = { HARUTA, MOVES, CUTS, FISTS, MAXM, get hook() { return hook && { at: hook.at }; }, get combo() { return combo && { t: +combo.t.toFixed(2) }; }, get held() { return held; }, get blade() { return blade && { phase: blade.phase, x: Math.round(blade.x) }; }, get miracles() { return miracles; }, set miracles(n) { miracles = clamp(n | 0, 0, MAXM); paint(); }, get punches() { return punches; } };
+JU.haruta = { HARUTA, MOVES, CUTS, FISTS, MAXM,
+  esp: { name: () => (held ? 'Drop Sword' : 'Sword Back'), jp: '落', col: PINK, left: 0, max: 1, press: dropPress },      // E (especial.js)
+ get hook() { return hook && { at: hook.at }; }, get combo() { return combo && { t: +combo.t.toFixed(2) }; }, get held() { return held; }, get blade() { return blade && { phase: blade.phase, x: Math.round(blade.x) }; }, get miracles() { return miracles; }, set miracles(n) { miracles = clamp(n | 0, 0, MAXM); paint(); }, get punches() { return punches; } };
 })();

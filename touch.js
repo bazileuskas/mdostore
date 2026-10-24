@@ -14,7 +14,7 @@ ui.className = 'tc';
 ui.innerHTML = `<div class="tstick"><i></i></div>
   <div class="tbtns">
     <button class="t-s t-awk" data-a="awk" aria-label="Awakening">G</button><button class="t-s t-clan" data-a="clan" aria-label="Clan ability">R</button>
-    <button class="t-s t-alt" data-a="alt" aria-label="Underheat">Heat</button><button class="t-s t-ratio" data-a="ok" aria-label="Ratio">7:3</button><button class="t-s t-rika" data-a="alt" aria-label="Rika">Rika</button><button class="t-s t-ves t-t" data-a="takeover" aria-label="Take over">T</button><button class="t-s t-ves t-v" data-a="vow" aria-label="Binding vow">V</button>
+    <button class="t-s t-alt" data-a="alt" aria-label="Underheat">Heat</button><button class="t-s t-ratio" data-a="ok" aria-label="Ratio">7:3</button><button class="t-s t-rika" data-a="alt" aria-label="Rika">Rika</button><button class="t-s t-swl" data-hold="swl" aria-label="Sword left">&#9664;</button><button class="t-s t-swr" data-hold="swr" aria-label="Sword right">&#9654;</button><button class="t-s t-ves t-t" data-a="takeover" aria-label="Take over">T</button><button class="t-s t-ves t-v" data-a="vow" aria-label="Binding vow">V</button>
     <button class="t-block" data-hold="block">Block</button><button class="t-dash" data-a="dash">Dash</button><button class="t-jump" data-a="jump">Jump</button><button class="t-hit" data-a="m1">Strike</button>
   </div>
   <button class="t-x" data-x="1" aria-label="Back to the title">✕</button><button class="t-skip" data-a="skip">Skip ▸▸</button>`;

@@ -448,6 +448,9 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 .mv small.cnt{position:absolute;right:.55em;bottom:.35em;z-index:1;font:600 .74em/1 var(--f-ui);letter-spacing:.08em;color:#ffd27a;text-shadow:0 0 6px rgba(255,210,122,.6)}
 .mv::after{content:"";position:absolute;inset:0;background:rgba(0,0,0,.72);transform-origin:bottom;transform:scaleY(var(--cd,0))}
 .mv.act{border-color:#fff;background:rgba(255,36,64,.55)}
+.mv[hidden]{display:none}
+.mv.mve{border-bottom-color:var(--ec,#dff3ff)}
+.mv.mve kbd{color:var(--ec,#dff3ff)}
 .mv.rdy{animation:rdy .35s ease-out}
 @keyframes rdy{from{background:var(--red)}to{background:rgba(10,7,18,.84)}}
 .ghint{left:clamp(16px,3vw,44px);bottom:clamp(12px,3vh,36px);display:grid;gap:.55em;
@@ -972,6 +975,8 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 .touch .ghint,.touch .dlg em{display:none}
 .touch .hotbar .mv,.touch .awk{pointer-events:auto}
 .touch .mv{width:clamp(56px,min(9.4vw,15vh),180px)}
+.touch .hotbar{left:calc(var(--sx) + var(--st) + 14px);translate:0 0}
+.touch .hotbar .mv[data-m="dash"]{display:none}
 .touch .g-top{padding-left:calc(var(--sx) + 46px)}
 .tc{inset:0;display:none}
 .touch .tc{display:block}
@@ -993,6 +998,10 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 .game[data-tech="ratio"] .tc .t-ratio{display:grid}
 .tc .t-rika{right:calc(var(--rx) + var(--b)*1.36);bottom:calc(var(--by) + var(--b)*2.12);width:calc(var(--b)*.7);border-color:#c9a0ff;color:#c9a0ff;font-size:.8em}
 .game[data-tech="reaper"] .tc .t-rika{display:grid}
+.tc .t-swl,.tc .t-swr{bottom:calc(var(--by) + var(--b)*2.12);border-color:#ff9ad5;color:#ff9ad5}
+.tc .t-swl{right:calc(var(--rx) + var(--b)*2.1)}
+.tc .t-swr{right:calc(var(--rx) + var(--b)*1.36)}
+.game.swdrop .tc .t-swl,.game.swdrop .tc .t-swr{display:grid}
 .tc .t-clan{right:calc(var(--rx) + var(--b)*2.1)}
 .tc .t-t{right:calc(var(--rx) + var(--b)*2.84)}
 .tc .t-v{right:calc(var(--rx) + var(--b)*3.58)}
@@ -1094,7 +1103,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
   </div>
 
   <div class="side" aria-hidden="true" lang="ja">領域展開</div>
-  <div class="hud tl"><b lang="ja">呪</b>Fan project · Build 0.15v1 · Bastards Qusion</div>
+  <div class="hud tl"><b lang="ja">呪</b>Fan project · Build 0.16 · E Specials</div>
   <div class="hud bl">↑ ↓ Select &nbsp;·&nbsp; Enter Confirm</div>
   <div class="hud br">Title screen</div>
   <div class="acct" id="acct">
@@ -1127,6 +1136,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
     <div class="mv" data-m="crush"><kbd>2</kbd><b>Crushing Blow</b></div>
     <div class="mv" data-m="div"><kbd>3</kbd><b>Divergent Fist</b></div>
     <div class="mv" data-m="manji"><kbd>4</kbd><b>Manji Kick</b></div>
+    <div class="mv mve" data-m="esp" hidden><kbd>E</kbd><b>Special</b></div>
     <div class="mv" data-m="dash"><kbd>Q</kbd><b>Dash</b></div>
   </div>
   <div class="vows" id="vows"></div>
@@ -2158,7 +2168,7 @@ window.JU = { sfx, flash, bolts: blackFlash, reduceMotion, startGame, exitGame, 
 // Load every game script fresh on each page load. The dev server sends no cache headers, so without this a reload
 // could run a mix of old and new files (new menu, old moves) while the game is being worked on.
 ['account.js', 'announce.js', 'game.js', 'fx2.js', 'chars.js', 'street.js', 'walk.js', 'foes.js', 'cuts.js', 'sukuna.js', 'school.js', 'story.js', 'story2.js', 'tech.js', 'tech_a.js',
-  'tech_b.js', 'sets.js', 'story3.js', 'cast2.js', 'script.js', 'naoya.js', 'ch45.js', 'ch67.js', 'clan.js', 'clan_a.js', 'clan_b.js', 'boss.js', 'bossfx.js', 'boss_a.js', 'boss_b.js', 'boss_c.js', 'training.js', 'choso.js', 'domain.js', 'domain2.js', 'mahito.js', 'combo.js', 'combat.js', 'cast3.js', 'ch810.js', 'ch1112.js', 'cast4.js', 'ch1316.js', 'cast5.js', 'ch1721.js', 'combat2.js', 'judge.js', 'awaken.js', 'alimit.js', 'ats.js', 'switcher.js', 'tools.js', 'smark.js', 'cast6.js', 'ch2230.js', 'plants.js', 'clash.js', 'block.js', 'cannon.js', 'tced.js', 'shibuya.js', 'kyoto.js', 'evasive.js', 'kokusen.js', 'mp.js', 'pvp.js', 'vengeful.js', 'haruta.js', 'ratio.js', 'reaper.js', 'notes.js', 'shop.js', 'ps.js', 'raid.js', 'touch.js'].forEach(src => {
+  'tech_b.js', 'sets.js', 'story3.js', 'cast2.js', 'script.js', 'naoya.js', 'ch45.js', 'ch67.js', 'clan.js', 'clan_a.js', 'clan_b.js', 'boss.js', 'bossfx.js', 'boss_a.js', 'boss_b.js', 'boss_c.js', 'training.js', 'choso.js', 'domain.js', 'domain2.js', 'mahito.js', 'combo.js', 'combat.js', 'cast3.js', 'ch810.js', 'ch1112.js', 'cast4.js', 'ch1316.js', 'cast5.js', 'ch1721.js', 'combat2.js', 'judge.js', 'awaken.js', 'alimit.js', 'ats.js', 'switcher.js', 'tools.js', 'smark.js', 'cast6.js', 'ch2230.js', 'plants.js', 'clash.js', 'block.js', 'cannon.js', 'tced.js', 'shibuya.js', 'kyoto.js', 'evasive.js', 'kokusen.js', 'mp.js', 'pvp.js', 'vengeful.js', 'haruta.js', 'ratio.js', 'reaper.js', 'especial.js', 'notes.js', 'shop.js', 'ps.js', 'raid.js', 'touch.js'].forEach(src => {
   const s = document.createElement('script');
   s.src = src + '?v=' + Date.now(); s.async = false;      // async = false keeps them running in this order
   document.body.appendChild(s);
