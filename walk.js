@@ -49,7 +49,7 @@ function fight(o) {
 function encounter(c) {
   curses.splice(curses.indexOf(c), 1);
   fight({ cfg: { foes: [c.kind], wild: true }, after(won) {         // wild: out here a special grade may open its domain
-    if (won) { st.done++; if (W.won) W.won(c.kind); if (W.respawn) gone.push({ s: c.spot, t: W.respawn }); }
+    if (won) { st.done++; if (W.won) W.won(c.kind); if (W.respawn) gone.push({ s: c.spot, t: W.respawn }); if (JU.yen) JU.yen.bounty(c.kind); }
     else { c.calm = 3; curses.push(c); }           // the one he ran from is still standing there, and takes a moment to notice him again
     if (!curses.length && !W.respawn) spawnCurses();
   } });
@@ -62,7 +62,7 @@ function talk(list, then) {
 
 // everybody who is in the district besides him
 function populate() {
-  const n = W.civs || 7, gap = (W.LEN - 600) / n;
+  const n = W.civs === undefined ? 7 : W.civs, gap = (W.LEN - 600) / (n || 1);      // (a world can ask for nobody: Jujutsu High, a station)
   npcs = Array.from({ length: n }, (_, i) => {
     const f = E.fighter(C.civ(i), 300 + i * gap + rnd(-150, 150), i & 1 ? 1 : -1);
     f.z = i % 3 === 0 ? rnd(1270, 1325) : rnd(540, 740); f.y = f.ground0 = 12;
@@ -86,7 +86,7 @@ function travel(world, at) {
 function start(opts) {
   const last = opts && opts.free && !opts.world && JU.shibuya ? JU.shibuya.resume() : null;       // Free Exploration starts wherever he last got off the train
   if (last) opts = Object.assign({}, opts, last);
-  W = (opts && opts.world) || JU.tokyo;
+  W = (opts && opts.world) || (opts && opts.free && JU.jjh ? JU.jjh.world : JU.tokyo);      // (Free Exploration starts at Jujutsu High: jjh.js)
   me = E.fighter(E.YUJI, 420, 1); me.z = 640; me.y = me.ground0 = 12; me.pose = C.STAND.slice(); me.target = C.STAND;
   megumi = E.fighter(C.MEGUMI, JU.tokyo.SRC[0] + 10, 1); megumi.z = JU.tokyo.SRC[1]; megumi.y = megumi.ground0 = 12;
   megumi.pose = C.STAND.slice(); megumi.target = C.STAND;
@@ -94,6 +94,7 @@ function start(opts) {
   st = { sense: 0, sensed: false, found: false, locked: false, hold: false, talk: false, near: null, goto: null, arrive: null, beat: 0, pulse: 0, zoom: 0, yaw: 0, free: !!(opts && opts.free), done: 0 };
   pal = null;
   if (st.free && opts.at) { me.x = opts.at[0]; me.z = opts.at[1]; me.y = me.ground0 = W.gy(me.z, me.x); }
+  else if (st.free && W.start) { const a = W.start(); me.x = a[0]; me.z = a[1]; me.face = a[2] || 1; me.y = me.ground0 = W.gy(me.z, me.x); }
   populate();
   const duo = opts && opts.duo;
   if (duo) {                                     // nobody at the controls: two people strolling down the far pavement
@@ -119,6 +120,7 @@ function update(dt, real) {
   if (st.free) JU.clan.street(dt);
   if (st.free && JU.ps) JU.ps.street(dt, real, p);      // a private server's: flying, building
   if (st.free && JU.mp) JU.mp.tick(real);            // whoever else is on the server with him
+  if (st.free && JU.metro) JU.metro.step(dt, real);   // a cut between two places, under way (metro.js)
   let mx = 0, mz = 0, run = 1;
   if (st.goto) {                                 // a cutscene is walking him to a mark
     const dx = st.goto[0] - p.x, dz = st.goto[1] - p.z, d = Math.hypot(dx, dz);
@@ -206,7 +208,10 @@ function person(f) {
     const q = P(f.x, 130, f.z);
     g.globalCompositeOperation = 'lighter'; glow(GLOW.purple, q[0], q[1], 420 * q[2], .5 + .2 * Math.sin(E.T * 4)); g.globalCompositeOperation = 'source-over';
   }
+  const cy = W.clip ? W.clip(f) : null;            // (gone down a flight of stairs into the back: the ground in front hides what is below its edge)
+  if (cy != null) { g.save(); g.beginPath(); g.rect(-9999, -9999, 30000, cy + 9999); g.clip(); }
   E.shadow(f); E.drawFighter(f, f.alpha);
+  if (cy != null) g.restore();
 }
 // over something he could talk to or use: a small mark while he is far off, and what E would do once he is close
 function mark(s, near) {

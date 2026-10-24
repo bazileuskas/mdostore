@@ -220,7 +220,7 @@ const WHO = [['todo', JU.cast2.TODO, 3000, 1290, 1.2, 'Clapping Brawler'], ['mai
 function cast() { return WHO.map(w => { const f = E.fighter(w[1], w[2], -1); f.z = w[3]; f.y = f.ground0 = 12; f.scale = w[4]; f.pose = C.STAND.slice(); f.target = C.STAND; return f; }); }
 const mine = o => Object.keys(o).filter(k => o[k].w === 'k');
 const spots = [
-  { x: 4700, z: 1300, r: 170, h: 220, icon: '乗', col: '#38c8ff', label: 'Take the train', use: () => SH.openMap() },
+  { x: 4700, z: 1300, r: 170, h: 220, icon: '乗', col: '#38c8ff', label: 'Into the station', use: () => (JU.metro ? JU.metro.down('kyoto') : SH.openMap()) },
   { x: 8000, z: 1500, r: 150, h: 300, icon: '大', label: 'Look up at the hill', use: () => S.talk(LINES.daimonji()) },
   ...WHO.map(w => ({ x: w[2], z: w[3], r: 160, h: 350 * w[4], icon: '話', label: 'Talk to ' + w[5], use: () => S.talk(LINES[w[0]]()) })),
   ...mine(SH.RAIDS).map(id => ({ x: SH.RAIDS[id].at[0], z: SH.RAIDS[id].at[1], r: 150, h: 430, icon: '討', col: '#ff5a6e', raid: id, label: () => 'Raid · ' + SH.RAIDS[id].name + (M.raids[id] ? ' · cleared ' + M.raids[id] : ''), use: () => K.raid(id) })),

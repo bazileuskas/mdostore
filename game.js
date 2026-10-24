@@ -900,7 +900,7 @@ function frame(now) {
 }
 
 /* ================= input ================= */
-const KEYMAP = { tab: 'skip', x: 'skip', g: 'awk', r: 'clan', t: 'takeover', v: 'vow', c: 'alt', enter: 'ok', e: 'ok', j: 'm1', '1': 'strikes', '2': 'crush', '3': 'div', '4': 'manji', q: 'dash', shift: 'dash', w: 'jump', arrowup: 'jump', ' ': 'jump' };
+const KEYMAP = { tab: 'skip', x: 'skip', g: 'awk', r: 'clan', t: 'takeover', v: 'vow', b: 'rct', c: 'alt', enter: 'ok', e: 'ok', j: 'm1', '1': 'strikes', '2': 'crush', '3': 'div', '4': 'manji', q: 'dash', shift: 'dash', w: 'jump', arrowup: 'jump', ' ': 'jump' };
 function press(a) {
   if (performance.now() < armAt) return;
   if (scene) { if (scene.press) scene.press(a); return; }

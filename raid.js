@@ -201,7 +201,7 @@ function finish(won) {
   R.phase = 'over';
   const cfg = Fi.fight.cfg, id = R.id;
   E.slow(.8); E.banner(won ? '討伐' : '敗北', won ? 'RAID CLEAR' : 'RAID FAILED');
-  if (won) { sfx.confirm(); if (JU.shop && JU.shop.earn) JU.shop.earn(PAY, E.P1); }
+  if (won) { sfx.confirm(); if (JU.shop && JU.shop.earn) JU.shop.earn(PAY, E.P1); if (JU.yen) JU.yen.earn(PAY * 100); }      // (and yen, as every raid pays: yen.js)
   paintHud();
   Fi.later(3600, () => {
     if (!R || R.id !== id) return;

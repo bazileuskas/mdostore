@@ -82,7 +82,7 @@ function districts() {
   if (JU.kyoto && !out.some(d => d[0] === 'kyoto')) { const K = JU.kyoto.world; out.push(['kyoto', 'Kyoto', () => K, () => [420, (K.Z0 + 120) || 640, 1]]); }
   return out;
 }
-const reachable = id => id === 'tokyo' || !!(JU.shibuya && JU.shibuya.canRide && JU.shibuya.canRide());      // (only where the subway would take him anyway)
+const reachable = id => id === 'tokyo' || id === 'jjh' || !!(JU.shibuya && JU.shibuya.canRide && JU.shibuya.canRide());      // (only where the subway would take him anyway)
 function travel(id) {
   const d = districts().find(x => x[0] === id);
   if (!d || !reachable(id) || mode() !== 'street') return;

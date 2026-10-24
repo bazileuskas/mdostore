@@ -398,11 +398,13 @@ const SECRETS = {
   kenjaku: { name: 'The Stitched One', foe: 'sb_kenjaku', at: [13025, 1830], pay: 180, first: { cl: 3 }, show: () => !!M.raids.sealing, say: 'Under the last lantern a man in a monk’s robe is drinking alone. There are stitches across his forehead.' },
   sukuna: { name: 'King of Curses', foe: 'sb_sukuna', at: [9700, 700], pay: 300, first: { ct: 5, cl: 3, tl: 2 }, show: () => !!M.secrets.maho, say: 'In front of the store the road is gone, cut out in a circle. Somebody is standing in the middle of it, laughing.' }
 };
-const tally = (o, w) => Object.keys(o).filter(k => o[k] && ((RAIDS[k] || SECRETS[k] || {}).w === 'k') === (w === 'k')).length;      // (w: 'k' counts Kyoto's, anything else Shibuya's)
+const tally = (o, w) => Object.keys(o).filter(k => o[k] && ((RAIDS[k] || SECRETS[k] || {}).w || 's') === (w || 's')).length;      // (w: 'k' counts Kyoto's, 'j' Jujutsu High's, 'n' Shinjuku's, nothing Shibuya's)
+const winsKey = w => ({ k: 'kwins', j: 'jwins', n: 'nwins' })[w] || 'wins';
 function reward(pay, give) {
   const got = [];
   if (JU.shop) { JU.shop.earn(pay); for (const k in give || {}) { JU.shop.give(k, give[k]); got.push(give[k] + ' ' + { ct: 'CT ticket', cl: 'clan roll', tl: 'tool spin' }[k] + (give[k] > 1 ? 's' : '')); } }
-  return `${pay} Cursed Tokens${got.length ? ', ' + got.join(', ') : ''}`;
+  if (pay && JU.yen) JU.yen.earn(pay * 100);
+  return `${pay} Cursed Tokens${pay && JU.yen ? ' and ' + JU.yen.fmt(pay * 100) : ''}${got.length ? ', ' + got.join(', ') : ''}`;
 }
 // before a raid or a boss: what it is, and a chance to walk away from it. He stands still while he decides
 function begin(q, go) {
@@ -414,7 +416,7 @@ function raid(id) {
   begin({ mark: '討', tag: 'Raid · ' + R.jp, title: R.name, text: `${R.say} ${R.foes.length} fights, one straight after another, and no leaving once it has begun.`, yes: 'Start the raid', no: 'Not yet', lead: 1 }, () => S.fight({ stay: true, cfg: Object.assign({ foes: R.foes, label: 'Raid · ' + R.name, win: ['祓', 'RAID CLEARED'] }, R.stage ? { stage: R.stage() } : null), after(won) {
     if (!won) return;
     const first = !M.raids[id];
-    M.raids[id] = (M.raids[id] || 0) + 1; M[R.w === 'k' ? 'kwins' : 'wins'] = (M[R.w === 'k' ? 'kwins' : 'wins'] || 0) + 1; save();
+    M.raids[id] = (M.raids[id] || 0) + 1; M[winsKey(R.w)] = (M[winsKey(R.w)] || 0) + 1; save();
     S.talk([['sign', `${R.name} is cleared. ${reward(R.pay, R.give)}.` + (first ? ` And for the first time through: ${reward(0, R.first).replace('0 Cursed Tokens, ', '')}.` : '')]]);
   } }));
 }
@@ -423,7 +425,7 @@ function secret(id) {
   begin({ mark: '？', tag: 'Something that was not meant to be found', title: M.secrets[id] ? B.name : 'Something is here', text: B.say, yes: 'Face it', no: 'Walk away', lead: 1 }, () => S.fight({ stay: true, cfg: { foes: [B.foe], label: 'Secret boss', wild: true, win: ['祓', 'EXORCISED'] }, after(won) {
     if (!won) return;
     const first = !M.secrets[id];
-    M.secrets[id] = (M.secrets[id] || 0) + 1; M[B.w === 'k' ? 'kwins' : 'wins'] = (M[B.w === 'k' ? 'kwins' : 'wins'] || 0) + 1; save();
+    M.secrets[id] = (M.secrets[id] || 0) + 1; M[winsKey(B.w)] = (M[winsKey(B.w)] || 0) + 1; save();
     S.talk([['sign', `${B.name} is down. ${reward(B.pay)}.` + (first ? ` The first time: ${reward(0, B.first).replace('0 Cursed Tokens, ', '')}.` : '')]]);
   } }));
 }
@@ -457,7 +459,7 @@ const LINES = {
     return [['shoko', 'Sit. Hold still.'], ['shoko', 'Reversed technique, on somebody else. Not many can. Your next fight you go in with half again your health.', () => { M.bless = 1; save(); sfx.confirm(); }]];
   },
   yuki() {
-    const n = tally(M.secrets), all = Object.keys(SECRETS).filter(k => SECRETS[k].w !== 'k').length;
+    const n = tally(M.secrets), all = Object.keys(SECRETS).filter(k => !SECRETS[k].w).length;
     if (n >= all && !M.hunt) return [['yuki', 'All five? Every one of the things nobody was meant to find?'], ['yuki', `Then you are the kind of sorcerer I came back for. Here. ${reward(500, { ct: 5 })}.`, () => { M.hunt = 1; save(); sfx.bf(); }]];
     if (M.hunt) return [['yuki', 'Nothing left in this ward that can surprise you. Try the next one, when the line opens.']];
     return [['yuki', 'What kind of curse is your type? No? Then a serious question.'], ['yuki', `Five things are hiding in Shibuya tonight that have no business here. You have put down ${n}. Come and tell me when it is all of them.`]];
@@ -470,7 +472,7 @@ function cast() {
   return WHO.map(w => { const f = E.fighter(w[1], w[2], -1); f.z = w[3]; f.y = f.ground0 = 12; f.scale = w[4]; f.pose = C.STAND.slice(); f.target = C.STAND; f.who = w[0]; return f; });
 }
 const spots = [
-  { x: STAIRS[0], z: STAIRS[1] - 40, r: 150, h: 200, icon: '乗', col: '#38c8ff', label: 'Take the subway', use: () => openMap() },
+  { x: STAIRS[0], z: STAIRS[1] - 40, r: 150, h: 200, icon: '乗', col: '#38c8ff', label: 'Down to the subway', use: () => (JU.metro ? JU.metro.down('shibuya') : openMap()) },
   { x: HACHI[0], z: HACHI[1] - 70, r: 120, h: 300, icon: '犬', label: 'Look at the statue', use: () => S.talk(LINES.hachi()) },
   ...WHO.map(w => ({ x: w[2], z: w[3], r: 160, h: 350 * w[4], icon: '話', label: 'Talk to ' + w[5], use: () => S.talk(LINES[w[0]]()) })),
   ...Object.keys(RAIDS).map(id => ({ x: RAIDS[id].at[0], z: RAIDS[id].at[1], r: 150, h: 430, icon: '討', col: '#ff5a6e', raid: id, label: () => 'Raid · ' + RAIDS[id].name + (M.raids[id] ? ' · cleared ' + M.raids[id] : ''), use: () => raid(id) })),
@@ -503,14 +505,14 @@ const canRide = () => dev() || (exorcised() >= NEED && seasonOne()[0] >= seasonO
 // the stops, with the numbers the real ones carry on their signs: a ring in the line's colour, its letter, the station's number
 const STOPS = [{ id: 'tokyo', name: 'Tokyo', jp: '東京', code: ['M', 17, '#e60012'], x: 800, y: 215, at: () => [T0.LEN - 340, 1290, -1], world: () => T0 },      // (up the stairs onto the far pavement: the near one has a special grade standing on it)
   { id: 'shibuya', name: 'Shibuya', jp: '渋谷', code: ['G', 1, '#f39700'], x: 455, y: 250, at: () => [STAIRS[0] - 60, STAIRS[1] - 150, -1], world: () => world },
-  { id: 'harajuku', name: 'Harajuku', jp: '原宿', code: ['C', 3, '#00a650'], x: 395, y: 165, soon: 1 }, { id: 'shinjuku', name: 'Shinjuku', jp: '新宿', code: ['M', 8, '#e60012'], x: 440, y: 78, soon: 1 },
+  { id: 'harajuku', name: 'Harajuku', jp: '原宿', code: ['C', 3, '#00a650'], x: 395, y: 165, soon: 1 }, { id: 'shinjuku', name: 'Shinjuku', jp: '新宿', code: ['M', 8, '#e60012'], x: 440, y: 78 },
   { id: 'ebisu', name: 'Ebisu', jp: '恵比寿', code: ['H', 2, '#9caeb7'], x: 500, y: 345, soon: 1 }, { id: 'ikebukuro', name: 'Ikebukuro', jp: '池袋', code: ['Y', 9, '#c1a470'], x: 650, y: 62, soon: 1 },
   { id: 'roppongi', name: 'Roppongi', jp: '六本木', code: ['H', 4, '#9caeb7'], x: 660, y: 330, soon: 1 }];
 const metro = document.createElement('div'), fade = E.root.querySelector('#fade');
 metro.className = 'metro'; metro.id = 'metro';
 E.root.appendChild(metro);
 let mapOpen = false, armed = true;
-const hereStop = () => (STOPS.find(s => s.world && s.world() === S.world) || STOPS[0]).id;
+const hereStop = () => (S.world && S.world.stop) || (STOPS.find(s => s.world && s.world() === S.world) || STOPS[0]).id;
 // the board is drawn the way the ones on a station wall are: a yellow sign over a white street map, blocks in grey, parks in green, water
 // in blue, and every stop as its numbered ring
 const BLOCKS = (() => {
@@ -519,20 +521,24 @@ const BLOCKS = (() => {
   for (let y = 8; y < 432; y += 44) for (let x = 8; x < 992;) { const w = 38 + r() * 70; if (r() < .86) out.push(`<rect x="${x.toFixed(0)}" y="${(y + r() * 4).toFixed(0)}" width="${(w - 7).toFixed(0)}" height="${(30 + r() * 8).toFixed(0)}" fill="${r() < .1 ? '#f3d9a4' : r() < .12 ? '#e9b9b0' : '#e4e0d4'}"/>`); x += w; }
   return out.join('');
 })();
+const FREE_STOPS = ['tokyo', 'jjh'];                // (no need to have exorcised anything to ride home, or to the block)
+const lineOpen = s => ok0() || FREE_STOPS.includes(s.id), ok0 = () => canRide();
+const fareFor = s => (JU.metro ? JU.metro.fareOf(s.id) : 0), riding = () => (JU.yen ? JU.yen.ride : 99999);
 function paintMap() {
-  const here = hereStop(), ok = canRide(), s1 = seasonOne(), k = exorcised();
+  const here = hereStop(), ok = canRide(), s1 = seasonOne(), k = exorcised(), fare = riding();
   const line = (d, c, w = 11) => `<path d="${d}" stroke="#fff" stroke-width="${w + 6}" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="${d}" stroke="${c}" stroke-width="${w}" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`;
-  metro.innerHTML = `<div class="mbox" role="dialog" aria-modal="true" aria-label="Route map"><div class="msign"><i>i</i><b>のりば案内<span>Where to?</span></b><em>${ok ? '出口 Exit · the line is open' : '出口 Exit · the line is closed to you'}</em></div>
+  metro.innerHTML = `<div class="mbox" role="dialog" aria-modal="true" aria-label="Route map"><div class="msign"><i>i</i><b>のりば案内<span>Where to?</span></b><em>${ok ? '出口 Exit · the line is open' : '出口 Exit · some stops are closed to you'}</em></div>
     <div class="mmap"><svg viewBox="0 0 1000 440" aria-hidden="true"><rect width="1000" height="440" fill="#f7f5ee"/>${BLOCKS}
       <path d="M300 96q60-30 96 10l18 70q-40 44-104 22z" fill="#b9dc92"/><path d="M700 150q70-26 110 20l-6 86q-64 30-112-14z" fill="#b9dc92"/><path d="M716 168q52-16 78 14l-4 56q-46 20-78-8z" fill="none" stroke="#9fd0ea" stroke-width="9"/>
       <path d="M-10 404q200-34 420-6t600-22v70H-10z" fill="#a9d6ee"/><path d="M40 60l140 20M60 330l130 14" stroke="#b9dc92" stroke-width="22" stroke-linecap="round"/>
       <path d="M150 250H455L800 215" stroke="#fff" stroke-width="15" fill="none"/><path d="M150 250H455L800 215" stroke="#1c5fb8" stroke-width="7" stroke-dasharray="16 9" fill="none"/>
-      ${line('M440 40V250L500 345', '#7fbf3f')}${line('M455 250H640L800 215', '#f39700')}${line('M440 78L800 215', '#e60012')}${line('M395 165L455 250', '#00a650', 8)}${line('M500 345L660 330L800 215', '#9caeb7', 8)}${line('M650 62L800 215', '#c1a470', 8)}
+      ${line('M440 78C380 70 300 96 230 92', '#dd0077', 8)}${line('M440 40V250L500 345', '#7fbf3f')}${line('M455 250H640L800 215', '#f39700')}${line('M440 78L800 215', '#e60012')}${line('M395 165L455 250', '#00a650', 8)}${line('M500 345L660 330L800 215', '#9caeb7', 8)}${line('M650 62L800 215', '#c1a470', 8)}
       <g font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" fill="#1c5fb8"><text x="300" y="238" text-anchor="middle">東海道新幹線 TOKAIDO SHINKANSEN</text></g>
       <g font-family="Arial, Helvetica, sans-serif" font-size="11" fill="#6a665a"><text x="352" y="128" text-anchor="middle">代々木公園</text><text x="754" y="204" text-anchor="middle">皇居</text><text x="200" y="424">東京湾 TOKYO BAY</text></g>
-    </svg>${STOPS.map(s => { const cur = s.id === here, off = cur || s.soon || !ok; return `<button class="mst${cur ? ' here' : ''}" data-stop="${s.id}" style="left:${s.x / 10}%;top:${s.y / 4.4}%" ${off ? 'disabled' : ''}><i class="rnd" style="--c:${s.code[2]}"><b>${s.code[0]}</b>${String(s.code[1]).padStart(2, '0')}</i><span>${s.name}<small lang="ja">${s.jp}${cur ? ' · 現在地 you are here' : s.soon ? ' · sealed' : ok ? '' : ' · closed'}</small></span></button>`; }).join('')}</div>
-    <div class="mft"><span>${ok ? (here === 'tokyo' ? 'Two stops are open: <b>Shibuya</b>, the night of the incident, and <b>Kyoto</b>, by the bullet train.' : 'Ride on, go back to the block you started on, or stay.') + (dev() ? ' <b>Team account:</b> the line is open regardless.' : '')
-      : `To ride: exorcise ${NEED} curses (<${k >= NEED ? 'b' : 'i'}>${Math.min(k, NEED)} / ${NEED}</${k >= NEED ? 'b' : 'i'}>) and finish Season 1 (<${s1[0] >= s1[1] ? 'b' : 'i'}>${s1[0]} / ${s1[1]} chapters</${s1[0] >= s1[1] ? 'b' : 'i'}>).`}</span><button id="mClose">Stay here <small>Esc</small></button></div></div>`;
+    </svg>${STOPS.map(s => { const cur = s.id === here, f = fareFor(s), open = lineOpen(s), paid = fare >= f, off = cur || s.soon || !open || !paid;
+      return `<button class="mst${cur ? ' here' : ''}" data-stop="${s.id}" style="left:${s.x / 10}%;top:${s.y / 4.4}%" ${off ? 'disabled' : ''}><i class="rnd" style="--c:${s.code[2]}"><b>${s.code[0]}</b>${String(s.code[1]).padStart(2, '0')}</i><span>${s.name}<small lang="ja">${s.jp}${cur ? ' · 現在地 you are here' : s.soon ? ' · sealed' : !open ? ' · closed' : JU.yen && !JU.yen.free ? ' · ¥' + f.toLocaleString('en-US') + (paid ? '' : ' · ticket too cheap') : ''}</small></span></button>`; }).join('')}</div>
+    <div class="mft"><span>${JU.yen && !JU.yen.free ? `Your ticket: <b>¥${fare.toLocaleString('en-US')}</b>, as far as that goes. ` : ''}${ok ? 'Every stop on the line is open to you.' + (dev() ? ' <b>Team account:</b> the line is open regardless, and free.' : '')
+      : `Jujutsu High and Tokyo are always open. For the rest: exorcise ${NEED} curses (<${k >= NEED ? 'b' : 'i'}>${Math.min(k, NEED)} / ${NEED}</${k >= NEED ? 'b' : 'i'}>) and finish Season 1 (<${s1[0] >= s1[1] ? 'b' : 'i'}>${s1[0]} / ${s1[1]} chapters</${s1[0] >= s1[1] ? 'b' : 'i'}>).`}</span><button id="mClose">Stay here <small>Esc</small></button></div></div>`;
 }
 function onKey(e) {
   if (!mapOpen) return;
@@ -554,6 +560,7 @@ function closeMap() {
 }
 function ride(stop) {
   mapOpen = false; removeEventListener('keydown', onKey, true); metro.classList.remove('on'); sfx.whoosh(); E.keys.clear();
+  if (JU.metro) { S.st.hold = false; JU.metro.ride(stop); return; }
   if (fade) fade.classList.add('on');
   setTimeout(() => {
     S.travel(stop.world(), stop.at()); armed = false; M.last = stop.id; save();
@@ -573,10 +580,10 @@ T0.props.push({ z: 1262, draw() {                                               
   box(TX, 12, 1290, 190, 150, 60, '#0b0c12', '#06070a'); box(TX, 162, 1290, 230, 44, 60, '#1f6fd0', '#12407a'); text('地下鉄  SUBWAY', TX, 184, 1290, 26, '#f4f6fb', EN);
   const s = P(TX, 90, 1290); lit(() => glow(GLOW.blue, s[0], s[1], 420 * s[2], .5));
 } });
-T0.spots = [{ x: TX, z: 1270, r: 170, h: 200, icon: '乗', col: '#38c8ff', label: 'Take the subway', use: () => openMap() }];
+T0.spots = [{ x: TX, z: 1270, r: 170, h: 200, icon: '乗', col: '#38c8ff', label: 'Down to the subway', use: () => (JU.metro ? JU.metro.down('tokyo') : openMap()) }];
 T0.tick = (dt, real, p, st) => {                                                                         // and walking to the very end of the block asks the question by itself
   if (p.x < T0.LEN - 420) armed = true;
-  else if (armed && p.x > T0.LEN - 96 && !st.hold) { armed = false; openMap(); }
+  else if (armed && p.x > T0.LEN - 96 && !st.hold) { armed = false; if (JU.metro) JU.metro.down('tokyo'); else openMap(); }
   return false;
 };
 
@@ -589,7 +596,7 @@ H.fightStart = (cfg, wave) => {
 H.reset = () => { if (reset0) reset0(); if (mapOpen) { mapOpen = false; removeEventListener('keydown', onKey, true); } metro.classList.remove('on'); armed = true; };
 
 JU.shibuya = { world, RAIDS, SECRETS, STOPS, canRide, openMap, closeMap, seasonOne, exorcised, NEED, M, save,
-  kit: { slab, fill, lit, on, text, beacon, lamp, tree, column, arch, raid, secret, tally, mk, JP, EN, YGOJO },      // what the next district is built with (kyoto.js)
-  resume() { const s = STOPS.find(x => x.id === M.last); return s && s.id !== 'tokyo' && s.world && canRide() ? { world: s.world(), at: s.at() } : null; },      // Free Exploration starts wherever he last got off
+  kit: { slab, fill, lit, on, text, beacon, lamp, tree, column, arch, raid, secret, tally, mk, reward, winsKey, JP, EN, YGOJO, IJICHI },      // what the next district is built with (kyoto.js)
+  resume() { return null; },      // (Free Exploration used to start wherever he last got off; since 0.16v1 it starts at Jujutsu High, walk.js)
   get state() { return Object.assign({ mapOpen }, JSON.parse(JSON.stringify(M))); } };
 })();

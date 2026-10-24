@@ -448,6 +448,75 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 .mv small.cnt{position:absolute;right:.55em;bottom:.35em;z-index:1;font:600 .74em/1 var(--f-ui);letter-spacing:.08em;color:#ffd27a;text-shadow:0 0 6px rgba(255,210,122,.6)}
 .mv::after{content:"";position:absolute;inset:0;background:rgba(0,0,0,.72);transform-origin:bottom;transform:scaleY(var(--cd,0))}
 .mv.act{border-color:#fff;background:rgba(255,36,64,.55)}
+/* Build 0.16v1: the yen purse on the street, the sub technique's badge in a fight, the ticket machine, the train's next-stop screen, a hint line */
+.yenhud{position:absolute;right:clamp(16px,4vw,90px);top:clamp(14px,3.4vh,40px);z-index:3;display:grid;justify-items:end;gap:.3em;pointer-events:none;
+  font:400 clamp(15px,min(1.6vw,2.9vh),32px)/1 var(--f-display);letter-spacing:.06em;color:#9fe870;text-shadow:0 2px 0 #000;opacity:0;transition:opacity .4s}
+.game[data-mode="street"]:not(.cine) .yenhud{opacity:1}
+.yenhud span{font:400 .5em/1 var(--f-ui);letter-spacing:.26em;text-transform:uppercase;color:rgba(244,239,228,.6)}
+.yenhud.tk span{color:#ffd23d}
+.yenhud i{position:absolute;right:0;top:calc(100% + .3em);font:400 .7em/1 var(--f-display);font-style:normal;white-space:nowrap;color:#9fe870;opacity:0}
+.yenhud i.go{animation:yenpop 1.5s ease-out}
+@keyframes yenpop{0%{opacity:0;transform:translateY(12px)}15%{opacity:1;transform:none}80%{opacity:1}100%{opacity:0;transform:translateY(-14px)}}
+.subhud{position:absolute;left:calc(50% + clamp(132px,13.6vw,272px));bottom:calc(clamp(12px,3vh,36px) + clamp(52px,min(6.6vw,10.6vh),126px));z-index:2;display:flex;align-items:center;gap:.5em;overflow:hidden;
+  padding:.3em .7em;background:rgba(10,7,18,.84);border:1px solid rgba(159,232,112,.5);border-bottom:3px solid #9fe870;font:400 clamp(10px,min(1.1vw,2vh),20px)/1 var(--f-display);letter-spacing:.08em;color:#e8f8de;opacity:0;transition:opacity .4s}
+.subhud[hidden]{display:none}
+.subhud::after{content:"";position:absolute;inset:0;background:rgba(0,0,0,.72);transform-origin:left;transform:scaleX(var(--cd,0))}
+.subhud kbd{font:600 .85em/1 var(--f-ui);color:#9fe870}
+.game[data-mode="fight"]:not(.cine) .subhud{opacity:1}
+.subhud.rdy{box-shadow:0 0 14px rgba(159,232,112,.45)}
+.mhint{position:absolute;left:50%;bottom:clamp(90px,16vh,170px);translate:-50% 0;z-index:7;max-width:min(92vw,40em);padding:.6em 1.1em;text-align:center;pointer-events:none;
+  font:600 clamp(12px,min(1.2vw,2.2vh),20px)/1.3 var(--f-ui);letter-spacing:.06em;color:#111;background:#f5c400;border:2px solid #111;border-radius:4px;opacity:0;transition:opacity .25s}
+.mhint.on{opacity:1}
+.mlcd{position:absolute;inset:0;z-index:9;display:grid;place-items:center;pointer-events:none;opacity:0;transition:opacity .3s}
+.mlcd.on{opacity:1}
+.mlcd div{display:flex;align-items:center;gap:.8em;padding:.8em 1.4em;font:700 clamp(16px,min(2vw,3.6vh),40px)/1 Arial,Helvetica,sans-serif;color:#ffb04a;background:#07080c;border:4px solid #2a2e38;border-radius:6px;box-shadow:0 0 30px rgba(255,176,74,.25)}
+.mlcd div span{font-size:.55em;color:#f4f4f0}
+.tmach{position:absolute;inset:0;z-index:8;display:grid;place-items:center;padding:3vmin;background:rgba(3,2,8,.84);opacity:0;pointer-events:none;transition:opacity .2s}
+.tmach.on{opacity:1;pointer-events:auto}
+.tmbox{width:min(100%,46em);overflow:hidden;color:#111;background:#dfe4ec;border:3px solid #111;border-radius:10px;box-shadow:10px 12px 0 rgba(0,0,0,.6);font:400 clamp(12px,min(1.15vw,2.1vh),21px)/1.35 Arial,Helvetica,sans-serif}
+.tmhead{display:flex;align-items:baseline;gap:.8em;padding:.55em .9em;color:#fff;background:#1c5fb8;border-bottom:3px solid #111}
+.tmhead b{font-size:1.6em}
+.tmhead em{margin-left:auto;font-style:normal;font-weight:700;color:#9fe870;font-size:1.2em}
+.tmbody{display:grid;grid-template-columns:1.3fr 1fr;gap:.8em;padding:.8em}
+.tmfares{padding:.6em .8em;background:#fff;border:2px solid #9aa0aa;border-radius:6px}
+.tmfares p{margin:0 0 .4em;font-weight:700}
+.tmfares ul{display:grid;gap:.35em;margin:0;padding:0;list-style:none}
+.tmfares li{display:flex;align-items:center;gap:.55em}
+.tmfares li span{display:grid;flex:1}
+.tmfares li small{font-size:.75em;color:#666}
+.tmfares li > b{font-weight:700;color:#b00020}
+.tmbtns{display:grid;grid-template-columns:1fr 1fr;gap:.5em;align-content:start}
+.tmbtns button{display:grid;place-items:center;gap:.2em;min-height:3.4em;cursor:pointer;color:#0f2a5c;background:#fff;border:2px solid #0f2a5c;border-radius:8px;outline:none;font:700 1.25em/1 Arial,Helvetica,sans-serif}
+.tmbtns button small{font:400 .55em/1 Arial,Helvetica,sans-serif;color:#555}
+.tmbtns button.shin{grid-column:1 / -1;color:#fff;background:#1c5fb8;border-color:#0f2a5c}
+.tmbtns button.shin small{color:#cfe0f5}
+.tmbtns button.held{box-shadow:0 0 0 3px #f5c400}
+.tmbtns button:hover,.tmbtns button:focus-visible{transform:scale(1.04);background:#f5c400;color:#111}
+.tmfoot{display:flex;align-items:center;gap:1em;padding:.55em .9em;background:#f5c400;border-top:3px solid #111}
+.tmfoot span{flex:1;font-weight:600}
+.tmfoot span.no{color:#b00020}
+.tmfoot span.yes{color:#1a6a2a}
+.tmfoot button{padding:.45em 1em .4em;cursor:pointer;color:#f5c400;background:#111;border:0;border-radius:3px;outline:none;font:700 1em/1 Arial,Helvetica,sans-serif}
+@media (max-width:640px){.tmbody{grid-template-columns:1fr}}
+.wallet.yenw b{color:#9fe870}
+.wallet.yenw i{background:#9fe870}
+.mbtn.subb .num{color:#9fe870}
+.subs{display:grid;gap:1em;max-width:52em}
+.subintro{margin:0;font:400 clamp(12px,1.3vw,18px)/1.5 var(--f-ui);letter-spacing:.06em;color:rgba(244,239,228,.75)}
+.subintro.dim{color:rgba(244,239,228,.45)}
+.subcard{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:1.1em;padding:1em 1.2em;background:rgba(10,7,18,.7);border:1px solid rgba(244,239,228,.18);border-left:4px solid var(--c)}
+.subcard.have{border-color:rgba(159,232,112,.45);border-left-color:var(--c)}
+.subcard .sjp{font:400 clamp(24px,3vw,46px)/1 var(--f-jp);color:var(--c);writing-mode:vertical-rl}
+.subcard h3{margin:0 0 .35em;font:400 clamp(16px,1.8vw,30px)/1.1 var(--f-display);letter-spacing:.06em;text-transform:uppercase;color:var(--bone)}
+.subcard p{margin:0 0 .35em;font:400 clamp(11px,1.15vw,16px)/1.45 var(--f-ui);color:rgba(244,239,228,.78)}
+.subcard p.how{color:#9fe870}
+.subcard kbd{padding:.05em .4em;border:1px solid currentColor;border-radius:3px;font:600 .9em/1 var(--f-ui)}
+.subcard button{padding:.6em 1.2em;cursor:pointer;color:#0b0710;background:#9fe870;border:0;font:400 clamp(12px,1.3vw,20px)/1 var(--f-display);letter-spacing:.08em;text-transform:uppercase}
+.subcard button:disabled{cursor:default;color:rgba(244,239,228,.5);background:rgba(244,239,228,.12)}
+.subcard.eq button{background:#ffd23d}
+@media (max-width:640px){.subcard{grid-template-columns:1fr}.subcard .sjp{writing-mode:horizontal-tb}}
+.tc .t-rct{right:calc(var(--rx) + var(--b)*2.84);bottom:calc(var(--by) + var(--b)*2.12);width:calc(var(--b)*.7);border-color:#9fe870;color:#9fe870;font-size:.8em}
+.game.rct[data-mode="fight"] .tc .t-rct{display:grid}
 .mv[hidden]{display:none}
 .mv.mve{border-bottom-color:var(--ec,#dff3ff)}
 .mv.mve kbd{color:var(--ec,#dff3ff)}
@@ -1049,8 +1118,9 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
   .cp{width:22vh}
   .creveal.done .cp{width:15vh}
   .parch{max-height:none}
-  .shopbox{position:absolute;left:var(--pad-x);right:auto;bottom:clamp(8px,3vh,20px);justify-items:start}
-  .mbtn.shopb{min-width:0}
+  .shopbox{position:absolute;left:var(--pad-x);right:auto;bottom:clamp(8px,3vh,20px);justify-items:start;grid-template-columns:repeat(2,auto);column-gap:1.4em;row-gap:4px}
+  .shopbox .mbtn{grid-column:1 / -1}
+  .mbtn.shopb{min-width:0;font-size:clamp(12px,4.4vh,20px);padding:.3em .8em .3em 1.4em}      /* (since 0.16v1 the two purses share a row and the buttons are smaller: Sub Techniques made the column too tall for a phone on its side) */
   .acct{top:5px}
   .sfx{margin-top:5px;padding:4px 9px 3px;font-size:10px}
   .sets{gap:4px}
@@ -1097,13 +1167,15 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 
     <div class="shopbox">
       <div class="wallet" id="wallet" aria-live="polite"><i lang="ja" aria-hidden="true">呪</i><b>0</b><span>Cursed Tokens</span></div>
+      <div class="wallet yenw" id="yenWallet"><i lang="ja" aria-hidden="true">円</i><b>0</b><span>Yen</span></div>
       <button class="mbtn shopb" style="--i:5" data-id="shop"><span class="num" aria-hidden="true" lang="ja">商</span><span class="lbl">Shop</span><span class="jp" aria-hidden="true" lang="ja">売店</span></button>
       <button class="mbtn shopb toolb" style="--i:6" data-id="tools"><span class="num" aria-hidden="true" lang="ja">具</span><span class="lbl">Cursed Tools</span><span class="jp" aria-hidden="true" lang="ja">呪具</span></button>
+      <button class="mbtn shopb subb" style="--i:7" data-id="subtech"><span class="num" aria-hidden="true" lang="ja">副</span><span class="lbl">Sub Techniques</span><span class="jp" aria-hidden="true" lang="ja">副術式</span></button>
     </div>
   </div>
 
   <div class="side" aria-hidden="true" lang="ja">領域展開</div>
-  <div class="hud tl"><b lang="ja">呪</b>Fan project · Build 0.16 · E Specials</div>
+  <div class="hud tl"><b lang="ja">呪</b>Fan project · Build 0.16v1 · Sub Techniques</div>
   <div class="hud bl">↑ ↓ Select &nbsp;·&nbsp; Enter Confirm</div>
   <div class="hud br">Title screen</div>
   <div class="acct" id="acct">
@@ -2003,6 +2075,7 @@ const PANELS = {
   notes: { num: '肆', jp: '更新', title: 'Patch Notes', body: '', onOpen() { if (window.JU.notes) window.JU.notes.mount($('#pBody')); } },
   shop: { num: '商', jp: '売店', title: 'Shop', body: '', onOpen() { if (window.JU.shop) window.JU.shop.mount($('#pBody')); } },
   tools: { num: '具', jp: '呪具', title: 'Cursed Tools', body: '', onOpen() { if (window.JU.tools) window.JU.tools.mount($('#pBody')); } },
+  subtech: { num: '副', jp: '副術式', title: 'Sub Techniques', body: '', onOpen() { if (window.JU.sub) window.JU.sub.mount($('#pBody')); } },
   credits: { num: '伍', jp: '制作', title: 'Credits', body:
     `<dl class="cred">
        <dt>Game</dt><dd>Jujutsu Unlimiteds</dd>
@@ -2168,7 +2241,7 @@ window.JU = { sfx, flash, bolts: blackFlash, reduceMotion, startGame, exitGame, 
 // Load every game script fresh on each page load. The dev server sends no cache headers, so without this a reload
 // could run a mix of old and new files (new menu, old moves) while the game is being worked on.
 ['account.js', 'announce.js', 'game.js', 'fx2.js', 'chars.js', 'street.js', 'walk.js', 'foes.js', 'cuts.js', 'sukuna.js', 'school.js', 'story.js', 'story2.js', 'tech.js', 'tech_a.js',
-  'tech_b.js', 'sets.js', 'story3.js', 'cast2.js', 'script.js', 'naoya.js', 'ch45.js', 'ch67.js', 'clan.js', 'clan_a.js', 'clan_b.js', 'boss.js', 'bossfx.js', 'boss_a.js', 'boss_b.js', 'boss_c.js', 'training.js', 'choso.js', 'domain.js', 'domain2.js', 'mahito.js', 'combo.js', 'combat.js', 'cast3.js', 'ch810.js', 'ch1112.js', 'cast4.js', 'ch1316.js', 'cast5.js', 'ch1721.js', 'combat2.js', 'judge.js', 'awaken.js', 'alimit.js', 'ats.js', 'switcher.js', 'tools.js', 'smark.js', 'cast6.js', 'ch2230.js', 'plants.js', 'clash.js', 'block.js', 'cannon.js', 'tced.js', 'shibuya.js', 'kyoto.js', 'evasive.js', 'kokusen.js', 'mp.js', 'pvp.js', 'vengeful.js', 'haruta.js', 'ratio.js', 'reaper.js', 'especial.js', 'notes.js', 'shop.js', 'ps.js', 'raid.js', 'touch.js'].forEach(src => {
+  'tech_b.js', 'sets.js', 'story3.js', 'cast2.js', 'script.js', 'naoya.js', 'ch45.js', 'ch67.js', 'clan.js', 'clan_a.js', 'clan_b.js', 'boss.js', 'bossfx.js', 'boss_a.js', 'boss_b.js', 'boss_c.js', 'training.js', 'choso.js', 'domain.js', 'domain2.js', 'mahito.js', 'combo.js', 'combat.js', 'cast3.js', 'ch810.js', 'ch1112.js', 'cast4.js', 'ch1316.js', 'cast5.js', 'ch1721.js', 'combat2.js', 'judge.js', 'awaken.js', 'alimit.js', 'ats.js', 'switcher.js', 'tools.js', 'smark.js', 'cast6.js', 'ch2230.js', 'plants.js', 'clash.js', 'block.js', 'cannon.js', 'tced.js', 'shibuya.js', 'kyoto.js', 'evasive.js', 'kokusen.js', 'mp.js', 'pvp.js', 'vengeful.js', 'haruta.js', 'ratio.js', 'reaper.js', 'especial.js', 'yen.js', 'subtech.js', 'metro.js', 'jjh.js', 'shinjuku.js', 'notes.js', 'shop.js', 'ps.js', 'raid.js', 'touch.js'].forEach(src => {
   const s = document.createElement('script');
   s.src = src + '?v=' + Date.now(); s.async = false;      // async = false keeps them running in this order
   document.body.appendChild(s);
