@@ -1660,7 +1660,7 @@ const FLOOR = -2.2;
 const core = { x: 0, y: .9, z: 10, r: 1.5 };
 
 // each menu entry tints the scene
-const ACCENTS = [[170, 92, 255], [56, 200, 255], [255, 44, 72], [226, 180, 96], [240, 232, 214], [255, 210, 61], [207, 216, 224]];
+const ACCENTS = [[170, 92, 255], [56, 200, 255], [255, 44, 72], [226, 180, 96], [240, 232, 214], [255, 210, 61], [207, 216, 224], [159, 232, 112]];      // (one per menu button, in order: the last is Sub Techniques)
 const accent = ACCENTS[0].slice();
 let accentTarget = 0;
 const ac = a => `rgba(${accent[0] | 0},${accent[1] | 0},${accent[2] | 0},${a})`;
@@ -2192,20 +2192,23 @@ addEventListener('keydown', e => {
   else if ((k === 'Enter' || k === ' ') && !(document.activeElement instanceof HTMLButtonElement)) { e.preventDefault(); btns[sel].click(); }
 });
 addEventListener('pointerdown', () => sfx.unlock());
-addEventListener('pointermove', e => { mouse.x = e.clientX / W * 2 - 1; mouse.y = e.clientY / H * 2 - 1; });
+addEventListener('pointermove', e => { if (W > 0 && H > 0) { mouse.x = e.clientX / W * 2 - 1; mouse.y = e.clientY / H * 2 - 1; } });
 document.addEventListener('mouseleave', () => { mouse.x = mouse.y = 0; });
 addEventListener('resize', resize);
 
 /* ================= loop ================= */
 let last = performance.now();
 function frame(now) {
-  const real = (now - last) / 1000, dt = Math.min(.05, real);
+  requestAnimationFrame(frame);                     // first: whatever happens in this frame, there is a next one (0.16v1: a menu button with no tint of its own threw here, and the title went still for good)
+  const real = (now - last) / 1000, dt = Math.min(.05, Math.max(0, real) || 0);
   last = now; T += dt;
+  if (!isFinite(mouse.sx) || !isFinite(mouse.sy)) mouse.sx = mouse.sy = mouse.x = mouse.y = 0;      // (a pointer read while the window measured nothing)
+  if (sceneHidden && !inGame && !panelOpen) sceneHidden = false;      // (nothing is covering the title: draw it)
   const k = 1 - Math.exp(-dt * 5);
   // a slow idle drift keeps the parallax alive when the pointer is still
   mouse.sx = lerp(mouse.sx, mouse.x + Math.sin(T * .31) * .1, k);
   mouse.sy = lerp(mouse.sy, mouse.y + Math.cos(T * .23) * .08, k);
-  const tgt = ACCENTS[accentTarget];
+  const tgt = ACCENTS[accentTarget] || ACCENTS[0];
   for (let i = 0; i < 3; i++) accent[i] = lerp(accent[i], tgt[i], 1 - Math.exp(-dt * 4));
   if (!reduceMotion) {
     ui.style.setProperty('--ry', (mouse.sx * 4.5).toFixed(3) + 'deg');
@@ -2213,7 +2216,6 @@ function frame(now) {
   }
   if (!sceneHidden) drawScene(reduceMotion ? dt * .25 : dt);
   drawFx(Math.min(.5, real));   // sparks run on wall-clock time so they never linger after a stall
-  requestAnimationFrame(frame);
 }
 
 resize();
