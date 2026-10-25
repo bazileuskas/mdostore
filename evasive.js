@@ -55,9 +55,10 @@ function evade(p) {
   V.ring(p.x, p.y + 160, 170, CYAN, .3); V.sparks(p.x, p.y + 160, 'white', 6); E.addDust(p.x);
   paint();
 }
-// a foe's: out from under what is coming, along the floor. chance: how likely it is to see it in time. True if it went
+// a foe's: out from under what is coming, along the floor. chance: how likely it is to see it in time. True if it went (not while it is
+// bound: the Chain of a Thousand Miles' Whip, tools.js)
 function foe(o, chance = .5) {
-  if (!o || o !== E.P2 || o.ko || duel() || limbed(o) || o.alpha < 1 || (o.evAt !== undefined && E.T - o.evAt < EV_CD) || !(Math.random() < chance)) return false;
+  if (!o || o !== E.P2 || o.ko || duel() || limbed(o) || o.alpha < 1 || o.noEvade > E.T || (o.evAt !== undefined && E.T - o.evAt < EV_CD) || !(Math.random() < chance)) return false;
   const p = E.P1, x0 = o.x, away = Math.sign(o.x - p.x) || 1, x1 = clamp(o.x + away * EV_AWAY, -940, 940);
   o.evAt = E.T;
   ghost(o, .45);

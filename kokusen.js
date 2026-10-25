@@ -5,6 +5,10 @@
      2  dash round behind them (a dash at them now carries him past), and a Black Flash: Divergent Fist, on the timing
      3  dash, then F held, and Divergent Fist from behind the guard (3, and 3 again on the timing)
      4  the same again, and then 4: Manji Kick, the last of them, and the biggest
+   The Black Flashes that open those two block steps (the second and the third) leave them standing, STUNNED, instead of knocking them down
+   (stars round the head): long enough to dash, guard and Divergent Fist if he is quick. It does not last: any other blow shortens it, and
+   if he hesitates before starting the fist, they may break out with their own Evasive (a chance, and their Evasive then takes twenty
+   seconds to come back), and the step stays open a little longer so he can chase them down. Not in a duel.
    Each Black Flash after the first is 190, and so is the kick. Then Divergent Fist and Manji Kick are gone for thirty seconds.
    Its sounds are the anime's: the Black Flashes, myinstants' "yuji's black flash" (sounds/home-yuji-bf.mp3 at home), the kick
    "Kokusen (Itadori VS Mahito)" (home-yuji-final.mp3). Online (Build 0.15v1) both are played from myinstants itself, never copied onto
@@ -15,6 +19,7 @@
 const E = JU.eng, g = E.g, F = E.F, cam = E.cam, H = E.hooks, POSE = E.POSE, LINE = E.LINE, V = JU.vfx, sfx = JU.sfx, Z = JU.bossfx, C = JU.cut, M = E.MOVES, keys = E.keys;
 const { rnd, clamp } = E, TAU = Math.PI * 2, INK = '#ff2440', IRGB = '255,36,64';
 const CHAIN_T = 4, FIN_T = 1.6, DMG = 190, LOCK = 30, STEP = 150;      // how long each step of the chain stays open; the last kick's; what each of them does; how long it shuts things after; how far past them a dash takes him
+const DAZE = 1.3, EV_CHANCE = .3, EV_AT = [.5, .9], CHASE_T = 2.6;      // the stun before a block step (counted from when he is free to move); how likely they are to Evasive out of it, and when (if he has not started the fist); how long the step stays open after they do
 sfx.preload(['home-yuji-bf', 'home-yuji-final']);
 const RED_FRAMES = E.flat('#3a0008', '#ff2440');    // what a dash leaves behind, in the chain
 
@@ -55,6 +60,15 @@ let vc = null;                                      // { n (Black Flashes in it 
 const vessel = () => !JU.tech.active && E.P1.skin === E.YUJI;
 const NEXT = ['', 'DASH BEHIND THEM · 3', 'DASH · HOLD F · 3', 'DASH · HOLD F · 3 · THEN 4', '4 · MANJI KICK'];
 const say = (text, col, life = 1.4, up = 440) => { const p = E.P1; E.fx.push({ k: 2, x: p.x, y: p.y + up, n: text, col, t: 0, life }); };
+const duel = () => !!(JU.fights.fight.cfg && JU.fights.fight.cfg.pvp);
+let daze = null;                                    // the stun before a block step: { o, spent (seconds into it), at (when it might Evasive out), rolled }
+function stun(o) {
+  if (!o || o.ko || o.net || duel()) return;
+  Object.assign(o, { state: 'hurt', stun: DAZE, vx: (o.vx || 0) * .3, act: null, tele: 0, inv: 0 });
+  if (o.ai) o.ai.t = Math.max(o.ai.t || 0, DAZE);
+  daze = { o, spent: 0, at: rnd(EV_AT[0], EV_AT[1]), rolled: false };
+  E.fx.push({ k: 2, x: o.x, y: o.y + 420 * (o.scale || 1), n: 'STUNNED', col: '#ffd23d', t: 0, life: 1 });
+}
 function refill(n) {                                // the dash, a broken guard, Divergent Fist; and for the last, the kick
   E.cd.dash = 0; E.cd.div = 0;
   if (JU.block && JU.block.state.broken > 0) JU.block.brk(0);
@@ -94,9 +108,10 @@ H.aim = (p, h) => {
   const m = p.move, o = E.P2;
   if (!vc || !vessel() || !m || m.def !== M.div || !m.bf || vc.o !== o || vc.n > 3) return h;
   const ok = vc.dashed && (vc.n === 1 ? Math.sign(p.x - o.x) !== vc.side : !!m.guard);
+  if (ok && vc.n <= 2 && !duel()) return Object.assign({}, h, { dmg: DMG / (o.dr || 1), kb: 160, lift: 0, stun: DAZE, fixed: 1, vchain: 1 });      // (the next step is a block one: they are left on their feet, stunned)
   return ok ? Object.assign({}, h, { dmg: DMG / (o.dr || 1), kb: 300, lift: 420, fixed: 1, vchain: 1 }) : h;      // (and it only pops them up: they stay near enough for the next)
 };
-H.hit = (o, face, h) => { hit0(o, face, h); if (h.vchain && vc) vc.pending = true; };
+H.hit = (o, face, h) => { hit0(o, face, h); if (h.vchain && vc) vc.pending = true; else if (daze && o === daze.o) daze = null; };      // (any other blow knocks them out of the stun: it is the chain's to use)
 H.bfSound = () => (snd0 && snd0()) || (vc && vc.pending && vessel() ? chainSound : null);
 H.bf = o => {
   bf0(o);
@@ -109,6 +124,8 @@ H.bf = o => {
   Object.assign(vc, { o, t: CHAIN_T, dashed: false, side: Math.sign(p.x - o.x) || 1, fin: vc.n === 4 ? FIN_T : 0 });
   if (vc.n > 1) say('BLACK FLASH  ×' + vc.n, '#ffd27a', 1.4, 470);
   say(NEXT[vc.n], '#ff8a98', vc.n === 4 ? FIN_T : 2.2, 420);
+  daze = null;
+  if (vc.n === 2 || vc.n === 3) stun(o);
 };
 H.press = (a, inScene) => {
   if (!inScene && vc && vessel()) {
@@ -137,6 +154,21 @@ H.dash = () => {
 };
 H.tick = dt => {
   tick0(dt);
+  if (daze) {
+    const o = daze.o, p = E.P1, busy = p.move && !p.move.guard && p.move.def !== FINALE;
+    if (!busy) daze.spent += dt;                      // (while he is still finishing the blow that stunned them, the stun waits for him)
+    if (!vc || o !== E.P2 || o.ko || daze.spent > DAZE) daze = null;
+    else {
+      if (o.state === 'down' || o.state === 'up') { o.state = 'hurt'; o.inv = 0; }      // (it came down from the air: still stunned, and on its feet)
+      if (o.state === 'hurt') o.stun = Math.max(o.stun, DAZE - daze.spent + .05);
+      const started = p.move && p.move.def === M.div && p.move.guard;
+      if (!daze.rolled && daze.spent >= daze.at) {   // he is taking his time: they may break out of it
+        daze.rolled = true;
+        if (!started && JU.evasive && JU.evasive.foe(o, EV_CHANCE)) { daze = null; vc.t = Math.max(vc.t, CHASE_T); say('THEY BROKE OUT · CATCH THEM', '#7fe9ff', 1.4, 420); }
+      }
+      if (daze && o.state !== 'hurt') daze = null;   // (shaken off, or something else has hold of it)
+    }
+  }
   if (!vc) return;
   const p = E.P1;
   if (p.dashT > 0) vc.dashed = true;
@@ -146,6 +178,15 @@ H.tick = dt => {
 // over him while it is open: four marks, lit for every one so far, and how long he has left for the next
 H.fx = dt => {
   fx0(dt);
+  if (daze && daze.o === E.P2) {
+    const o = daze.o, c = F(o.x, o.y + 345 * (o.scale || 1)), k = c[2], a = Math.min(1, (DAZE - daze.spent) * 3);
+    g.save(); g.globalAlpha = a; g.fillStyle = '#ffd23d'; g.strokeStyle = '#07060c'; g.lineWidth = 2 * k;
+    for (let i = 0; i < 3; i++) {
+      const an = E.T * 5 + i * TAU / 3, x = c[0] + Math.cos(an) * 46 * k, y = c[1] + Math.sin(an) * 12 * k, r = 9 * k;
+      g.beginPath(); for (let j = 0; j < 10; j++) { const rr = j & 1 ? r * .45 : r, aa = j / 10 * TAU - Math.PI / 2; g.lineTo(x + Math.cos(aa) * rr, y + Math.sin(aa) * rr); } g.closePath(); g.fill(); g.stroke();
+    }
+    g.restore();
+  }
   if (!vc || !vessel()) return;
   const p = E.P1, c = F(p.x, p.y + 400 * (p.scale || 1)), k = c[2], u = Math.max(0, vc.n === 4 ? vc.fin / FIN_T : vc.t / CHAIN_T);
   g.save();
@@ -158,8 +199,8 @@ H.fx = dt => {
   g.fillStyle = INK; g.fillRect(c[0] - 52 * k, c[1] + 16 * k, 104 * k * u, 5 * k);
   g.restore();
 };
-H.reset = () => { reset0(); vc = null; };
-H.fightStart = (cfg, wave) => { start0(cfg, wave); vc = null; };
+H.reset = () => { reset0(); vc = null; daze = null; };
+H.fightStart = (cfg, wave) => { start0(cfg, wave); vc = null; daze = null; };
 
-JU.kokusen = { insane, after, DMG, LOCK, CHAIN_T, FINALE, get chain() { return vc && { n: vc.n, t: +vc.t.toFixed(2), dashed: vc.dashed, side: vc.side, fin: +vc.fin.toFixed(2) }; } };
+JU.kokusen = { insane, after, DMG, LOCK, CHAIN_T, FINALE, DAZE, get daze() { return daze && { spent: +daze.spent.toFixed(2), at: +daze.at.toFixed(2), rolled: daze.rolled }; }, get chain() { return vc && { n: vc.n, t: +vc.t.toFixed(2), dashed: vc.dashed, side: vc.side, fin: +vc.fin.toFixed(2) }; } };
 })();

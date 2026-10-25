@@ -16,7 +16,7 @@ const PRICE = 10, START = 100, WIN = 5, BOSS = 15;  // a ticket; what a new play
 const BASE = 3, RARE = 10;                          // slots of each kind; and the odds at or under which spinning something off is asked about twice
 // Early Access and the packs are sold for real money, and nothing is being sold yet: their buttons do nothing. EARLY_OPEN would let
 // everybody equip the early-access techniques in the meantime. Since the public release it is off, so only the team's account has them
-// (S.ea is where owning one is kept, and S.dd the Dagger of the Demonly Holdings)
+// (S.ea is where owning one is kept)
 const EARLY_OPEN = false, EARLY_PRICE = '$2.99';
 const ITEMS = { ct: { name: 'CT Ticket', jp: '封', col: '#8f9bff', what: 'One spin of the Cursed Technique talisman.' },
                 cl: { name: 'Clan Roll', jp: '族', col: '#ff9a4d', what: 'One draw from the three clan talismans.' },
@@ -63,6 +63,10 @@ function migrate() {
     const tools = [];
     for (const id of JU.tools.state.slots) if (JU.tools.TOOLS[id] && !tools.includes(id)) tools.push(id);
     S.own = { tool: tools, tech: was.tech, clan: was.clan };
+  }
+  if (S.own.tool.includes('dagger') || 'dd' in S) {   // build 0.16v2: the dagger is gone (and its other form), and whoever had it has the Chain of a Thousand Miles
+    S.own.tool = S.own.tool.map(id => (id === 'dagger' ? 'chain' : id)).filter((id, i, a) => a.indexOf(id) === i);
+    delete S.dd; save();
   }
   if (!Array.isArray(S.ea && S.ea.tech) || !Array.isArray(S.ea.clan)) S.ea = { tech: [], clan: [] };
   if (S.slots && S.lim && S.sel && Array.isArray(S.slots.tech) && Array.isArray(S.slots.clan)) { delete S.own.tech; delete S.own.clan; return; }
@@ -185,7 +189,7 @@ function check() {
   checking = true;
   if (JU.clan.equipped && !owns('clan', JU.clan.equipped)) JU.clan.equip('');
   if (JU.tech.equipped && !allowed(JU.tech.equipped)) JU.tech.equip('');
-  JU.tools.check(id => owns('tool', id), !!S.dd);
+  JU.tools.check(id => owns('tool', id));
   checking = false;
 }
 
@@ -251,7 +255,7 @@ const HEIAN = `<img src="${(window.JU_PICS && window.JU_PICS['heian-sukuna']) ||
 const PACK_PRICE = '$12.99';
 const PACKS = [{ id: 'heian', name: 'Heian Era God', tag: 'God Pack · King of Curses', price: PACK_PRICE, col: '#ff2440', pic: HEIAN,
   line: 'Everything the King of Curses had at his height, a thousand years ago, in one pack.',
-  holds: [['Shrine', 'cursed technique'], ['Mark of the King', 'awakened cursed technique'], ['King of Curses', 'clan'], ['Dagger of the Demonly Holdings', 'cursed tool'],
+  holds: [['Shrine', 'cursed technique'], ['Mark of the King', 'awakened cursed technique'], ['King of Curses', 'clan'],
           ['50', 'Clan spins'], ['75', 'CT spins'], ['30', 'Cursed Tool spins']] }];
 function packs() {
   return `<div class="goods">${PACKS.map(k => `<div class="good pack" style="--c:${k.col}">
@@ -340,7 +344,6 @@ function keepAll() {
 }
 JU.shop = { mount, take, has, give, tix, earn, offers, fee, owns, holds, grant, allowed, check, slotsOf, pick, place, plan, ask, gory, row, giveUp, PACKS, FEES, PRICE, RARE,
   get PAID() { return paid(); }, get dev() { return dev(); }, get tokens() { return S.t; }, get owned() { return { ct: S.ct, cl: S.cl, tl: S.tl }; },
-  get state() { return { slots: { tech: S.slots.tech.slice(), clan: S.slots.clan.slice() }, lim: { tech: S.lim.tech.slice(), clan: S.lim.clan.slice() }, ea: { tech: S.ea.tech.slice(), clan: S.ea.clan.slice() }, sel: Object.assign({}, S.sel), tool: S.own.tool.slice() }; },
-  get demon() { return dev() || !!S.dd; } };        // may the dagger's other form be used?
+  get state() { return { slots: { tech: S.slots.tech.slice(), clan: S.slots.clan.slice() }, lim: { tech: S.lim.tech.slice(), clan: S.lim.clan.slice() }, ea: { tech: S.ea.tech.slice(), clan: S.ea.clan.slice() }, sel: Object.assign({}, S.sel), tool: S.own.tool.slice() }; } };
 migrate(); keepAll(); check(); sync();
 })();

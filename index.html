@@ -446,6 +446,11 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 .mv kbd{font:600 .8em/1 var(--f-ui);letter-spacing:.1em;color:var(--red)}
 .mv b{font-weight:400}
 .mv small.cnt{position:absolute;right:.55em;bottom:.35em;z-index:1;font:600 .74em/1 var(--f-ui);letter-spacing:.08em;color:#ffd27a;text-shadow:0 0 6px rgba(255,210,122,.6)}
+/* Build 0.16v2: a move's small second line (Rupture: USE TWICE, tools.js), lit while its second use is waiting */
+.mv small.tsub{position:absolute;left:.75em;bottom:.45em;z-index:1;font:600 .5em/1 var(--f-ui);letter-spacing:.16em;color:rgba(226,192,96,.9)}
+.mv:has(small.tsub) b{margin-bottom:.62em}
+.mv.twice{border-color:#e2c060;box-shadow:0 0 14px rgba(226,192,96,.55)}
+.mv.twice small.tsub{color:#fff;text-shadow:0 0 6px #e2c060}
 .mv::after{content:"";position:absolute;inset:0;background:rgba(0,0,0,.72);transform-origin:bottom;transform:scaleY(var(--cd,0))}
 .mv.act{border-color:#fff;background:rgba(255,36,64,.55)}
 /* Build 0.16v1: the yen purse on the street, the sub technique's badge in a fight, the ticket machine, the train's next-stop screen, a hint line */
@@ -1175,7 +1180,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
   </div>
 
   <div class="side" aria-hidden="true" lang="ja">領域展開</div>
-  <div class="hud tl"><b lang="ja">呪</b>Fan project · Build 0.16v1 · Sub Techniques</div>
+  <div class="hud tl"><b lang="ja">呪</b>Fan project · Build 0.16v2 · Sorcerer Killer Returns</div>
   <div class="hud bl">↑ ↓ Select &nbsp;·&nbsp; Enter Confirm</div>
   <div class="hud br">Title screen</div>
   <div class="acct" id="acct">
@@ -1332,7 +1337,16 @@ const sfx = (() => {
     'home-yuji-final': [MI + 'kokusen-itadori-vs-mahito.mp3', 2.75],                                   // "Kokusen (Itadori VS Mahito)"
     'home-todo-bf': [MI + 'todo-black-flash-jjk.mp3', 27.65, 34.6],                                    // "todo black flash jjk": the crack, and the scene's music
     'home-nanami-bf': [MI + 'black-flash-sfx.mp3', .045, 2.64],                                       // "Black Flash SFX"
-    'home-nanami-final': [MI + 'mahito-black-flash-effect-season-2-episode-20.mp3', 0] };                // "Mahito Black Flash Effect (Season 2, Episode 20)"
+    'home-nanami-final': [MI + 'mahito-black-flash-effect-season-2-episode-20.mp3', 0],                 // "Mahito Black Flash Effect (Season 2, Episode 20)"
+    // Build 0.16v2: the Inverted Spear of Heaven's strikes and its spin, the Chain of a Thousand Miles' swing, hit and crack (tools.js)
+    'home-isoh-1': [MI + 'sword-battle-clashing-anime.mp3', .10, .45],                                 // "Sword Battle Clashing Anime": the first clash
+    'home-isoh-2': [MI + 'sword-battle-clashing-anime.mp3', .72, 1.05],                                // and the second
+    'home-isoh-3': [MI + 'spear-hitting.mp3', .40, .94],                                               // "Spear Hitting"
+    'home-isoh-4': [MI + 'scorpion-spear-hit-mk1.mp3', .05, .68],                                      // "Scorpion Spear Hit MK1"
+    'home-isoh-spin': [MI + '6-whoosh-and-spinning-sound_jeK3GfE.mp3', .75, 2.75],                     // "Whoosh and spinning sound": two seconds of it
+    'home-coatm-swing': [MI + 'chain-swing.mp3', 0, .30],                                               // "Chain Swing"
+    'home-coatm-hit': [MI + 'chain-hit.mp3', 0, .6],                                                    // "Chain Hit"
+    'home-coatm-whip': [MI + 'whip-crack-soundbible.mp3', .34, 1] };                                    // "Whip Crack (SoundBible)"
   const clips = {};
   const load = name => {
     if (clips[name]) return clips[name];
@@ -1350,7 +1364,11 @@ const sfx = (() => {
     try {
       const n = c.el.cloneNode(); n.volume = Math.min(1, vol);
       if (c.at) n.currentTime = c.at;
-      if (c.end) n.addEventListener('timeupdate', () => { if (n.currentTime >= c.end) n.pause(); });      // (where the copy at home's ends)
+      if (c.end) {                                  // (where the copy at home's ends: timeupdate comes only four times a second, so a short one is watched closer)
+        n.addEventListener('timeupdate', () => { if (n.currentTime >= c.end) n.pause(); });
+        const stop = () => { if (n.paused) return; if (n.currentTime >= c.end - .02) n.pause(); else setTimeout(stop, Math.max(10, (c.end - n.currentTime) * 1000)); };
+        setTimeout(stop, (c.end - (c.at || 0)) * 1000);
+      }
       const pl = n.play(); if (pl && pl.catch) pl.catch(() => {});
     } catch (e) {}
     return true;

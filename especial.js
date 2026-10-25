@@ -69,7 +69,7 @@ function circle(p) {                                // the circle round him that
 }
 add('yuji', { name: 'Cancel', jp: '解', col: '#dff3ff', press(p) {
   const m = p.move;
-  if (cd > 0 || !m || !CANCEL.has(m.key) || m.landed || p.ps || p.dead) return true;      // nothing of his to call off (or it has already hurt somebody)
+  if (cd > 0 || !m || !CANCEL.has(m.key) || m.def.noCancel || m.landed || p.ps || p.dead) return true;      // nothing of his to call off (or it has already hurt somebody, or E is part of it: Rupture, tools.js)
   const k = m.key;
   E.endMove(p); E.cd[k] = 0;                        // and its wait goes with it
   p.vx = 0; p.vy = Math.min(p.vy, 0); p.spin = 1; p.target = POSE.idle;
