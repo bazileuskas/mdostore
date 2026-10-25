@@ -98,8 +98,8 @@ const INVERSION = { name: 'Inversion Stab', cd: 12, dur: .7, run(p, m, t) {
 } };
 
 /* ---------- Rupture: once, a dash and an uppercut; twice, the square; or, with E held, the spear goes up too ---------- */
-const RUP_T = 1.5, QTE_T = 1, PERF = [.5, .7], HANG = 2, UP_T = .25, BACK_T = .22;      // how long the second use waits; how long the square takes to close; when it is inside the other; how long the spear stays up, takes to get there and to come back
-let rup = null, qte = null, thrown = null;          // { o, t } the second use, waiting · { o, t, res } the square · the spear in the air: { x, y, tx, ty, t, phase, o, rot, hit }
+const RUP_T = 1.5, QTE_T = 1, PERF = [.5, .7], HANG = 2, RIDE = .12, DESC = .35, BACK_T = .22, SPIN = 42;      // how long the second use waits; how long the square takes to close; when it is inside the other; how long the spear stays up, takes to reach them, to drift home and to come back when pulled; and how fast it turns (radians a second: about seven turns, as in the user's clip)
+let rup = null, qte = null, thrown = null;          // { o, t } the second use, waiting · { o, t, res } the square · the spear in the air: { x, y, t (in this phase), life (since it left his hand), phase, o, rot, dir, side, hit }
 const isoHeld = () => { const t = held(); return !!t && t.id === 'spear'; };
 const RUPTURE = { name: 'Rupture', sub: 'USE TWICE', cd: 9, dur: .78, noCancel: 1, run(p, m, t) {      // (noCancel: the Vessel's E does not call it off, especial.js: E is part of it)
   const o = E.P2, f = p.face;
@@ -157,31 +157,42 @@ function strike(p, o, perfect) {                    // the thrust, and down they
     say(o, 'PERFECT', '#ffffff', 1.2, 430);
   } else { shake(16); say(o, 'RUPTURE', GOLD, .9, 430); }
 }
-// with E held: the spear goes up with them, spinning on the end of its chain, and comes down through them
+// with E held: the spear goes up with them, spinning on the end of its chain, and comes down through them. The way it flies is the user's
+// clip's: up at their side as they go, still up there spinning when they come down, then down again to his hand, turning all the way
 function toss(p, o) {
   const w = E.hand(p, true);
-  thrown = { x: w[0], y: w[1], x0: w[0], y0: w[1], tx: o.x + p.face * 40, ty: clamp(o.y + 230, 380, 470), t: 0, phase: 'up', o, rot: 0, hit: false };      // (over their heads, and still on screen)
+  thrown = { x: w[0], y: w[1], x0: w[0], y0: w[1], tx: w[0], ty: w[1], t: 0, life: 0, phase: 'up', o, rot: -p.face * Math.PI / 2, dir: -p.face, side: -p.face, hit: false };      // (dir: anticlockwise when he faces right, as in the clip; side: it rides on his side of them)
   play('home-isoh-spin', .9, () => { for (let i = 0; i < 5; i++) E.after(i * .32, () => sfx.swish(.7 + i * .06)); });
   say(p, '2 · PULL THE CHAIN', GOLD, 1.6, 500);
 }
 function pull() {                                   // 2 while it is up: back down along its chain, now
   if (!thrown || thrown.phase === 'back') return;
-  Object.assign(thrown, { phase: 'back', t: 0, bx: thrown.x, by: thrown.y });
+  const o = thrown.o, far = Math.hypot(o.x - thrown.x, mid(o) - thrown.y);
+  Object.assign(thrown, { phase: 'back', t: 0, bx: thrown.x, by: thrown.y, bt: clamp(far / 2400, .06, BACK_T) });      // (bt: how long it takes to reach them: no time at all from right beside them)
   sfx.whoosh(); play('home-coatm-swing', .9, () => sfx.comb());
 }
 function flyTick(dt) {
-  const s = thrown, p = E.P1, o = s.o;
-  s.t += dt; s.rot += dt * (s.phase === 'back' ? 26 : 16);
-  if (s.phase === 'up') {                           // up to over their head
-    const u = ease(Math.min(1, s.t / UP_T));
-    s.x = lerp(s.x0, s.tx, u); s.y = lerp(s.y0, s.ty, u);
-    if (s.t >= UP_T) { s.phase = 'hang'; s.t = 0; }
-  } else if (s.phase === 'hang') {                  // spinning there, as long as it is left
-    s.y = s.ty + Math.sin(s.t * 6) * 14;
-    if (s.t >= HANG - UP_T) pull();
-  } else {                                          // and back: through them on the way, if they are still up there
-    const w = E.hand(p, true), aim = there(o) && o === E.P2 && !o.ground && o.y > 40, u = Math.min(1, s.t / BACK_T);
-    if (aim && !s.hit) {
+  const s = thrown, p = E.P1, o = s.o, up = there(o) && o === E.P2 && !o.ground;
+  s.t += dt; s.life += dt; s.rot += dt * SPIN * s.dir;
+  if (s.phase === 'up') {                           // up with them, at their side, as fast as they go
+    if (up) { s.tx = o.x + s.side * 55 * (o.scale || 1); s.ty = mid(o) - 30; }
+    const u = Math.min(1, s.t / RIDE);
+    if (u < 1) { s.x = lerp(s.x0, s.tx, ease(u)); s.y = lerp(s.y0, s.ty, ease(u)); }
+    else { const q = 1 - Math.exp(-dt * 14); s.x += (s.tx - s.x) * q; s.y += (s.ty - s.y) * q; }
+    if (u >= 1 && (!up || o.vy < -150 || s.life > .9)) { s.phase = 'hang'; s.t = 0; s.hx = s.x; s.hy = s.y; }      // they are on their way down: it stays up
+  } else if (s.phase === 'hang') {                  // up there turning, drifting a little, until its time is up
+    s.x = s.hx + Math.sin(s.t * 2.3) * 14; s.y = s.hy + Math.min(1, s.t * 3) * 20 + Math.sin(s.t * 3.1) * 10;
+    if (s.life >= HANG - DESC) { if (up) pull(); else Object.assign(s, { phase: 'home', t: 0, bx: s.x, by: s.y }); }      // (somebody still in the air: it comes for them on the way)
+  } else if (s.phase === 'home') {                  // left to itself: down to his hand again, still turning
+    const w = E.hand(p, true), u = Math.min(1, s.t / DESC), q = u * u * (3 - 2 * u);
+    s.x = lerp(s.bx, w[0], q); s.y = lerp(s.by, w[1], q);
+    if (u >= 1) thrown = null;
+  } else {                                          // pulled back: through them on the way, if they are still up there
+    const w = E.hand(p, true), aim = there(o) && o === E.P2 && !o.ground && o.y > 40 && !s.hit;
+    if (s.aim && !aim) { s.t = dt; s.bx = s.x; s.by = s.y; }      // (they came down before it got there: home from where it is, with no jump)
+    s.aim = aim;
+    const u = Math.min(1, s.t / (aim ? s.bt || BACK_T : BACK_T));
+    if (aim) {
       const cx = o.x, cy = mid(o);
       s.x = lerp(s.bx, cx, u); s.y = lerp(s.by, cy, u);
       if (u >= 1) { s.hit = true; s.t = 0; s.bx = s.x; s.by = s.y; tear(p, o); }
@@ -204,14 +215,38 @@ function tear(p, o) {                               // 60, and it is not clean
   } else { V.sparks(x, y, 'gold', 16); V.ring(x, y, 260, GOLD, .35); }
   say(o, '天逆鉾', gore() ? '#ff5a6e' : GOLD, 1.1, 440);
 }
-function spearAt(x, y, rot, k) {                    // the spear on its own, turning: the heavy two-pronged blade, the short haft
-  g.save(); g.translate(x, y); g.rotate(rot); g.lineCap = 'round';
+function spearAt(x, y, rot, k, pv = 0) {            // the spear on its own: the heavy two-pronged blade, the short haft (pv: how far along it the point it turns round is)
+  g.save(); g.translate(x, y); g.rotate(rot); g.translate(pv * k, 0); g.lineCap = 'round';
   const rod = (x0, x1, w, col) => { g.beginPath(); g.moveTo(x0 * k, 0); g.lineTo(x1 * k, 0); g.strokeStyle = LINE; g.lineWidth = (w + 4) * k; g.stroke(); g.strokeStyle = col; g.lineWidth = w * k; g.stroke(); };
   rod(-70, -20, 8, '#3a2a1c'); rod(-20, 60, 10, '#cfd8e0');
   g.fillStyle = '#cfd8e0'; g.strokeStyle = LINE; g.lineWidth = 2.5 * k; g.beginPath(); g.moveTo(60 * k, -7 * k); g.lineTo(96 * k, 0); g.lineTo(60 * k, 7 * k); g.closePath(); g.fill(); g.stroke();
   g.beginPath(); g.moveTo(10 * k, -9 * k); g.lineTo(46 * k, -22 * k); g.lineTo(30 * k, -8 * k); g.closePath(); g.fill(); g.stroke();      // the second, hooked point
   rod(14, 40, 5, GOLD);
   g.restore();
+}
+
+// spinning in the air, as in the user's clip: end over end round its guard, and behind the blade half a disc of yellow-white light, filled
+// right in to the guard, brightest at the blade and fading back from it; a brighter band round its edge, jagged on the inside, and the
+// tip's own path along it. dir: 1 clockwise, -1 anticlockwise
+const SWEEP = Math.PI * .95;
+function spinDraw(x, y, ang, k, dir) {
+  const R = 116 * k, ccw = dir > 0, at = (a, r) => [Math.cos(a) * r, Math.sin(a) * r], A = i => ang - dir * SWEEP * i;      // (R: from the guard to the tip; ccw: which way round the trail is drawn; A: a share of the way back along it)
+  g.save(); g.translate(x, y); g.globalCompositeOperation = 'lighter';
+  for (let i = 0, N = 14; i < N; i++) {             // the disc
+    const f = 1 - .72 * i / N, gr = g.createRadialGradient(0, 0, 0, 0, 0, R);
+    gr.addColorStop(0, `rgba(255,222,120,${.12 * f})`); gr.addColorStop(.6, `rgba(255,232,145,${.24 * f})`); gr.addColorStop(1, `rgba(255,242,185,${.44 * f})`);
+    g.fillStyle = gr; g.beginPath(); g.moveTo(0, 0); g.arc(0, 0, R, A(i / N), A((i + 1) / N), ccw); g.closePath(); g.fill();
+  }
+  for (let i = 0, M = 16; i < M; i++) {             // the band round its edge, jagged where it meets the rest
+    const r0 = R * (i % 2 ? .6 : .78), r1 = R * ((i + 1) % 2 ? .6 : .78), p2 = at(A((i + 1) / M), r1), p3 = at(A(i / M), r0);
+    g.fillStyle = `rgba(255,248,205,${.5 * Math.pow(1 - i / M, 1.3)})`;
+    g.beginPath(); g.arc(0, 0, R, A(i / M), A((i + 1) / M), ccw); g.lineTo(p2[0], p2[1]); g.lineTo(p3[0], p3[1]); g.closePath(); g.fill();
+  }
+  g.lineCap = 'round';
+  for (let i = 0; i < 6; i++) { g.strokeStyle = `rgba(255,255,245,${.85 * (1 - i / 6)})`; g.lineWidth = (4.5 - i * .6) * k; g.beginPath(); g.arc(0, 0, R, A(i / 7), A((i + 1) / 7), ccw); g.stroke(); }
+  const b = at(A(.15), R * .65); E.glow(E.GLOW.gold || E.GLOW.fire, b[0], b[1], R * 1.7, .3); E.glow(E.GLOW.white || E.GLOW.fire, b[0], b[1], R * .9, .3);
+  g.globalCompositeOperation = 'source-over'; g.restore();
+  spearAt(x, y, ang, k, 20);                        // and the spear over it, turning round its guard
 }
 
 /* ================= the Chain of a Thousand Miles ================= */
@@ -495,7 +530,7 @@ H.fx = dt => {
   if (!live) return;
   const p = E.P1, t = held();
   if (bound && bound.o === E.P2) boundDraw();
-  if (thrown) { const c = F(thrown.x, thrown.y); spearAt(c[0], c[1], thrown.rot, c[2] * 1.3); g.globalCompositeOperation = 'lighter'; E.glow(E.GLOW.fire, c[0], c[1], 160 * c[2], .25); g.globalCompositeOperation = 'source-over'; }
+  if (thrown) { const c = F(thrown.x, thrown.y); spinDraw(c[0], c[1], thrown.rot, c[2] * 1.25, thrown.dir); }
   if (t && !p.dead && !(p.alpha < .05)) weapon(p, t);
   if (qte) {                                        // a square closing on a square: 2 while it is inside the gold one
     const o = qte.o, c = F(o.x, mid(o)), k = c[2], u = qte.t / QTE_T, size = v => 64 * k * lerp(2.6, .25, Math.min(1, v)), s = size(u), inside = u >= PERF[0] && u <= PERF[1];
@@ -589,5 +624,5 @@ document.addEventListener('click', e => {
 
 JU.tools = { TOOLS, ORDER, mount, apply, off, roll, check, ENDS, TOJI, RUPTURE, RUPTURE2, LASSO, WHIP, IS_UP, IS_DOWN, PERF, QTE_T,
   get state() { return { live, slots: S.slots.slice(), cur: S.cur, dc, dcCd, m1cd, dots: dots.length, held: held() && held().id,
-    rup: rup && +rup.t.toFixed(2), qte: qte && { t: +qte.t.toFixed(2), res: qte.res }, thrown: thrown && { phase: thrown.phase, t: +thrown.t.toFixed(2), hit: thrown.hit }, bound: bound && +bound.t.toFixed(2) }; } };
+    rup: rup && +rup.t.toFixed(2), qte: qte && { t: +qte.t.toFixed(2), res: qte.res }, thrown: thrown && { phase: thrown.phase, t: +thrown.t.toFixed(2), hit: thrown.hit, x: Math.round(thrown.x), y: Math.round(thrown.y) }, bound: bound && +bound.t.toFixed(2) }; } };
 })();
