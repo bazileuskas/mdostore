@@ -215,14 +215,37 @@ function tear(p, o) {                               // 60, and it is not clean
   } else { V.sparks(x, y, 'gold', 16); V.ring(x, y, 260, GOLD, .35); }
   say(o, '天逆鉾', gore() ? '#ff5a6e' : GOLD, 1.1, 440);
 }
-function spearAt(x, y, rot, k, pv = 0) {            // the spear on its own: the heavy two-pronged blade, the short haft (pv: how far along it the point it turns round is)
-  g.save(); g.translate(x, y); g.rotate(rot); g.translate(pv * k, 0); g.lineCap = 'round';
-  const rod = (x0, x1, w, col) => { g.beginPath(); g.moveTo(x0 * k, 0); g.lineTo(x1 * k, 0); g.strokeStyle = LINE; g.lineWidth = (w + 4) * k; g.stroke(); g.strokeStyle = col; g.lineWidth = w * k; g.stroke(); };
-  rod(-70, -20, 8, '#3a2a1c'); rod(-20, 60, 10, '#cfd8e0');
-  g.fillStyle = '#cfd8e0'; g.strokeStyle = LINE; g.lineWidth = 2.5 * k; g.beginPath(); g.moveTo(60 * k, -7 * k); g.lineTo(96 * k, 0); g.lineTo(60 * k, 7 * k); g.closePath(); g.fill(); g.stroke();
-  g.beginPath(); g.moveTo(10 * k, -9 * k); g.lineTo(46 * k, -22 * k); g.lineTo(30 * k, -8 * k); g.closePath(); g.fill(); g.stroke();      // the second, hooked point
-  rod(14, 40, 5, GOLD);
-  g.restore();
+// the Inverted Spear of Heaven as the user's picture of it has it (Build 0.16v2): a flat blade with two prongs, the long one and a short one
+// with a rounded slot between them, both cut off on the same slant, and a small mark cut in it near the base; a square brass guard and
+// collar; a long black grip wound tight with cord; and a brass end with a ring in it (where the chain goes, in the story). In its own
+// units: the guard at 0, the long prong's tip at 104, the ring at -97; -y is the long prong's side
+const BRASS = '#d9c99f', BRASS_D = '#a08f69', WRAP = '#191413', CORD = '#3e2b27';
+const BLADE = [[6, -9], [12, -16], [104, -16], [89, -1], [32, -1], [29, 2], [32, 5], [60, 5], [49, 16], [12, 16], [6, 9]];
+function isohShape() {
+  g.lineJoin = 'round'; g.lineCap = 'round'; g.strokeStyle = LINE;
+  g.lineWidth = 3.6; g.beginPath(); g.arc(-97, 0, 5, 0, TAU); g.stroke(); g.lineWidth = 1.8; g.strokeStyle = BRASS; g.stroke();      // the ring
+  g.strokeStyle = LINE; g.lineWidth = 1.6;
+  g.fillStyle = BRASS; g.beginPath(); g.roundRect(-93, -5.5, 8, 11, 2); g.fill(); g.stroke();                                         // its cap
+  g.fillStyle = WRAP; g.beginPath(); g.moveTo(-86, -5.2); g.lineTo(-7, -6.6); g.lineTo(-7, 6.6); g.lineTo(-86, 5.2); g.closePath(); g.fill(); g.stroke();      // the grip
+  g.strokeStyle = CORD; g.lineWidth = 1.4;
+  for (let x = -83; x < -10; x += 4.4) { g.beginPath(); g.moveTo(x, -4.6); g.lineTo(x + 2.4, 4.6); g.stroke(); }                     // (the cord round it)
+  g.strokeStyle = LINE; g.lineWidth = 1.6;
+  g.fillStyle = BRASS_D; g.beginPath(); g.roundRect(-8, -13, 5.5, 26, 1.5); g.fill(); g.stroke();                                     // the guard
+  g.fillStyle = BRASS; g.beginPath(); g.roundRect(-3.5, -9.5, 10, 19, 1.5); g.fill(); g.stroke();                                     // and its collar
+  const gr = g.createLinearGradient(0, -16, 0, 16);
+  gr.addColorStop(0, '#eef2f6'); gr.addColorStop(.45, '#cdd3da'); gr.addColorStop(1, '#a3abb5');
+  g.fillStyle = gr; g.beginPath(); BLADE.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y))); g.closePath(); g.fill();
+  g.lineWidth = 2; g.stroke();
+  g.strokeStyle = 'rgba(255,255,255,.85)'; g.lineWidth = 1.6;                                                                         // the bevel along its edges
+  g.beginPath(); g.moveTo(14, -13.6); g.lineTo(100, -13.6); g.moveTo(14, 13.6); g.lineTo(50, 13.6); g.stroke();
+  g.strokeStyle = 'rgba(70,78,90,.75)'; g.lineWidth = 1.1;                                                                            // the mark cut near its base
+  for (const x of [14, 17, 20]) { g.beginPath(); g.moveTo(x, -5); g.lineTo(x, 5); g.stroke(); }
+  g.beginPath(); g.moveTo(24, -5); g.lineTo(24, 5); g.moveTo(22, 0); g.lineTo(27, 0); g.stroke();
+  g.lineCap = 'butt';
+}
+// drawn on screen at x, y (where its guard is), turned to ang, s pixels to its unit; flip: which side the short prong is on
+function isohAt(x, y, ang, s, flip = 1) {
+  g.save(); g.translate(x, y); g.rotate(ang); g.scale(s, s * flip); isohShape(); g.restore();
 }
 
 // spinning in the air, as in the user's clip: end over end round its guard, and behind the blade half a disc of yellow-white light, filled
@@ -230,7 +253,7 @@ function spearAt(x, y, rot, k, pv = 0) {            // the spear on its own: the
 // tip's own path along it. dir: 1 clockwise, -1 anticlockwise
 const SWEEP = Math.PI * .95;
 function spinDraw(x, y, ang, k, dir) {
-  const R = 116 * k, ccw = dir > 0, at = (a, r) => [Math.cos(a) * r, Math.sin(a) * r], A = i => ang - dir * SWEEP * i;      // (R: from the guard to the tip; ccw: which way round the trail is drawn; A: a share of the way back along it)
+  const R = 104 * k, ccw = dir > 0, at = (a, r) => [Math.cos(a) * r, Math.sin(a) * r], A = i => ang - dir * SWEEP * i;      // (R: from the guard to the tip; ccw: which way round the trail is drawn; A: a share of the way back along it)
   g.save(); g.translate(x, y); g.globalCompositeOperation = 'lighter';
   for (let i = 0, N = 14; i < N; i++) {             // the disc
     const f = 1 - .72 * i / N, gr = g.createRadialGradient(0, 0, 0, 0, 0, R);
@@ -246,7 +269,7 @@ function spinDraw(x, y, ang, k, dir) {
   for (let i = 0; i < 6; i++) { g.strokeStyle = `rgba(255,255,245,${.85 * (1 - i / 6)})`; g.lineWidth = (4.5 - i * .6) * k; g.beginPath(); g.arc(0, 0, R, A(i / 7), A((i + 1) / 7), ccw); g.stroke(); }
   const b = at(A(.15), R * .65); E.glow(E.GLOW.gold || E.GLOW.fire, b[0], b[1], R * 1.7, .3); E.glow(E.GLOW.white || E.GLOW.fire, b[0], b[1], R * .9, .3);
   g.globalCompositeOperation = 'source-over'; g.restore();
-  spearAt(x, y, ang, k, 20);                        // and the spear over it, turning round its guard
+  isohAt(x, y, ang, k, -dir);                       // and the spear over it, turning round its guard
 }
 
 /* ================= the Chain of a Thousand Miles ================= */
@@ -438,7 +461,12 @@ function weapon(p, t) {
   g.lineCap = 'round';
   if (t.id === 'katana') { rod(-16, 14, 8, '#3a2f4a'); rod(14, 165, 6, STEEL); }
   else if (t.id === 'cloud') { for (let i = 0; i < 3; i++) rod(-10 + i * 62, 42 + i * 62, 11, CLOUD); }
-  else { rod(-16, 16, 8, '#3a2a1c'); rod(16, 104, 9, '#cfd8e0'); rod(40, 78, 5, GOLD); }               // the spear: a short heavy blade with a second point beside it
+  else {                                            // the spear: held near the end of its grip, the ring just behind his fist, all of the rest out in front of it
+    g.lineCap = 'butt';
+    const a = at(0), b = at(100), len = Math.hypot(b[0] - a[0], b[1] - a[1]), ang = Math.atan2(b[1] - a[1], b[0] - a[0]), u = len / 100 * .72;
+    isohAt(a[0] + Math.cos(ang) * 76 * u, a[1] + Math.sin(ang) * 76 * u, ang, u, p.face < 0 ? -1 : 1);
+    return;
+  }
   g.lineCap = 'butt';
 }
 
@@ -530,7 +558,7 @@ H.fx = dt => {
   if (!live) return;
   const p = E.P1, t = held();
   if (bound && bound.o === E.P2) boundDraw();
-  if (thrown) { const c = F(thrown.x, thrown.y); spinDraw(c[0], c[1], thrown.rot, c[2] * 1.25, thrown.dir); }
+  if (thrown) { const c = F(thrown.x, thrown.y); spinDraw(c[0], c[1], thrown.rot, c[2] * 1.2, thrown.dir); }
   if (t && !p.dead && !(p.alpha < .05)) weapon(p, t);
   if (qte) {                                        // a square closing on a square: 2 while it is inside the gold one
     const o = qte.o, c = F(o.x, mid(o)), k = c[2], u = qte.t / QTE_T, size = v => 64 * k * lerp(2.6, .25, Math.min(1, v)), s = size(u), inside = u >= PERF[0] && u <= PERF[1];
