@@ -8,12 +8,13 @@
    And the INVERTED SPEAR OF HEAVEN strikes at the usual speed: four to a chain, jump held makes the fourth an uppercut, in the air a slam,
    with sounds of their own. Its second move is RUPTURE, used twice: a dash and an uppercut (30), then 2 again for a square closing on a
    square, and 2 once more as it lands inside it: a perfect thrust (70, and 100 in all). With E held as it winds up, the spear goes up with
-   them instead, spinning on its chain for two seconds: 2 pulls it back early, and it tears through whatever is still in the air (60) */
+   them instead, floating up and spinning for two seconds, and floating down again: 2 calls it back early, and it tears through whatever is
+   still in the air (60) */
 (() => {
 'use strict';
 
 const E = JU.eng, g = E.g, F = E.F, cam = E.cam, H = E.hooks, POSE = E.POSE, LINE = E.LINE, TOR = E.TOR, V = JU.vfx, sfx = JU.sfx, Fi = JU.fights, M = E.MOVES, C = JU.clan, Z = JU.bossfx;
-const { rnd, clamp, lerp, ease } = E, TAU = Math.PI * 2, { shout } = JU.tech.tk, SLOTS = JU.tech.SLOTS;
+const { rnd, clamp, lerp } = E, TAU = Math.PI * 2, { shout } = JU.tech.tk, SLOTS = JU.tech.SLOTS;
 const STEEL = '#e8f0ff', GOLD = '#e2c060', CLOUD = '#ff5a6e', IRON = '#9aa3b5', BLOODC = '#b3121f';
 const ENDS = Date.parse('2026-11-01T12:00:00Z');   // when the Toji clan leaves the draw. It first ran to 11 October; brought back for seven more days on 25 October (Build 0.16v2)
 const TOJI_TOOL = 3, COUNTER = 3, COUNTER_CD = 20;  // +200% tool damage; Deadly Counter's seconds and its wait
@@ -98,7 +99,7 @@ const INVERSION = { name: 'Inversion Stab', cd: 12, dur: .7, run(p, m, t) {
 } };
 
 /* ---------- Rupture: once, a dash and an uppercut; twice, the square; or, with E held, the spear goes up too ---------- */
-const RUP_T = 1.5, QTE_T = 1, PERF = [.5, .7], HANG = 2, RIDE = .12, DESC = .35, BACK_T = .22, SPIN = 42;      // how long the second use waits; how long the square takes to close; when it is inside the other; how long the spear stays up, takes to reach them, to drift home and to come back when pulled; and how fast it turns (radians a second: about seven turns, as in the user's clip)
+const RUP_T = 1.5, QTE_T = 1, PERF = [.5, .7], HANG = 2, RISE = .8, DESC = .7, BACK_T = .22, SPIN = 42;      // how long the second use waits; how long the square takes to close; when it is inside the other; how long the spear stays up, takes to float up and to float down again (slowly, both, as in the user's clip), and to come back when called; and how fast it turns (radians a second: about seven turns)
 let rup = null, qte = null, thrown = null;          // { o, t } the second use, waiting · { o, t, res } the square · the spear in the air: { x, y, t (in this phase), life (since it left his hand), phase, o, rot, dir, side, hit }
 const isoHeld = () => { const t = held(); return !!t && t.id === 'spear'; };
 const RUPTURE = { name: 'Rupture', sub: 'USE TWICE', cd: 9, dur: .78, noCancel: 1, run(p, m, t) {      // (noCancel: the Vessel's E does not call it off, especial.js: E is part of it)
@@ -157,34 +158,32 @@ function strike(p, o, perfect) {                    // the thrust, and down they
     say(o, 'PERFECT', '#ffffff', 1.2, 430);
   } else { shake(16); say(o, 'RUPTURE', GOLD, .9, 430); }
 }
-// with E held: the spear goes up with them, spinning on the end of its chain, and comes down through them. The way it flies is the user's
-// clip's: up at their side as they go, still up there spinning when they come down, then down again to his hand, turning all the way
+// with E held: the spear goes up with them, spinning, and comes down through them. The way it flies is the user's clip's: no chain on it,
+// up slowly over them (they go up past it), hanging there turning, and down again slowly into his hand
 function toss(p, o) {
   const w = E.hand(p, true);
-  thrown = { x: w[0], y: w[1], x0: w[0], y0: w[1], tx: w[0], ty: w[1], t: 0, life: 0, phase: 'up', o, rot: -p.face * Math.PI / 2, dir: -p.face, side: -p.face, hit: false };      // (dir: anticlockwise when he faces right, as in the clip; side: it rides on his side of them)
+  thrown = { x: w[0], y: w[1], x0: w[0], y0: w[1], hx: o.x - p.face * 60, hy: 385, t: 0, life: 0, phase: 'up', o, rot: -p.face * Math.PI / 2, dir: -p.face, hit: false };      // (hx, hy: where it hangs, over them and on his side of them; dir: anticlockwise when he faces right, as in the clip)
   play('home-isoh-spin', .9, () => { for (let i = 0; i < 5; i++) E.after(i * .32, () => sfx.swish(.7 + i * .06)); });
-  say(p, '2 · PULL THE CHAIN', GOLD, 1.6, 500);
+  say(p, '2 · CALL IT BACK', GOLD, 1.6, 500);
 }
-function pull() {                                   // 2 while it is up: back down along its chain, now
+function pull() {                                   // 2 while it is up: back to him now
   if (!thrown || thrown.phase === 'back') return;
   const o = thrown.o, far = Math.hypot(o.x - thrown.x, mid(o) - thrown.y);
   Object.assign(thrown, { phase: 'back', t: 0, bx: thrown.x, by: thrown.y, bt: clamp(far / 2400, .06, BACK_T) });      // (bt: how long it takes to reach them: no time at all from right beside them)
-  sfx.whoosh(); play('home-coatm-swing', .9, () => sfx.comb());
+  sfx.whoosh(); sfx.swish(1.2);
 }
 function flyTick(dt) {
   const s = thrown, p = E.P1, o = s.o, up = there(o) && o === E.P2 && !o.ground;
   s.t += dt; s.life += dt; s.rot += dt * SPIN * s.dir;
-  if (s.phase === 'up') {                           // up with them, at their side, as fast as they go
-    if (up) { s.tx = o.x + s.side * 55 * (o.scale || 1); s.ty = mid(o) - 30; }
-    const u = Math.min(1, s.t / RIDE);
-    if (u < 1) { s.x = lerp(s.x0, s.tx, ease(u)); s.y = lerp(s.y0, s.ty, ease(u)); }
-    else { const q = 1 - Math.exp(-dt * 14); s.x += (s.tx - s.x) * q; s.y += (s.ty - s.y) * q; }
-    if (u >= 1 && (!up || o.vy < -150 || s.life > .9)) { s.phase = 'hang'; s.t = 0; s.hx = s.x; s.hy = s.y; }      // they are on their way down: it stays up
+  if (s.phase === 'up') {                           // up, slowly, and slower still as it gets there
+    const u = Math.min(1, s.t / RISE), q = 1 - (1 - u) * (1 - u);
+    s.x = lerp(s.x0, s.hx, q); s.y = lerp(s.y0, s.hy, q);
+    if (u >= 1) { s.phase = 'hang'; s.t = 0; }
   } else if (s.phase === 'hang') {                  // up there turning, drifting a little, until its time is up
-    s.x = s.hx + Math.sin(s.t * 2.3) * 14; s.y = s.hy + Math.min(1, s.t * 3) * 20 + Math.sin(s.t * 3.1) * 10;
-    if (s.life >= HANG - DESC) { if (up) pull(); else Object.assign(s, { phase: 'home', t: 0, bx: s.x, by: s.y }); }      // (somebody still in the air: it comes for them on the way)
-  } else if (s.phase === 'home') {                  // left to itself: down to his hand again, still turning
-    const w = E.hand(p, true), u = Math.min(1, s.t / DESC), q = u * u * (3 - 2 * u);
+    s.x = s.hx + Math.sin(s.t * 2.3) * 14; s.y = s.hy + Math.sin(s.t * 3.1) * 10;
+    if (s.life >= HANG - DESC) { if (up && o.y > 40) pull(); else Object.assign(s, { phase: 'home', t: 0, bx: s.x, by: s.y }); }      // (somebody still up in the air: it comes for them on the way; bouncing off the floor does not count)
+  } else if (s.phase === 'home') {                  // left to itself: down again, slowly at first, and into his hand, still turning
+    const w = E.hand(p, true), u = Math.min(1, s.t / DESC), q = u * u;
     s.x = lerp(s.bx, w[0], q); s.y = lerp(s.by, w[1], q);
     if (u >= 1) thrown = null;
   } else {                                          // pulled back: through them on the way, if they are still up there
@@ -450,11 +449,7 @@ function swap() {                                   // T: whatever was round his
 /* ---------- the tool, drawn in whichever hand is doing the work ---------- */
 function weapon(p, t) {
   if (t.id === 'chain') { if (lasso && p.move === lasso.m) chainWork(p); else chainIdle(p); return; }
-  if (t.id === 'spear' && thrown) {                 // the spear is up: only its chain runs from his hand to it
-    const w = E.hand(p, true), a = F(w[0], w[1]), b = F(thrown.x, thrown.y), k = a[2];
-    sagged([a[0], a[1]], [b[0], b[1]], (thrown.phase === 'back' ? 4 : 30) * k, k, 24);
-    return;
-  }
+  if (t.id === 'spear' && thrown) return;          // the spear is up there: his hand is empty
   const ps = p.pose, tp = p.target || ps, back = tp[3] > tp[2], an = back ? ps[3] : ps[2], w = E.hand(p, !back), dx = Math.sin(an) * p.face, dy = -Math.cos(an);
   const at = L => F(w[0] + dx * L, w[1] + dy * L), h0 = at(-16), k = h0[2];
   const rod = (L0, L1, wd, col) => { const a0 = at(L0), a1 = at(L1); g.beginPath(); g.moveTo(a0[0], a0[1]); g.lineTo(a1[0], a1[1]); g.strokeStyle = LINE; g.lineWidth = (wd + 4) * k; g.stroke(); g.strokeStyle = col; g.lineWidth = wd * k; g.stroke(); };
@@ -517,7 +512,7 @@ H.press = (a, inScene) => {
   if (!inScene && live && isoHeld()) {
     if (a === 'crush') {
       if (qte && !qte.res) { judge(); return true; }                                   // the square
-      if (thrown && thrown.phase !== 'back') { pull(); return true; }                   // the chain
+      if (thrown && thrown.phase !== 'back') { pull(); return true; }                   // calling it back
       if (rup && !E.P1.dead) { second(); return true; }                                 // Rupture, the second time
     }
     if (thrown && (a === 'strikes' || a === 'crush')) { shout(E.P1, 'The spear is up', GOLD); return true; }
