@@ -421,7 +421,8 @@ function paintAwk() {
 /* ================= UNSEALED (Build 0.18): five words, the fifth on 5 ================= */
 // 1 EXPLODE (爆ぜろ): they burst. Two at most, when there is more than one there (a raid): whoever he is fighting and the next nearest.
 //   If either had more fight in it than STRONG, he goes with them (and that fight is lost); otherwise it costs him a little. Its clip is the
-//   only one of the line on myinstants, titled in Portuguese ("IMPLODA - Inumaki"): sounds/home-inu-explode.mp3 at home
+//   Japanese line, 爆ぜろ (0.19: 0.18 had the Brazilian dub's "IMPLODA" by mistake), titled "Inumaki fire" on myinstants:
+//   sounds/home-inu-explode.mp3 at home
 // 2 TWIST OFF: wrung round six times where they stand (12 each), and thrown (18)
 // 3 GET DOWN: CRATER: put into the floor three times (25, 25, 40), and kept there four seconds
 // 4 STILLNESS (Don't Move): five seconds stock still (two for a heavy one), and every blow on them lands half as hard again
@@ -442,7 +443,7 @@ function burst(p, o) {
 const EXPLODE = { name: 'Explode', cd: 30, dur: 1.2, run(p, m, t) {
   p.vx = 0; p.rate = 30; p.target = t < .9 ? POSE.inuDie : POSE.idle;
   if (!m.s) { m.s = 1; command(p, 'home-inu-explode', '爆ぜろ', 'EXPLODE', 40); }
-  if (t < .5 || m.done) return;                       // (on the word: the clip has it half a second in)
+  if (t < .5 || m.done) return;                       // (on the word: the clip has it ending half a second in)
   m.done = 1;
   const o = hears(p), more = H.foes && H.foes();
   rings(p, o, '#ff5a8c');
@@ -582,8 +583,8 @@ const MOVES = {
   get strikes() { return unsealed ? EXPLODE : DONT; }, get crush() { return unsealed ? WRING : TWIST; },
   get div() { return unsealed ? CRATER : DOWN; }, get manji() { return unsealed ? STILL : STOP; }
 };
-JU.tech.add('speaker', { name: 'Cursed Speaker', jp: '呪言', mark: '言', who: 'Cursed speech, and a throat that pays for it', odds: 0, col: COL, glow: 'purple', moves: MOVES,
-  early: true, skin: SPEAKER, as: ['Cursed Speaker', '呪言'], m1, awaken, awkName: 'Last Word', awkKeep: true, awkStart: 0,
+JU.tech.add('speaker', { name: 'Cursed Speaker', jp: '呪言', mark: '言', who: 'Cursed speech, and a throat that pays for it', odds: 15, col: COL, glow: 'purple', moves: MOVES,      // (out of Early Access in 0.19, at 15%: the user's number)
+  skin: SPEAKER, as: ['Cursed Speaker', '呪言'], m1, awaken, awkName: 'Last Word', awkKeep: true, awkStart: 0,
   get awkHits() { return !unsealed && !lw; },          // (unsealed, the bar is spent: hits do not fill it)
   hint: HINT });
 const DEF = JU.tech.TECH.speaker, on = () => JU.tech.active === DEF;

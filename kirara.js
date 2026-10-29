@@ -12,7 +12,13 @@
      (ACRUX). In the wrong order, the two stars push apart: 30, a long way back, and the next star. With no star yet: in with an open palm, 25
    E SOUTHERN CROSS: the whole constellation over the arena. They are dragged through it in order with a blow at each star (12 x4), and
      into the last one, which is the Star-Crossed (36), and left wearing IMAI: Love Rendezvous next is the meeting
-   3 and 4 are still to come (the user asked for two).
+   3 STAR STAMP (Build 0.19; the user: "make it so you can add stars with one of the moves"): a star flicked up and pinned in the sky over a
+     spot in front, three at most. A pinned star is the next one in the order for whoever they are fighting, so it draws them to it (stars in
+     order meet): pulled along the floor until they are under it, and then it comes down on them, 14 and the next star on them. It stays
+     pinned there after, met, for 4 to fly through. While they wear IMAI the pinned stars wait, dim: that one belongs to GINAN
+   4 INTERSTELLAR FLIGHT (0.19; 星間飛行 is the technique's own name): a streak of light from star to star. Through them, out to the first
+     pinned star, back through them, out to the next, and so on, a blow every time through (15, the last 25) and the next star with each;
+     the pinned stars go out as they are flown through. With none pinned, one is flicked up behind them first
    A duel's other player is moved by their own game: there, nothing is pushed apart or pulled in and no blow stops short, but the stars,
    the hits and the harder hits on IMAI are the same. The sounds are built (sfx.star, twinkle and cross, in index.html) */
 (() => {
@@ -86,7 +92,9 @@ Object.assign(POSE, {
   kiFlick: [.25, -.05, 1.5, .3, .5, -.45, 0],         // and flicked at them
   kiReach: [-.05, -.12, 1.6, .9, .36, -.36, 0],       // a hand held out to them: come here
   kiPush: [.3, 0, 1.55, 1.45, .55, -.5, 0],           // both hands out, pushing
-  kiRaise: [-.12, -.3, 3, .6, .35, -.35, 0]           // a hand up to the sky
+  kiRaise: [-.12, -.3, 3, .6, .35, -.35, 0],          // a hand up to the sky
+  kiFly: [0, -.25, 2.95, 2.75, .2, -.12, 1.25],       // flying, arms out ahead, flat out along the line (Interstellar Flight)
+  kiLand: [-.2, .1, 2.2, 1.2, .55, -.6, 0]            // and down again, arms still open
 });
 
 /* ================= the stars on them ================= */
@@ -246,6 +254,160 @@ const CROSS = { name: 'Southern Cross', jp: '南十字', col: PINK, cd: 20, dur:
   if (t > 2.45) crossS = null;
 } };
 
+/* ================= 3 — Star Stamp (Build 0.19) ================= */
+const PIN_MAX = 3, PIN_LIFE = 15, PIN_PULL = 620, PIN_R = 80, PIN_DMG = 14, PIN_AHEAD = 330, PIN_Y = [330, 470, 250];      // how many, how long each lasts, how fast it draws them, how close is touching, the blow; where it goes, how high
+const pins = [];                                    // { x, y, t, pop, fly, met }: a star pinned in the sky over a spot on the floor (met: the star it gave them)
+let pinN = 0, pinCool = 0;                          // how many have been pinned (for the heights); a moment after one comes down before the next may draw them
+const awake = o => live(o) && !(o === markO && mark >= 4);      // (a pinned star waits while they wear IMAI: that one is GINAN's)
+const nextName = o => STARS[Math.min(3, o === markO ? mark : 0)];      // the star a pinned one would put on them
+const STAMP = { name: 'Star Stamp', cd: 1.6, dur: .5, run(p, m, t) {
+  p.vx = 0; p.rate = 36; p.target = t < .14 ? POSE.kiWind : t < .4 ? POSE.kiRaise : POSE.idle;
+  if (m.s || t < .14) return;
+  m.s = 1;
+  const x = clamp(p.x + p.face * PIN_AHEAD, -930, 930), y = PIN_Y[pinN % PIN_Y.length], w = E.hand(p, true);
+  pinN++;
+  if (pins.length >= PIN_MAX) { const old = pins.shift(); burstAt(old.x, old.y, .5); }      // (the oldest goes out to make room)
+  pins.push({ x, y, t: 0, pop: .5, fly: { x0: w[0], y0: w[1], u: 0 } });
+  sfx.twinkle(); sfx.star(pins.length - 1);
+} };
+function pinsTick(dt) {
+  const p = E.P1, o = E.P2;
+  if (pinCool > 0) pinCool -= dt;
+  for (let i = pins.length - 1; i >= 0; i--) {
+    const q = pins[i];
+    q.t += dt; if (q.pop > 0) q.pop -= dt;
+    if (q.fly) { q.fly.u += dt / .22; if (q.fly.u >= 1) { q.fly = null; burstAt(q.x, q.y, .6); } }
+    if (q.t > PIN_LIFE) { burstAt(q.x, q.y, .4); pins.splice(i, 1); }
+  }
+  if (!pins.length || !awake(o) || crossS || flight || p.dead || pinCool > 0) return;
+  const q = pins.filter(q => !q.fly && !q.met).sort((a, b) => Math.abs(a.x - o.x) - Math.abs(b.x - o.x))[0];
+  if (!q) return;
+  const d = q.x - o.x, held = !duel() && !o.net && Math.abs(o.x - p.x) <= GAP + 6 && (q.x - p.x) * (o.x - p.x) > 0 && Math.abs(q.x - p.x) < GAP;      // (on their side, but inside the wall: they meet it at the wall)
+  if (Math.abs(d) < PIN_R || held) { meetPin(o, q); return; }
+  if (duel() || o.net || !o.ground || !(o.state === 'idle' || o.state === 'act' || o.state === 'hurt')) return;
+  o.x += Math.sign(d) * Math.min(PIN_PULL * dt, Math.abs(d));      // in order: drawn to it along the floor
+  if (Math.random() < dt * 30) V.mote(o.x, o.y + 170, 'gold');
+}
+function meetPin(o, q) {                            // the pinned star comes down on them: the next star, and a blow; it stays up there, met
+  pinCool = .55; q.pop = .5;
+  const hs = o.scale || 1, x = o.x, y = o.y + 170 * hs;
+  E.applyHit(o, x >= E.P1.x ? 1 : -1, { dmg: exact(o, PIN_DMG), kb: 260, lift: 340, stun: .6, stop: .08, col: GOLD, fixed: 1, mute: 1, nostar: 1 });
+  advance(o); q.met = STARS[mark - 1];
+  burstAt(x, y, 1); shake(14); sfx.hit(true);
+  V.custom(.35, u => {                              // a line of light down out of where it hung, onto them
+    const a = F(q.x, q.y), b = F(x, y), k = b[2];
+    lit(() => { g.strokeStyle = `rgba(${GRGB},${1 - u})`; g.lineWidth = (18 - 14 * u) * k; g.lineCap = 'round'; g.beginPath(); g.moveTo(a[0], a[1]); g.lineTo(b[0], b[1]); g.stroke(); E.glow(E.GLOW.gold, b[0], b[1], 260 * k * (1 - u), .9); });
+  });
+}
+function drawPins() {
+  const o = E.P2, on2 = awake(o);
+  for (const q of pins) {
+    let x = q.x, y = q.y;
+    if (q.fly) { const u = ease(q.fly.u); x = lerp(q.fly.x0, q.x, u); y = lerp(q.fly.y0, q.y, u) + Math.sin(u * Math.PI) * 120; }
+    const c = F(x, y), k = c[2], fade = Math.min(1, (PIN_LIFE - q.t) / 1), al = (q.met ? .75 : on2 ? 1 : .45) * fade, R = ((q.met ? 20 : 26) + 14 * Math.max(0, q.pop) / .5) * k;
+    if (!q.fly && !q.met) {                         // a thread of light down to the spot on the floor it watches
+      const f0 = F(q.x, 0), col = on2 ? PINK : '#d8cbe0';
+      g.save(); g.globalAlpha = .35 * al; g.setLineDash([6 * k, 9 * k]); g.strokeStyle = col; g.lineWidth = 2.5 * k; g.beginPath(); g.moveTo(c[0], c[1] + R); g.lineTo(f0[0], f0[1]); g.stroke(); g.restore();
+      g.save(); g.globalAlpha = .5 * al; g.strokeStyle = col; g.lineWidth = 3 * k; g.beginPath(); g.ellipse(f0[0], f0[1], 46 * k, 11 * k, 0, 0, TAU); g.stroke(); g.restore();
+      if (on2 && live(o) && !duel() && Math.abs(o.x - q.x) > PIN_R) {      // and, drawing them in: light along the floor from them to it
+        const a = F(o.x, 20);
+        lit(() => { for (let i = 0; i < 3; i++) { const u = (E.T * 1.4 + i / 3) % 1; E.glow(E.GLOW.gold, lerp(a[0], f0[0], u), lerp(a[1], f0[1], u), 40 * k, .7 * al); } });
+      }
+    }
+    lit(() => E.glow(E.GLOW[on2 && !q.met ? 'pink' : 'gold'], c[0], c[1], R * 4.5, (.55 + .2 * Math.sin(E.T * 6 + q.x)) * al));
+    g.save(); g.globalAlpha = al;
+    starPath(c[0], c[1], R, R * .42, q.t * 1.2); g.fillStyle = '#fff6d8'; g.fill(); g.lineWidth = 2.5 * k; g.strokeStyle = on2 && !q.met ? PINK : GOLD; g.stroke();
+    if (!q.fly && (q.met || live(o))) {
+      const nm = q.met || nextName(o), txt = q.met || on2 ? nm[1] + ' ' + nm[0] : 'WAITING';
+      g.font = `${Math.max(10, Math.round(17 * k))}px Anton, Impact, sans-serif`; g.textAlign = 'center'; g.textBaseline = 'top';
+      g.lineJoin = 'round'; g.lineWidth = 4; g.strokeStyle = 'rgba(0,0,0,.75)'; g.strokeText(txt, c[0], c[1] + R + 4 * k); g.fillStyle = q.met ? GOLD : on2 ? '#ffe3f3' : '#cfc6d6'; g.fillText(txt, c[0], c[1] + R + 4 * k);
+    }
+    g.restore();
+  }
+}
+
+/* ================= 4 — Interstellar Flight (Build 0.19) ================= */
+const FLY_V = 2800, FLY_DMG = 15, FLY_LAST = 25;    // how fast the streak goes; each time through them, and the last
+let flight = null;                                  // the flight under way: { o, legs, i, from, u, len, trail, lines, hits }
+const FLIGHT = { name: 'Interstellar Flight', cd: 10, dur: 6, run(p, m, t) {
+  if (!m.set) {
+    m.set = 1;
+    const o = E.P2, there = live(o) && Math.abs(o.x - p.x) < 1500 ? o : null, dir = there ? (Math.sign(o.x - p.x) || p.face) : p.face;
+    let stars = pins.filter(q => !q.fly).slice(0, PIN_MAX).map(q => ({ x: q.x, y: q.y, pin: q }));
+    if (!stars.length) {                            // nothing pinned: one flicked up behind them first, to fly out to
+      const x = clamp((there ? o.x : p.x + dir * 400) + dir * 360, -930, 930);
+      stars = [{ x, y: 400, pin: null }];
+      burstAt(x, 400, .8); sfx.twinkle();
+    }
+    const legs = [];                                // where it goes: through them, out to a star, back through them, and so on
+    for (const st of stars) { if (there) legs.push({ to: 'foe' }); legs.push({ to: st }); }
+    if (there) legs.push({ to: 'foe', last: true });
+    flight = m.f = { o: there, legs, i: 0, from: [p.x, p.y + 150], u: 0, len: 1, trail: [], lines: [], hits: 0, lt: 0 };
+    sfx.cross(); E.zoomIn(.5); if (Z) Z.dim(.45, 1.2);
+    p.vy = 0;
+  }
+  const f = m.f, dt = t - f.lt;
+  f.lt = t;
+  p.inv = Math.max(p.inv || 0, .25); p.vx = 0;
+  if (t < .18) { p.target = POSE.kiRaise; p.rate = 30; return; }      // a breath, and gone
+  if (f.i >= f.legs.length) {                       // the flight over: down beside them
+    if (!f.down) { f.down = t; p.vy = -300; p.ground = false; }
+    p.target = POSE.kiLand; p.rate = 26; p.spin = 1;
+    if (p.ground || t > f.down + .6) { flight = null; E.endMove(p); }
+    return;
+  }
+  const leg = f.legs[f.i], o = f.o;
+  const to = leg.to === 'foe' ? (o && !o.ko ? [o.x, o.y + 170 * (o.scale || 1)] : f.from) : [leg.to.x, leg.to.y];
+  if (f.u === 0) f.len = Math.max(60, Math.hypot(to[0] - f.from[0], to[1] - f.from[1]));
+  f.u = Math.min(1, f.u + dt * FLY_V / f.len);
+  const x = lerp(f.from[0], to[0], ease(f.u)), y = lerp(f.from[1], to[1], ease(f.u));
+  p.x = clamp(x, -965, 965); p.y = Math.max(20, y - 150); p.vy = 0; p.ground = false;
+  p.face = to[0] >= f.from[0] ? 1 : -1;
+  p.target = POSE.kiFly; p.rate = 60; p.spin = 1;
+  f.trail.push([p.x, p.y + 150]); if (f.trail.length > 18) f.trail.shift();
+  if (Math.random() < .7) V.mote(p.x, p.y + 150, Math.random() < .5 ? 'pink' : 'gold');
+  if (o && !o.ko && !duel() && !o.net && !o.poise) { o.vx = 0; if (o.ground) Object.assign(o, { state: 'hurt', stun: Math.max(o.stun || 0, .35), act: null, tele: 0 }); }      // (held where they are while it goes on)
+  if (f.u < 1) return;
+  f.lines.push({ a: f.from, b: to, t: 0 });         // the line it drew stays a moment: a constellation
+  f.from = to; f.u = 0; f.i++;
+  if (leg.to === 'foe') {
+    if (o && !o.ko) {
+      const last = !!leg.last, hs = o.scale || 1;
+      E.applyHit(o, p.face, last ? { dmg: exact(o, FLY_LAST), kb: 760, lift: 640, stun: .9, stop: .2, heavy: 1, col: PINK, fixed: 1, mute: 1, nostar: 1 }
+                                 : { dmg: exact(o, FLY_DMG), kb: 0, stun: .7, stop: .05, col: GOLD, fixed: 1, mute: 1, nostar: 1 });
+      advance(o); f.hits++;
+      burstAt(o.x, o.y + 170 * hs, last ? 1.4 : .8); shake(last ? 30 : 14);
+      if (last) {
+        sfx.bf(); sfx.star(4); E.zoomIn(.4);
+        E.fx.push({ k: 2, x: o.x, y: o.y + 520 * hs, n: 'INTERSTELLAR', col: PINK, t: 0, life: 1.4 });
+        if (Z) { Z.flash(PRGB, .3, .22); Z.shock(o.x, 640, PRGB, .45, 10); }
+      } else sfx.hit(true);
+    }
+  } else {                                          // through a star: it goes out
+    const st = leg.to;
+    if (st.pin) { const k = pins.indexOf(st.pin); if (k >= 0) pins.splice(k, 1); }
+    burstAt(st.x, st.y, 1); sfx.star(Math.min(4, f.i)); V.ring(st.x, st.y, 200, PINK, .3);
+  }
+} };
+function flightTick(dt) {
+  if (!flight) return;
+  for (let i = flight.lines.length - 1; i >= 0; i--) if ((flight.lines[i].t += dt) > 1.1) flight.lines.splice(i, 1);
+}
+function drawFlight() {
+  const f = flight;
+  if (!f) return;
+  lit(() => {
+    for (const L of f.lines) {                      // what it has drawn: lines between the stars, going out
+      const a = F(L.a[0], L.a[1]), b = F(L.b[0], L.b[1]), al = Math.max(0, 1 - L.t / 1.1);
+      g.strokeStyle = `rgba(${PRGB},${.85 * al})`; g.lineWidth = 9 * a[2]; g.lineCap = 'round'; g.beginPath(); g.moveTo(a[0], a[1]); g.lineTo(b[0], b[1]); g.stroke();
+      g.strokeStyle = `rgba(255,255,255,${.8 * al})`; g.lineWidth = 3 * a[2]; g.stroke();
+    }
+    f.trail.forEach((q, i) => { const c = F(q[0], q[1]), u = (i + 1) / f.trail.length; E.glow(E.GLOW.pink, c[0], c[1], 150 * c[2] * u, .55 * u); });
+    const h = f.trail[f.trail.length - 1];
+    if (h && f.i < f.legs.length) { const c = F(h[0], h[1]); E.glow(E.GLOW.gold, c[0], c[1], 260 * c[2], 1); E.glow(E.GLOW.white, c[0], c[1], 110 * c[2], .9); }
+  });
+}
+
 /* ================= the Southern Cross's rules, every moment ================= */
 function never() {                                  // a blow thrown across the wrong order: it stops short, and says so
   const p = E.P1, o = E.P2, mx = (p.x + o.x) / 2;
@@ -257,7 +419,7 @@ function rules(dt) {
   if (stampT > 0) stampT -= dt;
   if (neverT > 0) neverT -= dt;
   if (markO && (!live(markO) || (markO !== E.P2 && !(H.foes && H.foes())))) { markO = null; mark = 0; }
-  if (!markO || !mark || duel() || crossS || o.net || p.dead) return;
+  if (!markO || !mark || duel() || crossS || flight || o.net || p.dead) return;
   const dx = o.x - p.x, d = Math.abs(dx), s = dx >= 0 ? 1 : -1;
   if (mark <= 3 && d < GAP && o.state !== 'down' && o.state !== 'up') {      // never meet: whoever is not against a wall is the one moved
     const ox = clamp(p.x + s * GAP, -960, 960);
@@ -316,11 +478,10 @@ function drawCross() {
 }
 
 /* ================= the technique ================= */
-const SOON = { name: 'Coming soon', cd: 1, dur: .01, run() {} };
-const MOVES = { strikes: SHOOT, crush: MEET, div: SOON, manji: SOON };
+const MOVES = { strikes: SHOOT, crush: MEET, div: STAMP, manji: FLIGHT };
 JU.tech.add('kirara', { name: 'Star-Crossed', jp: '星間飛行', mark: '星', who: 'Love Rendezvous', odds: 2.5, col: PINK, glow: 'pink', moves: MOVES,
   limited: ENDS, skin: KIRARA, as: ['Star-Crossed', '星'],
-  hint: '<b>1</b> Shooting Star · <b>2</b> Love Rendezvous · <b>E</b> Southern Cross · every hit puts the next star on them: the wrong order never meet, <b>IMAI</b> is drawn in' });
+  hint: '<b>1</b> Shooting Star · <b>2</b> Love Rendezvous · <b>3</b> Star Stamp: pin a star, it draws them in · <b>4</b> Interstellar Flight, through every star · <b>E</b> Southern Cross · every hit puts the next star on them: the wrong order never meet, <b>IMAI</b> is drawn in' });
 const DEF = JU.tech.TECH.kirara, on = () => JU.tech.active === DEF;
 
 /* ---------- wiring ---------- */
@@ -341,20 +502,23 @@ H.guard = (face, a, mul) => {
 H.power = (h, o) => (pow0 ? pow0(h, o) : 1) * (on() && drawn(o) ? BONUS : 1);
 H.tick = dt => {
   tick0(dt);
-  if (!on()) { if (shots.length) shots.length = 0; markO = null; mark = 0; crossS = null; return; }
+  if (!on()) { if (shots.length) shots.length = 0; markO = null; mark = 0; crossS = null; pins.length = 0; flight = null; return; }
   if (shots.length) flyShots(dt);
+  if (flight && !(E.P1.move && E.P1.move.def === FLIGHT)) flight = null;      // (cut short)
+  flightTick(dt); pinsTick(dt);
   rules(dt);
 };
 H.fx = dt => {
   fx0(dt);
   if (!on()) return;
-  drawCross(); drawShots(); drawRules();
+  drawCross(); drawPins(); drawShots(); drawFlight(); drawRules();
 };
-const clear = () => { mark = 0; markO = null; shots.length = 0; crossS = null; stampT = pushT = neverT = 0; };
+const clear = () => { mark = 0; markO = null; shots.length = 0; crossS = null; stampT = pushT = neverT = 0; pins.length = 0; flight = null; pinCool = 0; };
 H.reset = () => { reset0(); clear(); };
 H.fightStart = (cfg, wave) => { start0(cfg, wave); clear(); };
 
 JU.kirara = { SKIN: KIRARA, MOVES, esp: CROSS, ENDS, STARS,      // (esp: E, especial.js)
-  get state() { return { mark, star: mark ? STARS[mark - 1][0] : null, on: markO === E.P2, shots: shots.length, cross: crossS ? +crossS.t.toFixed(2) : null }; },
+  get state() { return { mark, star: mark ? STARS[mark - 1][0] : null, on: markO === E.P2, shots: shots.length, cross: crossS ? +crossS.t.toFixed(2) : null,
+    pins: pins.map(q => ({ x: Math.round(q.x), y: q.y, t: +q.t.toFixed(2) })), flight: flight ? { leg: flight.i, of: flight.legs.length, hits: flight.hits } : null }; },
   set(n) { setMark(E.P2, n); } };
 })();

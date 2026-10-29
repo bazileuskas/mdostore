@@ -699,8 +699,8 @@ const OTM = {
   crush: { name: 'Overtime Barrage', cd: 9, dur: 1.4, glow: 'gold', run: barrage }
 };
 
-JU.tech.add('ratio', { name: 'Ratio Man', jp: '十劃', mark: '七', who: 'Ratio Technique', odds: 0, col: GOLD, glow: 'gold', moves: MOVES,
-  early: true, skin: NANAMI, as: ['Ratio Man', '十劃'], m1, awaken, awkName: 'Overtime', awkKeep: true,
+JU.tech.add('ratio', { name: 'Ratio Man', jp: '十劃', mark: '七', who: 'Ratio Technique', odds: 4, col: GOLD, glow: 'gold', moves: MOVES,      // (out of Early Access in 0.19, at 4%: the user's number)
+  skin: NANAMI, as: ['Ratio Man', '十劃'], m1, awaken, awkName: 'Overtime', awkKeep: true,
   hint: '<b>E</b> Ratio, <b>E</b> again on the red: a Black Flash on the 5th strike and on <b>1</b>, <b>3</b> harder · <b>2</b> in the air, or after an uppercut · after <b>1</b>\'s Black Flash: Ratio, <b>3</b>, Ratio, <b>3</b>, <b>2</b>' });
 const DEF = JU.tech.TECH.ratio, on = () => JU.tech.active === DEF;
 const LAUNCHERS = new Set([UP, FIN, FIN_BF, MOVES.strikes]);      // what Ratio Kick can be thrown straight out of: the uppercut, the fifth strike, Cleaving Rush

@@ -526,7 +526,7 @@ function labels() {                                 // the hotbar: his awakening
 }
 
 
-JU.tech.add('haruta', { name: 'Miracle Dork', jp: '奇跡', mark: '奇', who: 'Miracles', odds: 5, col: PINK, glow: 'gold', moves: MOVES,      // (out of Early Access in 0.17v1: 5%, on top of the rest, so the talisman's odds come to 105)
+JU.tech.add('haruta', { name: 'Miracle Dork', jp: '奇跡', mark: '奇', who: 'Miracles', odds: 5, col: PINK, glow: 'gold', moves: MOVES,      // (out of Early Access in 0.17v1: 5%, on top of the rest, so the talisman's odds came to 105, until 0.19 brought them back to 100)
   gore: true, skin: HARUTA, as: ['Miracle Dork', '奇跡'], m1,
   hint: '<b>2</b> again: the sword comes back · without it: punches, every 3rd a miracle · <b>1</b> is Lucky Cut · <b>4</b> Backstab · <b>3</b>, then the sword back through them, then <b>1</b>: the combo' });
 const DEF = JU.tech.TECH.haruta, on = () => JU.tech.active === DEF;

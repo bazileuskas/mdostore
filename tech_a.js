@@ -80,72 +80,13 @@ const TEN = {
 
 /* ================= Transfiguration: flesh and souls reshaped by a touch ================= */
 const TEAL = '#78e6c8';
+// all four were reworked in Build 0.19, with his purple fire on the hands: soul.js gives them their bodies (and these very objects, which
+// combo.js and the Soul Shaper the boss hold on to)
 const TRANS = {
-  strikes: { name: 'Blade Arm', cd: 3, dur: .55, run(p, m, t) {
-    p.rate = 40; p.vx = t > .1 && t < .22 ? p.face * 300 : 0; p.target = t < .1 ? POSE.hookWind : t < .36 ? POSE.hook : POSE.idle;
-    if (t > .1 && !m.s) {
-      m.s = 1; sfx.whoosh();
-      V.custom(.24, u => {                      // the forearm stretched into a long blade, swept downward
-        const w = E.hand(p, true), a = F(w[0], w[1]), L = 250 * a[2];
-        g.save(); g.translate(a[0], a[1]); g.scale(p.face, 1); g.rotate(u * 1.9 - .9);
-        g.beginPath(); g.moveTo(0, -14); g.quadraticCurveTo(L * .6, -30, L, 0); g.quadraticCurveTo(L * .5, 10, 0, 14); g.closePath();
-        g.fillStyle = '#b9c3cc'; g.fill(); g.lineWidth = 3; g.strokeStyle = LINE; g.stroke(); g.restore();
-      });
-      V.slash(p.x + p.face * 150, p.y + 170, p.face > 0 ? -.5 : Math.PI + .5, 340, TEAL, 12);
-    }
-    if (t > .14 && t < .26 && !m.done && E.tryHit(p, { reach: 290, dmg: 10, kb: 440, stun: p === E.P1 ? .768 : .5, stop: .09, heavy: 1, col: TEAL })) {
-      m.done = 1;
-      if (p === E.P1 && JU.combat2) JU.combat2.stun(E.P2);       // in his hands it leaves what it cuts unable to do anything for 0.768 of a second
-    }
-  } },
-  crush: { name: 'Body Repel', cd: 5, dur: .7, run(p, m, t) {
-    p.vx = 0; p.rate = 34; p.target = t < .25 ? POSE.divWind : t < .5 ? POSE.div : POSE.idle;
-    if (t > .25 && !m.s) {
-      m.s = 1; sfx.blast();
-      const f = p.face, x0 = p.x + f * 80, y = p.y + 170;
-      V.custom(.26, u => {                      // a twisted spike of flesh fired like a drill
-        const x = x0 + f * 820 * u, c = F(x, y), k = c[2];
-        g.save(); g.translate(c[0], c[1]); g.scale(f * k, k); g.beginPath(); g.moveTo(70, 0);
-        for (let i = 0; i < 7; i++) g.lineTo(40 - i * 22, (i % 2 ? -1 : 1) * (10 + i * 5));
-        g.lineTo(-110, 0);
-        for (let i = 6; i >= 0; i--) g.lineTo(32 - i * 22, (i % 2 ? 1 : -1) * (10 + i * 5));
-        g.closePath(); g.fillStyle = '#8e7aa8'; g.fill(); g.lineWidth = 3; g.strokeStyle = LINE; g.stroke(); g.restore();
-        V.puff('teal', x - f * 60, y + rnd(-20, 20), -f * 200, 0, 40, .2);
-      });
-      E.after(.1, () => E.tryHit(p, { reach: 840, dmg: 13, kb: 580, lift: 300, stop: .1, heavy: 1, col: TEAL }));
-    }
-  } },
-  div: { name: 'Idle Transfiguration', cd: 8, dur: .8, run(p, m, t) {
-    const gap = (E.P2.x - p.x) * p.face;
-    p.rate = 40; p.vx = t > .06 && t < .26 && gap > 150 && !m.done ? p.face * 1100 : 0; p.target = t < .12 ? POSE.dash : t < .5 ? POSE.jab : POSE.idle;
-    if (t > .08 && t < .3 && !m.done && E.tryHit(p, { reach: 200, dmg: 6, kb: 0, stun: 1.9, stop: .14, col: TEAL })) {
-      m.done = 1; sfx.charge(); shout(p, '無為転変', TEAL);
-      const o = E.P2;
-      dot(o, p.face, 5, .28, { dmg: 5, kb: 0, stun: 1, stop: .03, col: TEAL }, () => { V.ring(o.x, o.y + 150, 120, TEAL, .3); for (let i = 0; i < 4; i++) V.mote(o.x, o.y + 150, 'teal'); });
-      V.custom(1.5, u => {                      // its outline will not hold still
-        const c = F(o.x, o.y + 150 * (o.scale || 1)), k = c[2];
-        g.beginPath();
-        for (let i = 0; i <= 14; i++) { const a = i / 14 * 6.283, r = (90 + 26 * Math.sin(a * 5 + E.T * 22) + 16 * Math.sin(a * 3 - E.T * 15)) * k; i ? g.lineTo(c[0] + Math.cos(a) * r, c[1] + Math.sin(a) * r * 1.5) : g.moveTo(c[0] + r, c[1]); }
-        g.strokeStyle = `rgba(120,230,200,${1 - u})`; g.lineWidth = 4; g.stroke();
-      });
-    }
-  } },
-  manji: { name: 'Soul Isomer', cd: 10, dur: 1.1, run(p, m, t) {
-    p.vx = 0; p.rate = 30; p.target = t < .5 ? POSE.crushWind : t < .8 ? POSE.crush : POSE.idle;
-    if (m.s) return;
-    m.s = 1; sfx.charge();
-    const o = near(p, 760), tx = o ? o.x : p.x + p.face * 340;
-    V.custom(.75, u => {                        // a fused mass of souls swells overhead, then drops
-      const grow = Math.min(1, u / .5), y = u < .6 ? 470 : 470 - (u - .6) / .4 * 390, c = F(tx, y), r = 110 * grow * c[2];
-      g.fillStyle = '#6d5a86'; g.strokeStyle = LINE; g.lineWidth = 3;
-      for (const b of [[0, 0, 1], [-.7, .3, .62], [.7, .25, .66], [-.2, -.6, .6], [.4, -.5, .5]]) { g.beginPath(); g.arc(c[0] + b[0] * r, c[1] + b[1] * r, r * b[2], 0, 6.283); g.fill(); g.stroke(); }
-      g.fillStyle = LINE; for (const e of [[-.3, -.1], [.25, .05], [-.6, .35], [.6, .3]]) g.fillRect(c[0] + e[0] * r - 4, c[1] + e[1] * r, 8 * grow, 12 * grow);
-    });
-    E.after(.72, () => {
-      V.crack(tx, 320); V.rocks(tx, 0, 14); V.ring(tx, 80, 330, TEAL, .4); shake(24); sfx.blast();
-      if (near(p, 820)) E.tryHit(p, { reach: 820, dmg: 24, kb: 300, lift: 520, stop: .16, heavy: 1, col: TEAL });
-    });
-  } }
+  strikes: { name: 'Blade Arm', cd: 3.5, dur: .62, run() {} },
+  crush: { name: 'Body Repel', cd: 7, dur: 1.25, run() {} },
+  div: { name: 'Idle Transfiguration', cd: 9, dur: .85, run() {} },
+  manji: { name: 'Polymorphic Soul Isomer', cd: 13, dur: 1.75, run() {} }
 };
 
 /* ================= Disaster Plants: slow, heavy, and the ground itself joins in ================= */
@@ -168,9 +109,9 @@ const PLANTS = {
   } }
 };
 
-JU.tech.add('ten', { name: 'Ten Shadows', jp: '十種影法術', mark: '影', who: 'Shadow Summoner', odds: 31, col: INDIGO, glow: 'indigo', moves: TEN });      // (34 until 0.12v1: Cursed Cannon's 3% came out of it)
-JU.tech.add('trans', { name: 'Transfiguration', jp: '無為転変', mark: '魂', who: 'Soul Shaper', odds: 20, col: TEAL, glow: 'teal', moves: TRANS });
-JU.tech.add('plants', { name: 'Disaster Plants', jp: '呪いの花', mark: '花', who: 'Disaster Bloom', odds: 20, col: GREEN, glow: 'green', moves: PLANTS,
+JU.tech.add('ten', { name: 'Ten Shadows', jp: '十種影法術', mark: '影', who: 'Shadow Summoner', odds: 19, col: INDIGO, glow: 'indigo', moves: TEN });      // (34 until 0.12v1: Cursed Cannon's 3% came out of it; 31 until 0.19, see tech.js roll())
+JU.tech.add('trans', { name: 'Transfiguration', jp: '無為転変', mark: '魂', who: 'Soul Shaper', odds: 14, col: TEAL, glow: 'teal', moves: TRANS });
+JU.tech.add('plants', { name: 'Disaster Plants', jp: '呪いの花', mark: '花', who: 'Disaster Bloom', odds: 14, col: GREEN, glow: 'green', moves: PLANTS,
   // one basic attack a second, but each lands twice as hard
   m1() { if (E.T - lastM1 < 1) return false; lastM1 = E.T; return true; },
   aim(p, h) { return p.move && p.move.def.m1 ? Object.assign({}, h, { dmg: h.dmg * 2, kb: h.kb * 1.4, heavy: 1, col: GREEN }) : h; }

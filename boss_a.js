@@ -6,7 +6,8 @@ const B = JU.boss, T = JU.tech.TECH, TRANS = T.trans.moves, SHRINE = JU.sukuna.S
 
 // (Hanami's Disaster Plants are in plants.js, with the rework of the technique itself)
 
-// Transfiguration. Soul Isomer falls where he was standing when Mahito let it go, so the mark on the floor is the place to leave
+// Transfiguration (reworked in Build 0.19: soul.js turns these down for him, BOSS, and recolours the kit). The Polymorphic Soul Isomer's blow
+// lands where he was standing when Mahito let it go, so the mark on the floor is the place to leave
 const under = (o, p) => { const d = (p.x - o.x) * o.face; return d > -30 && d < 760 ? p.x : o.x + o.face * 340; };
 B.kit('mahito', { tech: 'Transfiguration', col: '#78e6c8', glow: 'teal', scale: .8, moves: [
   { of: TRANS.strikes, cd: 4, max: 330, wind: .38, pre: 'hookWind' },

@@ -5,7 +5,7 @@
      The Vessel (no technique)      CANCEL: a move he has just started, before it has hurt anybody, called off, and its wait with it. A quiet
                                     circle round him says so, the way it is in Jujutsu Shenanigans
      Ten Shadows                    SHADOW SWIM: down into his shadow, up out of theirs behind them, and the Divine Dogs out of it first. 22
-     Transfiguration                SOUL TOUCH: a hand on them, and their soul pulled half out of them and stitched back. 26, and a long stun
+     Transfiguration                SOUL TOUCH: a hand on them, and their soul pulled half out of them, twisted, and back. 36 (soul.js, 0.19)
      Disaster Plants                WOOD BALL: roots up out of the floor and closed round them, squeezing, and then it bursts into flowers. 36
      Limitless                      BLINK: gone, and behind them, and Lapse: Blue in their middle pulling them in. 16
      Projection Sorcery             24 FPS: six passes through them at twenty-four frames a second, the film running behind them. 35
@@ -133,44 +133,7 @@ add('ten', { name: 'Shadow Swim', jp: '影泳ぎ', col: '#8f9bff', cd: 14, dur: 
   if (s > .75) { p.alpha = 1; E.endMove(p); }
 } });
 
-/* ---------- Transfiguration: SOUL TOUCH ---------- */
-const SOUL = E.flat('#2f8f78', '#9ff3dc');
-function grab(p, o) {
-  sfx.charge(); E.stop(.12); shake(10);
-  if (Z) Z.dim(.55, .7);
-  hold(o, 1.1);
-  V.custom(.8, u => {                               // its soul, half out of it toward his hand, and back: the shape it really is
-    const pull = Math.sin(Math.min(1, u / .7) * Math.PI), f = p.x >= o.x ? 1 : -1, gh = E.over(o, SOUL);
-    gh.x = o.x + f * 120 * pull; gh.y = o.y + 18 * pull;
-    E.drawFighter(gh, .62 * (1 - u * .4));
-    const c = F(o.x + f * 60 * pull, mid(o)), k = c[2];
-    g.save(); g.strokeStyle = 'rgba(14,40,34,.85)'; g.lineWidth = 3 * k; g.lineCap = 'round';      // the stitches where it is torn
-    for (let i = -2; i <= 2; i++) { g.beginPath(); g.moveTo(c[0] - 16 * k, c[1] + (i * 24 - 8) * k); g.lineTo(c[0] + 16 * k, c[1] + (i * 24 + 8) * k); g.stroke(); }
-    g.restore();
-    lit(() => E.glow(E.GLOW.teal, c[0], c[1], 260 * k * pull, .5));
-  });
-}
-add('trans', { name: 'Soul Touch', jp: '魂に触れる', col: '#78e6c8', cd: 14, dur: 1.35, run(p, m, t) {
-  const o = E.P2, f = p.face;
-  if (m.got === undefined) {
-    if (t < .1) { p.target = POSE.divWind; p.vx = 0; return; }
-    p.target = POSE.jab; p.vx = t < .3 ? f * 1500 : 0;
-    const gap = (o.x - p.x) * f;
-    if (gap > -30 && gap < 190 && up(o) && o.state !== 'down' && o.state !== 'up') { m.got = t; p.vx = 0; grab(p, o); }
-    else if (t > .45) E.endMove(p);
-    return;
-  }
-  const s = t - m.got;
-  p.vx = 0; p.target = s < .55 ? POSE.jab : POSE.idle;
-  if (s > .58 && !m.back) {
-    m.back = 1;
-    hit(p, o, 26, { kb: 420, stun: 1.4, stop: .2, heavy: 1, col: '#78e6c8' });
-    sfx.splat(); sfx.charge(); shake(22); V.ring(o.x, mid(o), 300, '#78e6c8', .35); V.sparks(o.x, mid(o), 'blue', 12);
-    if (Z) Z.flash('120,230,200', .22, .25);
-    label(o.x, o.y + 430 * hs(o), 'SOUL TOUCHED', '#9ff3dc');
-  }
-  if (s > .9) E.endMove(p);
-} });
+/* ---------- Transfiguration: SOUL TOUCH (reworked with the rest of the Soul Shaper in Build 0.19: soul.js, added below) ---------- */
 
 /* ---------- Disaster Plants: WOOD BALL ---------- */
 function quad(x0, y0, cx, cy, x1, y1, u) {         // a curve drawn as far as u along it
@@ -798,6 +761,7 @@ if (JU.haruta && JU.haruta.esp) add('haruta', JU.haruta.esp);
 if (JU.reaper && JU.reaper.esp) add('reaper', JU.reaper.esp);
 if (JU.speaker && JU.speaker.esp) add('speaker', JU.speaker.esp);
 if (JU.kirara && JU.kirara.esp) add('kirara', JU.kirara.esp);
+if (JU.soul && JU.soul.esp) add('trans', JU.soul.esp);
 const RATIO = { name: 'Ratio', show: true };         // (Ratio Man's E is the Ratio, ratio.js: shown here, not done here)
 
 /* ================= E ================= */

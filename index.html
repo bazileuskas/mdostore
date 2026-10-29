@@ -1199,7 +1199,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
   </div>
 
   <div class="side" aria-hidden="true" lang="ja">領域展開</div>
-  <div class="hud tl"><b lang="ja">呪</b>Fan project · Build 0.18 · Star-Crossed</div>
+  <div class="hud tl"><b lang="ja">呪</b>Fan project · Build 0.19 · Soul Shaper</div>
   <div class="hud bl">↑ ↓ Select &nbsp;·&nbsp; Enter Confirm</div>
   <div class="hud br">Title screen</div>
   <div class="acct" id="acct">
@@ -1387,8 +1387,20 @@ const sfx = (() => {
     'home-gojo-purple2-say': [MI + 'imaginary-purple-short-version-gojo.mp3', 1.05, 2.95],            // "Imaginary purple Short version (Gojo)"
     'home-gojo-de': [MI + 'domain-expansion-gojo.mp3', 1.5, 2.75],                                    // "domain expansion GOJO": "Domain Expansion..."
     'home-gojo-uv': [MI + 'domain-expansion-gojo.mp3', 6.3, 9.1],                                     // "...Unlimited Void"
-    // Build 0.18: the Cursed Speaker's EXPLODE (inumaki.js), unsealed. The only clip of the line there is titled in Portuguese
-    'home-inu-explode': [MI + 'imploda-inumaki.mp3', 0, 1.75] };                                      // "IMPLODA - Inumaki"
+    // Build 0.18: the Cursed Speaker's EXPLODE (inumaki.js), unsealed. 0.19: the Japanese line (爆ぜろ, "hazero") in place of the dub
+    // ("IMPLODA - Inumaki", Brazilian, which the user caught); myinstants titles it "Inumaki fire", the word half a second in, the blast after
+    'home-inu-explode': [MI + 'inumaki-fire.mp3', 0, 1.45],                                           // "Inumaki fire"
+    // Build 0.19: the Love Reaper's Crushing Love (reaper.js): her hand putting them into the floor, and what it does to them in her fist
+    'home-love-slam': [MI + 'dragon-ball-z-heavy-punch.mp3', .05, 1.2],                               // "Dragon Ball Z Heavy Punch"
+    'home-love-crack': [MI + 'loud-bone-crack.mp3', 0, .6],                                           // "Loud Bone Crack"
+    'home-love-crunch': [MI + 'bone-crunching.mp3', 3.5, 4.75],                                       // "Bone crunching"
+    // and the Soul Shaper's rework (soul.js): his voice (the Japanese, 無為転変; and a laugh), and flesh being changed
+    'home-mahito-mui': [MI + 'mahito-idle-transfiguration.mp3', 4.82, 6.15],                          // "Mahito Idle transfiguration"
+    'home-mahito-laugh': [MI + 'mahito_2Kdk766.mp3', 2, 3.6],                                         // "Mahito"
+    'home-mahito-morph': [MI + 'horror-flesh-growth-shift.mp3', .6, 2.4],                             // "Horror Flesh Growth/Shift"
+    'home-mahito-bones': [MI + 'horror-bones-and-flesh-movement.mp3', .6, 2],                         // "Horror Bones and Flesh Movement"
+    'home-mahito-flesh': [MI + 'horror-flesh-hit.mp3', 0, .62],                                       // "Horror Flesh Hit"
+    'home-mahito-gore': [MI + 'gore-gush.mp3', .08, 1.19] };                                          // "GORE GUSH"
   const clips = {};
   const load = name => {
     if (clips[name]) return clips[name];
@@ -1755,6 +1767,13 @@ const sfx = (() => {
     twinkle() {
       [2637, 3136, 3951, 4699].forEach((f, i) => voice({ f: [f, f * 1.01], at: i * .035, dur: .25, vol: .045, type: 'triangle', wet: .7 }));
       voice({ type: 'noise', dur: .18, vol: .07, attack: .02, filt: ['bandpass', 5000, 9000], q: 2 });
+    },
+    // the Soul Shaper's cursed energy catching on his hands (soul.js, Build 0.19): a low rush of it, a growl under it, and crackling
+    curse() {
+      voice({ type: 'noise', dur: .5, vol: .26, attack: .04, filt: ['lowpass', 700, 3400], wet: .5 });
+      voice({ f: [62, 128], dur: .55, vol: .3, type: 'triangle', attack: .05, wet: .4 });
+      voice({ f: [124, 250], dur: .4, vol: .07, type: 'sawtooth', attack: .05, filt: ['lowpass', 900], wet: .4 });
+      for (let i = 0; i < 6; i++) voice({ type: 'noise', at: .04 + Math.random() * .34, dur: .015 + Math.random() * .02, vol: .09, filt: ['bandpass', 2500 + Math.random() * 3500], q: 5 });
     },
     cross() {
       [523.3, 659.3, 784, 1046.5, 1318.5].forEach((f, i) => voice({ f: [f, f], at: i * .07, dur: 1.6 - i * .1, vol: .06, attack: .01, wet: .9 }));
@@ -2356,7 +2375,7 @@ window.JU = { sfx, flash, bolts: blackFlash, reduceMotion, startGame, exitGame, 
 // Load every game script fresh on each page load. The dev server sends no cache headers, so without this a reload
 // could run a mix of old and new files (new menu, old moves) while the game is being worked on.
 ['account.js', 'announce.js', 'game.js', 'fx2.js', 'chars.js', 'street.js', 'walk.js', 'foes.js', 'cuts.js', 'sukuna.js', 'school.js', 'story.js', 'story2.js', 'tech.js', 'tech_a.js',
-  'tech_b.js', 'sets.js', 'story3.js', 'cast2.js', 'script.js', 'naoya.js', 'ch45.js', 'ch67.js', 'clan.js', 'clan_a.js', 'clan_b.js', 'boss.js', 'bossfx.js', 'boss_a.js', 'boss_b.js', 'boss_c.js', 'training.js', 'choso.js', 'domain.js', 'domain2.js', 'mahito.js', 'combo.js', 'combat.js', 'cast3.js', 'ch810.js', 'ch1112.js', 'cast4.js', 'ch1316.js', 'cast5.js', 'ch1721.js', 'combat2.js', 'judge.js', 'awaken.js', 'alimit.js', 'ats.js', 'switcher.js', 'tools.js', 'smark.js', 'cast6.js', 'ch2230.js', 'plants.js', 'clash.js', 'block.js', 'cannon.js', 'tced.js', 'shibuya.js', 'kyoto.js', 'evasive.js', 'kokusen.js', 'mp.js', 'pvp.js', 'vengeful.js', 'manga.js', 'haruta.js', 'ratio.js', 'reaper.js', 'inumaki.js', 'kirara.js', 'especial.js', 'yen.js', 'subtech.js', 'metro.js', 'jjh.js', 'shinjuku.js', 'notes.js', 'shop.js', 'ps.js', 'raid.js', 'touch.js'].forEach(src => {
+  'tech_b.js', 'sets.js', 'story3.js', 'cast2.js', 'script.js', 'naoya.js', 'ch45.js', 'ch67.js', 'clan.js', 'clan_a.js', 'clan_b.js', 'boss.js', 'bossfx.js', 'boss_a.js', 'boss_b.js', 'boss_c.js', 'training.js', 'choso.js', 'domain.js', 'domain2.js', 'mahito.js', 'combo.js', 'combat.js', 'cast3.js', 'ch810.js', 'ch1112.js', 'cast4.js', 'ch1316.js', 'cast5.js', 'ch1721.js', 'combat2.js', 'judge.js', 'awaken.js', 'alimit.js', 'ats.js', 'switcher.js', 'tools.js', 'smark.js', 'cast6.js', 'ch2230.js', 'plants.js', 'clash.js', 'block.js', 'cannon.js', 'tced.js', 'shibuya.js', 'kyoto.js', 'evasive.js', 'kokusen.js', 'mp.js', 'pvp.js', 'vengeful.js', 'manga.js', 'haruta.js', 'ratio.js', 'reaper.js', 'inumaki.js', 'kirara.js', 'soul.js', 'especial.js', 'yen.js', 'subtech.js', 'metro.js', 'jjh.js', 'shinjuku.js', 'notes.js', 'shop.js', 'ps.js', 'raid.js', 'touch.js'].forEach(src => {
   const s = document.createElement('script');
   s.src = src + '?v=' + Date.now(); s.async = false;      // async = false keeps them running in this order
   document.body.appendChild(s);

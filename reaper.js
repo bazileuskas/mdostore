@@ -9,7 +9,11 @@
      hand comes down; impact frames (black edged in red, then white, then red); they hang in the air four seconds with black lightning
      tearing out of them while the Black Flash rings out; one more white frame; and a kick, with a red shockwave and white rings spinning
      off it, that sends them the length of the arena. That is when they die.
-   3 and 4 are still to come.
+   3 CRUSHING LOVE (Build 0.19; the user left it to me, "just add good sfx"): her arm, out of her and all the way across to them, and her
+     hand shut round them. Lifted and put into the floor behind him (25), up and over and into the floor in front of him (25), held up in her
+     fist and squeezed till things give (5 x4, a bone going with each), and thrown the length of the arena (30): 100 in all. Nothing there,
+     and her hand shuts on the air. The hits are clips (myinstants, home-love-*), over built ones
+   4 is still to come.
    Rika is drawn after the user's picture of her (Build 0.17): a ridged shell of a head with long pale tendrils off the back of it, a mouth
    that is all teeth where a face would be, a starved ribcage, long thin arms and longer fingers, and no legs: from the waist down she is a
    black tail. Her scream is his name (myinstants' "YUTA", sfx.rika in index.html). The story's Rika, in chapter 15, is drawn the same way */
@@ -17,10 +21,10 @@
 'use strict';
 
 const E = JU.eng, g = E.g, F = E.F, P = E.P, cam = E.cam, H = E.hooks, POSE = E.POSE, LINE = E.LINE, TOR = E.TOR, ZP = E.ZP, V = JU.vfx, sfx = JU.sfx, M = E.MOVES, Z = JU.bossfx, Fi = JU.fights, K = JU.cast4;
-const { rnd, clamp, lerp } = E, TAU = Math.PI * 2, { shout } = JU.tech.tk;
+const { rnd, clamp, lerp, ease } = E, TAU = Math.PI * 2, { shout } = JU.tech.tk;
 const shake = v => { cam.shake = Math.max(cam.shake, v); };
 const play = (name, vol, alt) => { if (!sfx.file(name, vol) && alt) alt(); };      // a clip (myinstants' online, sounds/home-* at home), or a built one
-sfx.preload(['home-rika-yuta', 'home-yuta-tp', 'home-yuta-cut', 'home-nanami-bf']);
+sfx.preload(['home-rika-yuta', 'home-yuta-tp', 'home-yuta-cut', 'home-nanami-bf', 'home-love-slam', 'home-love-crack', 'home-love-crunch']);
 const lit = fn => { g.globalCompositeOperation = 'lighter'; fn(); g.globalCompositeOperation = 'source-over'; };
 const exact = (o, n) => n / (o.dr || 1);            // a hit worth the stated amount, whatever the target is made of
 const duel = () => !!(Fi.fight.cfg && Fi.fight.cfg.pvp);
@@ -115,7 +119,7 @@ function drawRika(wx, wy, wz, face, s, a, q) {
   for (let i = 0; i < 7; i++) { const x = -48 + i * 15; g.beginPath(); g.moveTo(-8 + (x + 8) * .2, -118); g.quadraticCurveTo(x * 1.05, -56, x, 20 - Math.abs(x - 0) * .1); g.stroke(); }
   g.strokeStyle = LINE; g.lineWidth = 2.5; g.beginPath(); g.moveTo(-58, 20); g.quadraticCurveTo(-4, 34, 50, 18); g.stroke();
   g.restore();
-  arm(66, -416, q, false);
+  if (!q.noArm) arm(66, -416, q, false);            // (Crushing Love draws that one itself, all the way out to them)
   g.restore();
 }
 function arm(sx, sy, q, back) {                     // from the shoulder (sx, sy): thin, and long, reaching as far as q.arm says, raised by q.raise
@@ -166,6 +170,7 @@ function rikaPose(dt) {
     q = t < .32 ? { arm: lerp(.2, .55, t / .32), raise: .25, mouth: Math.min(1, t * 4) } : t < .5 ? { arm: 1.2, raise: .1, mouth: 1 } : { arm: .9, raise: 0, mouth: .7 };
   } else if (A && A.kind === 'slam') { want = 1; q = { arm: .6, raise: A.t < .14 ? .9 : .3, mouth: .9 }; }
   else if (A && A.kind === 'beam') { want = 1; q = { arm: .35 + .25 * Math.min(1, A.t), raise: .55, mouth: Math.min(1, A.t * 1.5) }; }
+  else if (A && A.kind === 'grab') { want = 1; q = { arm: .3, raise: .35, mouth: .55 + .45 * Math.abs(Math.sin(A.t * 5)), noArm: true }; }
   rk.a += (want - rk.a) * (1 - Math.exp(-dt * (want > rk.a ? 12 : 3)));
   if (rk.flare > 0) rk.flare -= dt;
   return q;
@@ -323,6 +328,129 @@ const BEAM = { name: 'Pure Love', jp: '純愛', col: LILAC, cd: LOVE_CD, dur: 1.
   }
 } };
 
+/* ================= 3 (Build 0.19): CRUSHING LOVE. Her arm, out to them, and her hand shut round them ================= */
+const CR_REACH = 760, CR_SLAM = 25, CR_SQ = 5, CR_SQN = 4, CR_TOSS = 30, CR_CD = 16;
+let crush = null;                                   // what her hand is doing: { o, hx, hy, open, got, k } (hx, hy: where it is, in the world)
+function shoulder(p) {                              // her front shoulder, on the screen (drawRika's, at the size and place she is drawn behind him)
+  const bob = Math.sin(E.T * 1.6) * 14, c = P(p.x - p.face * 125, p.y + 10 + bob, ZP + 160), k = c[2] * 1.08;
+  return [c[0] + p.face * 66 * k, c[1] - 416 * k, k];
+}
+function longArm(p, hx, hy, shut) {                 // the arm, out of her shoulder and bent up at the elbow, to her hand at (hx, hy)
+  const S = shoulder(p), H2 = F(hx, hy), k = S[2], dx = H2[0] - S[0], dy = H2[1] - S[1], L = Math.hypot(dx, dy) || 1;
+  let nx = -dy / L, ny = dx / L;
+  if (ny > 0) { nx = -nx; ny = -ny; }               // (the elbow always up)
+  const bend = Math.min(.22, 120 / L + .08), ex = (S[0] + H2[0]) / 2 + nx * L * bend, ey = (S[1] + H2[1]) / 2 + ny * L * bend;
+  g.save(); g.lineCap = 'round'; g.lineJoin = 'round';
+  g.globalAlpha = Math.min(1, rk.a * 1.1);
+  g.beginPath(); g.moveTo(S[0], S[1]); g.lineTo(ex, ey); g.strokeStyle = LINE; g.lineWidth = 28 * k; g.stroke(); g.strokeStyle = BONE; g.lineWidth = 20 * k; g.stroke();
+  g.beginPath(); g.moveTo(ex, ey); g.lineTo(H2[0], H2[1]); g.strokeStyle = LINE; g.lineWidth = 24 * k; g.stroke(); g.strokeStyle = BONE; g.lineWidth = 16 * k; g.stroke();
+  g.strokeStyle = SHADE; g.lineWidth = 4 * k; g.beginPath(); g.moveTo(lerp(S[0], ex, .2), lerp(S[1], ey, .2) + 5 * k); g.lineTo(lerp(S[0], ex, .85), lerp(S[1], ey, .85) + 5 * k); g.stroke();      // a ridge of bone along it
+  g.fillStyle = BONE; g.beginPath(); g.arc(ex, ey, 14 * k, 0, TAU); g.fill(); g.lineWidth = 3 * k; g.strokeStyle = LINE; g.stroke();
+  const ang = Math.atan2(H2[1] - ey, H2[0] - ex);
+  if (!shut) { g.translate(H2[0], H2[1]); g.scale(k * 1.5, k * 1.5); claw(0, 0, ang, BONE); }
+  g.restore();
+  return { x: H2[0], y: H2[1], k, ang };
+}
+function fist(c, ang, k, sq) {                      // her hand shut round whoever is in it: the palm behind, four long fingers over the front, tighter as sq goes up
+  g.save(); g.translate(c[0], c[1]); g.rotate(ang); g.scale(k * 1.5, k * 1.5); g.lineCap = 'round'; g.lineJoin = 'round';
+  g.fillStyle = BONE; g.beginPath(); g.ellipse(-30, 0, 34, 50, 0, 0, TAU); g.fill(); g.lineWidth = 4; g.strokeStyle = LINE; g.stroke();
+  for (let i = 0; i < 4; i++) {
+    const y0 = -42 + i * 26, r = 52 - sq * 10;
+    g.beginPath(); g.moveTo(-20, y0); g.quadraticCurveTo(r + 30, y0 - 18, r - 6 - sq * 8, y0 + 22);
+    g.strokeStyle = LINE; g.lineWidth = 15; g.stroke(); g.strokeStyle = i % 2 ? BONE : '#e2dde8'; g.lineWidth = 10; g.stroke();
+    const t = [r - 6 - sq * 8, y0 + 22];
+    g.fillStyle = '#2a1830'; g.beginPath(); g.moveTo(t[0] - 4, t[1] - 3); g.lineTo(t[0] - 16, t[1] + 9); g.lineTo(t[0] + 3, t[1] + 4); g.closePath(); g.fill();      // the nail, hooked into them
+  }
+  g.beginPath(); g.moveTo(-40, 40); g.quadraticCurveTo(-8, 62, 18, 40); g.strokeStyle = LINE; g.lineWidth = 15; g.stroke(); g.strokeStyle = BONE; g.lineWidth = 10; g.stroke();      // the thumb
+  g.restore();
+}
+function floorHit(o, x) {                           // put into the floor: the clip, a built thud under it, the floor going
+  play('home-love-slam', 1, () => sfx.slam(1.6)); sfx.slam(1.2); play('home-love-crack', .7);
+  shake(34); E.zoomIn(.25); V.crack(x, 380); V.rocks(x, 0, 16); E.addDust(x); E.addRing(x, LRGB, 460); V.ring(x, 30, 360, LILAC, .35);
+  if (Z) { Z.boom(x, 30, 130, LRGB, { n: 18, smoke: '30,20,40', hot: '240,230,255' }); Z.shock(x, 520, LRGB, .45, 10); }
+  if (JU.gore !== false) V.sparks(x, 80, 'red', 10);
+}
+const CRUSH = { name: 'Crushing Love', cd: CR_CD, dur: 3.2, glow: 'purple', run(p, m, t) {
+  const f = p.face;
+  p.vx = 0; p.rate = 40;
+  if (!m.s) {
+    m.s = 1; rk.act = { kind: 'grab', t: 0 }; sfx.rika(0); shout(p, '里香', LILAC);
+    const o = E.P2, hs = o.scale || 1, gap = (o.x - p.x) * f;
+    m.o = can(o) && gap > -40 && gap < CR_REACH ? o : null;
+    m.tx = m.o ? o.x : p.x + f * CR_REACH; m.ty = m.o ? o.y + 170 * hs : 200;
+    crush = { hx: p.x, hy: p.y + 420, shut: false, sq: 0, o: null };
+  }
+  const C = crush, o = m.o;
+  if (!C) { E.endMove(p); return; }
+  if (t < .2) { p.target = POSE.lrWindB; C.hx = p.x - f * 40; C.hy = p.y + 440; return; }      // she rears up
+  if (m.got === undefined) {
+    const u = Math.min(1, (t - .2) / .2);           // and her hand goes out
+    if (!m.ws) { m.ws = 1; sfx.whoosh(); sfx.cut(.6); }
+    p.target = POSE.lrCutB;
+    const tx = o && can(o) ? o.x : m.tx, ty = o && can(o) ? o.y + 170 * (o.scale || 1) : m.ty;
+    C.hx = lerp(p.x - f * 40, tx, u * u); C.hy = lerp(p.y + 440, ty, u * u);
+    if (u < 1) return;
+    if (o && can(o) && Math.abs(o.x - tx) < 120) {   // got them
+      m.got = t; C.shut = true; C.o = o;
+      play('home-love-crack', .9, () => sfx.hit(true)); sfx.rika(0); shake(18);
+      if (!duel() && !o.net) Object.assign(o, { stun: Math.max(o.stun || 0, 1.2), act: null, tele: 0 });      // (held: no number for it, it has done nothing yet)
+      E.stop(.06);
+      m.free = duel() || o.net || o.poise;          // (somebody who cannot be carried about is crushed where they stand)
+      m.x0 = o.x;
+    } else { m.got = -1; m.miss = t; C.shut = true; sfx.whoosh(); }      // her hand shuts on nothing
+    return;
+  }
+  if (m.got < 0) {                                  // nothing there: the hand comes back
+    const u = Math.min(1, (t - m.miss) / .3);
+    C.hx = lerp(C.hx, p.x - f * 40, u); C.hy = lerp(C.hy, p.y + 440, u); p.target = POSE.idle;
+    if (u >= 1) { crush = null; rk.act = null; E.endMove(p); }
+    return;
+  }
+  const st = t - m.got, hs = o.scale || 1;
+  const B = clamp(p.x - f * 250, -940, 940), Fr = clamp(p.x + f * 320, -940, 940);      // where the floor gets it: behind him, then in front
+  let x = m.x0, y = 170;                            // where she has them (their feet), when she is carrying them
+  if (st < .3) { x = m.x0; y = lerp(o.y, 380, ease(st / .3)); }      // up
+  else if (st < .46) { const u = (st - .3) / .16; x = lerp(m.x0, B, ease(u)); y = lerp(380, 0, u * u) + Math.sin(u * Math.PI) * 200; }      // over his head, and down behind him
+  else if (st < .66) { x = B; y = lerp(0, 420, ease((st - .46) / .2)); }      // up again
+  else if (st < .8) { const u = (st - .66) / .14; x = lerp(B, Fr, ease(u)); y = lerp(420, 0, u * u) + Math.sin(u * Math.PI) * 220; }      // over, and down in front
+  else if (st < 1.02) { x = Fr; y = lerp(0, 330, ease((st - .8) / .22)); }      // and held up in her fist
+  else { x = Fr + (st < 1.65 ? rnd(-6, 6) : 0); y = 330; }
+  if (!m.slam1 && st >= .46) { m.slam1 = 1; hitIt(p, o, CR_SLAM, { kb: 0, stun: 1.2, stop: .14 }); floorHit(o, m.free ? o.x : B); }
+  if (!m.slam2 && st >= .8) { m.slam2 = 1; hitIt(p, o, CR_SLAM, { kb: 0, stun: 1.2, stop: .14 }); floorHit(o, m.free ? o.x : Fr); }
+  for (let i = 0; i < CR_SQN; i++) {               // squeezed: something gives each time
+    const at = 1.08 + i * .15;
+    if (st < at || m['q' + i]) continue;
+    m['q' + i] = 1; C.sq = (i + 1) / CR_SQN;
+    if (!i) { sfx.rika(1); play('home-love-crunch', 1); }
+    play('home-love-crack', .8, () => sfx.hit(true)); shake(12 + i * 4);
+    hitIt(p, o, CR_SQ, { kb: 0, stun: 1.2, stop: .05, mute: 1 });
+    V.sparks(o.x, o.y + 170 * hs, i % 2 ? 'purple' : 'red', 8); if (Z) Z.flare(o.x, o.y + 170 * hs, LRGB, 220, .12);
+  }
+  if (!m.toss && st >= 1.75) {                      // and thrown, the length of the arena
+    m.toss = 1; C.shut = false; C.sq = 0; C.o = null;
+    hitIt(p, o, CR_TOSS, { kb: 1500, lift: 700, stun: .9, stop: .2, heavy: 1 });
+    sfx.whoosh(); sfx.blast(); shake(26); E.zoomIn(.35);
+    V.ring(o.x, o.y + 170 * hs, 380, LILAC, .35); if (Z) Z.shock(o.x, 600, LRGB, .45, 10);
+    E.fx.push({ k: 2, x: o.x, y: o.y + 460 * hs, n: 'CRUSHING LOVE', col: LILAC, t: 0, life: 1.3 });
+  }
+  if (!m.toss) {
+    if (o.ko && !m.free) { m.toss = 1; C.shut = false; C.o = null; }      // (gone in her hand: let go)
+    else if (!m.free) Object.assign(o, { x: clamp(x, -960, 960), y: Math.max(0, y), vx: 0, vy: 0, ground: false, state: 'air', stun: 1, act: null, tele: 0 });
+    else Object.assign(o, { vx: 0, stun: Math.max(o.stun || 0, .5) });
+    if (o.ai) o.ai.t = Math.max(o.ai.t || 0, .5);
+    C.hx = o.x; C.hy = o.y + 170 * hs;
+    p.target = st < .46 ? POSE.lrWindC : st < .8 ? POSE.lrCutA : POSE.lrCrouch;
+    return;
+  }
+  const u = Math.min(1, (st - 1.75) / .35);         // her hand back to her
+  C.hx = lerp(C.hx, p.x - f * 40, u * .3); C.hy = lerp(C.hy, p.y + 440, u * .3); p.target = POSE.lrCutC;
+  if (st > 2.15) { crush = null; rk.act = null; E.endMove(p); }
+} };
+function hitIt(p, o, n, h) {                        // a blow of hers: exactly n, whatever they are made of
+  if (o.ko) return;
+  E.applyHit(o, p.face, Object.assign({ dmg: exact(o, n), col: LILAC, fixed: 1, mute: 1 }, h));
+}
+
 /* ================= 2 (Build 0.17): REAPING SLASH. Used twice ================= */
 const RS_DMG = [50, 90], RS_WAIT = 1.6, RS_CD = 12;      // the cut, and the Black Flash; how long the second use waits; the wait after
 let rsWait = null, fin = null;                      // { o, t }: the second use, waiting · the finisher holding them: { o, t, x, y, air }
@@ -462,13 +590,13 @@ function finFx() {
 const MOVES = {
   get strikes() { return rk.mode === 'rika' ? CL_R : CL_K; },
   crush: RS1,
-  div: { name: 'Coming soon', cd: 1, dur: .01, run() {} },
+  div: CRUSH,
   manji: { name: 'Coming soon', cd: 1, dur: .01, run() {} }
 };
 
 JU.tech.add('reaper', { name: 'Love Reaper', jp: '純愛', mark: '愛', who: 'Rika, and a katana', odds: 0, col: LILAC, glow: 'purple', moves: MOVES,
   early: true, skin: REAPER, as: ['Love Reaper', '純愛'], m1,
-  hint: '<b>Right click</b> Rika\'s moves, or the sword\'s · <b>1</b> Cleaving Love · <b>2</b> Reaping Slash' });
+  hint: '<b>Right click</b> Rika\'s moves, or the sword\'s · <b>1</b> Cleaving Love · <b>2</b> Reaping Slash · <b>3</b> Crushing Love' });
 const DEF = JU.tech.TECH.reaper, on = () => JU.tech.active === DEF;
 
 /* ---------- wiring ---------- */
@@ -511,7 +639,8 @@ H.tick = dt => {
   labels();
   q = rikaPose(dt);
   const A = rk.act, p = E.P1;
-  if (A && ((A.kind === 'throw' && !(p.move && p.move.def === CL_R)) || (A.kind === 'slam' && A.t > .9) || (A.kind === 'beam' && !(p.move && p.move.def === BEAM)))) rk.act = null;
+  if (A && ((A.kind === 'throw' && !(p.move && p.move.def === CL_R)) || (A.kind === 'slam' && A.t > .9) || (A.kind === 'beam' && !(p.move && p.move.def === BEAM)) || (A.kind === 'grab' && !(p.move && p.move.def === CRUSH)))) rk.act = null;
+  if (crush && !(p.move && p.move.def === CRUSH)) crush = null;      // (cut short)
   if (rk.a > .5 && Math.random() < dt * 20) V.puff('purple', p.x - p.face * 125 + rnd(-90, 90), p.y + rnd(20, 380), 0, rnd(60, 180), 40, .6);
 };
 H.under = dt => {
@@ -545,15 +674,20 @@ H.fx = dt => {
   for (const f of [E.P2, p, ...(JU.raid ? JU.raid.allies() : [])]) if (f.skin === REAPER && !(f.alpha < .05)) katana(f, f === p && p.move && (p.move.def === CL_K || p.move.def === CL_R));
   const A = rk.act;
   if (A && A.kind === 'slam' && on()) slamHand(A.x, A.t / .16, Math.min(1, (.9 - A.t) / .25));
+  if (crush && on() && p.skin === REAPER) {         // Crushing Love: her arm out to them, and her hand open, or shut round them
+    const a = longArm(p, crush.hx, crush.hy, crush.shut);
+    if (crush.shut && crush.o) fist([a.x, a.y], a.ang, a.k, crush.sq);
+  }
   if (fin && on()) finFx();
 };
-const clear = () => { rk.act = null; rk.flare = 0; rk.a = SEE; trail.length = 0; rsWait = fin = null; };
+const clear = () => { rk.act = null; rk.flare = 0; rk.a = SEE; trail.length = 0; rsWait = fin = null; crush = null; };
 const hit0 = H.hit;
 H.hit = (o, face, h) => { hit0(o, face, h); if (h.yuta) play('home-yuta-cut', .5 * h.yuta, () => sfx.hit(!!h.heavy)); };      // (his strikes: a katana landing)
 H.reset = () => { reset0(); clear(); };
 H.fightStart = (cfg, wave) => { start0(cfg, wave); if (!wave) clear(); };
 
-JU.reaper = { MOVES, CL_K, CL_R, RS1, RS2, REAPER, drawRika, esp: BEAM,      // (esp: E, especial.js)
+JU.reaper = { MOVES, CL_K, CL_R, RS1, RS2, CRUSH, REAPER, drawRika, esp: BEAM,      // (esp: E, especial.js)
+  get crush() { return crush && { shut: crush.shut, sq: crush.sq, held: !!crush.o }; },
   get finisher() { return fin && { t: +fin.t.toFixed(2) }; }, get waiting() { return !!rsWait; },
   get mode() { return rk.mode; }, set mode(v) { rk.mode = v === 'rika' ? 'rika' : 'katana'; labels(); }, get rika() { return { a: +rk.a.toFixed(2), act: rk.act && rk.act.kind }; } };
 })();
