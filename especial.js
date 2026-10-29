@@ -762,6 +762,7 @@ if (JU.reaper && JU.reaper.esp) add('reaper', JU.reaper.esp);
 if (JU.speaker && JU.speaker.esp) add('speaker', JU.speaker.esp);
 if (JU.kirara && JU.kirara.esp) add('kirara', JU.kirara.esp);
 if (JU.soul && JU.soul.esp) add('trans', JU.soul.esp);
+if (JU.slit && JU.slit.esp) add('slit', JU.slit.esp);
 const RATIO = { name: 'Ratio', show: true };         // (Ratio Man's E is the Ratio, ratio.js: shown here, not done here)
 
 /* ================= E ================= */
