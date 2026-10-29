@@ -368,15 +368,8 @@ function front() {
 
 /* ================= who is here ================= */
 const poly = (pts, col) => { g.beginPath(); g.moveTo(pts[0], pts[1]); for (let i = 2; i < pts.length; i += 2) g.lineTo(pts[i], pts[i + 1]); g.closePath(); g.fillStyle = col; g.fill(); g.lineWidth = 2.5; g.strokeStyle = LINE; g.stroke(); };
-// the second year who only speaks in rice-ball fillings: pale hair, and his collar zipped up over his mouth
-const INUMAKI = Object.assign({}, C.MEGUMI, { head() {
-  E.headBase('#ecd2bc', '#f6e2d0');
-  poly([-26, 4, -30, -16, -26, -30, -12, -40, 4, -42, 18, -36, 27, -24, 26, -6, 18, -14, 10, -8, 2, -15, -6, -8, -14, -13, -19, 4], '#ece8f2');
-  g.fillStyle = '#5a3f7a'; g.beginPath(); g.ellipse(5, 1, 2.6, 2.2, 0, 0, TAU); g.fill(); g.beginPath(); g.ellipse(17, 1, 2.2, 2.2, 0, 0, TAU); g.fill();
-  g.strokeStyle = LINE; g.lineWidth = 2; g.beginPath(); g.moveTo(1, -2); g.lineTo(9, -2); g.moveTo(14, -2); g.lineTo(21, -2); g.stroke();
-  g.beginPath(); g.roundRect(-22, 7, 48, 22, [6, 6, 8, 8]); g.fillStyle = '#1c1f2e'; g.fill(); g.lineWidth = 2.5; g.stroke();
-  g.strokeStyle = '#8a8f9a'; g.lineWidth = 1.6; g.beginPath(); g.moveTo(12, 9); g.lineTo(12, 28); g.stroke();
-} });
+// the second year who only speaks in rice-ball fillings: his look is the Cursed Speaker's (inumaki.js, early access since 0.17)
+const INUMAKI = JU.speaker.SKIN;
 // The Principal: a big man in dark clothes, cropped hair, a beard, sunglasses; he makes cursed corpses, and they are cute
 const YAGA = Object.assign({}, C.GOJO, { head() {
   E.headBase('#c99a76', '#d9ab88');
@@ -463,7 +456,7 @@ const LINES = {
   shoko: healer,
   maki: () => [['maki', 'You are the new one? Do not just stand on the field. Pick up a weapon or get off it.'], ['maki', J.q >= 4 ? 'You put the Brawler down? Not bad. He will want a rematch. He always does.' : 'If the big idiot from Kyoto shows up, do not tell him your type. It only encourages him.']],
   panda: () => [['panda', 'Hi. I am Panda. Yes, a panda. No, not a person in a suit.'], ['panda', 'Our Speaker says you look strong. Well. He said "salmon". It is the same thing.']],
-  inumaki: () => [['inumaki', 'Salmon.'], ['inumaki', 'Tuna mayo! Kelp.'], ['panda', 'He says welcome, and that the vending machine on the left eats coins.']],
+  inumaki: () => [['inumaki', 'Salmon.', () => sfx.file('home-inu-salmon', .95)], ['inumaki', 'Tuna mayo! Kelp.', () => sfx.file('home-inu-tunamayo', .95)], ['panda', 'He says welcome, and that the vending machine on the left eats coins.']],
   ijichi: () => [['ijichi', 'Ah, the new student. I am The Driver. I drive everybody, everywhere, always.'], ['ijichi', 'Into the city? Through the gate, down the stairs, along the road to the station at the bottom. Or run it. Everybody runs it.']],
   todo: () => []
 };

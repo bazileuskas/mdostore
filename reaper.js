@@ -4,19 +4,25 @@
    1 Cleaving Love. With the sword: a barrage of cuts, 90 in all. With Rika: she throws him at them with the sword out in front; when he
      gets there it cuts them (80), she puts them into the floor (20), and he cuts them again on the way back up (30). Then Cleaving Love
      waits twenty seconds.
-   2, 3 and 4 are still to come.
-   Rika is drawn new for him (bone-pale, black hair down over her face and back, a mouth too wide for it, long arms and claws, no legs: she
-   trails off into cursed energy), with sounds of her own (index.html: sfx.rika). The story's Rika, in chapter 15, is drawn the same way now */
+   2 REAPING SLASH (Build 0.17), used twice: gone, and behind them, and a cut (50). 2 again while they reel: gone again, and a Black Flash
+     (90), and everything stops: the sparks of it hang in the air, they hang where they are for four seconds while it rings out, the world
+     round him goes grey and smeared, and then he kicks them clean across the arena.
+   3 and 4 are still to come.
+   Rika is drawn after the user's picture of her (Build 0.17): a ridged shell of a head with long pale tendrils off the back of it, a mouth
+   that is all teeth where a face would be, a starved ribcage, long thin arms and longer fingers, and no legs: from the waist down she is a
+   black tail. Her scream is his name (myinstants' "YUTA", sfx.rika in index.html). The story's Rika, in chapter 15, is drawn the same way */
 (() => {
 'use strict';
 
 const E = JU.eng, g = E.g, F = E.F, P = E.P, cam = E.cam, H = E.hooks, POSE = E.POSE, LINE = E.LINE, TOR = E.TOR, ZP = E.ZP, V = JU.vfx, sfx = JU.sfx, M = E.MOVES, Z = JU.bossfx, Fi = JU.fights, K = JU.cast4;
 const { rnd, clamp, lerp } = E, TAU = Math.PI * 2, { shout } = JU.tech.tk;
 const shake = v => { cam.shake = Math.max(cam.shake, v); };
+const play = (name, vol, alt) => { if (!sfx.file(name, vol) && alt) alt(); };      // a clip (myinstants' online, sounds/home-* at home), or a built one
+sfx.preload(['home-rika-yuta', 'home-yuta-tp', 'home-yuta-cut', 'home-nanami-bf']);
 const lit = fn => { g.globalCompositeOperation = 'lighter'; fn(); g.globalCompositeOperation = 'source-over'; };
 const exact = (o, n) => n / (o.dr || 1);            // a hit worth the stated amount, whatever the target is made of
 const duel = () => !!(Fi.fight.cfg && Fi.fight.cfg.pvp);
-const LILAC = '#c9a0ff', LRGB = '201,160,255', STEEL = '#e8f0ff', BONE = '#ddd8e6', BONE2 = '#aaa2bb', HAIR = '#120e17', MOUTH = '#1a0610';
+const LILAC = '#c9a0ff', LRGB = '201,160,255', STEEL = '#e8f0ff', BONE = '#eeebf1', BONE2 = '#b9b3c4', SHADE = '#a39cb0', TAIL = '#16131b', TAIL2 = '#3a3446', MAW = '#3d0a14', MAW2 = '#6e1522';
 const BARRAGE = 9, BARRAGE_DMG = 10, THROW = [80, 20, 30], CD_KATANA = 8, CD_RIKA = 20, SEE = .15;      // the barrage's cuts, and each one; Rika's three; the waits; how much of her shows (85% see-through)
 
 /* ================= how he looks: the uniform, and the sword out of its case (the case on his back, empty) ================= */
@@ -56,55 +62,77 @@ function katana(f, lit) {
 }
 
 /* ================= Rika ================= */
-// twice his height: bone-pale, hunched, black hair down her back and over her face, one eye in the gap of it, a mouth too wide for her
-// face, long arms with claws, and below the waist nothing but cursed energy. Drawn in the world at (wx, wy, wz), facing face, s her size,
-// a how much of her shows; q: { arm (her front arm reaching, 0 to 1.2), raise (lifted), mouth (open) }
+// after the user's picture of her: twice his height, hunched forward, a head like a ridged shell with long pale tendrils off the back of it
+// and no face under it but a mouth full of long teeth, a starved ribcage, long thin arms with longer fingers, and below the waist a black
+// tail, curling. Drawn in the world at (wx, wy, wz), facing face, s her size, a how much of her shows; q: { arm (her front arm reaching,
+// 0 to 1.2), raise (lifted), mouth (open) }
 function drawRika(wx, wy, wz, face, s, a, q) {
   if (a < .01) return;
-  const c = P(wx, wy, wz), k = c[2] * s;
+  const c = P(wx, wy, wz), k = c[2] * s, T = E.T;
   g.save(); g.translate(c[0], c[1]); g.scale(face * k, k); g.lineJoin = 'round'; g.lineCap = 'round';
-  g.globalCompositeOperation = 'lighter'; E.glow(E.GLOW.purple, 10, -300, 820, .4 * Math.min(1, a * 2)); g.globalCompositeOperation = 'source-over';      // her own light
+  g.globalCompositeOperation = 'lighter'; E.glow(E.GLOW.purple, 10, -300, 760, .22 * Math.min(1, a * 2)); g.globalCompositeOperation = 'source-over';      // a little of her cursed energy, round her
   g.globalAlpha = a;
   const ink = w => { g.lineWidth = w; g.strokeStyle = LINE; g.stroke(); };
-  let gr = g.createLinearGradient(0, -200, 0, 70);  // where her legs would be: her, thinning out into nothing
-  gr.addColorStop(0, BONE2); gr.addColorStop(1, 'rgba(170,162,187,0)');
-  g.fillStyle = gr; g.beginPath(); g.moveTo(-85, -200); g.quadraticCurveTo(-55, -50, -8, 70); g.quadraticCurveTo(40, -50, 82, -200); g.closePath(); g.fill();
-  g.fillStyle = HAIR; g.beginPath(); g.moveTo(-10, -540); g.lineTo(72, -520); g.lineTo(40, -340); g.lineTo(-30, -150); g.lineTo(-78, -178); g.lineTo(-114, -310); g.lineTo(-84, -470); g.closePath(); g.fill(); ink(4);      // her hair, down her back
-  arm(-30, -370, q, true);
-  g.fillStyle = BONE; g.beginPath(); g.moveTo(-82, -400); g.quadraticCurveTo(10, -452, 82, -412); g.lineTo(102, -310); g.quadraticCurveTo(92, -220, 60, -185); g.lineTo(-70, -185); g.quadraticCurveTo(-104, -270, -82, -400); g.closePath(); g.fill(); ink(4);      // the body, hunched
-  g.strokeStyle = 'rgba(90,80,110,.45)'; g.lineWidth = 3; for (let i = 0; i < 4; i++) { g.beginPath(); g.arc(20, -340 + i * 30, 52, .3, 1.5); g.stroke(); }      // ribs
-  g.save(); g.translate(58, -462); g.rotate(.18);
-  g.fillStyle = BONE; g.beginPath(); g.ellipse(0, 0, 74, 64, 0, 0, TAU); g.fill(); ink(4);      // the head, bowed
-  const mh = 26 + (q.mouth || 0) * 42, my = 8;
-  g.fillStyle = MOUTH; g.beginPath(); g.roundRect(-10, my, 88, mh, 10); g.fill(); ink(3);      // the mouth
-  g.fillStyle = '#f2eee6';
-  for (let i = 0; i < 7; i++) {
-    const tx = -6 + i * 11.8;
-    g.beginPath(); g.moveTo(tx, my); g.lineTo(tx + 9.5, my); g.lineTo(tx + 4.7, my + 13); g.closePath(); g.fill();
-    g.beginPath(); g.moveTo(tx, my + mh); g.lineTo(tx + 9.5, my + mh); g.lineTo(tx + 4.7, my + mh - 13); g.closePath(); g.fill();
+  // the tail: black, thick at her waist, thinning, and curling up at the end
+  const sw = Math.sin(T * 1.4) * 10;
+  g.fillStyle = TAIL; g.beginPath(); g.moveTo(-56, -190); g.bezierCurveTo(-70, -90, -60 + sw, -20, 10 + sw, 30); g.bezierCurveTo(60 + sw, 60, 96, 40, 92, 4);
+  g.bezierCurveTo(88, -14, 70, -10, 74, 8); g.bezierCurveTo(70, 26, 40 + sw, 22, 22 + sw, 4); g.bezierCurveTo(-8, -30, 2, -110, 52, -190); g.closePath(); g.fill(); ink(4);
+  g.strokeStyle = TAIL2; g.lineWidth = 5; g.beginPath(); g.moveTo(-34, -170); g.bezierCurveTo(-40, -90, -30 + sw, -20, 20 + sw, 14); g.stroke();      // the light along it
+  arm(-14, -400, q, true);
+  // the body: a starved ribcage, hunched forward over a waist that is hardly there
+  g.fillStyle = BONE; g.beginPath(); g.moveTo(-52, -188); g.quadraticCurveTo(-80, -290, -58, -392); g.quadraticCurveTo(-30, -446, 40, -448); g.quadraticCurveTo(98, -430, 104, -372);
+  g.quadraticCurveTo(102, -300, 76, -246); g.quadraticCurveTo(58, -210, 50, -188); g.closePath(); g.fill(); ink(4);
+  g.fillStyle = SHADE; g.beginPath(); g.moveTo(-52, -188); g.quadraticCurveTo(-80, -290, -58, -392); g.quadraticCurveTo(-40, -300, -20, -190); g.closePath(); g.fill();      // her back, in shadow
+  g.strokeStyle = 'rgba(40,34,52,.75)'; g.lineWidth = 3;
+  for (let i = 0; i < 6; i++) { const y = -392 + i * 26; g.beginPath(); g.moveTo(34, y); g.quadraticCurveTo(80 - i * 3, y + 6, 98 - i * 6, y + 22); g.stroke(); }      // ribs
+  g.beginPath(); g.moveTo(34, -400); g.lineTo(30, -250); g.stroke();                                                                                           // and the bone down her middle
+  g.fillStyle = '#2a2430'; for (const [x, y, r] of [[-20, -205, 7], [6, -214, 5], [24, -200, 8], [-36, -226, 4], [40, -222, 4], [-6, -192, 5]]) { g.beginPath(); g.arc(x, y, r, 0, TAU); g.fill(); }      // the dark where she turns to tail
+  // the neck, reaching forward
+  g.fillStyle = BONE; g.beginPath(); g.moveTo(36, -444); g.quadraticCurveTo(84, -470, 128, -446); g.lineTo(130, -416); g.quadraticCurveTo(92, -430, 64, -412); g.closePath(); g.fill(); ink(3.5);
+  // the tendrils off the back of her head, long and pale, swaying
+  for (let i = 0; i < 9; i++) {
+    const r0 = [92 + i * 5, -508 + i * 8], len = 230 + (i % 3) * 40, ph = T * 1.6 + i * .8;
+    g.beginPath(); g.moveTo(r0[0], r0[1]);
+    g.bezierCurveTo(r0[0] - 70, r0[1] - 30 + Math.sin(ph) * 16, r0[0] - len * .55, r0[1] + 30 + Math.cos(ph) * 22, r0[0] - len, r0[1] + 90 + i * 12 + Math.sin(ph * 1.3) * 26);
+    g.strokeStyle = LINE; g.lineWidth = 16 - i * .6; g.stroke(); g.strokeStyle = i % 2 ? BONE : '#dcd8e2'; g.lineWidth = 11 - i * .6; g.stroke();
   }
-  g.fillStyle = HAIR; g.beginPath(); g.moveTo(-80, 14); g.lineTo(-76, -40); g.quadraticCurveTo(-30, -82, 30, -74); g.quadraticCurveTo(74, -62, 82, -20); g.lineTo(72, -2); g.lineTo(60, -26);
-  g.lineTo(48, 2); g.lineTo(32, -26); g.lineTo(16, 6); g.lineTo(-2, -24); g.lineTo(-22, 34); g.lineTo(-48, 2); g.lineTo(-62, 70); g.closePath(); g.fill(); ink(3);      // her hair over it
-  g.fillStyle = '#fff'; g.beginPath(); g.ellipse(54, -10, 8, 5.5, 0, 0, TAU); g.fill(); g.fillStyle = '#7a3cff'; g.beginPath(); g.arc(56, -10, 3, 0, TAU); g.fill();      // one eye, in the gap
+  g.save(); g.translate(150, -405); g.rotate(.32);
+  // the mouth, under the shell: all teeth, the jaw dropping as it opens
+  const op = q.mouth || 0, jaw = 40 + op * 70;
+  g.fillStyle = MAW; g.beginPath(); g.moveTo(-36, 18); g.quadraticCurveTo(0, 24, 40, 14); g.lineTo(44, 24 + jaw * .7); g.quadraticCurveTo(10, 36 + jaw, -30, 24 + jaw * .85); g.closePath(); g.fill(); ink(3.5);
+  g.fillStyle = MAW2; g.beginPath(); g.ellipse(4, 30 + jaw * .5, 20, jaw * .32, 0, 0, TAU); g.fill();
+  g.fillStyle = '#f4f0e8'; g.strokeStyle = LINE; g.lineWidth = 1.5;
+  for (let i = 0; i < 8; i++) {                     // long thin teeth, down from the top and up from the jaw
+    const x = -30 + i * 9.5, l = 20 + (i % 3) * 7 + op * 10, y1 = 24 + jaw * (.85 - .15 * (i / 7)) + (i < 4 ? 0 : -4);
+    g.beginPath(); g.moveTo(x - 3.2, 18); g.lineTo(x + 3.2, 18); g.lineTo(x + .5, 18 + l); g.closePath(); g.fill(); g.stroke();
+    g.beginPath(); g.moveTo(x - 3, y1); g.lineTo(x + 3, y1); g.lineTo(x + .5, y1 - l * .8); g.closePath(); g.fill(); g.stroke();
+  }
+  // the head: a shell, ridged from the crown down to the brow, over where a face should be
+  g.fillStyle = BONE; g.beginPath(); g.moveTo(-58, 20); g.quadraticCurveTo(-76, -60, -44, -104); g.quadraticCurveTo(-4, -134, 38, -110); g.quadraticCurveTo(66, -70, 50, 18); g.quadraticCurveTo(-4, 34, -58, 20); g.closePath(); g.fill(); ink(4);
+  g.strokeStyle = SHADE; g.lineWidth = 3.2;
+  for (let i = 0; i < 7; i++) { const x = -48 + i * 15; g.beginPath(); g.moveTo(-8 + (x + 8) * .2, -118); g.quadraticCurveTo(x * 1.05, -56, x, 20 - Math.abs(x - 0) * .1); g.stroke(); }
+  g.strokeStyle = LINE; g.lineWidth = 2.5; g.beginPath(); g.moveTo(-58, 20); g.quadraticCurveTo(-4, 34, 50, 18); g.stroke();
   g.restore();
-  arm(64, -392, q, false);
+  arm(66, -416, q, false);
   g.restore();
 }
-function arm(sx, sy, q, back) {                     // from the shoulder (sx, sy): reaching forward as far as q.arm says, raised by q.raise
-  const reach = (q.arm || 0) - (back ? .2 : 0), raise = q.raise || 0;
-  const ex = sx + 70 + reach * 60, ey = sy + 110 - raise * 130, hx = sx + 120 + reach * 175, hy = sy + 235 - raise * 340, col = back ? BONE2 : BONE;
-  g.beginPath(); g.moveTo(sx, sy); g.lineTo(ex, ey); g.lineTo(hx, hy);
-  g.strokeStyle = LINE; g.lineWidth = 50; g.stroke(); g.strokeStyle = col; g.lineWidth = 42; g.stroke();
+function arm(sx, sy, q, back) {                     // from the shoulder (sx, sy): thin, and long, reaching as far as q.arm says, raised by q.raise
+  const reach = (q.arm || 0) - (back ? .2 : 0), raise = q.raise || 0, sway = Math.sin(E.T * 1.3 + (back ? 1 : 0)) * 6;
+  const ex = sx + 56 + reach * 50, ey = sy + 130 - raise * 120 + sway, hx = sx + 106 + reach * 190, hy = sy + 262 - raise * 340, col = back ? BONE2 : BONE;
+  g.beginPath(); g.moveTo(sx, sy); g.lineTo(ex, ey); g.strokeStyle = LINE; g.lineWidth = 26; g.stroke(); g.strokeStyle = col; g.lineWidth = 19; g.stroke();
+  g.beginPath(); g.moveTo(ex, ey); g.lineTo(hx, hy); g.strokeStyle = LINE; g.lineWidth = 22; g.stroke(); g.strokeStyle = col; g.lineWidth = 15; g.stroke();
+  g.fillStyle = col; g.beginPath(); g.arc(ex, ey, 12, 0, TAU); g.fill(); g.lineWidth = 3; g.strokeStyle = LINE; g.stroke();      // the elbow, a knot of bone
   claw(hx, hy, Math.atan2(hy - ey, hx - ex), col);
 }
-function claw(x, y, ang, col) {                     // a hand the size of a man's chest, and four claws
+function claw(x, y, ang, col) {                     // a narrow hand, four long jointed fingers with hooked tips, and a thumb
   g.save(); g.translate(x, y); g.rotate(ang);
-  g.fillStyle = col; g.beginPath(); g.ellipse(10, 0, 34, 28, 0, 0, TAU); g.fill(); g.lineWidth = 4; g.strokeStyle = LINE; g.stroke();
-  for (let i = 0; i < 4; i++) {
-    g.save(); g.rotate(-.55 + i * .37);
-    g.beginPath(); g.moveTo(30, -7); g.lineTo(78, -4); g.lineTo(96, 0); g.lineTo(78, 5); g.lineTo(30, 8); g.closePath(); g.fillStyle = col; g.fill(); g.lineWidth = 3; g.strokeStyle = LINE; g.stroke();
-    g.fillStyle = '#2a1830'; g.beginPath(); g.moveTo(78, -4); g.lineTo(106, 0); g.lineTo(78, 5); g.closePath(); g.fill();
-    g.restore();
+  g.fillStyle = col; g.beginPath(); g.ellipse(8, 0, 24, 15, 0, 0, TAU); g.fill(); g.lineWidth = 3.5; g.strokeStyle = LINE; g.stroke();
+  for (let i = 0; i < 5; i++) {
+    const th = i === 4, a0 = th ? 1 : -.48 + i * .3, L1 = th ? 28 : 46, L2 = th ? 24 : 50, b = th ? .3 : .22;
+    const j = [26 + Math.cos(a0) * L1, Math.sin(a0) * L1 * 1.1], t = [j[0] + Math.cos(a0 + b) * L2, j[1] + Math.sin(a0 + b) * L2];
+    g.beginPath(); g.moveTo(18, Math.sin(a0) * 8); g.lineTo(j[0], j[1]); g.lineTo(t[0], t[1]);
+    g.strokeStyle = LINE; g.lineWidth = 10; g.stroke(); g.strokeStyle = col; g.lineWidth = 6; g.stroke();
+    g.fillStyle = '#2a1830'; g.beginPath(); g.moveTo(t[0] - 3, t[1] - 3); g.lineTo(t[0] + Math.cos(a0 + b + .5) * 16, t[1] + Math.sin(a0 + b + .5) * 16); g.lineTo(t[0] + 3, t[1] + 3); g.closePath(); g.fill();      // the hooked nail
   }
   g.restore();
 }
@@ -112,7 +140,7 @@ function claw(x, y, ang, col) {                     // a hand the size of a man'
 function slamHand(x, u, a) {
   const y = lerp(900, 120, Math.min(1, u) ** 2), c = F(x, y), k = c[2] * 1.25;
   g.save(); g.translate(c[0], c[1]); g.scale(k, k); g.globalAlpha = a;
-  g.beginPath(); g.moveTo(0, -60); g.lineTo(-30, -900); g.strokeStyle = LINE; g.lineWidth = 58; g.stroke(); g.strokeStyle = BONE; g.lineWidth = 50; g.stroke();      // the arm, up out of the picture
+  g.beginPath(); g.moveTo(0, -60); g.lineTo(-30, -900); g.strokeStyle = LINE; g.lineWidth = 32; g.stroke(); g.strokeStyle = BONE; g.lineWidth = 24; g.stroke();      // the arm, thin, up out of the picture
   claw(0, -10, Math.PI / 2, BONE);
   g.restore();
 }
@@ -149,8 +177,11 @@ function toggle(p) {
 }
 // the hotbar: Cleaving Love's wait for whichever it is now, and under its name which one it is
 let tag = null;
+let sub = null;
 function labels() {
-  if (!on()) { if (tag) { tag.remove(); tag = null; } return; }
+  if (!on()) { if (tag) { tag.remove(); tag = null; } if (sub) { sub.remove(); sub = null; E.hud.mv.crush.classList.remove('twice'); } return; }
+  if (!sub || !sub.isConnected) { sub = document.createElement('small'); sub.className = 'tsub'; sub.textContent = 'USE TWICE'; E.hud.mv.crush.appendChild(sub); }
+  E.hud.mv.crush.classList.toggle('twice', !!rsWait);
   E.CD.strikes = rk.mode === 'rika' ? CD_RIKA : CD_KATANA;
   if (!tag || !tag.isConnected) { tag = document.createElement('small'); tag.className = 'cnt'; E.hud.mv.strikes.appendChild(tag); }
   const txt = rk.mode === 'rika' ? 'Rika' : 'Katana';
@@ -165,7 +196,7 @@ Object.assign(POSE, {
   lrCrouch: [-.24, 0, .6, .3, .55, -.65, 0], lrThrust: [.55, -.12, 1.62, -.6, .9, -.9, 0]
 });
 const CUTS = [['lrWindA', 'lrCutA', 4], ['lrWindB', 'lrCutB', 4], ['lrWindA', 'lrCutA', 5], ['lrWindC', 'lrCutC', 7]].map(([pre, pose, dmg], i) =>
-  Object.assign({}, M.m1[i], { pre, pose, kick: 0, lr: 1, sw: 'rgba(232,240,255,.95)', whoosh: () => sfx.cut(.7 + i * .15), hit: Object.assign({}, M.m1[i].hit, { dmg, reach: M.m1[i].hit.reach + 50, col: STEEL }) }));
+  Object.assign({}, M.m1[i], { pre, pose, kick: 0, lr: 1, sw: 'rgba(232,240,255,.95)', whoosh: () => sfx.cut(.7 + i * .15), hit: Object.assign({}, M.m1[i].hit, { dmg, reach: M.m1[i].hit.reach + 50, col: STEEL, mute: 1, yuta: i === 3 ? 1 : .7 }) }));      // (yuta: the katana clip's volume, H.hit)
 function m1(i) {
   const p = E.P1;
   if (p.skin !== REAPER) return true;               // in somebody else's body: the ordinary strikes
@@ -187,7 +218,7 @@ const CL_K = { name: 'Cleaving Love', cd: CD_KATANA, dur: 1.35, glow: 'purple', 
     if (n !== m.n) {
       m.n = n;
       const last = n === BARRAGE - 1, x = o.x + rnd(-30, 30), y = o.y + 160 * hs + rnd(-60, 60);
-      sfx.cut(last ? 1.6 : .7 + Math.random() * .3);
+      if (last) play('home-yuta-cut', 1, () => sfx.cut(1.6)); else sfx.cut(.7 + Math.random() * .3);
       V.slash(x, y, rnd(0, TAU), last ? 540 : rnd(260, 380), n % 3 ? STEEL : LILAC, last ? 14 : 7);
       if (E.tryHit(p, last ? { reach: 240, dmg: exact(o, BARRAGE_DMG), kb: 760, lift: 420, stun: .9, stop: .12, heavy: 1, col: LILAC, fixed: 1 }
                            : { reach: 240, dmg: exact(o, BARRAGE_DMG), kb: 30, stun: .5, stop: .02, col: STEEL, fixed: 1, mute: 1 })) {
@@ -251,7 +282,7 @@ const CL_R = { name: 'Cleaving Love', cd: CD_RIKA, dur: 2.6, glow: 'purple', run
 /* ================= E (Build 0.16): PURE LOVE. Rika, all of her, and what she has in her let out of her mouth in one beam ================= */
 const LOVE = 45, LOVE_CD = 22;
 function mouth(p) {                                 // where her mouth is, on the screen (drawRika's head, and the mouth in it)
-  const bob = Math.sin(E.T * 1.6) * 14, s = 1.08, wx = p.x - p.face * 125 + p.face * 100 * s, wy = p.y + 10 + bob + 440 * s;
+  const bob = Math.sin(E.T * 1.6) * 14, s = 1.08, wx = p.x - p.face * 125 + p.face * 142 * s, wy = p.y + 10 + bob + 363 * s;
   return P(wx, wy, ZP + 160);
 }
 const BEAM = { name: 'Pure Love', jp: '純愛', col: LILAC, cd: LOVE_CD, dur: 1.9, run(p, m, t) {
@@ -290,21 +321,84 @@ const BEAM = { name: 'Pure Love', jp: '純愛', col: LILAC, cd: LOVE_CD, dur: 1.
   }
 } };
 
+/* ================= 2 (Build 0.17): REAPING SLASH. Used twice ================= */
+const RS_DMG = [50, 90], RS_WAIT = 1.6, RS_HOLD = 4, RS_CD = 12;      // the cut, and the Black Flash; how long the second use waits; how long the finisher holds them; the wait after
+let rsWait = null, fin = null;                      // { o, t }: the second use, waiting · the finisher holding them: { o, t, x, y, air }
+const reachable = p => { const o = E.P2; return o && can(o) && Math.abs(o.x - p.x) < 1100 ? o : null; };
+function blink(p, x, face) {                        // gone, a grey shape where he was, and there
+  if (JU.evasive) JU.evasive.ghost(p, .35);
+  V.ring(p.x, p.y + 160, 140, '#d6d6de', .25);
+  p.x = clamp(x, -965, 965); p.face = face; p.vx = 0; p.dashT = 0;
+  V.ring(p.x, p.y + 160, 190, LILAC, .25); E.addDust(p.x);
+  play('home-yuta-tp', .9, () => sfx.whoosh());
+}
+const RS1 = { name: 'Reaping Slash', sub: 'USE TWICE', cd: RS_CD, dur: .6, glow: 'purple', run(p, m, t) {
+  const o = m.o;
+  p.rate = 50; p.vx = 0;
+  if (!m.s) {
+    m.s = 1; m.o = reachable(p);
+    if (m.o) { const d = Math.sign(m.o.x - p.x) || p.face; blink(p, m.o.x + d * 130, -d); }      // behind them, turned round
+    else blink(p, p.x + p.face * 420, p.face);
+  }
+  p.target = t < .07 ? POSE.lrWindB : t < .34 ? POSE.lrCutB : POSE.idle;
+  if (t < .07 || m.cut) return;
+  m.cut = 1;
+  play('home-yuta-cut', 1, () => sfx.cut(1.6));
+  const x = o ? o.x : p.x + p.face * 160, y = o ? o.y + 160 * (o.scale || 1) : p.y + 170;
+  V.slash(x, y, p.face > 0 ? -.35 : Math.PI + .35, 560, LILAC, 14); V.slash(x, y + 8, p.face > 0 ? -.35 : Math.PI + .35, 600, '#ffffff', 5);
+  if (!o || !can(o)) return;
+  E.applyHit(o, p.face, { dmg: exact(o, RS_DMG[0]), kb: 200, stun: 1.2, stop: .12, heavy: 1, col: LILAC, fixed: 1, mute: 1 });
+  V.sparks(x, y, 'purple', 12); shake(16);
+  rsWait = { o, t: RS_WAIT };
+  E.fx.push({ k: 2, x: p.x, y: p.y + 430, n: '2 · AGAIN', col: LILAC, t: 0, life: 1.2 });
+} };
+const KICK = E.POSE.kick, KWIND = E.POSE.kickWind;
+const RS2 = { name: 'Reaping Slash', dur: RS_HOLD + 1.4, glow: 'purple', run(p, m, t) {
+  const o = m.o;
+  p.rate = 50; p.vx = 0;
+  if (!m.s) { m.s = 1; m.o = rsWait ? rsWait.o : E.P2; rsWait = null; const d = Math.sign(m.o.x - p.x) || p.face; blink(p, m.o.x + d * 120, -d); p.inv = Math.max(p.inv || 0, RS_HOLD + 1.4); }
+  if (!o) return;
+  const kickAt = duel() ? .45 : .5 + RS_HOLD;
+  if (t >= .06 && !m.bf) {                          // the Black Flash
+    m.bf = 1;
+    E.applyHit(o, p.face, duel() ? { dmg: exact(o, RS_DMG[1]), kb: 1800, lift: 520, stun: .9, stop: .25, heavy: 1, col: '#ff2440', fixed: 1, mute: 1 }
+                                 : { dmg: exact(o, RS_DMG[1]), kb: 0, stun: RS_HOLD + 1, stop: .25, heavy: 1, col: '#ff2440', fixed: 1, mute: 1 });
+    E.blackFlash(() => play('home-nanami-bf', 1, () => sfx.bf()));
+    V.slash(o.x, o.y + 160, p.face > 0 ? .4 : Math.PI - .4, 700, '#ff2440', 18);
+    if (!duel() && !o.ko) { fin = { o, t: 0, x: o.x, y: o.y, air: !o.ground }; E.after(2.3, () => { if (fin && fin.o === o) play('home-nanami-bf', .8, () => sfx.bf()); }); }      // (and it rings out again, while it holds them)
+  }
+  p.target = t < .06 ? POSE.lrWindC : t < .5 ? POSE.lrCutC : t < kickAt ? KWIND : t < kickAt + .35 ? KICK : POSE.idle;
+  if (t >= kickAt && !m.kick) {                     // and the kick: clean across the arena
+    m.kick = 1; fin = null;
+    if (!duel() && !o.ko && !o.poise) Object.assign(o, { ground: false, state: 'air', y: Math.max(o.y, 30), vx: p.face * 2600, vy: 700, bounced: false, face: -p.face, flash: .1 });
+    sfx.blast(); sfx.punch(4, 1.2); shake(40); E.zoomIn(.4);
+    V.ring(o.x, o.y + 150, 380, '#ff2440', .35); V.sparks(o.x, o.y + 150, 'red', 18);
+    if (Z) { Z.flash('255,36,64', .25, .15); Z.shock(o.x, 520, '255,36,64', .45, 10); }
+  }
+  if (t > kickAt + .5) E.endMove(p);
+} };
+
 const MOVES = {
   get strikes() { return rk.mode === 'rika' ? CL_R : CL_K; },
-  crush: { name: 'Coming soon', cd: 1, dur: .01, run() {} },
+  crush: RS1,
   div: { name: 'Coming soon', cd: 1, dur: .01, run() {} },
   manji: { name: 'Coming soon', cd: 1, dur: .01, run() {} }
 };
 
 JU.tech.add('reaper', { name: 'Love Reaper', jp: '純愛', mark: '愛', who: 'Rika, and a katana', odds: 0, col: LILAC, glow: 'purple', moves: MOVES,
   early: true, skin: REAPER, as: ['Love Reaper', '純愛'], m1,
-  hint: '<b>Right click</b> Rika\'s moves, or the sword\'s · <b>1</b> Cleaving Love' });
+  hint: '<b>Right click</b> Rika\'s moves, or the sword\'s · <b>1</b> Cleaving Love · <b>2</b> Reaping Slash' });
 const DEF = JU.tech.TECH.reaper, on = () => JU.tech.active === DEF;
 
 /* ---------- wiring ---------- */
 const press0 = H.press, tick0 = H.tick, fx0 = H.fx, under0 = H.under, reset0 = H.reset, start0 = H.fightStart;
 H.press = (a, inScene) => {
+  if (!inScene && on() && a === 'crush' && rsWait && !E.P1.dead) {      // Reaping Slash, the second time
+    const p = E.P1;
+    if (p.move) E.endMove(p);
+    p.move = { def: RS2, key: 'crush', t: 0 }; E.hud.mv.crush.classList.add('act');
+    return true;
+  }
   if (!inScene && on() && E.root.dataset.mode === 'fight' && a === 'alt') {      // right click: her moveset, or the sword's
     const p = E.P1;
     if (!p.dead && !p.move && p.skin === REAPER) toggle(p);
@@ -315,7 +409,18 @@ H.press = (a, inScene) => {
 let q = { arm: .25, raise: 0, mouth: .1 };
 H.tick = dt => {
   tick0(dt);
-  if (!on()) { if (tag) labels(); return; }
+  if (!on()) { if (tag || sub) labels(); rsWait = fin = null; return; }
+  if (rsWait && ((rsWait.t -= dt) <= 0 || rsWait.o.ko || rsWait.o !== E.P2)) rsWait = null;
+  if (fin) {                                        // the finisher: held where the Black Flash left them, the sparks of it still going
+    const o = fin.o;
+    fin.t += dt;
+    if (o.ko || o !== E.P2) fin = null;
+    else {
+      Object.assign(o, { x: fin.x, y: fin.y, vx: 0, vy: 0, ground: !fin.air, state: 'hurt', stun: Math.max(o.stun || 0, 1), act: null, tele: 0 });
+      if (o.ai) o.ai.t = Math.max(o.ai.t || 0, 1);
+      if (Math.random() < dt * 9) { const y = o.y + rnd(80, 260); if (Z) Z.lightning(o.x + rnd(-90, 90), y, o.x + rnd(-160, 160), y + rnd(-120, 120), Math.random() < .5 ? '255,36,64' : '20,0,8', .16, 3, 2); V.sparks(o.x + rnd(-40, 40), y, 'red', 2); }
+    }
+  }
   labels();
   q = rikaPose(dt);
   const A = rk.act, p = E.P1;
@@ -336,6 +441,19 @@ H.under = dt => {
   }
 };
 const TRAIL = E.flat('#5a3a8a', LILAC);
+// while the finisher holds them: the world round the two of them grey and smeared, as if time had nearly stopped
+const post0 = H.post;
+H.post = dt => {
+  if (post0) post0(dt);
+  if (!fin || !on()) return;
+  const o = fin.o, p = E.P1, c = F((o.x + p.x) / 2, (o.y + p.y) / 2 + 170), u = Math.min(1, fin.t * 3), VW = E.VW, VH = E.VH;
+  const gr = g.createRadialGradient(c[0], c[1], 160 * c[2], c[0], c[1], Math.max(VW, VH) * .7);
+  gr.addColorStop(0, 'rgba(90,90,100,0)'); gr.addColorStop(.35, `rgba(96,96,106,${.45 * u})`); gr.addColorStop(1, `rgba(70,70,80,${.82 * u})`);
+  g.fillStyle = gr; g.fillRect(0, 0, VW, VH);
+  g.save(); g.globalAlpha = .07 * u; g.fillStyle = '#e8e8ee';      // the smear: long faint streaks, drifting
+  for (let i = 0; i < 14; i++) { const y = (i * 97 + fin.t * 30) % VH, x = ((i * 233 + fin.t * (40 + i * 6)) % (VW + 600)) - 300; g.fillRect(x, y, 300 + (i % 4) * 90, 3 + (i % 3) * 2); }
+  g.restore();
+};
 H.fx = dt => {
   fx0(dt);
   const p = E.P1;
@@ -343,10 +461,13 @@ H.fx = dt => {
   const A = rk.act;
   if (A && A.kind === 'slam' && on()) slamHand(A.x, A.t / .16, Math.min(1, (.9 - A.t) / .25));
 };
-const clear = () => { rk.act = null; rk.flare = 0; rk.a = SEE; trail.length = 0; };
+const clear = () => { rk.act = null; rk.flare = 0; rk.a = SEE; trail.length = 0; rsWait = fin = null; };
+const hit0 = H.hit;
+H.hit = (o, face, h) => { hit0(o, face, h); if (h.yuta) play('home-yuta-cut', .5 * h.yuta, () => sfx.hit(!!h.heavy)); };      // (his strikes: a katana landing)
 H.reset = () => { reset0(); clear(); };
 H.fightStart = (cfg, wave) => { start0(cfg, wave); if (!wave) clear(); };
 
-JU.reaper = { MOVES, CL_K, CL_R, REAPER, drawRika, esp: BEAM,      // (esp: E, especial.js)
+JU.reaper = { MOVES, CL_K, CL_R, RS1, RS2, REAPER, drawRika, esp: BEAM,      // (esp: E, especial.js)
+  get finisher() { return fin && { t: +fin.t.toFixed(2) }; }, get waiting() { return !!rsWait; },
   get mode() { return rk.mode; }, set mode(v) { rk.mode = v === 'rika' ? 'rika' : 'katana'; labels(); }, get rika() { return { a: +rk.a.toFixed(2), act: rk.act && rk.act.kind }; } };
 })();

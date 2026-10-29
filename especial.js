@@ -794,6 +794,7 @@ add('yuki', { name: 'Black Hole', jp: 'ブラックホール', col: STAR, cd: 18
 if (JU.judge && JU.judge.esp) add('judge', JU.judge.esp);
 if (JU.haruta && JU.haruta.esp) add('haruta', JU.haruta.esp);
 if (JU.reaper && JU.reaper.esp) add('reaper', JU.reaper.esp);
+if (JU.speaker && JU.speaker.esp) add('speaker', JU.speaker.esp);
 const RATIO = { name: 'Ratio', show: true };         // (Ratio Man's E is the Ratio, ratio.js: shown here, not done here)
 
 /* ================= E ================= */

@@ -116,9 +116,9 @@ const near = (p, range) => { const o = E.P2, d = (o.x - p.x) * p.face; return d 
 
 /* ---------- the roll (Cursed Technique screen on the title menu) ---------- */
 // a card for whoever is coming next. It says that somebody is, and gives a different hint each time it is pressed
-const HINTS = ['A ring on a chain, and a promise made at eleven.', 'He is never the only one in the room.', 'He carries a sword he would rather not have to use.', 'Show him a thing once.'];
+const HINTS = ['Stars that come in the wrong order never meet.', 'A third year who spent most of the year away from school.', 'Everybody it touches gets a star. The order matters.', 'Stands at the side of somebody who likes to gamble.', 'Some things can only come close one at a time.'];      // (Build 0.17: the next limited character. Who it is stays a guess for now: the user asked to work it out themselves)
 let hintAt = 0;
-const TEASE = false;                                // the card is put away for now (the user's call, 0.2v6). true brings it back
+const TEASE = true;                                 // (put away in 0.2v6; back in 0.17 for the next limited character)
 // a limited technique (def.limited = the moment it leaves) is rolled for first, at its own odds, for as long as it is here.
 // If it does not come up, the usual table decides
 const live = t => !t.limited || Date.now() < t.limited;
@@ -156,7 +156,7 @@ function mount(body) {
     ${JU.shop ? JU.shop.row('tech') + JU.shop.tix('ct') : ''}
     ${ORDER.filter(id => TECH[id].limited && live(TECH[id])).map(id => { const t = TECH[id]; return `<button class="tcard lim${mine(id) ? '' : ' lock'}" data-tech="${id}" style="--c:${t.col}" aria-label="Equip ${t.name}, limited time"><b lang="ja">${t.mark || t.jp[0]}</b><span><small>Limited time</small>${t.name}</span><i>${t.who} · ${t.odds}%</i><u></u></button>`; }).join('')}
     ${ORDER.filter(id => TECH[id].early).map(id => { const t = TECH[id]; return `<button class="tcard lim ea${mine(id) ? '' : ' lock'}" data-tech="${id}" style="--c:${t.col}" aria-label="Equip ${t.name}, early access"><b lang="ja">${t.mark || t.jp[0]}</b><span><small>Early Access</small>${t.name}</span><i>${t.who}</i><u>$2.99</u></button>`; }).join('')}
-    ${TEASE ? `<button class="tcard lim tease" id="tease" style="--c:#d9c9ff" aria-label="A character still to come. Press for a hint"><b lang="ja">？</b><span><small>Next character</small>? ? ?</span><i>${HINTS[hintAt]}</i><u>Soon</u></button>` : ''}
+    ${TEASE ? `<button class="tcard lim tease" id="tease" style="--c:#d9c9ff" aria-label="A character still to come. Press for a hint"><b lang="ja">？</b><span><small>Next limited character</small>? ? ?</span><i>${HINTS[hintAt]}</i><u>Soon</u></button>` : ''}
     ${ORDER.filter(id => TECH[id].admin && JU.shop && JU.shop.dev).map(id => { const t = TECH[id]; return `<button class="tcard lim ea" data-tech="${id}" style="--c:${t.col}" aria-label="Equip ${t.name}, the team's own"><b lang="ja">${t.mark || t.jp[0]}</b><span><small>Admin only</small>${t.name}</span><i>${t.who}</i><u>Team</u></button>`; }).join('')}
     <div class="tcards t8">${ORDER.filter(id => !TECH[id].limited && !TECH[id].early && !TECH[id].awakened && !TECH[id].admin).map(id => { const t = TECH[id]; return `<button class="tcard${mine(id) ? '' : ' lock'}" data-tech="${id}" style="--c:${t.col}" aria-label="Equip ${t.name}${mine(id) ? '' : ', not yours yet'}"><b lang="ja">${t.mark || t.jp[0]}</b><span>${t.name}</span><i>${t.free ? 'Free' : t.odds + '%'}</i></button>`; }).join('')}</div>`;
   show(false);

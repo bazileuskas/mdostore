@@ -5,6 +5,14 @@
 // Newest first. v = the build, jp = the seal stamped beside it, pic = notes/<pic>.jpg, cap = what the picture shows.
 // A new update goes at the top of this list.
 const NOTES = [
+  { v: '0.17', name: 'Cursed Speaker', jp: '呪言', date: '29 Oct 2026', pic: 'speaker', cap: 'Don’t Move, Rika as she really is, and the Reaping Slash holding them in the grey', items: [
+    'CURSED SPEAKER, new in Early Access: the second year who only talks in rice-ball fillings. His collar comes down, the seal shows, and what he says happens. Every command is in his own voice from the anime',
+    '1 Don’t Move: they stop where they stand for two seconds. 2 Twist: it wrings them round and throws them, 40. 3 Get Down: into the floor, 30, and they stay down. 4 Stop: for a second he waits, and whatever they swing at him stops short; they freeze, 45. E: Cough Syrup, half his voice back',
+    'His VOICE is the bar under his health. Every command costs some, and it comes back when he is quiet. Ask for more than is left and it still works, but he coughs blood and pays in health',
+    'Outside a fight he only says salmon, tuna mayo, bonito flakes and kelp, out loud. Everybody else has to guess what he meant',
+    'Love Reaper: 2 is REAPING SLASH (use twice). A teleport and a cut, 50. Again, and another teleport and a Black Flash, 90: the sparks hang in the air, they are held there four seconds while it rings out, everything round him goes grey and smeared, and then he kicks them across the arena',
+    'Rika is drawn again, after how she really looks: a ridged shell of a head with long pale tendrils, a mouth of long teeth, a starved ribcage, long fingers, and a black tail. Her scream is his name. His sword sounds like a sword now, and Reaping Slash teleports with a sound of its own',
+    'The Cursed Technique screen has a card for the next limited character. Who? Press it for hints'] },
   { v: '0.16v2', name: 'Sorcerer Killer Returns', jp: '鎖', date: '25 Oct 2026', pic: 'rupture', cap: 'The spear up on its chain, the square closing, the Lasso catching, and the Whip coming down', items: [
     'The Sorcerer Killer clan is back in the draw for seven more days, until 1 November',
     'Inverted Spear of Heaven: its strikes come at the normal speed now, four to a chain like everybody’s (7, 7, 9 and 16). Hold jump and the fourth is an uppercut; in the air it is a slam into the floor (32). Every one of them has a sound of its own',
