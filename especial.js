@@ -19,6 +19,8 @@
      Cursed Cannon                  VENT: every bar of heat let out at once, and whatever is close is thrown off by it (more for more heat)
      True Cursed Energy Discharge   GRANITE ZERO: right up to them, and a blast from nothing away. 40
      Vengeful Artist, Mr. Instincto SPLATTER ART: the spear flicked, and five gobs of it thrown at them; the last leaves them bleeding. 30
+     Star-Crossed (0.18, its file)  SOUTHERN CROSS: the constellation over the arena, and them dragged through it a star at a time (12 x4), into
+                                    the last one, which is the Star-Crossed (36): left wearing IMAI (kirara.js)
    and the four the story hands out:
      Heavenly Restriction (Maki)    DRAGON-BONE: the blade up across her. A blow that lands on it in time is taken into it (none of it reaches
                                     her) and let out of the hilt as a jet behind one cut, worth more for more taken (18 and half as much again,
@@ -795,6 +797,7 @@ if (JU.judge && JU.judge.esp) add('judge', JU.judge.esp);
 if (JU.haruta && JU.haruta.esp) add('haruta', JU.haruta.esp);
 if (JU.reaper && JU.reaper.esp) add('reaper', JU.reaper.esp);
 if (JU.speaker && JU.speaker.esp) add('speaker', JU.speaker.esp);
+if (JU.kirara && JU.kirara.esp) add('kirara', JU.kirara.esp);
 const RATIO = { name: 'Ratio', show: true };         // (Ratio Man's E is the Ratio, ratio.js: shown here, not done here)
 
 /* ================= E ================= */

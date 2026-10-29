@@ -466,6 +466,9 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 .mv small.tsub{position:absolute;left:.75em;bottom:.45em;z-index:1;font:600 .5em/1 var(--f-ui);letter-spacing:.16em;color:rgba(226,192,96,.9)}
 .mv:has(small.tsub) b{margin-bottom:.62em}
 .mv.twice{border-color:#e2c060;box-shadow:0 0 14px rgba(226,192,96,.55)}
+.mv.inu5{border-color:#b48cff;box-shadow:0 0 14px rgba(180,140,255,.45)}
+.mv.inu5 kbd{color:#d9c9ff}
+.game.unsealed .hotbar .mv:not([data-m="dash"]):not([data-m="esp"]){border-bottom-color:#b48cff}
 .mv.twice small.tsub{color:#fff;text-shadow:0 0 6px #e2c060}
 .mv::after{content:"";position:absolute;inset:0;background:rgba(0,0,0,.72);transform-origin:bottom;transform:scaleY(var(--cd,0))}
 .mv.act{border-color:#fff;background:rgba(255,36,64,.55)}
@@ -1196,7 +1199,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
   </div>
 
   <div class="side" aria-hidden="true" lang="ja">領域展開</div>
-  <div class="hud tl"><b lang="ja">呪</b>Fan project · Build 0.17v2 · Louder</div>
+  <div class="hud tl"><b lang="ja">呪</b>Fan project · Build 0.18 · Star-Crossed</div>
   <div class="hud bl">↑ ↓ Select &nbsp;·&nbsp; Enter Confirm</div>
   <div class="hud br">Title screen</div>
   <div class="acct" id="acct">
@@ -1362,7 +1365,7 @@ const sfx = (() => {
     'home-isoh-spin': [MI + '6-whoosh-and-spinning-sound_jeK3GfE.mp3', .75, 2.75],                     // "Whoosh and spinning sound": two seconds of it
     'home-coatm-swing': [MI + 'chain-swing.mp3', 0, .30],                                               // "Chain Swing"
     'home-coatm-hit': [MI + 'chain-hit.mp3', 0, .6],                                                    // "Chain Hit"
-    'home-coatm-whip': [MI + 'whip-crack-soundbible.mp3', .34, 1],
+    'home-coatm-whip': [MI + 'whip-crack-soundbible.mp3', .34, 1],                                     // "Whip Crack (SoundBible)"
     // Build 0.17: the Cursed Speaker's commands and rice-ball words (inumaki.js), as their myinstants titles have them; Rika screaming his name,
     // a teleport and a katana for the Love Reaper (reaper.js)
     'home-inu-dontmove': [MI + 'dont-move-inumaki.mp3', .05, 1.9],                                     // "dOnt move inumaki"
@@ -1375,7 +1378,7 @@ const sfx = (() => {
     'home-inu-konbu': [MI + 'inumaki-konbu.mp3', 0, 1.27],                                             // "Inumaki konbu"
     'home-rika-yuta': [MI + 'yuta-louder.mp3', .15, 2.45],                                             // "\"YUTA\" louder": her, screaming it
     'home-yuta-tp': [MI + 'teleport-anime.mp3', 0, .85],                                               // "телепорт аниме"
-    'home-yuta-cut': [MI + 'katana-1-hit.mp3', .1, 1.1],
+    'home-yuta-cut': [MI + 'katana-1-hit.mp3', .1, 1.1],                                               // "Katana 1 Hit"
     // Build 0.17v2: Gojo's, both movesets (tech_b.js, alimit.js): his lines and the anime's sounds, as myinstants titles them
     'home-gojo-blue': [MI + 'gojo-lapse-blue.mp3', 3.5, 6.6],                                         // "Gojo: Lapse Blue"
     'home-gojo-red': [MI + 'gojo-reversal-red.mp3', 7.3, 8.93],                                       // "Gojo: Reversal Red"
@@ -1383,7 +1386,9 @@ const sfx = (() => {
     'home-gojo-purple-boom': [MI + 'hollow-purple-no-voice.mp3', 0, 3.5],                             // "hollow purple no voice": the blast
     'home-gojo-purple2-say': [MI + 'imaginary-purple-short-version-gojo.mp3', 1.05, 2.95],            // "Imaginary purple Short version (Gojo)"
     'home-gojo-de': [MI + 'domain-expansion-gojo.mp3', 1.5, 2.75],                                    // "domain expansion GOJO": "Domain Expansion..."
-    'home-gojo-uv': [MI + 'domain-expansion-gojo.mp3', 6.3, 9.1] };                                   // "...Unlimited Void"                                             // "Katana 1 Hit"                                    // "Whip Crack (SoundBible)"
+    'home-gojo-uv': [MI + 'domain-expansion-gojo.mp3', 6.3, 9.1],                                     // "...Unlimited Void"
+    // Build 0.18: the Cursed Speaker's EXPLODE (inumaki.js), unsealed. The only clip of the line there is titled in Portuguese
+    'home-inu-explode': [MI + 'imploda-inumaki.mp3', 0, 1.75] };                                      // "IMPLODA - Inumaki"
   const clips = {};
   const load = name => {
     if (clips[name]) return clips[name];
@@ -1703,6 +1708,58 @@ const sfx = (() => {
       voice({ type: 'noise', dur: 1.3, vol: .5, filt: ['lowpass', 3000, 70], wet: .7 });
       voice({ type: 'noise', dur: .08, vol: .6, filt: ['highpass', 2400], wet: .5 });
       [932, 1397, 2093].forEach((f, i) => voice({ f: [f, f * .5], dur: 1.2 - i * .2, vol: .07 - i * .015, attack: .02, wet: .9 }));
+    },
+    // Build 0.18: a song, from a point in it, faded up from nothing: song(name, from, fade, vol) gives back { stop(secs) }, which fades it
+    // out. Only a file the copy at home has (sounds/home-*.mp3), or one posted online (WEB); otherwise nothing plays, and nothing is asked for
+    song(name, from = 0, fade = 2.5, vol = .7) {
+      const none = { stop() {} };
+      if (!on || !(HOME || WEB[name])) return none;
+      const c = load(name);
+      if (!c.ok) return none;
+      const el = c.el.cloneNode(), t0 = performance.now();
+      let dead = false;
+      el.volume = 0;
+      const seek = () => { try { el.currentTime = (c.at || 0) + from; } catch (e) {} };      // (a fresh copy has to know how long it is before it can be moved through)
+      if (el.readyState >= 1) seek(); else el.addEventListener('loadedmetadata', seek, { once: true });
+      try { const pl = el.play(); if (pl && pl.catch) pl.catch(() => {}); } catch (e) {}
+      const up = setInterval(() => { const u = Math.min(1, (performance.now() - t0) / (fade * 1000 || 1)); el.volume = vol * u * u; if (u >= 1) clearInterval(up); }, 40);
+      return { stop(secs = 1.2) {
+        if (dead) return;
+        dead = true; clearInterval(up);
+        const v0 = el.volume, s0 = performance.now();
+        const down = setInterval(() => { const u = Math.min(1, (performance.now() - s0) / (secs * 1000 || 1)); el.volume = v0 * (1 - u); if (u >= 1) { clearInterval(down); el.pause(); } }, 40);
+      }, get playing() { return !dead && !el.paused; }, get at() { return el.currentTime; }, get vol() { return el.volume; } };
+    },
+    // the Cursed Speaker's last word (there is no clip of him saying it): the air drawn in for half a second, and then something enormous and low
+    word() {
+      voice({ type: 'noise', dur: .5, vol: .22, attack: .45, filt: ['bandpass', 500, 4200], q: 1.4 });
+      voice({ f: [58, 22], at: .5, dur: 2.6, vol: .9, wet: .6 });
+      voice({ f: [116, 38], at: .5, dur: 1.7, vol: .38, type: 'sawtooth', filt: ['lowpass', 900, 110], wet: .7 });
+      for (const f of [146.8, 174.6, 207.7]) voice({ f: [f, f * .5], at: .5, dur: 1.9, vol: .09, type: 'sawtooth', attack: .02, filt: ['bandpass', 720, 260], q: 2, wet: .85 });
+      voice({ type: 'noise', at: .5, dur: 1.5, vol: .6, filt: ['lowpass', 2600, 55], wet: .7 });
+      voice({ type: 'noise', at: .5, dur: .07, vol: .7, filt: ['highpass', 2500] });
+    },
+    // everything stopping at once: a thud, and one high note left ringing in the quiet after it
+    hush() {
+      voice({ f: [96, 30], dur: .7, vol: .55, wet: .4 });
+      voice({ type: 'noise', dur: .12, vol: .3, filt: ['lowpass', 1400, 200] });
+      [1975.5, 2960].forEach((f, i) => voice({ f: [f, f], at: .04, dur: 2.2 - i * .6, vol: .06 - i * .02, attack: .05, wet: .9 }));
+    },
+    // Star-Crossed's stars (kirara.js). star(i): one of the five of the Southern Cross rung, each a step higher than the last; twinkle(): one
+    // thrown; cross(): the whole constellation lit at once
+    star(i = 0) {
+      const f = [1046.5, 1174.7, 1318.5, 1568, 2093][((i % 5) + 5) % 5];
+      voice({ f: [f, f], dur: .9, vol: .085, wet: .8 }); voice({ f: [f * 2, f * 2], dur: .45, vol: .035, wet: .8 }); voice({ f: [f * 1.5, f * 1.5], at: .05, dur: .6, vol: .03, type: 'triangle', wet: .8 });
+      voice({ type: 'noise', dur: .03, vol: .12, filt: ['highpass', 6000] });
+    },
+    twinkle() {
+      [2637, 3136, 3951, 4699].forEach((f, i) => voice({ f: [f, f * 1.01], at: i * .035, dur: .25, vol: .045, type: 'triangle', wet: .7 }));
+      voice({ type: 'noise', dur: .18, vol: .07, attack: .02, filt: ['bandpass', 5000, 9000], q: 2 });
+    },
+    cross() {
+      [523.3, 659.3, 784, 1046.5, 1318.5].forEach((f, i) => voice({ f: [f, f], at: i * .07, dur: 1.6 - i * .1, vol: .06, attack: .01, wet: .9 }));
+      voice({ f: [130.8, 130.8], dur: 1.8, vol: .12, type: 'triangle', attack: .3, wet: .6 });
+      voice({ type: 'noise', dur: 1.2, vol: .05, attack: .4, filt: ['highpass', 7000], wet: .8 });
     },
     toggle() { on = !on; try { localStorage.setItem('ju.sfx', on ? '1' : '0'); } catch (e) {} return on; }
   };
@@ -2299,7 +2356,7 @@ window.JU = { sfx, flash, bolts: blackFlash, reduceMotion, startGame, exitGame, 
 // Load every game script fresh on each page load. The dev server sends no cache headers, so without this a reload
 // could run a mix of old and new files (new menu, old moves) while the game is being worked on.
 ['account.js', 'announce.js', 'game.js', 'fx2.js', 'chars.js', 'street.js', 'walk.js', 'foes.js', 'cuts.js', 'sukuna.js', 'school.js', 'story.js', 'story2.js', 'tech.js', 'tech_a.js',
-  'tech_b.js', 'sets.js', 'story3.js', 'cast2.js', 'script.js', 'naoya.js', 'ch45.js', 'ch67.js', 'clan.js', 'clan_a.js', 'clan_b.js', 'boss.js', 'bossfx.js', 'boss_a.js', 'boss_b.js', 'boss_c.js', 'training.js', 'choso.js', 'domain.js', 'domain2.js', 'mahito.js', 'combo.js', 'combat.js', 'cast3.js', 'ch810.js', 'ch1112.js', 'cast4.js', 'ch1316.js', 'cast5.js', 'ch1721.js', 'combat2.js', 'judge.js', 'awaken.js', 'alimit.js', 'ats.js', 'switcher.js', 'tools.js', 'smark.js', 'cast6.js', 'ch2230.js', 'plants.js', 'clash.js', 'block.js', 'cannon.js', 'tced.js', 'shibuya.js', 'kyoto.js', 'evasive.js', 'kokusen.js', 'mp.js', 'pvp.js', 'vengeful.js', 'manga.js', 'haruta.js', 'ratio.js', 'reaper.js', 'inumaki.js', 'especial.js', 'yen.js', 'subtech.js', 'metro.js', 'jjh.js', 'shinjuku.js', 'notes.js', 'shop.js', 'ps.js', 'raid.js', 'touch.js'].forEach(src => {
+  'tech_b.js', 'sets.js', 'story3.js', 'cast2.js', 'script.js', 'naoya.js', 'ch45.js', 'ch67.js', 'clan.js', 'clan_a.js', 'clan_b.js', 'boss.js', 'bossfx.js', 'boss_a.js', 'boss_b.js', 'boss_c.js', 'training.js', 'choso.js', 'domain.js', 'domain2.js', 'mahito.js', 'combo.js', 'combat.js', 'cast3.js', 'ch810.js', 'ch1112.js', 'cast4.js', 'ch1316.js', 'cast5.js', 'ch1721.js', 'combat2.js', 'judge.js', 'awaken.js', 'alimit.js', 'ats.js', 'switcher.js', 'tools.js', 'smark.js', 'cast6.js', 'ch2230.js', 'plants.js', 'clash.js', 'block.js', 'cannon.js', 'tced.js', 'shibuya.js', 'kyoto.js', 'evasive.js', 'kokusen.js', 'mp.js', 'pvp.js', 'vengeful.js', 'manga.js', 'haruta.js', 'ratio.js', 'reaper.js', 'inumaki.js', 'kirara.js', 'especial.js', 'yen.js', 'subtech.js', 'metro.js', 'jjh.js', 'shinjuku.js', 'notes.js', 'shop.js', 'ps.js', 'raid.js', 'touch.js'].forEach(src => {
   const s = document.createElement('script');
   s.src = src + '?v=' + Date.now(); s.async = false;      // async = false keeps them running in this order
   document.body.appendChild(s);
