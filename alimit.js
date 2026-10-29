@@ -8,6 +8,8 @@
 'use strict';
 
 const E = JU.eng, g = E.g, P = E.P, F = E.F, cam = E.cam, H = E.hooks, POSE = E.POSE, V = JU.vfx, sfx = JU.sfx, D = JU.domain, keys = E.keys;
+const play = (name, vol, alt) => { if (!sfx.file(name, vol) && alt) alt(); };      // (0.17v2: Gojo's own voice and the anime's sounds, from myinstants online and sounds/home-gojo-* at home; the built sound if neither)
+sfx.preload(['home-gojo-blue', 'home-gojo-red', 'home-gojo-purple2-say', 'home-gojo-purple-boom', 'home-gojo-de', 'home-gojo-uv']);
 const { rnd, lerp, clamp, ease, ZP } = E, TAU = Math.PI * 2, { shout } = JU.tech.tk;
 const BLUE = '#38c8ff', RED = '#ff2440', VIOLET = '#b79bff';
 const QUEST = false;                                // 150% Hollow Purple is meant to be earned through a questline. Off: everybody has it
@@ -183,12 +185,12 @@ const PURPLE = { name: 'Imaginary Technique: Purple', dur: .9, glow: 'purple', r
   p.vx = 0; p.rate = 30;
   if (!m.c) {
     m.c = 1; p.inv = Math.max(p.inv, 3.6); p.face = o.x >= p.x ? 1 : -1;
-    cine = { t: 0, skin: p.skin, face: p.face }; lastT = E.T; E.root.classList.add('dom'); sfx.rise(2.2); sfx.bf();
+    cine = { t: 0, skin: p.skin, face: p.face }; lastT = E.T; E.root.classList.add('dom'); play('home-gojo-purple2-say', 1, () => { sfx.rise(2.2); sfx.bf(); });
   }
   if (cine) { p.target = POSE.manjiWind; return; }
   p.target = t < .5 ? POSE.div : POSE.idle;
   if (m.s) return;
-  m.s = 1; sfx.purple(); shake(40); E.zoomIn(.6); E.banner('虚式・茈', 'IMAGINARY TECHNIQUE: PURPLE', 'xs');
+  m.s = 1; play('home-gojo-purple-boom', 1, () => sfx.purple()); shake(40); E.zoomIn(.6); E.banner('虚式・茈', 'IMAGINARY TECHNIQUE: PURPLE', 'xs');
   const f = p.face, hx = p.x + f * 120, hy = p.y + 190;
   V.custom(.55, u => {                              // it goes the length of the arena with the air torn along beside it, and is not there afterwards
     const x = hx + f * 1600 * Math.min(1, u * 2.6), a = Math.min(1, (1 - u) * 2.2);
@@ -253,7 +255,7 @@ const MOVES = {
   strikes: { name: 'Maximum: Blue', cd: 10, dur: .6, glow: 'blue', run(p, m, t) {
     p.vx = 0; p.rate = 30; p.target = t < .45 ? POSE.manjiWind : POSE.idle;
     if (m.s || t < .15) return;
-    m.s = 1; sfx.blue(); shout(p, '出力最大「蒼」', BLUE);
+    m.s = 1; play('home-gojo-blue', 1, () => sfx.blue()); shout(p, '出力最大「蒼」', BLUE);
     blue = { t: 0, a: p.face > 0 ? 0 : Math.PI, pull: 0, x: p.x + p.face * 330, y: p.y + 175, z: 0 };
     const sx = blue.x, sy = blue.y;
     V.custom(.4, u => {                             // the air falling in on the place where it starts
@@ -270,7 +272,7 @@ const MOVES = {
       V.custom(.16, u => { const w = E.hand(p, true), c = F(w[0] + p.face * 22, w[1]), R = (7 + 15 * u) * c[2]; rays(c[0], c[1], R, 14, '255,255,255', 5 * u, E.T * 9); ball(c[0], c[1], R, 'red', E.T * 12); });
     }
     if (t < .16 || m.s) return;
-    m.s = 1; sfx.red(); shake(26);
+    m.s = 1; play('home-gojo-red', 1, () => sfx.red()); shake(26);
     const f = p.face, x0 = p.x + f * 90, y = p.y + 175;
     V.custom(.32, u => {                            // a line of it, there all at once, and rings standing off the line where it pushed the air away
       const head = Math.min(1, u * 3.4), a = (1 - u) ** 1.2;
@@ -301,7 +303,7 @@ const MOVES = {
     if (t < 1.25) {
       p.target = POSE.crushWind;
       if (m.c) return;
-      m.c = 1; p.inv = Math.max(p.inv, 2.4); E.slow(.5); E.banner('虚式', '150% HOLLOW PURPLE', 'xs'); sfx.charge(); sfx.rise(1.2);
+      m.c = 1; p.inv = Math.max(p.inv, 2.4); E.slow(.5); E.banner('虚式', '150% HOLLOW PURPLE', 'xs'); play('home-gojo-purple2-say', 1, () => { sfx.charge(); sfx.rise(1.2); });
       V.custom(2, u => dim(.5 * Math.min(1, u * 5, (1 - u) * 5)), 0, true);     // everything else goes dark while it is made
       V.custom(1.25, u => {
         const s = 1 - Math.min(1, u * 1.6), x = p.x, R0 = 32 + 16 * u;
@@ -326,7 +328,7 @@ const MOVES = {
       });
     }
     if (m.b || t < 1.7) return;
-    m.b = 1; sfx.purple(); shake(46); E.zoomIn(.6); V.impact(.5, m.x1, 200); E.addBlast(m.x1, 200, '157,123,255', 760);
+    m.b = 1; play('home-gojo-purple-boom', 1, () => sfx.purple()); shake(46); E.zoomIn(.6); V.impact(.5, m.x1, 200); E.addBlast(m.x1, 200, '157,123,255', 760);
     for (let i = 0; i < 5; i++) V.ring(m.x1, 200, 260 + i * 150, VIOLET, .35 + i * .07);
     V.crack(m.x1, 520); V.rocks(m.x1, 0, 24); crater(m.x1, 470, '183,155,255', 3.6);
     V.custom(.6, u => {                             // a dome of it over the place, and lines thrown out of the middle as far as the edges of the screen
@@ -345,8 +347,10 @@ const MOVES = {
     if (JU.training.on) E.cd.manji = 0;             // no waiting in Training
     quick = { r: false, two: false };
     if (gojo()) hint('R  +  2  ·  0.2 SECOND DOMAIN');
+    play('home-gojo-de', 1);                          // "Domain Expansion..."
     D.open({ who: p, tone: 'blue', skin: p.skin, kind: 'void', reveal() {
       const short = quick && quick.r && quick.two;
+      if (!short) play('home-gojo-uv', 1);          // "...Unlimited Void", and it opens
       quick = null;
       D.raise('void', { who: p, dur: short ? .2 : 6 });
       E.after(.25, () => { if (!D.clashing) E.banner(short ? '0.2秒' : '無量空処', short ? '0.2 SECOND DOMAIN' : 'UNLIMITED VOID', 'sm'); });

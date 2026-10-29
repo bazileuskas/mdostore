@@ -5,6 +5,10 @@
 // Newest first. v = the build, jp = the seal stamped beside it, pic = notes/<pic>.jpg, cap = what the picture shows.
 // A new update goes at the top of this list.
 const NOTES = [
+  { v: '0.17v2', name: 'Louder', jp: '呪言', date: '29 Oct 2026', pic: 'speaker', cap: 'The Cursed Speaker, saying it', items: [
+    'Cursed Speaker, much stronger: Don\u2019t Move 20 (and two and a half seconds), Twist 75, Get Down 60 (three seconds down), Stop 85 (three seconds frozen). Every word costs a little less voice, too',
+    'His strikes are three now, not four, and there is no uppercut. Two punches, and the third is a word: hold jump and he says FALL and they are slammed into the floor, 25 (he does not jump; the word does it). Otherwise it is his Twist, a quick 15',
+    'Blindfolded Infinity sounds like the anime now, in both his movesets: his own voice for Lapse: Blue, Reversal: Red, Hollow Purple and the 150% one, the Purple\u2019s blast, and \u201cDomain Expansion... Unlimited Void\u201d as it opens. Blink teleports with the anime\u2019s sound'] },
   { v: '0.17v1', name: 'Just a Little Harder', jp: '奇跡', date: '29 Oct 2026', pic: 'harder', cap: 'Miracle Dork, a Backstab and a dodged sword later, deciding to try', items: [
     'MIRACLE DORK is out of Early Access: 5% on the Cursed Technique talisman. Nobody else\u2019s chance went down for it; the odds just add up to 105 now',
     'Miracle Dork 4: BACKSTAB. Round behind them and the sword into their back: pulled out, 40 and two stacks of bleeding; then he throws them, 50, and there is blood everywhere. It needs the sword in his hand',

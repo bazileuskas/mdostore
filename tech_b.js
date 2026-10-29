@@ -3,6 +3,8 @@
 'use strict';
 
 const E = JU.eng, g = E.g, F = E.F, cam = E.cam, POSE = E.POSE, V = JU.vfx, sfx = JU.sfx;
+const play = (name, vol, alt) => { if (!sfx.file(name, vol) && alt) alt(); };      // (0.17v2: Gojo's own voice and the anime's sounds, from myinstants online and sounds/home-gojo-* at home; the built sound if neither)
+sfx.preload(['home-gojo-blue', 'home-gojo-red', 'home-gojo-purple-say', 'home-gojo-purple-boom']);
 const { orb, beam, shout, near } = JU.tech.tk;
 const shake = v => { cam.shake = Math.max(cam.shake, v); };
 
@@ -13,7 +15,7 @@ const LIMIT = {
   strikes: { name: 'Lapse: Blue', cd: 4, dur: .7, run(p, m, t) {
     p.vx = 0; p.rate = 30; p.target = t < .5 ? POSE.jab : POSE.idle;
     if (t > .18 && !m.s) {
-      m.s = 1; sfx.charge();
+      m.s = 1; play('home-gojo-blue', .95, () => sfx.charge());
       const f = p.face, ox = p.x + f * 330, oy = p.y + 175;
       V.custom(.6, u => { orb(ox, oy, 34 * Math.min(1, u * 5) * (u > .8 ? (1 - u) * 5 : 1), 'blue', '#06203a'); V.mote(ox, oy, 'blue'); });
       // everything nearby is dragged toward the point, wherever it started
@@ -24,7 +26,7 @@ const LIMIT = {
   crush: { name: 'Reversal: Red', cd: 5, dur: .65, run(p, m, t) {
     p.vx = 0; p.rate = 34; p.target = t < .22 ? POSE.divWind : t < .45 ? POSE.jab : POSE.idle;
     if (t > .22 && !m.s) {
-      m.s = 1; sfx.blast();
+      m.s = 1; play('home-gojo-red', 1, () => sfx.blast());
       const f = p.face, x0 = p.x + f * 90, y = p.y + 175, o = near(p, 840), ex = o ? o.x : x0 + f * 760;
       V.custom(.14, u => orb(x0 + (ex - x0) * u, y, 22, 'red', '#fff'));
       E.after(.1, () => {
@@ -50,7 +52,7 @@ const LIMIT = {
     if (t < .8) {
       p.target = POSE.manjiWind;
       if (!m.c) {
-        m.c = 1; E.slow(.4); E.banner('虚式', 'HOLLOW PURPLE', 'sm'); sfx.charge();
+        m.c = 1; E.slow(.4); E.banner('虚式', 'HOLLOW PURPLE', 'sm'); play('home-gojo-purple-say', 1, () => sfx.charge());
         V.custom(.8, u => {                       // blue and red brought together
           const s = 1 - Math.min(1, u * 1.5);
           orb(hx - 90 * s, hy + 70 * s, 22, 'blue', '#06203a'); orb(hx + 90 * s, hy - 70 * s, 22, 'red', '#3a0610');
@@ -61,7 +63,7 @@ const LIMIT = {
     }
     p.target = t < 1.2 ? POSE.div : POSE.idle;
     if (m.s) return;
-    m.s = 1; sfx.bf(); shake(34); E.zoomIn(.5);
+    m.s = 1; play('home-gojo-purple-boom', 1, () => sfx.bf()); shake(34); E.zoomIn(.5);
     V.custom(.36, u => { const x = hx + f * 1500 * u; beam(hx, x, hy, 60, 'purple', .5 * (1 - u)); orb(x, hy, 96, 'purple', '#14042a'); });
     for (let i = 1; i < 6; i++) V.crack(hx + f * i * 230, 150);
     if (E.tryHit(p, { reach: 1500, dmg: 55, kb: 1250, lift: 500, stop: .26, heavy: 1, col: '#b79bff' })) V.impact(.18, E.P2.x, E.P2.y + 150);

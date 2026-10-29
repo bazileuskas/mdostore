@@ -226,7 +226,7 @@ add('limitless', { name: 'Blink', jp: '瞬間移動', col: '#38c8ff', cd: 10, du
     m.s = 1;
     const side = o.x >= p.x ? 1 : -1;
     if (Z) Z.ghost(p, .6, .3);
-    V.ring(p.x, p.y + 160, 200, '#38c8ff', .3); sfx.blue();
+    V.ring(p.x, p.y + 160, 200, '#38c8ff', .3); if (!sfx.file('home-yuta-tp', .9)) sfx.blue();      // (0.17v2: the anime's teleport)
     p.x = clamp(o.x + side * 150, -960, 960); p.face = -side;       // and there, behind them
     V.ring(p.x, p.y + 160, 200, '#bfe9ff', .3); shake(8);
     if (Z) Z.flare(p.x, p.y + 200, '56,200,255', 300, .15);

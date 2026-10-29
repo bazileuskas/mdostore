@@ -1,21 +1,25 @@
 /* JUJUTSU UNLIMITEDS — early access (Build 0.17): CURSED SPEAKER. The second year who says nothing but rice-ball fillings, because what
    he means, happens. His collar comes down, the seal at the corners of his mouth shows, and the word goes out in rings.
    Every command is a word he says in the anime (the clips are myinstants', played from there online; at home, copies: sounds/home-inu-*):
-   1 DON'T MOVE    they stop where they are, two seconds (a heavy one, under one)                            20 of his voice
-   2 TWIST         it wrings them round, 40, and throws them                                                  30
-   3 GET DOWN      into the floor, 30, and they stay down two and a half seconds                              30
-   4 STOP          for a second he waits for it: whatever they swing at him stops short, they freeze, 45       25
+   (0.17v2: all of them a great deal stronger, the user's ask)
+   1 DON'T MOVE    20, and they stop where they are, two and a half seconds (a heavy one, under one)         15 of his voice
+   2 TWIST         it wrings them round, 75, and throws them                                                  25
+   3 GET DOWN      into the floor, 60, and they stay down three seconds                                       25
+   4 STOP          for a second he waits for it: whatever they swing at him stops short, they freeze, 85       20
    E COUGH SYRUP   half his voice back
+   HIS STRIKES (0.17v2): three, not four, and no uppercut. Two punches, and the third is a word: with jump held (or in the air) he says FALL
+   and they are slammed into the floor, 25 (he does not jump: it is the word that does it; the clip is his "down", the nearest there is);
+   otherwise it is his TWIST, a quick 15. Each costs a little voice
    His VOICE is the bar under his health. It comes back by itself when he has been quiet a moment. Asking more of it than is left still
    works, but it tears his throat: he coughs blood, and it costs him health instead. Outside a fight he only talks in rice-ball
    fillings (salmon, tuna mayo, bonito flakes, kelp), and whoever he is talking to has to work out what he meant */
 (() => {
 'use strict';
 
-const E = JU.eng, g = E.g, F = E.F, cam = E.cam, H = E.hooks, POSE = E.POSE, LINE = E.LINE, V = JU.vfx, sfx = JU.sfx, Z = JU.bossfx, Fi = JU.fights, C = JU.cast;
+const E = JU.eng, g = E.g, F = E.F, cam = E.cam, H = E.hooks, POSE = E.POSE, LINE = E.LINE, V = JU.vfx, sfx = JU.sfx, Z = JU.bossfx, Fi = JU.fights, C = JU.cast, M = E.MOVES;
 const { rnd, clamp } = E, TAU = Math.PI * 2, { shout } = JU.tech.tk;
 const COL = '#c9c2ff', CRGB = '201,194,255', SEAL = '#4a3470';
-const VOICE = 100, REGEN = 9, REST = 1.2, HOLD = 2, HOLD_HEAVY = .9, PIN = 2.5, STOP_T = 1;      // his voice; what comes back a second, after how long quiet; how long Don't Move holds; Get Down; how long Stop waits
+const VOICE = 100, REGEN = 9, REST = 1.2, HOLD = 2.5, HOLD_HEAVY = .9, PIN = 3, STOP_T = 1, STOP_HOLD = 3;      // his voice; what comes back a second, after how long quiet; how long Don't Move holds; Get Down; how long Stop waits
 const duel = () => !!(Fi.fight.cfg && Fi.fight.cfg.pvp);
 const exact = (o, n) => n / (o.dr || 1);
 const shake = v => { cam.shake = Math.max(cam.shake, v); };
@@ -92,7 +96,7 @@ function command(p, clip, jp, word, cost) {
   E.fx.push({ k: 2, x: p.x, y: p.y + 470, n: word, col: '#ffffff', t: 0, life: 1.1 });
 }
 // who hears it: whoever he is fighting, near enough, and not out of reach of it
-const hears = p => { const o = E.P2; return o && !o.ko && !(o.alpha < 1) && !(o.inv > 0) && Math.abs(o.x - p.x) < 1250 ? o : null; };
+const hears = (p, range = 1250) => { const o = E.P2; return o && !o.ko && !(o.alpha < 1) && !(o.inv > 0) && Math.abs(o.x - p.x) < range ? o : null; };
 
 // held where they stand (Don't Move, Stop) or held down (Get Down): kept that way every moment until it runs out
 let held = null, pinned = null;                     // { o, t }
@@ -121,13 +125,13 @@ function holdTick(dt) {
 /* ================= 1 — Don't Move ================= */
 const DONT = { name: 'Don\'t Move', cd: 9, dur: .75, run(p, m, t) {
   p.vx = 0; p.rate = 30; p.target = t < .55 ? POSE.inuSay : POSE.idle;
-  if (!m.s) { m.s = 1; command(p, 'home-inu-dontmove', '動くな', 'DON\'T MOVE', 20); }
+  if (!m.s) { m.s = 1; command(p, 'home-inu-dontmove', '動くな', 'DON\'T MOVE', 15); }
   if (t < .16 || m.done) return;
   m.done = 1;
   const o = hears(p);
   rings(p, o);
   if (!o) return;
-  E.applyHit(o, o.x >= p.x ? 1 : -1, { dmg: exact(o, 6), kb: 0, stun: HOLD, stop: .08, col: COL, fixed: 1, mute: 1 });
+  E.applyHit(o, o.x >= p.x ? 1 : -1, { dmg: exact(o, 20), kb: 0, stun: HOLD, stop: .1, heavy: 1, col: COL, fixed: 1, mute: 1 });
   hold(o, HOLD);
   V.ring(o.x, o.y + 160, 220, COL, .4);
 } };
@@ -135,7 +139,7 @@ const DONT = { name: 'Don\'t Move', cd: 9, dur: .75, run(p, m, t) {
 /* ================= 2 — Twist ================= */
 const TWIST = { name: 'Twist', cd: 10, dur: .8, run(p, m, t) {
   p.vx = 0; p.rate = 30; p.target = t < .6 ? POSE.inuPoint : POSE.idle;
-  if (!m.s) { m.s = 1; command(p, 'home-inu-twist', '捻れろ', 'TWIST', 30); }
+  if (!m.s) { m.s = 1; command(p, 'home-inu-twist', '捻れろ', 'TWIST', 25); }
   if (t < .22 || m.done) return;
   m.done = 1;
   const o = hears(p);
@@ -143,7 +147,7 @@ const TWIST = { name: 'Twist', cd: 10, dur: .8, run(p, m, t) {
   if (!o) return;
   const x = o.x, y = o.y + 160 * (o.scale || 1);
   held = held && held.o === o ? null : held;        // (it wrings them out of a Don't Move)
-  E.applyHit(o, p.face, { dmg: exact(o, 40), kb: 300, lift: 380, stun: .9, stop: .16, heavy: 1, col: COL, fixed: 1, mute: 1 });
+  E.applyHit(o, p.face, { dmg: exact(o, 75), kb: 360, lift: 420, stun: .9, stop: .2, heavy: 1, col: COL, fixed: 1, mute: 1 });
   sfx.snap(); sfx.hit(true); shake(18);
   if (!duel() && !o.poise && JU.vengeful && JU.vengeful.launch) JU.vengeful.launch(o);      // and round they go
   V.custom(.45, u => {                              // the wringing: lines spiralling in on them
@@ -158,14 +162,14 @@ const TWIST = { name: 'Twist', cd: 10, dur: .8, run(p, m, t) {
 /* ================= 3 — Get Down ================= */
 const DOWN = { name: 'Get Down', cd: 11, dur: .8, run(p, m, t) {
   p.vx = 0; p.rate = 30; p.target = t < .6 ? POSE.inuSay : POSE.idle;
-  if (!m.s) { m.s = 1; command(p, 'home-inu-down', '伏せろ', 'GET DOWN', 30); }
+  if (!m.s) { m.s = 1; command(p, 'home-inu-down', '伏せろ', 'GET DOWN', 25); }
   if (t < .2 || m.done) return;
   m.done = 1;
   const o = hears(p);
   rings(p, o);
   if (!o) return;
   held = held && held.o === o ? null : held;
-  E.applyHit(o, o.x >= p.x ? 1 : -1, { dmg: exact(o, 30), kb: 40, stun: 1, stop: .14, heavy: 1, col: COL, fixed: 1, mute: 1 });
+  E.applyHit(o, o.x >= p.x ? 1 : -1, { dmg: exact(o, 60), kb: 40, stun: 1, stop: .18, heavy: 1, col: COL, fixed: 1, mute: 1 });
   if (!duel() && !o.poise && !o.ko) { Object.assign(o, { ground: false, state: 'air', y: Math.max(o.y, 26), vy: -1900, vx: 0, bounced: true }); pinned = { o, t: PIN }; }
   sfx.slam(1.2); shake(24); V.crack(o.x, 300); V.ring(o.x, 30, 320, COL, .4); E.addDust(o.x);
   if (Z) Z.shock(o.x, 420, CRGB, .45, 9);
@@ -183,13 +187,49 @@ function stopped(face) {                            // they swung at him while h
   const p = E.P1, o = E.P2, m = p.move;
   stopT = 0;
   if (m && m.def === STOP) m.fired = m.t;
-  command(p, 'home-inu-stop', '止まれ', 'STOP', 25);
+  command(p, 'home-inu-stop', '止まれ', 'STOP', 20);
   rings(p, o, '#ffffff');
   if (!o || o.ko) return;
-  E.applyHit(o, -face, { dmg: exact(o, 45), kb: 200, stun: 2.5, stop: .25, heavy: 1, col: COL, fixed: 1, mute: 1 });
-  hold(o, 2.5);
+  E.applyHit(o, -face, { dmg: exact(o, 85), kb: 200, stun: STOP_HOLD, stop: .3, heavy: 1, col: COL, fixed: 1, mute: 1 });
+  hold(o, STOP_HOLD);
   sfx.blast(); shake(26); E.zoomIn(.35); V.ring(o.x, o.y + 160, 320, '#ffffff', .35); V.sparks(o.x, o.y + 160, 'purple', 14);
   if (Z) Z.flash(CRGB, .25, .2);
+}
+
+/* ================= his strikes (0.17v2): two punches, and the third is a word ================= */
+const PUNCH = [0, 1].map(i => Object.assign({}, M.m1[i], { n: 3 }));      // (n: a chain of three)
+const jumping = p => !p.ground || E.keys.has('w') || E.keys.has(' ') || E.keys.has('arrowup');
+// FALL: with jump held. They are put into the floor; he stays where he is
+const FALL = { m1: 1, n: 3, dur: .55, run(p, m, t) {
+  p.vx = 0; p.rate = 34; p.target = t < .4 ? POSE.inuPoint : POSE.idle;
+  if (!m.s) { m.s = 1; command(p, 'home-inu-down', '落ちろ', 'FALL', 6); }
+  if (t < .12 || m.done) return;
+  m.done = 1;
+  const o = hears(p, 560);
+  rings(p, o);
+  if (!o) return;
+  held = held && held.o === o ? null : held;
+  E.applyHit(o, o.x >= p.x ? 1 : -1, { dmg: exact(o, 25), kb: 40, stun: .9, stop: .12, heavy: 1, col: COL, fixed: 1, mute: 1 });
+  if (!duel() && !o.poise && !o.ko) Object.assign(o, { ground: false, state: 'air', y: Math.max(o.y, 26), vy: -1900, vx: 0, bounced: true });
+  sfx.slam(1); shake(18); V.crack(o.x, 220); V.ring(o.x, 30, 240, COL, .35); E.addDust(o.x);
+} };
+// and without it: his TWIST, quick, 15
+const QUICK = { m1: 1, n: 3, dur: .45, run(p, m, t) {
+  p.vx = 0; p.rate = 34; p.target = t < .32 ? POSE.inuPoint : POSE.idle;
+  if (!m.s) { m.s = 1; command(p, 'home-inu-twist', '捻れろ', 'TWIST', 6); }
+  if (t < .1 || m.done) return;
+  m.done = 1;
+  const o = hears(p, 560);
+  rings(p, o);
+  if (!o) return;
+  E.applyHit(o, p.face, { dmg: exact(o, 15), kb: 220, stun: .55, stop: .08, col: COL, fixed: 1, mute: 1 });
+  sfx.snap(); V.sparks(o.x, o.y + 160 * (o.scale || 1), 'purple', 6);
+} };
+function m1(i) {
+  const p = E.P1;
+  if (p.skin !== SPEAKER) return true;              // in somebody else's body: the ordinary strikes
+  p.move = { def: i < 2 ? PUNCH[i] : jumping(p) ? FALL : QUICK, i: Math.min(i, 2), t: 0 };
+  return false;
 }
 
 /* ================= E — Cough Syrup ================= */
@@ -204,8 +244,8 @@ const SYRUP = { name: 'Cough Syrup', jp: '薬', col: COL, cd: 18, dur: .9, quiet
 
 const MOVES = { strikes: DONT, crush: TWIST, div: DOWN, manji: STOP };
 JU.tech.add('speaker', { name: 'Cursed Speaker', jp: '呪言', mark: '言', who: 'Cursed speech, and a throat that pays for it', odds: 0, col: COL, glow: 'purple', moves: MOVES,
-  early: true, skin: SPEAKER, as: ['Cursed Speaker', '呪言'],
-  hint: '<b>1</b> Don\'t Move · <b>2</b> Twist · <b>3</b> Get Down · <b>4</b> Stop · every word costs voice' });
+  early: true, skin: SPEAKER, as: ['Cursed Speaker', '呪言'], m1,
+  hint: '<b>1</b> Don\'t Move · <b>2</b> Twist · <b>3</b> Get Down · <b>4</b> Stop · 3 strikes: the third is a word (jump held: FALL) · every word costs voice' });
 const DEF = JU.tech.TECH.speaker, on = () => JU.tech.active === DEF;
 if (JU.story && JU.story.WHO && !JU.story.WHO.inumaki) JU.story.WHO.inumaki = ['Cursed Speaker', '呪言', COL];
 

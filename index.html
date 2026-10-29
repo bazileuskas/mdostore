@@ -1196,7 +1196,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
   </div>
 
   <div class="side" aria-hidden="true" lang="ja">領域展開</div>
-  <div class="hud tl"><b lang="ja">呪</b>Fan project · Build 0.17v1 · Just a Little Harder</div>
+  <div class="hud tl"><b lang="ja">呪</b>Fan project · Build 0.17v2 · Louder</div>
   <div class="hud bl">↑ ↓ Select &nbsp;·&nbsp; Enter Confirm</div>
   <div class="hud br">Title screen</div>
   <div class="acct" id="acct">
@@ -1375,7 +1375,15 @@ const sfx = (() => {
     'home-inu-konbu': [MI + 'inumaki-konbu.mp3', 0, 1.27],                                             // "Inumaki konbu"
     'home-rika-yuta': [MI + 'yuta-louder.mp3', .15, 2.45],                                             // "\"YUTA\" louder": her, screaming it
     'home-yuta-tp': [MI + 'teleport-anime.mp3', 0, .85],                                               // "телепорт аниме"
-    'home-yuta-cut': [MI + 'katana-1-hit.mp3', .1, 1.1] };                                             // "Katana 1 Hit"                                    // "Whip Crack (SoundBible)"
+    'home-yuta-cut': [MI + 'katana-1-hit.mp3', .1, 1.1],
+    // Build 0.17v2: Gojo's, both movesets (tech_b.js, alimit.js): his lines and the anime's sounds, as myinstants titles them
+    'home-gojo-blue': [MI + 'gojo-lapse-blue.mp3', 3.5, 6.6],                                         // "Gojo: Lapse Blue"
+    'home-gojo-red': [MI + 'gojo-reversal-red.mp3', 7.3, 8.93],                                       // "Gojo: Reversal Red"
+    'home-gojo-purple-say': [MI + 'hollow-purple.mp3', 0, 1.92],                                      // "Hollow Purple": his line
+    'home-gojo-purple-boom': [MI + 'hollow-purple-no-voice.mp3', 0, 3.5],                             // "hollow purple no voice": the blast
+    'home-gojo-purple2-say': [MI + 'imaginary-purple-short-version-gojo.mp3', 1.05, 2.95],            // "Imaginary purple Short version (Gojo)"
+    'home-gojo-de': [MI + 'domain-expansion-gojo.mp3', 1.5, 2.75],                                    // "domain expansion GOJO": "Domain Expansion..."
+    'home-gojo-uv': [MI + 'domain-expansion-gojo.mp3', 6.3, 9.1] };                                   // "...Unlimited Void"                                             // "Katana 1 Hit"                                    // "Whip Crack (SoundBible)"
   const clips = {};
   const load = name => {
     if (clips[name]) return clips[name];
