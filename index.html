@@ -6,7 +6,7 @@
 <title>JUJUTSU UNLIMITEDS</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Anton&family=Comic+Neue:wght@700&family=Oswald:wght@400;600&family=Yuji+Syuku&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Comic+Neue:wght@700&family=Oswald:wght@400;600&family=Shantell+Sans:ital,wght@1,700;1,800&family=Yuji+Syuku&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box}
 :root{
@@ -408,6 +408,14 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 .mir{display:none;gap:.3em;margin-top:.12em;padding-left:.3em}
 /* Build 0.17: the Cursed Speaker's voice (inumaki.js), a thin bar under his health that empties as he talks */
 .throat{display:none;align-items:center;gap:.5em;margin-top:.1em;padding-left:.3em}
+/* Build 0.17v1: manga lettering (manga.js). A thought: the words alone, black with a white edge. Speech: the words in a white box, black-bordered */
+.manga{position:absolute;inset:0;z-index:5;overflow:hidden;pointer-events:none}
+.mg{position:absolute;left:0;top:0;transform:translate(-50%,-100%);text-align:center;white-space:pre-line;text-transform:uppercase;color:#111;font:italic 800 clamp(20px,min(3vw,5.2vh),62px)/1.02 'Shantell Sans','Comic Neue',sans-serif;animation:mgin .3s cubic-bezier(.2,1.6,.4,1) both}
+.mg.think{text-shadow:.07em 0 #fff,-.07em 0 #fff,0 .07em #fff,0 -.07em #fff,.05em .05em #fff,-.05em -.05em #fff,.05em -.05em #fff,-.05em .05em #fff,0 .1em .2em rgba(0,0,0,.35)}
+.mg.say{transform:translate(-50%,-55%);max-width:6.2em;padding:.55em .5em;background:#e6e6e6;border:.09em solid #111;font-style:normal;font-size:clamp(17px,min(2.4vw,4.2vh),50px);box-shadow:.12em .12em 0 rgba(0,0,0,.35)}
+.mg.out{animation:mgout .25s ease-in both}
+@keyframes mgin{0%{opacity:0;scale:.4}70%{opacity:1;scale:1.08}100%{opacity:1;scale:1}}
+@keyframes mgout{to{opacity:0;scale:.85}}
 .throat.on{display:flex}
 .throat i{position:relative;width:min(16em,60%);height:.38em;background:rgba(255,255,255,.12);border:1px solid rgba(201,194,255,.5);overflow:hidden}
 .throat i::after{content:"";position:absolute;inset:0;transform-origin:left;transform:scaleX(var(--v,1));background:linear-gradient(90deg,#8f7dff,#c9c2ff);transition:transform .12s}
@@ -1188,7 +1196,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
   </div>
 
   <div class="side" aria-hidden="true" lang="ja">領域展開</div>
-  <div class="hud tl"><b lang="ja">呪</b>Fan project · Build 0.17 · Cursed Speaker</div>
+  <div class="hud tl"><b lang="ja">呪</b>Fan project · Build 0.17v1 · Just a Little Harder</div>
   <div class="hud bl">↑ ↓ Select &nbsp;·&nbsp; Enter Confirm</div>
   <div class="hud br">Title screen</div>
   <div class="acct" id="acct">
@@ -2283,7 +2291,7 @@ window.JU = { sfx, flash, bolts: blackFlash, reduceMotion, startGame, exitGame, 
 // Load every game script fresh on each page load. The dev server sends no cache headers, so without this a reload
 // could run a mix of old and new files (new menu, old moves) while the game is being worked on.
 ['account.js', 'announce.js', 'game.js', 'fx2.js', 'chars.js', 'street.js', 'walk.js', 'foes.js', 'cuts.js', 'sukuna.js', 'school.js', 'story.js', 'story2.js', 'tech.js', 'tech_a.js',
-  'tech_b.js', 'sets.js', 'story3.js', 'cast2.js', 'script.js', 'naoya.js', 'ch45.js', 'ch67.js', 'clan.js', 'clan_a.js', 'clan_b.js', 'boss.js', 'bossfx.js', 'boss_a.js', 'boss_b.js', 'boss_c.js', 'training.js', 'choso.js', 'domain.js', 'domain2.js', 'mahito.js', 'combo.js', 'combat.js', 'cast3.js', 'ch810.js', 'ch1112.js', 'cast4.js', 'ch1316.js', 'cast5.js', 'ch1721.js', 'combat2.js', 'judge.js', 'awaken.js', 'alimit.js', 'ats.js', 'switcher.js', 'tools.js', 'smark.js', 'cast6.js', 'ch2230.js', 'plants.js', 'clash.js', 'block.js', 'cannon.js', 'tced.js', 'shibuya.js', 'kyoto.js', 'evasive.js', 'kokusen.js', 'mp.js', 'pvp.js', 'vengeful.js', 'haruta.js', 'ratio.js', 'reaper.js', 'inumaki.js', 'especial.js', 'yen.js', 'subtech.js', 'metro.js', 'jjh.js', 'shinjuku.js', 'notes.js', 'shop.js', 'ps.js', 'raid.js', 'touch.js'].forEach(src => {
+  'tech_b.js', 'sets.js', 'story3.js', 'cast2.js', 'script.js', 'naoya.js', 'ch45.js', 'ch67.js', 'clan.js', 'clan_a.js', 'clan_b.js', 'boss.js', 'bossfx.js', 'boss_a.js', 'boss_b.js', 'boss_c.js', 'training.js', 'choso.js', 'domain.js', 'domain2.js', 'mahito.js', 'combo.js', 'combat.js', 'cast3.js', 'ch810.js', 'ch1112.js', 'cast4.js', 'ch1316.js', 'cast5.js', 'ch1721.js', 'combat2.js', 'judge.js', 'awaken.js', 'alimit.js', 'ats.js', 'switcher.js', 'tools.js', 'smark.js', 'cast6.js', 'ch2230.js', 'plants.js', 'clash.js', 'block.js', 'cannon.js', 'tced.js', 'shibuya.js', 'kyoto.js', 'evasive.js', 'kokusen.js', 'mp.js', 'pvp.js', 'vengeful.js', 'manga.js', 'haruta.js', 'ratio.js', 'reaper.js', 'inumaki.js', 'especial.js', 'yen.js', 'subtech.js', 'metro.js', 'jjh.js', 'shinjuku.js', 'notes.js', 'shop.js', 'ps.js', 'raid.js', 'touch.js'].forEach(src => {
   const s = document.createElement('script');
   s.src = src + '?v=' + Date.now(); s.async = false;      // async = false keeps them running in this order
   document.body.appendChild(s);

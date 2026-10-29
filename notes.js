@@ -5,6 +5,14 @@
 // Newest first. v = the build, jp = the seal stamped beside it, pic = notes/<pic>.jpg, cap = what the picture shows.
 // A new update goes at the top of this list.
 const NOTES = [
+  { v: '0.17v1', name: 'Just a Little Harder', jp: '奇跡', date: '29 Oct 2026', pic: 'harder', cap: 'Miracle Dork, a Backstab and a dodged sword later, deciding to try', items: [
+    'MIRACLE DORK is out of Early Access: 5% on the Cursed Technique talisman. Nobody else\u2019s chance went down for it; the odds just add up to 105 now',
+    'Miracle Dork 4: BACKSTAB. Round behind them and the sword into their back: pulled out, 40 and two stacks of bleeding; then he throws them, 50, and there is blood everywhere. It needs the sword in his hand',
+    'Miracle Dork E: the sword thrown, and if it lands it does Bastards Qusion on its own, round and round them, 80 in all, and comes back',
+    'HIS AWAKENING. Miss a Backstab (or have it blocked, or seen coming), then throw Sword Play: they dodge it. Then: \u201cI thought\u201d... \u201cI cut you there.\u201d... a sigh... \u201cI guess I\u2019ll try just a little harder.\u201d Six miracles at once, and two moves',
+    'Dirty Stab: an uppercut with the sword, 40 and five stacks of bleeding. Used again once it is ready: an instant kill. My Death: the sword into himself. He falls, and the sword goes for them on its own: if Dirty Stab landed, it kills them and the fight is won; if not, it only cuts them, and he is dead. Never in a duel',
+    'Love Reaper: the second Reaping Slash is just its Black Flash, 90, unless it kills. Then it is his FINISHER: \u201cCOME, RIKA.\u201d and her hand, impact frames (black edged in red, white, red), four seconds held in the air with black lightning tearing out of them while the Black Flash rings out, a white frame, and a kick with a red shockwave and white rings that sends them across the arena',
+    'Manga lettering for what the characters say and think: thoughts on their own in white-edged lettering, speech in a white box'] },
   { v: '0.17', name: 'Cursed Speaker', jp: '呪言', date: '29 Oct 2026', pic: 'speaker', cap: 'Don’t Move, Rika as she really is, and the Reaping Slash holding them in the grey', items: [
     'CURSED SPEAKER, new in Early Access: the second year who only talks in rice-ball fillings. His collar comes down, the seal shows, and what he says happens. Every command is in his own voice from the anime',
     '1 Don’t Move: they stop where they stand for two seconds. 2 Twist: it wrings them round and throws them, 40. 3 Get Down: into the floor, 30, and they stay down. 4 Stop: for a second he waits, and whatever they swing at him stops short; they freeze, 45. E: Cough Syrup, half his voice back',

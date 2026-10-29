@@ -134,8 +134,9 @@ const retix = no => { const el = document.getElementById('tix'); if (el && JU.sh
 function stamp() { document.querySelectorAll('.tcard.lim:not(.ea):not(.tease)').forEach(c => { const t = TECH[c.dataset.tech]; c.classList.toggle('over', !live(t) && !mine(t.id)); c.querySelector('u').textContent = left(t); }); }
 function roll() {
   for (const id of ORDER) { const t = TECH[id]; if (t.limited && live(t) && !(JU.shop && JU.shop.holds('tech', id)) && Math.random() * 100 < t.odds) return id; }      // (a limited one he holds already is not rolled twice)
-  let r = Math.random() * 100;
-  for (const id of ORDER) if (!TECH[id].limited && (r -= TECH[id].odds) < 0) return id;
+  const pool = ORDER.filter(id => !TECH[id].limited), total = pool.reduce((n, id) => n + TECH[id].odds, 0);      // (out of what they all come to: 105 since Miracle Dork joined at 5% in 0.17v1, nobody else's cut)
+  let r = Math.random() * total;
+  for (const id of pool) if ((r -= TECH[id].odds) < 0) return id;
   return ORDER.find(id => TECH[id].odds > 0 && !TECH[id].limited);
 }
 function show(fresh) {

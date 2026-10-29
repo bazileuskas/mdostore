@@ -5,8 +5,10 @@
      gets there it cuts them (80), she puts them into the floor (20), and he cuts them again on the way back up (30). Then Cleaving Love
      waits twenty seconds.
    2 REAPING SLASH (Build 0.17), used twice: gone, and behind them, and a cut (50). 2 again while they reel: gone again, and a Black Flash
-     (90), and everything stops: the sparks of it hang in the air, they hang where they are for four seconds while it rings out, the world
-     round him goes grey and smeared, and then he kicks them clean across the arena.
+     (90). If that Black Flash is going to kill them, it is his FINISHER (0.17v1, the way the user's clip has it): "COME, RIKA." and her
+     hand comes down; impact frames (black edged in red, then white, then red); they hang in the air four seconds with black lightning
+     tearing out of them while the Black Flash rings out; one more white frame; and a kick, with a red shockwave and white rings spinning
+     off it, that sends them the length of the arena. That is when they die.
    3 and 4 are still to come.
    Rika is drawn after the user's picture of her (Build 0.17): a ridged shell of a head with long pale tendrils off the back of it, a mouth
    that is all teeth where a face would be, a starved ribcage, long thin arms and longer fingers, and no legs: from the waist down she is a
@@ -322,7 +324,7 @@ const BEAM = { name: 'Pure Love', jp: '純愛', col: LILAC, cd: LOVE_CD, dur: 1.
 } };
 
 /* ================= 2 (Build 0.17): REAPING SLASH. Used twice ================= */
-const RS_DMG = [50, 90], RS_WAIT = 1.6, RS_HOLD = 4, RS_CD = 12;      // the cut, and the Black Flash; how long the second use waits; how long the finisher holds them; the wait after
+const RS_DMG = [50, 90], RS_WAIT = 1.6, RS_CD = 12;      // the cut, and the Black Flash; how long the second use waits; the wait after
 let rsWait = null, fin = null;                      // { o, t }: the second use, waiting · the finisher holding them: { o, t, x, y, air }
 const reachable = p => { const o = E.P2; return o && can(o) && Math.abs(o.x - p.x) < 1100 ? o : null; };
 function blink(p, x, face) {                        // gone, a grey shape where he was, and there
@@ -353,31 +355,110 @@ const RS1 = { name: 'Reaping Slash', sub: 'USE TWICE', cd: RS_CD, dur: .6, glow:
   E.fx.push({ k: 2, x: p.x, y: p.y + 430, n: '2 · AGAIN', col: LILAC, t: 0, life: 1.2 });
 } };
 const KICK = E.POSE.kick, KWIND = E.POSE.kickWind;
-const RS2 = { name: 'Reaping Slash', dur: RS_HOLD + 1.4, glow: 'purple', run(p, m, t) {
-  const o = m.o;
+const FIN_IMP = .9, FIN_HOLD = 4, FIN_KICK = FIN_IMP + FIN_HOLD + .12, FIN_AFTER = 1.3;      // the finisher: impact frames, the hold, a white frame, the kick; and what is left of it after
+// would this Black Flash kill them? (then it is the finisher)
+const lethal = o => !duel() && !o.ko && o.hp <= RS_DMG[1] * (H.power ? H.power({ dmg: exact(o, RS_DMG[1]), fixed: 1, col: '#ff2440' }, o) : 1) + .001;
+function smoke(x, y) { if (Z && Z.dust) Z.dust(x, 8, 0, y); for (let i = 0; i < 6; i++) V.puff('white', x + rnd(-60, 60), y + rnd(0, 200), rnd(-60, 60), rnd(20, 90), rnd(50, 90), .45); }
+const RS2 = { name: 'Reaping Slash', dur: 9, glow: 'purple', run(p, m, t) {
   p.rate = 50; p.vx = 0;
-  if (!m.s) { m.s = 1; m.o = rsWait ? rsWait.o : E.P2; rsWait = null; const d = Math.sign(m.o.x - p.x) || p.face; blink(p, m.o.x + d * 120, -d); p.inv = Math.max(p.inv || 0, RS_HOLD + 1.4); }
-  if (!o) return;
-  const kickAt = duel() ? .45 : .5 + RS_HOLD;
-  if (t >= .06 && !m.bf) {                          // the Black Flash
+  if (!m.s) {
+    m.s = 1; const o = m.o = rsWait ? rsWait.o : E.P2; rsWait = null;
+    m.fin = lethal(o);
+    const d = Math.sign(o.x - p.x) || p.face;
+    if (m.fin) {                                    // "Come, Rika.", and her hand
+      if (JU.manga) JU.manga.think(p, 'COME, RIKA.', { life: 1.7 });
+      rk.act = { kind: 'slam', t: 0, x: o.x }; sfx.rika(0); smoke(p.x, p.y);
+      p.inv = Math.max(p.inv || 0, FIN_KICK + 1.5);
+    }
+    blink(p, o.x + d * 120, -d);
+    if (m.fin) smoke(p.x, p.y);
+  }
+  const o = m.o;
+  if (!o) { E.endMove(p); return; }
+  if (!m.fin) {                                     // the Black Flash, and that is all
+    p.target = t < .06 ? POSE.lrWindC : t < .4 ? POSE.lrCutC : POSE.idle;
+    if (t >= .06 && !m.bf) {
+      m.bf = 1;
+      E.applyHit(o, p.face, { dmg: exact(o, RS_DMG[1]), kb: duel() ? 1800 : 900, lift: duel() ? 520 : 420, stun: .9, stop: .25, heavy: 1, col: '#ff2440', fixed: 1, mute: 1 });
+      E.blackFlash(() => play('home-nanami-bf', 1, () => sfx.bf()));
+      V.slash(o.x, o.y + 160, p.face > 0 ? .4 : Math.PI - .4, 700, '#ff2440', 18);
+    }
+    if (t > .6) E.endMove(p);
+    return;
+  }
+  // the finisher
+  if (t < .22) { p.target = POSE.lrWindC; return; }
+  if (!m.bf) {                                      // the cut: a Black Flash that is going to kill them. They are kept alive for what comes next
     m.bf = 1;
-    E.applyHit(o, p.face, duel() ? { dmg: exact(o, RS_DMG[1]), kb: 1800, lift: 520, stun: .9, stop: .25, heavy: 1, col: '#ff2440', fixed: 1, mute: 1 }
-                                 : { dmg: exact(o, RS_DMG[1]), kb: 0, stun: RS_HOLD + 1, stop: .25, heavy: 1, col: '#ff2440', fixed: 1, mute: 1 });
-    E.blackFlash(() => play('home-nanami-bf', 1, () => sfx.bf()));
-    V.slash(o.x, o.y + 160, p.face > 0 ? .4 : Math.PI - .4, 700, '#ff2440', 18);
-    if (!duel() && !o.ko) { fin = { o, t: 0, x: o.x, y: o.y, air: !o.ground }; E.after(2.3, () => { if (fin && fin.o === o) play('home-nanami-bf', .8, () => sfx.bf()); }); }      // (and it rings out again, while it holds them)
+    const hs = o.scale || 1;
+    o.hp = Math.max(1, Math.min(o.hp, 1)); o.flash = .1; o.lastHit = 0;
+    E.addNum(o.x, o.y + 270 * hs, RS_DMG[1], '#ff2440');
+    play('home-nanami-bf', 1, () => sfx.bf()); shake(34); E.stop(.12);      // (no banner over this one: the impact frames are the picture, as in the clip)
+    V.slash(o.x, o.y + 160 * hs, p.face > 0 ? .4 : Math.PI - .4, 760, '#ff2440', 20); V.slash(o.x, o.y + 160 * hs, p.face > 0 ? -.5 : Math.PI + .5, 680, LILAC, 14, .04);
+    if (Z) Z.boom(o.x, o.y + 160 * hs, 140, LRGB, { n: 18, smoke: '30,20,40', hot: '255,220,250' });
+    fin = { o, t: 0, x: o.x, y: Math.max(o.y, 110), air: true, shards: [], kicked: false, sounded: false };
+    for (let i = 0; i < 7; i++) fin.shards.push(shard(true));
   }
-  p.target = t < .06 ? POSE.lrWindC : t < .5 ? POSE.lrCutC : t < kickAt ? KWIND : t < kickAt + .35 ? KICK : POSE.idle;
-  if (t >= kickAt && !m.kick) {                     // and the kick: clean across the arena
-    m.kick = 1; fin = null;
-    if (!duel() && !o.ko && !o.poise) Object.assign(o, { ground: false, state: 'air', y: Math.max(o.y, 30), vx: p.face * 2600, vy: 700, bounced: false, face: -p.face, flash: .1 });
-    sfx.blast(); sfx.punch(4, 1.2); shake(40); E.zoomIn(.4);
-    V.ring(o.x, o.y + 150, 380, '#ff2440', .35); V.sparks(o.x, o.y + 150, 'red', 18);
-    if (Z) { Z.flash('255,36,64', .25, .15); Z.shock(o.x, 520, '255,36,64', .45, 10); }
-  }
-  if (t > kickAt + .5) E.endMove(p);
+  const ft = fin ? fin.t : 99;
+  p.target = ft < FIN_IMP ? POSE.lrCutC : ft < FIN_KICK ? KWIND : ft < FIN_KICK + .4 ? KICK : POSE.idle;
+  if (fin && !fin.kicked && ft >= FIN_KICK) kick(p, fin);
+  if (!fin || ft > FIN_KICK + .6) E.endMove(p);
 } };
-
+// a bolt of black lightning out of them, edged in red: in screen units at full size, from near their middle
+function shard(big) {
+  const n = 4 + (Math.random() * 4 | 0), len = big ? rnd(700, 1400) : rnd(260, 980), pts = [[rnd(-60, 60), rnd(-60, 60)]];
+  let a = rnd(0, TAU);
+  for (let i = 1; i <= n; i++) { a += rnd(-.9, .9); const q = pts[i - 1]; pts.push([q[0] + Math.cos(a) * len / n, q[1] + Math.sin(a) * len / n]); }
+  return { pts, w: big ? rnd(120, 220) : rnd(40, 150), t: 0, life: big ? rnd(.3, .6) : rnd(.12, .3) };
+}
+// the kick: across the arena, and that is what kills them
+function kick(p, f) {
+  const o = f.o, face = p.face, n0 = E.fx.length;
+  f.kicked = true; f.after = 0;
+  E.applyHit(o, face, { dmg: exact(o, o.hp + 99999), kb: 3200, lift: 700, stun: .9, stop: .3, heavy: 1, col: '#ff2440', fixed: 1, mute: 1 });
+  for (let i = E.fx.length - 1; i >= n0; i--) if (typeof E.fx[i].n === 'number') E.fx.splice(i, 1);      // (no number for it: the 90 has been shown)
+  sfx.blast(); sfx.punch(4, 1.2); shake(44); E.zoomIn(.5);
+  V.ring(o.x, o.y + 150, 420, '#ff2440', .35); V.sparks(o.x, o.y + 150, 'red', 20); V.rocks(o.x, 0, 10);
+  if (Z) { Z.flash('255,36,64', .3, .18); Z.shock(o.x, 620, '255,36,64', .5, 12); }
+}
+const SIL = { black: E.flat('#000000', '#000000'), red: E.flat('#ff2440', '#ff2440') };
+// what the finisher draws over the fight: the impact frames, the black lightning, the white frame, the rings off the kick
+function finFx() {
+  const f = fin, o = f.o, p = E.P1, hs = o.scale || 1, c = F(o.x, o.y + 160 * hs), k = c[2], t = f.t;
+  const full = col => { g.fillStyle = col; g.fillRect(-4000, -3000, 8000 + E.VW, 6000 + E.VH); };
+  const sil = (skin, dx = 0, dy = 0) => { for (const w of [o, p]) E.drawFighter(Object.assign(E.over(w, skin), { x: w.x + dx, y: w.y + dy }), 1); };
+  const bolt = (s, fill, edge, ew) => {           // one shard: a jagged band, thick at its root and thin at its tip
+    const L = [], R = [], n = s.pts.length;
+    for (let i = 0; i < n; i++) {
+      const a = s.pts[Math.min(i + 1, n - 1)], b = s.pts[Math.max(i - 1, 0)], dx = a[0] - b[0], dy = a[1] - b[1], d = Math.hypot(dx, dy) || 1, w = s.w * (1 - i / n) * .5 + 3;
+      L.push([c[0] + (s.pts[i][0] - dy / d * w) * k, c[1] + (s.pts[i][1] + dx / d * w) * k]); R.push([c[0] + (s.pts[i][0] + dy / d * w) * k, c[1] + (s.pts[i][1] - dx / d * w) * k]);
+    }
+    g.beginPath(); L.forEach((q, i) => (i ? g.lineTo(q[0], q[1]) : g.moveTo(q[0], q[1]))); for (let i = R.length - 1; i >= 0; i--) g.lineTo(R[i][0], R[i][1]); g.closePath();
+    if (edge) { g.strokeStyle = edge; g.lineWidth = ew * k; g.lineJoin = 'miter'; g.stroke(); }
+    if (fill) { g.fillStyle = fill; g.fill(); }
+  };
+  if (t < FIN_IMP) {                                // impact frames: black edged in red, then white, then red
+    if (t < .35) { full('#000'); for (const [dx, dy] of [[5, 0], [-5, 0], [0, 5], [0, -5]]) sil(SIL.red, dx, dy); sil(SIL.black); for (const s of f.shards) bolt(s, '#000', 'rgba(255,36,64,.9)', 4); }
+    else if (t < .75) { full('#fff'); sil(SIL.black); for (const s of f.shards) bolt(s, '#000', null); }
+    else { full('#ff1430'); sil(SIL.black); }
+    return;
+  }
+  if (t < FIN_KICK - .12) {                         // the hold: black lightning tearing out of them, edged in red, and red light
+    g.save(); g.shadowColor = 'rgba(255,36,64,.95)'; g.shadowBlur = 16 * E.px * k;
+    for (const s of f.shards) bolt(s, '#050003', 'rgba(255,40,70,.95)', 7);
+    g.restore();
+    return;
+  }
+  if (!f.kicked) { full('#fff'); sil(SIL.black); return; }      // one more white frame
+  const u = f.after / FIN_AFTER, kc = F(o.x, o.y + 150 * hs);   // the rings spinning off the kick, after them
+  g.save(); g.lineCap = 'round';
+  for (let i = 0; i < 5; i++) {
+    const r = (120 + i * 70 + u * 260) * kc[2], a0 = f.after * (9 - i) + i;
+    g.strokeStyle = `rgba(255,255,255,${(1 - u) * (.55 - i * .08)})`; g.lineWidth = (14 - i * 2) * kc[2];
+    g.beginPath(); g.ellipse(kc[0], kc[1], r, r * .62, -.3, a0, a0 + 2.4); g.stroke();
+  }
+  g.restore();
+}
 const MOVES = {
   get strikes() { return rk.mode === 'rika' ? CL_R : CL_K; },
   crush: RS1,
@@ -411,14 +492,20 @@ H.tick = dt => {
   tick0(dt);
   if (!on()) { if (tag || sub) labels(); rsWait = fin = null; return; }
   if (rsWait && ((rsWait.t -= dt) <= 0 || rsWait.o.ko || rsWait.o !== E.P2)) rsWait = null;
-  if (fin) {                                        // the finisher: held where the Black Flash left them, the sparks of it still going
+  if (fin) {                                        // the finisher: held up where the Black Flash left them while the lightning goes, then flying
     const o = fin.o;
     fin.t += dt;
-    if (o.ko || o !== E.P2) fin = null;
+    if (fin.kicked) { if ((fin.after += dt) >= FIN_AFTER) fin = null; }
+    else if (o !== E.P2 || (o.ko && !fin.kicked)) fin = null;
     else {
-      Object.assign(o, { x: fin.x, y: fin.y, vx: 0, vy: 0, ground: !fin.air, state: 'hurt', stun: Math.max(o.stun || 0, 1), act: null, tele: 0 });
+      Object.assign(o, { x: fin.x, y: fin.y, vx: 0, vy: 0, ground: false, state: 'air', stun: 1, act: null, tele: 0 });
       if (o.ai) o.ai.t = Math.max(o.ai.t || 0, 1);
-      if (Math.random() < dt * 9) { const y = o.y + rnd(80, 260); if (Z) Z.lightning(o.x + rnd(-90, 90), y, o.x + rnd(-160, 160), y + rnd(-120, 120), Math.random() < .5 ? '255,36,64' : '20,0,8', .16, 3, 2); V.sparks(o.x + rnd(-40, 40), y, 'red', 2); }
+      if (fin.t >= FIN_IMP) {
+        for (let i = fin.shards.length - 1; i >= 0; i--) { const sh = fin.shards[i]; if ((sh.t += dt) >= sh.life) fin.shards.splice(i, 1); }
+        if (fin.t < FIN_KICK - .12 && Math.random() < dt * 26) fin.shards.push(shard(Math.random() < .3));
+        if (Math.random() < dt * 8) V.sparks(o.x + rnd(-50, 50), o.y + rnd(100, 240), 'red', 2);
+        if (!fin.sounded && fin.t >= FIN_IMP + 1.9) { fin.sounded = true; play('home-nanami-bf', .85, () => sfx.bf()); }      // (it rings out again, while it holds them)
+      }
     }
   }
   labels();
@@ -445,13 +532,11 @@ const TRAIL = E.flat('#5a3a8a', LILAC);
 const post0 = H.post;
 H.post = dt => {
   if (post0) post0(dt);
-  if (!fin || !on()) return;
-  const o = fin.o, p = E.P1, c = F((o.x + p.x) / 2, (o.y + p.y) / 2 + 170), u = Math.min(1, fin.t * 3), VW = E.VW, VH = E.VH;
-  const gr = g.createRadialGradient(c[0], c[1], 160 * c[2], c[0], c[1], Math.max(VW, VH) * .7);
-  gr.addColorStop(0, 'rgba(90,90,100,0)'); gr.addColorStop(.35, `rgba(96,96,106,${.45 * u})`); gr.addColorStop(1, `rgba(70,70,80,${.82 * u})`);
-  g.fillStyle = gr; g.fillRect(0, 0, VW, VH);
-  g.save(); g.globalAlpha = .07 * u; g.fillStyle = '#e8e8ee';      // the smear: long faint streaks, drifting
-  for (let i = 0; i < 14; i++) { const y = (i * 97 + fin.t * 30) % VH, x = ((i * 233 + fin.t * (40 + i * 6)) % (VW + 600)) - 300; g.fillRect(x, y, 300 + (i % 4) * 90, 3 + (i % 3) * 2); }
+  if (!fin || !on() || !fin.kicked) return;
+  const u = fin.after / FIN_AFTER, VW = E.VW, VH = E.VH, a = u < .3 ? 1 : 1 - (u - .3) / .7;      // after the kick: everything red for a moment, then grey and smeared, then itself again
+  g.fillStyle = u < .3 ? `rgba(200,40,60,${.42 * a})` : `rgba(110,104,112,${.5 * a})`; g.fillRect(0, 0, VW, VH);
+  g.save(); g.globalAlpha = .1 * a; g.fillStyle = '#ffffff';
+  for (let i = 0; i < 16; i++) { const y = (i * 89 + fin.after * 60) % VH, x = ((i * 233 + fin.after * (500 + i * 40)) % (VW + 700)) - 350; g.fillRect(x, y, 340 + (i % 4) * 110, 3 + (i % 3) * 2); }
   g.restore();
 };
 H.fx = dt => {
@@ -460,6 +545,7 @@ H.fx = dt => {
   for (const f of [E.P2, p, ...(JU.raid ? JU.raid.allies() : [])]) if (f.skin === REAPER && !(f.alpha < .05)) katana(f, f === p && p.move && (p.move.def === CL_K || p.move.def === CL_R));
   const A = rk.act;
   if (A && A.kind === 'slam' && on()) slamHand(A.x, A.t / .16, Math.min(1, (.9 - A.t) / .25));
+  if (fin && on()) finFx();
 };
 const clear = () => { rk.act = null; rk.flare = 0; rk.a = SEE; trail.length = 0; rsWait = fin = null; };
 const hit0 = H.hit;
