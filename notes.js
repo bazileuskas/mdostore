@@ -5,6 +5,12 @@
 // Newest first. v = the build, jp = the seal stamped beside it, pic = notes/<pic>.jpg, cap = what the picture shows.
 // A new update goes at the top of this list.
 const NOTES = [
+  { v: '0.20v1', name: 'Fever & Unmasked', jp: '覚醒', date: '30 Oct 2026', pic: 'awakenings', cap: 'The fever, and the bandages coming off', items: [
+    'The Slit Mouth has an awakening, Unmasked (G with the bar full). A thought, NOBODY EVER SAYS YES..., then AM I PRETTY?, the bandages torn off her face and hands, HOW ABOUT NOW?, and real music from the anime under the next thirty seconds',
+    'Unmasked: her mouth and the eyes in her hair stay open, shears follow her about and snip at whoever she hits (5, a third of the time), Am I Pretty? is back in six seconds instead of twenty, a NO closes six pairs of shears instead of four, and whatever she is fighting is slower with fear. When it is over she thinks it: ...THEY STILL SAY NO',
+    'The Star-Crossed has an awakening, Fever (G with the bar full). A thought, THE FEVER\u2019S RUNNING HOT TODAY~, then the sky goes dark and full of stars with the Southern Cross in it, STARS IN THE WRONG ORDER NEVER MEET!, and real music from the anime (season 3, theirs) for thirty seconds',
+    'Fever: every hit puts two stars on them instead of one, IMAI lands 60% harder instead of 30%, Shooting Star throws three, and the Rendezvous heel is 110. When it is over: ...THE FEVER\u2019S GONE COLD',
+    'The music is the anime\u2019s own, played from myinstants on the site and going round for as long as the awakening lasts. The lines are lettered the manga way: thoughts as bare words, speech in white boxes'] },
   { v: '0.20', name: 'Slit Mouth', jp: '口裂け', date: '29 Oct 2026', pic: 'slitmouth', cap: 'Am I pretty? Not her type', items: [
     'Early Access: the Slit Mouth, a curse out of an old story, and one of the strongest a curse user had when he was a second year (the Hidden Inventory). Tall, a light trench coat belted tight, long black hair over a face wrapped in bandages, eyes that open in her hair, and a mouth cut from ear to ear, full of teeth. Drawn after the anime',
     'E Am I Pretty?: her Simple Domain. Time stops for the two of you and the place turns into her corridor of frames running off into white light, and nobody can lift a hand until her question is answered. You answer for them, with 1, 2 or 3 (or the buttons). YES: she is pleased, and for eight seconds everything she does lands 30% harder. NO: not her type, and shears close on them from all round, 4 x10 and a bleed',

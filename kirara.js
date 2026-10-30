@@ -19,6 +19,8 @@
    4 INTERSTELLAR FLIGHT (0.19; 星間飛行 is the technique's own name): a streak of light from star to star. Through them, out to the first
      pinned star, back through them, out to the next, and so on, a blow every time through (15, the last 25) and the next star with each;
      the pinned stars go out as they are flown through. With none pinned, one is flicked up behind them first
+   G FEVER (Build 0.20v1, the awakening): see its own part below. The user asked for it with thought and speech bubbles and real music from
+     the anime behind it
    A duel's other player is moved by their own game: there, nothing is pushed apart or pulled in and no blow stops short, but the stars,
    the hits and the harder hits on IMAI are the same. The sounds are built (sfx.star, twinkle and cross, in index.html) */
 (() => {
@@ -46,6 +48,7 @@ function mk(rgb) {
   return c;
 }
 if (!E.GLOW.pink) E.GLOW.pink = mk(PRGB);
+sfx.preload(['home-kirara-awk']);              // (the fever's music: Build 0.20v1)
 
 /* ================= how the Star-Crossed looks: long dark hair with pink through it, the school's dark uniform to the ankles, stars ================= */
 const shade = (hex, f) => { const n = parseInt(hex.slice(1), 16); return `rgb(${Math.min(255, (n >> 16) * f) | 0},${Math.min(255, (n >> 8 & 255) * f) | 0},${Math.min(255, (n & 255) * f) | 0})`; };
@@ -127,7 +130,12 @@ function burstAt(x, y, s = 1) {
 /* ================= 1 — Shooting Star ================= */
 const SHOOT = { name: 'Shooting Star', cd: 1.8, dur: .42, run(p, m, t) {
   p.vx = 0; p.rate = 36; p.target = t < .12 ? POSE.kiWind : t < .3 ? POSE.kiFlick : POSE.idle;
-  if (!m.s && t > .1) { m.s = 1; shots.push({ x: p.x + p.face * 80, y: p.y + 250, vx: p.face * SHOT_V, t: 0, rot: 0, trail: [] }); sfx.twinkle(); sfx.whoosh(); }
+  if (!m.s && t > .1) {
+    m.s = 1;
+    const n = fevOn() ? 3 : 1;                       // (three of them in the fever)
+    for (let i = 0; i < n; i++) shots.push({ x: p.x + p.face * 80, y: p.y + 250 + (i - (n - 1) / 2) * 80, vx: p.face * SHOT_V, t: 0, rot: 0, trail: [] });
+    sfx.twinkle(); sfx.whoosh();
+  }
 } };
 function flyShots(dt) {
   const o = E.P2;
@@ -181,7 +189,7 @@ function meet(p, m, t) {                            // IMAI on them: come here, 
   m.done = 1;
   if (duel()) p.x = clamp(o.x - f * 120, -960, 960);      // (a duel's other player stays where they are: the heel goes to them)
   if (o.ko) return;
-  E.applyHit(o, f, { dmg: exact(o, 85), kb: 900, lift: 700, stun: .9, stop: .3, heavy: 1, col: PINK, fixed: 1, mute: 1, nostar: 1 });
+  E.applyHit(o, f, { dmg: exact(o, fevOn() ? FEV_MEET : 85), kb: 900, lift: 700, stun: .9, stop: .3, heavy: 1, col: PINK, fixed: 1, mute: 1, nostar: 1 });
   setMark(o, 1);                                    // and out of order again
   burstAt(o.x, o.y + 180, 1.3); sfx.bf(); sfx.star(4); shake(30); E.zoomIn(.4);
   E.fx.push({ k: 2, x: o.x, y: o.y + 520, n: 'RENDEZVOUS', col: PINK, t: 0, life: 1.4 });
@@ -477,19 +485,96 @@ function drawCross() {
   g.restore();
 }
 
+/* ================= G — FEVER (Build 0.20v1): the awakening ================= */
+// Nothing makes the Star-Crossed happier than a fever running hot. A thought first ("THE FEVER'S RUNNING HOT TODAY~"), the sky going to stars
+// with the Southern Cross in it, "STARS IN THE WRONG ORDER NEVER MEET!", and real music from the anime under the rest of it (myinstants'
+// "Jjk theme season 3", the season the Star-Crossed is in; sounds/home-kirara-awk.mp3 at home), round and round, for thirty seconds. In the
+// fever every hit puts two stars on them instead of one, IMAI lands x1.6 instead of x1.3, Shooting Star throws three, and the Rendezvous heel
+// is 110 (176 on IMAI). When it is over: "...THE FEVER'S GONE COLD."
+const FEV_T = 30, FEV_INTRO = 3, FEV_BONUS = 1.6, FEV_MEET = 110;
+let fev = null, watch = 0, shownT = -1, sky = 0;   // { t, intro, paused, music, sky }; how far the sky has gone to stars
+function fevOn() { return !!fev && !fev.intro; }
+function awaken(p) {
+  if (fev) return;
+  fev = { t: FEV_T, intro: true, paused: false, music: null, sky: false };
+  if (!duel() && !(H.foes && H.foes()) && !Fi.fight.paused) { Fi.fight.paused = true; fev.paused = true; }      // (the fight waits for it: not a duel's, not a raid's)
+  p.inv = Math.max(p.inv || 0, FEV_INTRO + .3);
+  p.move = { def: FEVER, t: 0 };
+  E.zoomIn(FEV_INTRO);
+  clearInterval(watch); watch = setInterval(() => { if (fev && E.root.dataset.mode !== 'fight') endFev(true); if (!fev) clearInterval(watch); }, 250);
+}
+const FEVER = { name: 'Fever', dur: FEV_INTRO, run(p, m, t) {
+  p.vx = 0; p.rate = 16; p.target = t < 1.25 ? POSE.kiReach : POSE.kiRaise;
+  if (!m.a) { m.a = 1; if (JU.manga) JU.manga.think(p, "THE FEVER'S RUNNING HOT TODAY~", { life: 1.25 }); sfx.twinkle(); }
+  if (t >= 1.25 && !m.b) { m.b = 1; fev.sky = true; if (JU.manga) JU.manga.say(p, 'STARS IN THE WRONG ORDER NEVER MEET!', { life: 1.45 }); sfx.cross(); }
+  if (t >= 2.75 && !m.c) { m.c = 1; begin(p); }
+} };
+function begin(p) {
+  fev.intro = false;
+  if (fev.paused) { fev.paused = false; Fi.fight.paused = false; }
+  E.banner('星間飛行', 'FEVER'); sfx.star(4); sfx.bf(); shake(20); burstAt(p.x, p.y + 220, 1.6);
+  if (Z) Z.flash(PRGB, .3, .3);
+  fev.music = sfx.song('home-kirara-awk', 0, 1.2, .55, true);
+  shownT = -1;
+}
+function endFev(quiet) {
+  const f = fev;
+  if (!f) return;
+  fev = null; clearInterval(watch);
+  if (f.music) f.music.stop(1.6);
+  if (f.paused && Fi.fight.paused) Fi.fight.paused = false;
+  if (on()) JU.tech.drain();
+  if (!quiet && on() && JU.manga) JU.manga.think(E.P1, "...THE FEVER'S GONE COLD.", { life: 1.6 });
+}
+const awkEl = document.getElementById('awk');
+function awkBar() {                                 // the bar while the fever lasts: the time left
+  if (!fevOn() || !on()) return;
+  const s = Math.max(0, Math.ceil(fev.t));
+  if (s === shownT) return;
+  shownT = s; awkEl.style.setProperty('--a', Math.max(0, fev.t / FEV_T)); awkEl.classList.remove('full');
+  awkEl.lastElementChild.textContent = 'Fever · ' + s + 's';
+}
+// the sky gone to stars: the stage darkened, stars everywhere twinkling, the Southern Cross big over it all, and now and then one falling
+const SKY = Array.from({ length: 140 }, (_, i) => ({ x: (Math.sin(i * 12.9898) * 43758.5453 % 1 + 1) % 1, y: (Math.sin(i * 78.233) * 12345.678 % 1 + 1) % 1 * .72, r: .6 + (i % 5) * .35, ph: i * 1.7 }));
+const CRUX = [[.5, .1], [.4, .27], [.5, .44], [.61, .25], [.55, .36]];      // ACRUX at the foot... drawn as the sky has it: GACRUX top, ACRUX bottom
+const falls = [];
+function drawSky(dt) {
+  if (sky < .01) return;
+  const cv = g.canvas, W = cv.width, Hh = cv.height, T = E.T, s = Math.min(W / 1280, Hh / 720);
+  g.save(); g.setTransform(1, 0, 0, 1, 0, 0);
+  g.fillStyle = `rgba(5,6,26,${.72 * sky})`; g.fillRect(0, 0, W, Hh);
+  g.globalCompositeOperation = 'lighter';
+  for (const st of SKY) { const a = sky * (.35 + .65 * Math.abs(Math.sin(T * 1.6 + st.ph))); g.fillStyle = `rgba(255,248,236,${a})`; g.beginPath(); g.arc(st.x * W, st.y * Hh, st.r * s * 1.3, 0, TAU); g.fill(); }
+  const pts = [[.5, .52], [.43, .3], [.5, .1], [.58, .27], [.535, .4]].map(([x, y]) => [W * (.62 + (x - .5) * .9), Hh * (.06 + y * .55)]);      // ACRUX, MIMOSA, GACRUX, IMAI, GINAN
+  g.strokeStyle = `rgba(${PRGB},${.55 * sky})`; g.lineWidth = 2.5 * s;
+  g.beginPath(); g.moveTo(pts[0][0], pts[0][1]); g.lineTo(pts[2][0], pts[2][1]); g.moveTo(pts[1][0], pts[1][1]); g.lineTo(pts[3][0], pts[3][1]); g.stroke();
+  pts.forEach((q, i) => { E.glow(E.GLOW[i === 4 ? 'pink' : 'gold'], q[0], q[1], 70 * s, .9 * sky); g.fillStyle = `rgba(255,255,255,${sky})`; g.beginPath(); g.arc(q[0], q[1], 4 * s, 0, TAU); g.fill(); });
+  for (let i = falls.length - 1; i >= 0; i--) {     // stars falling
+    const f = falls[i]; f.t += dt;
+    if (f.t > .7) { falls.splice(i, 1); continue; }
+    const x = f.x * W + f.t * 900 * s, y = f.y * Hh + f.t * 420 * s, a = sky * (1 - f.t / .7);
+    g.strokeStyle = `rgba(255,236,250,${a})`; g.lineWidth = 2 * s; g.beginPath(); g.moveTo(x, y); g.lineTo(x - 120 * s, y - 56 * s); g.stroke();
+  }
+  if (Math.random() < dt * 1.2) falls.push({ x: Math.random() * .7, y: Math.random() * .3, t: 0 });
+  g.restore();
+}
+void CRUX;
+
 /* ================= the technique ================= */
 const MOVES = { strikes: SHOOT, crush: MEET, div: STAMP, manji: FLIGHT };
 JU.tech.add('kirara', { name: 'Star-Crossed', jp: '星間飛行', mark: '星', who: 'Love Rendezvous', odds: 2.5, col: PINK, glow: 'pink', moves: MOVES,
-  limited: ENDS, skin: KIRARA, as: ['Star-Crossed', '星'],
-  hint: '<b>1</b> Shooting Star · <b>2</b> Love Rendezvous · <b>3</b> Star Stamp: pin a star, it draws them in · <b>4</b> Interstellar Flight, through every star · <b>E</b> Southern Cross · every hit puts the next star on them: the wrong order never meet, <b>IMAI</b> is drawn in' });
+  limited: ENDS, skin: KIRARA, as: ['Star-Crossed', '星'], awaken, awkName: 'Fever', awkKeep: true,
+  get awkHits() { return !fev; },                   // (in the fever the bar is the time left: hits do not fill it)
+  hint: '<b>1</b> Shooting Star · <b>2</b> Love Rendezvous · <b>3</b> Star Stamp: pin a star, it draws them in · <b>4</b> Interstellar Flight, through every star · <b>E</b> Southern Cross · <b>G</b> Fever · every hit puts the next star on them: the wrong order never meet, <b>IMAI</b> is drawn in' });
 const DEF = JU.tech.TECH.kirara, on = () => JU.tech.active === DEF;
 
 /* ---------- wiring ---------- */
-const hit0 = H.hit, guard0 = H.guard, pow0 = H.power, tick0 = H.tick, fx0 = H.fx, reset0 = H.reset, start0 = H.fightStart;
+const hit0 = H.hit, guard0 = H.guard, pow0 = H.power, tick0 = H.tick, fx0 = H.fx, reset0 = H.reset, start0 = H.fightStart, under0 = H.under;
+H.under = dt => { under0(dt); if (on()) drawSky(dt); };
 H.hit = (o, face, h) => {                           // a blow of the Star-Crossed's that lands: the next star on them
   hit0(o, face, h);
   if (!on() || h.nostar || o.ko) return;
-  advance(o);
+  advance(o); if (fevOn()) advance(o);              // (two at a time in the fever)
   const m = E.P1.move;
   if (m && m.def.m1) burstAt(o.x - face * 20, o.y + 160 * (o.scale || 1), .35);
 };
@@ -499,10 +584,20 @@ H.guard = (face, a, mul) => {
   never();                                          // thrown across the wrong order: it stops short
   return true;
 };
-H.power = (h, o) => (pow0 ? pow0(h, o) : 1) * (on() && drawn(o) ? BONUS : 1);
+H.power = (h, o) => (pow0 ? pow0(h, o) : 1) * (on() && drawn(o) ? (fevOn() ? FEV_BONUS : BONUS) : 1);
 H.tick = dt => {
   tick0(dt);
-  if (!on()) { if (shots.length) shots.length = 0; markO = null; mark = 0; crossS = null; pins.length = 0; flight = null; return; }
+  sky += ((fev && fev.sky ? 1 : 0) - sky) * (1 - Math.exp(-dt * 3));
+  if (!on()) { if (shots.length) shots.length = 0; markO = null; mark = 0; crossS = null; pins.length = 0; flight = null; if (fev) endFev(true); return; }
+  if (fev) {                                         // the fever: the time going, and sparks off her
+    const p = E.P1;
+    if (p.dead) endFev(true);
+    else if (!fev.intro) {
+      fev.t -= dt; awkBar();
+      if (Math.random() < dt * 14) V.mote(p.x, p.y + 230, Math.random() < .5 ? 'pink' : 'gold');
+      if (fev.t <= 0) endFev();
+    }
+  }
   if (shots.length) flyShots(dt);
   if (flight && !(E.P1.move && E.P1.move.def === FLIGHT)) flight = null;      // (cut short)
   flightTick(dt); pinsTick(dt);
@@ -514,10 +609,11 @@ H.fx = dt => {
   drawCross(); drawPins(); drawShots(); drawFlight(); drawRules();
 };
 const clear = () => { mark = 0; markO = null; shots.length = 0; crossS = null; stampT = pushT = neverT = 0; pins.length = 0; flight = null; pinCool = 0; };
-H.reset = () => { reset0(); clear(); };
-H.fightStart = (cfg, wave) => { start0(cfg, wave); clear(); };
+H.reset = () => { reset0(); clear(); endFev(true); sky = 0; };
+H.fightStart = (cfg, wave) => { start0(cfg, wave); clear(); if (!wave) { endFev(true); sky = 0; } };      // (the fever lasts through the waves of one fight)
 
 JU.kirara = { SKIN: KIRARA, MOVES, esp: CROSS, ENDS, STARS,      // (esp: E, especial.js)
+  get fever() { return fev && { t: +fev.t.toFixed(2), intro: fev.intro, music: !!(fev.music && fev.music.playing), sky: +sky.toFixed(2) }; },
   get state() { return { mark, star: mark ? STARS[mark - 1][0] : null, on: markO === E.P2, shots: shots.length, cross: crossS ? +crossS.t.toFixed(2) : null,
     pins: pins.map(q => ({ x: Math.round(q.x), y: q.y, t: +q.t.toFixed(2) })), flight: flight ? { leg: flight.i, of: flight.legs.length, hits: flight.hits } : null }; },
   set(n) { setMark(E.P2, n); } };

@@ -14,6 +14,8 @@
    2 SLIT: in, with a big pair of shears, and shut on them: 32, and a bleed (3 x3)
    3 BANDAGE BIND: the bandages off her hands, out to them and round them: 14, held two seconds, and pulled in to her
    4 SNIP SNIP: hold of them, and shears round them going to work: 5 x8, then a cut across them, 12
+   G UNMASKED (Build 0.20v1, the awakening): see its own part below. The user asked for it with thought and speech bubbles of her most famous
+     lines and real music from the anime behind it
    Sounds: the snips are clips (myinstants' "Scissor cut" and "scissors Sound": home-slit-* at home), the rest built (sfx.snip, pretty, shear) */
 (() => {
 'use strict';
@@ -26,7 +28,7 @@ const exact = (o, n) => n / (o.dr || 1);            // a hit worth the stated am
 const duel = () => !!(Fi.fight.cfg && Fi.fight.cfg.pvp);
 const crowd = () => !!(H.foes && H.foes());
 const play = (name, vol, alt) => { if (!sfx.file(name, vol) && alt) alt(); };      // a clip (myinstants' online, sounds/home-* at home), or a built one
-sfx.preload(['home-slit-snip', 'home-slit-snips']);
+sfx.preload(['home-slit-snip', 'home-slit-snips', 'home-slit-awk']);
 const RED = '#e8344a', RRGB = '232,52,74', BLUE = '#8fd8ff', BRGB = '143,216,255';
 const live = o => !!o && !o.ko && !(o.alpha < 1);
 const handAt = (f, front) => { const h = E.hand(f, front), s = f.scale || 1; return [f.x + (h[0] - f.x) * s, f.y + (h[1] - f.y) * s]; };
@@ -287,7 +289,7 @@ function pick(i) {
   if (ask.o && JU.manga) JU.manga.say(ask.o, ANS[i], { life: 1.2, side: 0, up: 380 });
 }
 function unpause() { if (ask && ask.paused) { ask.paused = false; Fi.fight.paused = false; } }
-const ESP = { name: 'Am I Pretty?', jp: '私、キレイ？', col: RED, cd: 20, dur: 12, run(p, m, t) {
+const ESP = { name: 'Am I Pretty?', jp: '私、キレイ？', col: RED, get cd() { return unmOn() ? UNM_ECD : 20; }, dur: 12, run(p, m, t) {
   p.vx = 0;
   if (!m.set) {
     m.set = 1;
@@ -345,9 +347,11 @@ function no(p, A, o) {                               // not her type: shears all
   unpause(); look.mouthTo = 1;
   label(o.x, o.y + 470 * (o.scale || 1), 'NOT HER TYPE', RED, 1.4);
   ringOf(o, 10, 1.1, true);
-  for (let i = 0; i < 4; i++) E.after(.3 + i * .14, () => {
+  const n = unmOn() ? 6 : 4;                         // (six of them close while she is unmasked)
+  for (let i = 0; i < n; i++) E.after(.3 + i * .14, () => {
     if (o.ko) return;
-    E.applyHit(o, o.x >= p.x ? 1 : -1, { dmg: exact(o, 10), kb: i === 3 ? 520 : 0, lift: i === 3 ? 300 : 0, stun: .7, stop: .05, heavy: i === 3 ? 1 : 0, col: RED, fixed: 1, mute: 1 });
+    const last = i === n - 1;
+    E.applyHit(o, o.x >= p.x ? 1 : -1, { dmg: exact(o, 10), kb: last ? 520 : 0, lift: last ? 300 : 0, stun: .7, stop: .05, heavy: last ? 1 : 0, col: RED, fixed: 1, mute: 1 });
     play('home-slit-snip', .8, () => sfx.snip(1.2)); blood(o.x, mid(o), 6);
     if (JU.cut) JU.cut.slice(o.x, mid(o), rnd(-1.2, 1.2), 380, { shift: 6, life: .3, col: RRGB });
   });
@@ -411,15 +415,118 @@ function drawDomain() {
   g.restore();
 }
 
+/* ================= G — UNMASKED (Build 0.20v1): her awakening ================= */
+// What every telling of her has: she asks with her face covered, then takes the covering off and asks again. A thought first ("NOBODY EVER
+// SAYS YES..."), AM I PRETTY?, the bandages torn off her face and hands, HOW ABOUT NOW?, and then real music from the anime under the rest of
+// it (myinstants' "Yuuuuta vs ryu vs oro theme"; sounds/home-slit-awk.mp3 at home), round and round, for thirty seconds. Unmasked: her mouth
+// and the eyes in her hair stay open, shears follow her about and snip at whoever she hits (5, a third of the time), her question waits 6
+// seconds instead of 20 and a NO closes six pairs of shears instead of four, and whatever she fights is slow with fear (x.75). When it is
+// over she thinks it: "...THEY STILL SAY NO."
+const UNM_T = 30, UNM_INTRO = 3, UNM_SNIP = .33, UNM_FEAR = .75, UNM_ECD = 6;
+let unm = null, watch = 0, shownT = -1;            // { t, intro, paused, music }
+const strips = [];                                  // the bandages, torn off, coming down
+function unmOn() { return !!unm && !unm.intro; }
+function awaken(p) {
+  if (unm) return;
+  unm = { t: UNM_T, intro: true, paused: false, music: null };
+  if (!duel() && !crowd() && !Fi.fight.paused) { Fi.fight.paused = true; unm.paused = true; }      // (the fight waits for it: not a duel's, not a raid's)
+  p.inv = Math.max(p.inv || 0, UNM_INTRO + .3);
+  p.move = { def: UNMASK, t: 0 };
+  E.zoomIn(UNM_INTRO);
+  clearInterval(watch); watch = setInterval(() => { if (unm && E.root.dataset.mode !== 'fight') endUnm(true); if (!unm) clearInterval(watch); }, 250);
+}
+const UNMASK = { name: 'Unmasked', dur: UNM_INTRO, run(p, m, t) {
+  p.vx = 0; p.rate = 14;
+  p.target = t < 1.45 ? POSE.slAsk : t < 1.75 ? POSE.slGrab : POSE.slAsk;
+  if (!m.a) { m.a = 1; if (JU.manga) JU.manga.think(p, 'NOBODY EVER SAYS YES...', { life: 1.2 }); sfx.pretty(); look.eyesTo = .6; }
+  if (t >= 1 && !m.b) { m.b = 1; if (JU.manga) JU.manga.say(p, 'AM I PRETTY?', { life: .85 }); look.eyesTo = 1; }
+  if (t >= 1.5 && !m.c) { m.c = 1; tear(p); }
+  if (t >= 1.75 && !m.d) { m.d = 1; if (JU.manga) JU.manga.say(p, 'HOW ABOUT NOW?', { life: 1.2 }); shake(10); }
+  if (t >= 2.75 && !m.e) { m.e = 1; begin(p); }
+} };
+function tear(p) {                                  // the bandages off her face and hands, all at once
+  look.mouthTo = 1; sfx.rip(); sfx.snip(1.4);
+  const hs = p.scale || 1;
+  for (let i = 0; i < 16; i++) strips.push({ x: p.x + rnd(-34, 34) * hs, y: p.y + rnd(140, 300) * hs, vx: rnd(-460, 460), vy: rnd(250, 760), r: rnd(0, TAU), vr: rnd(-9, 9), t: 0, life: rnd(1.4, 2.6), len: rnd(26, 58) });
+  blood(p.x + p.face * 14, p.y + 200 * hs, 6, p.face);
+  if (Z) Z.flash(RRGB, .22, .25);
+}
+function begin(p) {
+  unm.intro = false;
+  if (unm.paused) { unm.paused = false; Fi.fight.paused = false; }
+  E.banner('口裂け', 'UNMASKED'); sfx.shear(); shake(20);
+  unm.music = sfx.song('home-slit-awk', 0, 1.2, .55, true);
+  shownT = -1;
+  void p;
+}
+function endUnm(quiet) {
+  const u = unm;
+  if (!u) return;
+  unm = null; clearInterval(watch);
+  if (u.music) u.music.stop(1.6);
+  if (u.paused && Fi.fight.paused) Fi.fight.paused = false;
+  look.mouthTo = look.eyesTo = 0;
+  if (on()) JU.tech.drain();
+  if (!quiet && on() && JU.manga) JU.manga.think(E.P1, '...THEY STILL SAY NO.', { life: 1.6 });
+}
+const awkEl = document.getElementById('awk');
+function awkBar() {                                 // the bar while she is unmasked: the time left
+  if (!unmOn() || !on()) return;
+  const s = Math.max(0, Math.ceil(unm.t));
+  if (s === shownT) return;
+  shownT = s; awkEl.style.setProperty('--a', Math.max(0, unm.t / UNM_T)); awkEl.classList.remove('full');
+  awkEl.lastElementChild.textContent = 'Unmasked · ' + s + 's';
+}
+function stripsTick(dt) {
+  for (let i = strips.length - 1; i >= 0; i--) {
+    const s = strips[i];
+    if ((s.t += dt) >= s.life) { strips.splice(i, 1); continue; }
+    s.x += s.vx * dt; s.y += s.vy * dt; s.vy -= 900 * dt; s.vx *= Math.exp(-dt * 1.5); s.r += s.vr * dt;
+    if (s.y < 4) { s.y = 4; s.vy = 0; s.vx *= .5; s.vr *= .5; }
+  }
+}
+function drawStrips() {
+  for (const s of strips) {
+    const c = F(s.x, s.y), k = c[2], a = Math.min(1, (s.life - s.t) * 2), L = s.len * k / 2;
+    g.save(); g.globalAlpha = a; g.translate(c[0], c[1]); g.rotate(s.r);
+    g.beginPath(); g.moveTo(-L, -4 * k); g.quadraticCurveTo(0, -9 * k * Math.sin(s.t * 6), L, -3 * k); g.lineTo(L, 4 * k); g.quadraticCurveTo(0, -1 * k, -L, 4 * k); g.closePath();
+    g.fillStyle = '#efe8da'; g.fill(); g.lineWidth = 1.5; g.strokeStyle = LINE; g.stroke();
+    g.restore();
+  }
+}
+function snipper(o, face) {                         // a pair of shears that has followed her about, snipping at whoever she has just hit
+  E.after(.18, () => {
+    if (o.ko) return;
+    E.applyHit(o, face, { dmg: exact(o, 5), kb: 0, stun: .25, stop: .02, col: RED, fixed: 1, mute: 1, snipper: 1 });
+    sfx.snip(1.1); blood(o.x, mid(o), 3, face);
+    const x = o.x + rnd(-40, 40), y = mid(o) + rnd(-60, 60), a = rnd(0, TAU);
+    V.custom(.3, u => { const c = F(x, y); shears(c[0], c[1], a, Math.max(0, 1 - u * 3), .9 * c[2], 1 - u); });
+  });
+}
+function vignette() {                               // her corridor's blue, at the edges of everything, while she is unmasked
+  const cv = g.canvas, W = cv.width, Hh = cv.height, a = unm.intro ? Math.min(1, (E.P1.move ? E.P1.move.t : 0) / 2.5) : Math.min(1, unm.t / 1.5);
+  const gr = g.createRadialGradient(W / 2, Hh * .45, Math.min(W, Hh) * .35, W / 2, Hh * .45, Math.max(W, Hh) * .75);
+  gr.addColorStop(0, 'rgba(10,33,64,0)'); gr.addColorStop(1, `rgba(10,33,64,${.55 * a})`);
+  g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.fillStyle = gr; g.fillRect(0, 0, W, Hh); g.restore();
+}
+
 /* ================= the technique ================= */
 const MOVES = { strikes: RAIN, crush: CUT, div: BIND, manji: SNIPS };
 JU.tech.add('slit', { name: 'Slit Mouth', jp: '口裂け', mark: '裂', who: 'Am I pretty?', odds: 0, col: RED, glow: 'red', moves: MOVES,
-  early: true, gore: true, skin: SLIT, as: ['Slit Mouth', '口裂け'],
-  hint: '<b>1</b> Scissor Rain · <b>2</b> Slit · <b>3</b> Bandage Bind · <b>4</b> Snip Snip · <b>E</b> Am I Pretty?: answer for them with <b>1</b>, <b>2</b> or <b>3</b>' });
+  early: true, gore: true, skin: SLIT, as: ['Slit Mouth', '口裂け'], awaken, awkName: 'Unmasked', awkKeep: true,
+  get awkHits() { return !unm; },                   // (unmasked, the bar is the time left: hits do not fill it)
+  hint: '<b>1</b> Scissor Rain · <b>2</b> Slit · <b>3</b> Bandage Bind · <b>4</b> Snip Snip · <b>E</b> Am I Pretty?: answer for them with <b>1</b>, <b>2</b> or <b>3</b> · <b>G</b> Unmasked' });
 const DEF = JU.tech.TECH.slit, on = () => JU.tech.active === DEF;
 
 /* ---------- wiring ---------- */
 const press0 = H.press, pow0 = H.power, ban0 = H.kitBan, tick0 = H.tick, fx0 = H.fx, under0 = H.under, reset0 = H.reset, start0 = H.fightStart;
+const hit0 = H.hit, rate0 = H.foeRate, post0 = H.post;
+H.hit = (o, face, h) => {                           // unmasked: shears that follow her snip at whoever she hits
+  hit0(o, face, h);
+  if (on() && unmOn() && !h.snipper && o !== E.P1 && !o.ko && Math.random() < UNM_SNIP) snipper(o, face);
+};
+H.foeRate = o => (rate0 ? rate0(o) : 1) * (on() && unmOn() ? UNM_FEAR : 1);      // and what she fights is slow with fear
+H.post = dt => { if (post0) post0(dt); if (on() && unm) vignette(); };
 H.press = (a, inScene) => {                          // while she is asking: 1, 2 and 3 answer for them
   if (!inScene && ask && ask.phase === 'q1' && ask.pick === undefined) {
     const i = { strikes: 0, crush: 1, div: 2 }[a];
@@ -435,8 +542,17 @@ H.tick = dt => {
   if (pleased > 0 && (pleased -= dt) <= 0) look.smile = 0;
   if (silenced && (silenced.t -= dt) <= 0) silenced = null;
   for (const k of ['eyes', 'mouth']) look[k] += (look[k + 'To'] - look[k]) * (1 - Math.exp(-dt * 12));
-  if (!on()) { if (ask) { unpause(); ask = null; showUI(false); } flung.length = 0; band = held = null; return; }
+  if (strips.length) stripsTick(dt);
+  if (!on()) { if (ask) { unpause(); ask = null; showUI(false); } if (unm) endUnm(true); flung.length = 0; band = held = null; return; }
   const p = E.P1;
+  if (unm) {                                         // unmasked: the time going, her face open, red about her
+    if (p.dead) endUnm(true);
+    else if (!unm.intro) {
+      unm.t -= dt; awkBar(); look.mouthTo = Math.max(look.mouthTo, .8); look.eyesTo = 1;
+      if (Math.random() < dt * 10) V.mote(p.x, p.y + 230, 'red');
+      if (unm.t <= 0) endUnm();
+    }
+  }
   if (ask && !(p.move && p.move.def === ESP)) { unpause(); ask = null; showUI(false); look.eyesTo = look.mouthTo = 0; }      // (cut short)
   if (held && !(p.move && (p.move.def === CUT))) held = null;
   if (band && !(p.move && p.move.def === BIND)) band = null;
@@ -446,18 +562,20 @@ H.tick = dt => {
 H.under = dt => { under0(dt); if (on()) drawDomain(); };
 H.fx = dt => {
   fx0(dt);
-  drawBound(dt); drawRing(dt); drawSlits(dt);
+  drawBound(dt); drawRing(dt); drawSlits(dt); drawStrips();
   if (!on()) return;
   const p = E.P1;
+  if (unmOn()) { const c = F(p.x, p.y + 190 * (p.scale || 1)); lit(() => E.glow(E.GLOW.red, c[0], c[1], 380 * c[2], .28 + .08 * Math.sin(E.T * 7))); }
   for (const q of flung) { if (q.t < 0) continue; const c = F(q.x, q.y); lit(() => E.glow(E.GLOW.red, c[0], c[1], 60 * c[2], .4)); shears(c[0], c[1], q.rot * (q.vx > 0 ? 1 : -1), .5 + .5 * Math.sin(q.t * 40), 1.05 * c[2]); }
   drawBand(p);
   if (held) { const w = handAt(p, true), c = F(w[0], w[1]); shears(c[0], c[1], p.face > 0 ? -.15 : Math.PI + .15, held.open, held.s * c[2]); }
 };
 const clear = () => { flung.length = bound.length = ring.length = slits.length = 0; band = held = null; pleased = 0; silenced = null; look.eyes = look.mouth = look.eyesTo = look.mouthTo = look.smile = 0; if (ask) unpause(); ask = null; showUI(false); };
-H.reset = () => { reset0(); clear(); };
-H.fightStart = (cfg, wave) => { start0(cfg, wave); clear(); };
+H.reset = () => { reset0(); clear(); endUnm(true); strips.length = 0; };
+H.fightStart = (cfg, wave) => { start0(cfg, wave); clear(); if (!wave) endUnm(true); };      // (unmasked lasts through the waves of one fight)
 
 JU.slit = { SKIN: SLIT, MOVES, esp: ESP,             // (esp: E, especial.js)
-  get state() { return { ask: ask && { phase: ask.phase, pick: ask.pick, p2: ask.p2, dom: +(ask.dom || 0).toFixed(2), paused: ask.paused }, pleased: +pleased.toFixed(2), silenced: !!silenced, flung: flung.length, bound: bound.length, ring: ring.length, slits: slits.length, look: { eyes: +look.eyes.toFixed(2), mouth: +look.mouth.toFixed(2) } }; },
+  get unmasked() { return unm && { t: +unm.t.toFixed(2), intro: unm.intro, music: !!(unm.music && unm.music.playing) }; },
+  get state() { return { ask: ask && { phase: ask.phase, pick: ask.pick, p2: ask.p2, dom: +(ask.dom || 0).toFixed(2), paused: ask.paused }, pleased: +pleased.toFixed(2), silenced: !!silenced, flung: flung.length, bound: bound.length, ring: ring.length, slits: slits.length, strips: strips.length, look: { eyes: +look.eyes.toFixed(2), mouth: +look.mouth.toFixed(2) } }; },
   pick };
 })();
