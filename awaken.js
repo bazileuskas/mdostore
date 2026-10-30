@@ -383,13 +383,21 @@ const LIST = [
   { id: 'smark', name: 'Mark of the King', mark: '印', col: '#ff2440' },
   { id: 'tced', name: 'True Cursed Energy Discharge', mark: '轟', col: '#7fe9ff' }      // tced.js fills this one in
 ];
+// (Build 0.22v1: the entries marked secret, dced.js and tdced.js, go on a row of their own, Secret CT. One that is made by combining two others
+// says so on its card when both are there, combine(), and pressing it then does it, fuse())
+function card(a) {
+  const t = JU.tech.TECH[a.id], fuse = !a.open() && a.combine && a.combine();
+  return t && a.open
+    ? `<button class="acard${JU.tech.equipped === a.id ? ' on' : ''}${a.open() ? '' : fuse ? ' fuse' : ' lock'}" data-awk="${a.id}" style="--c:${a.col}" aria-label="${fuse ? 'Combine into' : 'Equip'} ${a.name}"><b lang="ja">${a.mark}</b><h4>${a.name}</h4><p>${a.what}</p>
+        <small>${dev() ? 'Unlocked · team account' : a.open() ? 'Unlocked' : fuse ? 'Ready to combine · press' : 'Locked'}</small>
+        <p>${a.open() ? a.note || '' : a.later()}</p></button>`
+    : `<div class="acard soon" style="--c:${a.col}"><b lang="ja">${a.mark}</b><h4>${a.name}</h4><small>Coming soon</small></div>`;
+}
 function mount(body) {
+  const main = LIST.filter(a => !a.secret), secret = LIST.filter(a => a.secret);
   body.innerHTML = `<div class="awkhd"><button class="sback" id="awkback" aria-label="Back to the cursed techniques">‹ Cursed Techniques</button><b>Awakened CT</b><span lang="ja">覚醒術式</span></div>
-    <div class="acards a${LIST.length}">${LIST.map(a => { const t = JU.tech.TECH[a.id]; return t && a.open
-      ? `<button class="acard${JU.tech.equipped === a.id ? ' on' : ''}${a.open() ? '' : ' lock'}" data-awk="${a.id}" style="--c:${a.col}" aria-label="Equip ${a.name}"><b lang="ja">${a.mark}</b><h4>${a.name}</h4><p>${a.what}</p>
-          <small>${dev() ? 'Unlocked · team account' : a.open() ? 'Unlocked' : 'Locked'}</small>
-          <p>${a.open() ? a.note || '' : a.later()}</p></button>`
-      : `<div class="acard soon" style="--c:${a.col}"><b lang="ja">${a.mark}</b><h4>${a.name}</h4><small>Coming soon</small></div>`; }).join('')}</div>
+    <div class="acards a${main.length}">${main.map(card).join('')}</div>
+    ${secret.length ? `<div class="awkhd sec"><b>Secret CT</b><span lang="ja">秘伝術式</span></div><div class="acards a${secret.length} sec">${secret.map(card).join('')}</div>` : ''}
     <p class="fine">An awakened technique is equipped in place of your ordinary one. Pick a card on the Cursed Technique screen to go back.</p>`;
 }
 document.addEventListener('click', e => {
@@ -397,8 +405,9 @@ document.addEventListener('click', e => {
   if (e.target.closest('#awkct')) { mount(body); sfx.confirm(); return; }
   if (e.target.closest('#awkback')) { JU.tech.mount(body); sfx.back(); return; }
   if (!c) return;
-  const r = c.getBoundingClientRect();
-  if (!LIST.find(a => a.id === c.dataset.awk).open()) { c.classList.remove('no'); void c.offsetWidth; c.classList.add('no'); sfx.back(); return; }
+  const r = c.getBoundingClientRect(), a0 = LIST.find(a => a.id === c.dataset.awk);
+  if (!a0.open() && a0.combine && a0.combine() && a0.fuse && a0.fuse()) { mount(body); sfx.bf(); JU.flash(r.left + r.width / 2, r.top + r.height / 2); if (JU.bolts) JU.bolts(r.left + r.width / 2, r.top + r.height / 2, 26); return; }      // the two of them, made one
+  if (!a0.open()) { c.classList.remove('no'); void c.offsetWidth; c.classList.add('no'); sfx.back(); return; }
   JU.tech.equip(c.dataset.awk); mount(body); sfx.bf(); JU.flash(r.left + r.width / 2, r.top + r.height / 2);
 });
 

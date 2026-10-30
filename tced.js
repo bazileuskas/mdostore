@@ -479,7 +479,7 @@ H.fightStart = (cfg, wave) => {
 // its card on the Awaken CT screen. It is Cursed Cannon awakened, so it asks for Cursed Cannon, and that is Early Access
 Object.assign(JU.awakened.LIST.find(a => a.id === 'tced'), {
   what: 'Granite Cannon with nothing held back, and no heat to mind. Volley, Downpour, Repulse, and Dessert, the finisher (1000). G: Granite Blast at full power (900).',
-  later: () => 'Needs Cursed Cannon, which is Early Access. Early Access is not on sale yet.',
+  later: () => 'Needs Cursed Cannon in one of your slots: roll it from the talisman (3%).',      // (0.22v1: Cursed Cannon has been out of Early Access since 0.12v1)
   open: () => dev() || !JU.shop || JU.shop.holds('tech', 'cannon') });
 
 JU.tced = { MOVES, MAXB, SHOTS, SHOT, DROPS, DROP, BURST, TURNED, FULL, CHARGE, HOLD, DESSERT: PUM * PUM_DMG + SWING_DMG + BF_DMG, get state() { return { insert: !!insert, show: show && show.kind, pin: !!pin }; } };

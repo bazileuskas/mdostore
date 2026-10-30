@@ -28,15 +28,18 @@ const WAVES = [
 const NAMES = ['FIRST WAVE', 'SECOND WAVE', 'THIRD WAVE'];
 const ST = ['idle', 'act', 'hurt', 'air', 'down', 'up'];
 
-// the curses of this raid, made up for how many are in it
-function defs(n) {
+// the curses of this raid, made up for how many are in it. kind (Build 0.22v1): 'maho', or 'granite' (two players or more, and the Granite
+// Cannon at the end of it, who may drop a Secret CT: dced.js)
+const GRANITE = 'granite', NEED2 = 2;
+const granite = () => !!R && R.kind === GRANITE;
+function defs(n, kind) {
   const hp = 1 + .45 * (n - 1), dmg = 1 + .15 * (n - 1);
   for (const id of ['grunt', 'brute', 'warped2', 'ruin']) {
     const d = Fi.DEFS[id];
     if (d) Fi.DEFS['rd_' + id] = Object.assign({}, d, { hp: Math.round(d.hp * hp), human: false, atk: d.atk.map(a => Object.assign({}, a, { dmg: a.dmg * dmg })) });
   }
-  const b = Fi.DEFS.sb_mahoraga || Fi.DEFS.mahoraga;
-  Fi.DEFS.rd_boss = Object.assign({}, b, { name: 'Mahoraga', hp: Math.round(900 * (1 + .55 * (n - 1))), human: false, atk: b.atk.map(a => Object.assign({}, a, { dmg: a.dmg * (1 + .12 * (n - 1)) })) });
+  const gr = kind === GRANITE && Fi.DEFS.gr_ryu, b = gr || Fi.DEFS.sb_mahoraga || Fi.DEFS.mahoraga;
+  Fi.DEFS.rd_boss = Object.assign({}, b, { name: gr ? 'Granite Cannon' : 'Mahoraga', hp: Math.round((gr ? 1100 : 900) * (1 + .55 * (n - 1))), human: false, atk: b.atk.map(a => Object.assign({}, a, { dmg: a.dmg * (1 + .12 * (n - 1)) })) });
 }
 // what the fight starts with, before the first wave: nothing to see
 Fi.DEFS.raid0 = { name: 'Raid', jp: '討伐', skin: E.CURSE, hp: 1, scale: 1, speed: 0, range: 0, gap: [9, 9], atk: [], human: true };
@@ -52,8 +55,8 @@ const host = () => !!R && R.host === R.me;
 const here = pid => pid === me() || !!M.peer(pid);
 const fighting = () => !!R && R.phase === 'fight';
 const canRaid = () => M.on && M.kind === 'public' && E.root.dataset.mode === 'street' && S.st && S.st.free && !S.st.hold && !S.st.talk && !(JU.pvp && JU.pvp.busy) && !R && !inv;
-function make(id, hostId, ids) {
-  return { id, host: hostId, ids, me: me(), phase: 'gather', t: 0, wave: 0, list: [], byId: new Map(), alive: new Set(), down: new Set(), allies: new Map(),
+function make(id, hostId, ids, kind) {
+  return { id, host: hostId, ids, me: me(), kind: kind === GRANITE ? GRANITE : 'maho', phase: 'gather', t: 0, wave: 0, list: [], byId: new Map(), alive: new Set(), down: new Set(), allies: new Map(),
     sendEs: 0, sendMe: 0, turnT: TURN, next: 0, out: [], pend: new Map() };
 }
 
@@ -67,15 +70,17 @@ const left = until => Math.max(0, Math.ceil((until - Date.now()) / 1000));
 function paintBox() {
   if (R && R.phase === 'gather') {
     const names = R.ids.map(pid => pid === R.me ? 'you' : esc((M.peer(pid) || {}).name || 'Player'));
+    const gr = granite(), few = gr && R.ids.length < NEED2;
     box.className = 'duel on small';
-    box.innerHTML = `<div class="dask"><b>Raid</b><p>Waiting for the server to answer. In: <u>${names.join(', ')}</u></p><div><button type="button" data-raid="go" class="go">Start now</button><button type="button" data-raid="cancel">Call it off</button></div><em data-left>${left(R.t)}</em></div>`;
+    box.innerHTML = `<div class="dask"><b>${gr ? 'Granite raid' : 'Raid'}</b><p>${few ? 'A Granite raid takes two players or more. Waiting for somebody to join.' : 'Waiting for the server to answer.'} In: <u>${names.join(', ')}</u></p><div><button type="button" data-raid="go" class="go"${few ? ' disabled' : ''}>Start now</button><button type="button" data-raid="cancel">Call it off</button></div><em data-left>${left(R.t)}</em></div>`;
     return;
   }
   if (inv) {
+    const gr = inv.kind === GRANITE, what = gr ? 'Granite raid' : 'raid';
     box.className = 'duel on small';
     box.innerHTML = inv.joined
-      ? `<div class="dask"><b>Raid</b><p>You are in <u>${esc(inv.name)}</u>'s raid. It starts when the time runs out.</p><div><button type="button" data-raid="no">Leave it</button></div><em data-left>${left(inv.until)}</em></div>`
-      : `<div class="dask"><b>Raid</b><p><u>${esc(inv.name)}</u> is starting a raid: three waves of curses and a boss, together.</p><div><button type="button" data-raid="yes" class="go">Join <kbd>Y</kbd></button><button type="button" data-raid="no">No <kbd>N</kbd></button></div><em data-left>${left(inv.until)}</em></div>`;
+      ? `<div class="dask"><b>${gr ? 'Granite raid' : 'Raid'}</b><p>You are in <u>${esc(inv.name)}</u>'s ${what}. It starts when the time runs out.</p><div><button type="button" data-raid="no">Leave it</button></div><em data-left>${left(inv.until)}</em></div>`
+      : `<div class="dask"><b>${gr ? 'Granite raid' : 'Raid'}</b><p><u>${esc(inv.name)}</u> is starting a ${what}: ${gr ? 'three waves of curses, and the Granite Cannon at the end of it. It takes two' : 'three waves of curses and a boss, together'}.</p><div><button type="button" data-raid="yes" class="go">Join <kbd>Y</kbd></button><button type="button" data-raid="no">No <kbd>N</kbd></button></div><em data-left>${left(inv.until)}</em></div>`;
     return;
   }
   box.className = 'duel'; box.innerHTML = '';
@@ -97,9 +102,9 @@ addEventListener('keydown', e => {
   if (k === 'y' || k === 'n') { e.preventDefault(); e.stopPropagation(); click(k === 'y' ? 'yes' : 'no'); }
 }, true);
 // the button in the server's list (mp.js paints it there)
-const chip = () => (M.on && M.kind === 'public' && !R && !inv ? '<button type="button" class="mpraid" data-raid="start">⚔ Start a raid</button>' : '');
+const chip = () => (M.on && M.kind === 'public' && !R && !inv ? '<button type="button" class="mpraid" data-raid="start">⚔ Start a raid</button><button type="button" class="mpraid gran" data-raid="granite" title="Two players or more. The Granite Cannon may drop a Secret CT">⚔ Granite raid · 2+</button>' : '');
 function click(a) {
-  if (a === 'start') { if (canRaid()) start(); else if (!(S.st && S.st.free) || E.root.dataset.mode !== 'street') toast('Out on the street first.'); return; }
+  if (a === 'start' || a === 'granite') { if (canRaid()) start(a === 'granite' ? GRANITE : 'maho'); else if (!(S.st && S.st.free) || E.root.dataset.mode !== 'street') toast('Out on the street first.'); return; }
   if (a === 'go' && R && R.phase === 'gather' && host()) { go(); return; }
   if (a === 'cancel' && R && R.phase === 'gather') { M.all({ t: 'raid', a: 'cancel', id: R.id }); R = null; paintBox(); M.paint(); sfx.back(); return; }
   if (a === 'yes' && inv && !inv.joined) { if (!canJoin()) { M.to(inv.host, { t: 'raid', a: 'no', id: inv.id }); inv = null; paintBox(); return; } inv.joined = true; M.to(inv.host, { t: 'raid', a: 'join', id: inv.id }); sfx.confirm(); paintBox(); return; }
@@ -108,26 +113,30 @@ function click(a) {
 const canJoin = () => M.on && E.root.dataset.mode === 'street' && S.st && S.st.free && !S.st.talk && !(JU.pvp && JU.pvp.busy) && !R;
 
 /* ================= asking, and going in ================= */
-function start() {
-  R = make(Math.random().toString(36).slice(2, 10), me(), [me()]);
+function start(kind) {
+  R = make(Math.random().toString(36).slice(2, 10), me(), [me()], kind);
   R.t = Date.now() + ASK_T * 1000;
-  M.all({ t: 'raid', a: 'ask', id: R.id });
-  sfx.confirm(); toast('Raid: the server has ten seconds to join.', '#ffd23d'); paintBox(); tickBox(); M.paint();
+  M.all({ t: 'raid', a: 'ask', id: R.id, k: R.kind });
+  sfx.confirm(); toast(granite() ? 'Granite raid: it takes two. The server has ten seconds to join.' : 'Raid: the server has ten seconds to join.', '#ffd23d'); paintBox(); tickBox(); M.paint();
 }
 function go() {                                     // the host: in, with whoever said yes
   if (!R || R.phase !== 'gather') return;
-  clearInterval(clock);
   R.ids = R.ids.filter(here);
-  for (const pid of R.ids) if (pid !== R.me) say(pid, { a: 'go', ids: R.ids });
+  if (granite() && R.ids.length < NEED2) {          // a Granite raid takes two: nobody came, so it is off
+    if (Date.now() < R.t) { toast('A Granite raid takes two players or more.', '#ff8a98'); return; }
+    clearInterval(clock); M.all({ t: 'raid', a: 'cancel', id: R.id }); R = null; paintBox(); M.paint(); toast('Nobody joined: a Granite raid takes two players or more.', '#ff8a98'); return;
+  }
+  clearInterval(clock);
+  for (const pid of R.ids) if (pid !== R.me) say(pid, { a: 'go', ids: R.ids, k: R.kind });
   if (E.root.dataset.mode !== 'street') { M.all({ t: 'raid', a: 'cancel', id: R.id }); R = null; paintBox(); M.paint(); return; }
-  begin(R.id, R.me, R.ids);
+  begin(R.id, R.me, R.ids, R.kind);
 }
-function begin(id, hostId, ids) {
+function begin(id, hostId, ids, kind) {
   const kept = R && R.id === id ? R : null;
-  R = make(id, hostId, ids.filter(here));
+  R = make(id, hostId, ids.filter(here), kind);
   if (kept) R.t = kept.t;
   R.phase = 'fight'; inv = null; paintBox(); M.paint();
-  defs(R.ids.length);
+  defs(R.ids.length, R.kind);
   const n = R.ids.indexOf(R.me);
   S.fight({ stay: true, cfg: { foes: ['raid0'], stage: E.SHRINE, label: 'Raid', p1x: -360 + n * 150, win: null, raid: id, onLose: () => down() } });
   Fi.nm.p2.textContent = 'Raid'; Fi.nm.p2j.textContent = '討伐';
@@ -158,7 +167,7 @@ function wave(k, list) {
   }
   R.down.clear();
   const boss = list.some(e => e[1] === 'rd_boss');
-  if (boss) E.banner('魔虚羅', 'MAHORAGA'); else E.banner('第' + '一二三'[k - 1] + '波', NAMES[k - 1] || 'WAVE ' + k, 'sm');
+  if (boss) { if (granite()) E.banner('砲', 'GRANITE CANNON'); else E.banner('魔虚羅', 'MAHORAGA'); } else E.banner('第' + '一二三'[k - 1] + '波', NAMES[k - 1] || 'WAVE ' + k, 'sm');
   for (const e of list) E.after(+e[4] || 0, () => spawn(e));
   paintHud();
 }
@@ -202,11 +211,12 @@ function finish(won) {
   const cfg = Fi.fight.cfg, id = R.id;
   E.slow(.8); E.banner(won ? '討伐' : '敗北', won ? 'RAID CLEAR' : 'RAID FAILED');
   if (won) { sfx.confirm(); if (JU.shop && JU.shop.earn) JU.shop.earn(PAY, E.P1); if (JU.yen) JU.yen.earn(PAY * 100); }      // (and yen, as every raid pays: yen.js)
+  const drop = won && granite() && JU.dced && JU.dced.raidDrop ? JU.dced.raidDrop() : false;      // the Granite Cannon down: everyone in it rolls for the Secret CT, 3%
   paintHud();
   Fi.later(3600, () => {
     if (!R || R.id !== id) return;
     R = null; paintHud(); M.paint();
-    toast(won ? `Raid cleared. +${PAY} tokens.` : 'The raid failed.', won ? '#ffd23d' : '#ff8a98');
+    toast(won ? `Raid cleared. +${PAY} tokens.` + (drop ? ' And a Secret CT: Direct Cursed Energy Discharge!' : '') : 'The raid failed.', won ? '#ffd23d' : '#ff8a98');
     if (Fi.fight.cfg === cfg) { if (won && cfg.onWin) cfg.onWin(); else if (cfg.onFlee) cfg.onFlee(); }
   });
 }
@@ -235,14 +245,14 @@ M.hear('raid', (p, m) => {
   if (!m || typeof m.a !== 'string') return;
   if (m.a === 'ask') {
     if (!canJoin() || inv) { M.to(p.id, { t: 'raid', a: 'no', id: m.id }); return; }
-    inv = { id: m.id, host: p.id, name: p.name, until: Date.now() + ASK_T * 1000, joined: false };
+    inv = { id: m.id, host: p.id, name: p.name, until: Date.now() + ASK_T * 1000, joined: false, kind: m.k === GRANITE ? GRANITE : 'maho' };
     sfx.charge(); paintBox(); tickBox(); M.paint();
     return;
   }
   if (inv && m.id === inv.id && p.id === inv.host) {
     if (m.a === 'cancel') { inv = null; paintBox(); M.paint(); toast('The raid was called off.'); }
     else if (m.a === 'go') {
-      if (inv.joined && Array.isArray(m.ids) && m.ids.includes(me()) && canJoin()) begin(m.id, p.id, m.ids.map(String));
+      if (inv.joined && Array.isArray(m.ids) && m.ids.includes(me()) && canJoin()) begin(m.id, p.id, m.ids.map(String), m.k === GRANITE ? GRANITE : inv.kind);
       else { if (inv.joined) say(p.id, { a: 'left', id: m.id }); inv = null; paintBox(); M.paint(); }
     }
     return;
@@ -501,6 +511,6 @@ JU.exitGame = () => {
 };
 
 JU.raid = { chip, click, start, WAVES, allies: () => (R && R.phase !== 'gather' ? [...R.allies.values()].filter(a => a.st).map(a => a.f) : []),      // (the others' fighters, for what their techniques carry: ratio.js, reaper.js)
- get state() { return R && { id: R.id, host: R.host, ids: R.ids.slice(), phase: R.phase, wave: R.wave, alive: [...R.alive], list: R.list.map(o => ({ eid: o.eid, def: o.def, owner: o.owner, net: !!o.net, hp: r1(o.hp), ko: !!o.ko, x: Math.round(o.x) })), down: [...R.down], allies: [...R.allies.keys()] }; },
+ get state() { return R && { id: R.id, host: R.host, ids: R.ids.slice(), kind: R.kind, phase: R.phase, wave: R.wave, alive: [...R.alive], list: R.list.map(o => ({ eid: o.eid, def: o.def, owner: o.owner, net: !!o.net, hp: r1(o.hp), ko: !!o.ko, x: Math.round(o.x) })), down: [...R.down], allies: [...R.allies.keys()] }; },
   get invite() { return inv && { id: inv.id, host: inv.host, joined: inv.joined }; } };
 })();

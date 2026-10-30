@@ -171,6 +171,8 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 /* raids (raid.js): the button in a public server's list, and the raid's own line at the top of the fight */
 .mp .mpraid{display:block;width:100%;margin:.1em 0 .55em;padding:.5em .6em;border:1px solid #ff5a6e;background:rgba(255,36,64,.16);color:#ffd0d6;font:600 .9em/1 var(--f-ui);letter-spacing:.12em;text-transform:uppercase;cursor:pointer}
 .mp .mpraid:hover,.mp .mpraid:focus-visible{background:#ff5a6e;color:#fff}
+.mp .mpraid.gran{border-color:#7fe9ff;background:rgba(127,233,255,.13);color:#d8f8ff}
+.mp .mpraid.gran:hover,.mp .mpraid.gran:focus-visible{background:#7fe9ff;color:#05141a}
 .game>.raidhud{position:absolute;left:50%;top:clamp(70px,13vh,130px);z-index:3;display:none;gap:.15em;justify-items:center;translate:-50% 0;padding:.45em 1.1em .55em;pointer-events:none;border-bottom:3px solid #ff5a6e;background:rgba(8,6,14,.78);color:#f4efe4;font:500 clamp(11px,min(1.15vw,2.1vh),18px)/1.2 var(--f-ui);text-align:center}
 .game[data-mode="fight"]>.raidhud.on{display:grid}
 .raidhud b{font:400 1.5em/1 var(--f-display);letter-spacing:.14em;text-transform:uppercase;color:#ff8a98}
@@ -422,6 +424,12 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 .throat.low i::after{background:linear-gradient(90deg,#c2185b,#ff5a6e)}
 .throat b{font:600 .42em/1 var(--f-ui);letter-spacing:.2em;color:#c9c2ff}
 .throat.low b{color:#ff5a6e}
+/* Build 0.22v1: True Direct Cursed Energy Discharge's four modes, on his health bar (tdced.js) */
+.tdm{display:none;gap:.3em;margin-top:.15em;padding-left:.3em;font:600 clamp(8px,min(.75vw,1.35vh),14px)/1 var(--f-ui);letter-spacing:.1em}
+.game.tdmon[data-mode="fight"] .tdm{display:flex}
+.tdm i{display:grid;gap:.18em;padding:.3em .5em .25em;font-style:normal;color:var(--c);border:1px solid var(--c);background:rgba(8,6,14,.62);opacity:.5;transition:opacity .15s,background .15s}
+.tdm i.on{opacity:1;background:var(--c);color:#05070c}
+.tdm u{text-decoration:none;font-size:.78em;letter-spacing:.06em;opacity:.85}
 .mir.on{display:flex}
 .mir i{width:1.05em;height:.9em;clip-path:polygon(50% 0,100% 100%,0 100%);background:rgba(255,255,255,.16);transition:background .25s}
 .mir i.full{background:linear-gradient(180deg,#fff6c2,#ffd86b 50%,#ff7ab6)}
@@ -680,6 +688,13 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 .acards.a5{grid-template-columns:repeat(5,minmax(0,1fr));max-width:min(100%,78em)}
 .acards.a5 .acard h4{font-size:clamp(13px,min(1.4vw,2.5vh),28px)}
 .acards.a5 .acard>b{font-size:clamp(26px,min(3vw,5.4vh),60px)}
+/* Build 0.22v1: the Secret CT row */
+.awkhd.sec{margin-top:.4em}
+.awkhd.sec span{color:#4fd8ff}
+.acards.a2{grid-template-columns:repeat(2,minmax(0,1fr));max-width:min(100%,48em)}
+.acard.fuse{outline:2px solid var(--c);animation:fusing 1.3s ease-in-out infinite}
+.acard.fuse small{color:var(--c)}
+@keyframes fusing{50%{box-shadow:0 0 30px var(--c)}}
 /* a limited clan: the same banner a limited technique gets */
 .ccard.lim{grid-template-columns:auto 1fr auto auto;justify-items:start;align-items:center;gap:0 1.1em;width:100%;max-width:min(100%,60em);margin:0 0 clamp(6px,.8vw,14px);
   padding:.5em 1.1em .45em;text-align:left;border-top:0;border-left:4px solid var(--c);background:linear-gradient(100deg,rgba(120,130,150,.5),rgba(14,9,26,.86) 64%)}
@@ -1212,7 +1227,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
   </div>
 
   <div class="side" aria-hidden="true" lang="ja">領域展開</div>
-  <div class="hud tl"><b lang="ja">呪</b>Fan project · Build 0.22 · Idle Death Gamble</div>
+  <div class="hud tl"><b lang="ja">呪</b>Fan project · Build 0.22v1 · Direct Discharge</div>
   <div class="hud bl">↑ ↓ Select &nbsp;·&nbsp; Enter Confirm</div>
   <div class="hud br">Title screen</div>
   <div class="acct" id="acct">
@@ -1427,7 +1442,11 @@ const sfx = (() => {
     'home-gb-bust': [MI + 'door-kick.mp3', .42, 1.4],                                                // "Door kick"
     'home-gb-kick': [MI + 'strongkick.mp3', 0, .7],                                                  // "Hard Kick"
     'home-gb-reels': [MI + 'slotmachine.mp3', 0, 1.4],                                               // "Slot machine"
-    'home-gb-jackpot': [MI + 'slot-machine-jackpot-sound-effect.mp3', .45, 3.6] };                  // "Jackpot"
+    'home-gb-jackpot': [MI + 'slot-machine-jackpot-sound-effect.mp3', .45, 3.6],                    // "Jackpot"
+    // Build 0.22v1: the songs the user asked for while True Direct Cursed Energy Discharge is equipped (tdced.js). At home AIZO is their own
+    // copy, home-aizo; online the only AIZO on myinstants is the intro
+    'home-jane': [MI + 'jane-youre-early.mp3', 0, 0],                                               // "Jane youre early"
+    'home-tdc-aizo': [MI + 'aizo.mp3', 0, 0] };                                                      // "AIZO"
   const clips = {};
   const load = name => {
     if (clips[name]) return clips[name];
@@ -2456,7 +2475,7 @@ window.JU = { sfx, flash, bolts: blackFlash, reduceMotion, startGame, exitGame, 
 // Load every game script fresh on each page load. The dev server sends no cache headers, so without this a reload
 // could run a mix of old and new files (new menu, old moves) while the game is being worked on.
 ['account.js', 'announce.js', 'game.js', 'fx2.js', 'chars.js', 'street.js', 'walk.js', 'foes.js', 'cuts.js', 'sukuna.js', 'school.js', 'story.js', 'story2.js', 'tech.js', 'tech_a.js',
-  'tech_b.js', 'sets.js', 'story3.js', 'cast2.js', 'script.js', 'naoya.js', 'ch45.js', 'ch67.js', 'clan.js', 'clan_a.js', 'clan_b.js', 'boss.js', 'bossfx.js', 'boss_a.js', 'boss_b.js', 'boss_c.js', 'training.js', 'choso.js', 'domain.js', 'domain2.js', 'mahito.js', 'combo.js', 'combat.js', 'cast3.js', 'ch810.js', 'ch1112.js', 'cast4.js', 'ch1316.js', 'cast5.js', 'ch1721.js', 'combat2.js', 'judge.js', 'awaken.js', 'alimit.js', 'ats.js', 'switcher.js', 'tools.js', 'smark.js', 'cast6.js', 'ch2230.js', 'plants.js', 'clash.js', 'block.js', 'cannon.js', 'tced.js', 'shibuya.js', 'kyoto.js', 'evasive.js', 'kokusen.js', 'mp.js', 'pvp.js', 'vengeful.js', 'manga.js', 'haruta.js', 'ratio.js', 'reaper.js', 'inumaki.js', 'kirara.js', 'soul.js', 'slit.js', 'gambler.js', 'especial.js', 'yen.js', 'subtech.js', 'metro.js', 'jjh.js', 'shinjuku.js', 'notes.js', 'shop.js', 'ps.js', 'raid.js', 'touch.js', 'idg.js'].forEach(src => {
+  'tech_b.js', 'sets.js', 'story3.js', 'cast2.js', 'script.js', 'naoya.js', 'ch45.js', 'ch67.js', 'clan.js', 'clan_a.js', 'clan_b.js', 'boss.js', 'bossfx.js', 'boss_a.js', 'boss_b.js', 'boss_c.js', 'training.js', 'choso.js', 'domain.js', 'domain2.js', 'mahito.js', 'combo.js', 'combat.js', 'cast3.js', 'ch810.js', 'ch1112.js', 'cast4.js', 'ch1316.js', 'cast5.js', 'ch1721.js', 'combat2.js', 'judge.js', 'awaken.js', 'alimit.js', 'ats.js', 'switcher.js', 'tools.js', 'smark.js', 'cast6.js', 'ch2230.js', 'plants.js', 'clash.js', 'block.js', 'cannon.js', 'tced.js', 'shibuya.js', 'kyoto.js', 'evasive.js', 'kokusen.js', 'mp.js', 'pvp.js', 'vengeful.js', 'manga.js', 'haruta.js', 'ratio.js', 'reaper.js', 'inumaki.js', 'kirara.js', 'soul.js', 'slit.js', 'gambler.js', 'especial.js', 'yen.js', 'subtech.js', 'metro.js', 'jjh.js', 'shinjuku.js', 'notes.js', 'shop.js', 'ps.js', 'raid.js', 'touch.js', 'idg.js', 'dced.js', 'tdced.js'].forEach(src => {
   const s = document.createElement('script');
   s.src = src + '?v=' + Date.now(); s.async = false;      // async = false keeps them running in this order
   document.body.appendChild(s);

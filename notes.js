@@ -5,6 +5,13 @@
 // Newest first. v = the build, jp = the seal stamped beside it, pic = notes/<pic>.jpg, cap = what the picture shows.
 // A new update goes at the top of this list.
 const NOTES = [
+  { v: '0.22v1', name: 'Direct Discharge', jp: '直接放出', date: '30 Oct 2026', pic: 'discharge', cap: 'Overflow, the Granite raid, Omnidirectional Discharge and City Breaker', items: [
+    'NEW SECRET CT: DIRECT CURSED ENERGY DISCHARGE. A stronger Cursed Cannon with new moves: Point-Blank (hold it), Granite Lance, Discharge Step, Overflow, E Recoil Counter, G Zero Distance (600)',
+    'It drops from the Granite Cannon at the end of a GRANITE RAID: on a public server, Granite raid in the list of who is there. It takes two players or more. Everyone in it rolls when it is cleared: 3%',
+    'Combine it with True Cursed Energy Discharge (Cursed Technique, Awaken CT, the new Secret CT row) and you get TRUE DIRECT CURSED ENERGY DISCHARGE: four modes in one moveset, 54 moves, a different awakening for each mode',
+    'Modes: right click goes to the next one. RMB + Z Cursed Cannon: Direction Blast · T + RMB Cursed Energy Discharge: MAX · RMB + X Scatter · Y + RMB Zero Range. Each one has 4 moves, 4 more in the air, a held one, a follow-up, its own E, its own G, and a strike as you switch to it',
+    'The four awakenings (G): Omnidirectional Discharge, City Breaker (1200), Thousand Granite (a hundred shots) and Dessert: Full Course (1000)',
+    "While it is equipped, Jane You're Early and AIZO play"] },
   { v: '0.22', name: 'Idle Death Gamble', jp: '坐殺博徒', date: '30 Oct 2026', pic: 'idg', cap: 'Idle Death Gamble: a reach, the jackpot, a Double Lock and Sky Fever', items: [
     'Double or Nothing has his domain: G, IDLE DEATH GAMBLE. A pachinko machine as big as the sky. Every door and ball of his that lands comes out green, red, gold or rainbow, and sets a reach going on the screen: Transit Card, Seat Struggle, Potty Emergency or the Friday Night Final Train. The better the colour, the better the chance. Rainbow is a sure thing, and so are four counters (E) in a row',
     'THE JACKPOT: the domain is gone, and for 4 minutes 11 seconds he has no cooldowns and heals faster than anything can hurt him. Nothing puts him down. Odd numbers: the next one opens with better odds. Even: faster spins. Five spins, and a miss costs one. Not in 1v1s',
