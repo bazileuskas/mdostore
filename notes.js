@@ -5,6 +5,12 @@
 // Newest first. v = the build, jp = the seal stamped beside it, pic = notes/<pic>.jpg, cap = what the picture shows.
 // A new update goes at the top of this list.
 const NOTES = [
+  { v: '0.21', name: 'Double or Nothing', jp: '一か八か', date: '30 Oct 2026', pic: 'gambler', cap: 'Shut in, the reels on 7 7 7, and green legs', items: [
+    'Early Access: Double or Nothing, a gambler who lives for the fever, with the Restless Gambler of Jujutsu Shenanigans for a moveset: pachinko balls, shutter doors, and cursed energy so rough it grinds. His strikes are all kicks, five of them, and his legs light up green with every one (4, 4, 4, 5, 8)',
+    '1 Reserve Balls: a pachinko ball flung at them, 12 and a stun. 2 Shutter Doors: two doors slam shut on them, 16, and they are shut in there for a second and a half. 3 Rough Energy: rough energy gathered into one kick, 28, and they go flying. 4 Fever Breaker: kicked into a door that comes up behind them (14), and off it the length of the arena (20)',
+    'E Bouncer Doors: doors in front of him for 0.9 seconds. Hit them and it comes straight back through them, 40. A shot only breaks them',
+    'Combos. 1 then 2: the doors close where the ball comes down. 1 then 3, or 3 then 1: he jumps on the ball and rides it for 0.7 seconds, and when it comes down near them, Rough Energy that cannot miss (32). 4 then 2: the doors shut on them, and a leg comes down on them full of rough energy (10 and 30). 4 then 3 then 2: the doors hold them, the reels spin up over them and stop on 7 7 7, JACKPOT, and the rough energy goes through the doors and them (60)',
+    'Real sounds: pachinko balls, metal doors shut, slammed and kicked in, a hard kick, slot reels and a payout'] },
   { v: '0.20v1', name: 'Fever & Unmasked', jp: '覚醒', date: '30 Oct 2026', pic: 'awakenings', cap: 'The fever, and the bandages coming off', items: [
     'The Slit Mouth has an awakening, Unmasked (G with the bar full). A thought, NOBODY EVER SAYS YES..., then AM I PRETTY?, the bandages torn off her face and hands, HOW ABOUT NOW?, and real music from the anime under the next thirty seconds',
     'Unmasked: her mouth and the eyes in her hair stay open, shears follow her about and snip at whoever she hits (5, a third of the time), Am I Pretty? is back in six seconds instead of twenty, a NO closes six pairs of shears instead of four, and whatever she is fighting is slower with fear. When it is over she thinks it: ...THEY STILL SAY NO',

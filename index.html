@@ -1212,7 +1212,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
   </div>
 
   <div class="side" aria-hidden="true" lang="ja">領域展開</div>
-  <div class="hud tl"><b lang="ja">呪</b>Fan project · Build 0.20v1 · Fever &amp; Unmasked</div>
+  <div class="hud tl"><b lang="ja">呪</b>Fan project · Build 0.21 · Double or Nothing</div>
   <div class="hud bl">↑ ↓ Select &nbsp;·&nbsp; Enter Confirm</div>
   <div class="hud br">Title screen</div>
   <div class="acct" id="acct">
@@ -1419,7 +1419,15 @@ const sfx = (() => {
     'home-slit-snips': [MI + 'scissors-sound.mp3', 1, 2.9],                                           // "scissors Sound"
     // Build 0.20v1: the music under the two awakenings, the anime's own, as myinstants has it (sfx.song, looping)
     'home-slit-awk': [MI + 'yuuuuta-vs-ryu-vs-oro-theme.mp3', 0, 0],                                 // "Yuuuuta vs ryu vs oro theme": Unmasked
-    'home-kirara-awk': [MI + 'jjk-theme-season-3.mp3', 0, 0] };                                      // "Jjk theme season 3": Fever
+    'home-kirara-awk': [MI + 'jjk-theme-season-3.mp3', 0, 0],                                        // "Jjk theme season 3": Fever
+    // Build 0.21: Double or Nothing's (gambler.js): pachinko balls, doors shut, slammed and kicked in, a hard kick, reels and a payout
+    'home-gb-pachinko': [MI + 'pachinko.mp3', .45, 1.5],                                             // "pachinko"
+    'home-gb-door': [MI + 'metal-door-closing.mp3', .08, .72],                                       // "Metal Door Closing"
+    'home-gb-slam': [MI + 'door-slam.mp3', .2, 1.3],                                                 // "door slam"
+    'home-gb-bust': [MI + 'door-kick.mp3', .42, 1.4],                                                // "Door kick"
+    'home-gb-kick': [MI + 'strongkick.mp3', 0, .7],                                                  // "Hard Kick"
+    'home-gb-reels': [MI + 'slotmachine.mp3', 0, 1.4],                                               // "Slot machine"
+    'home-gb-jackpot': [MI + 'slot-machine-jackpot-sound-effect.mp3', .45, 3.6] };                  // "Jackpot"
   const clips = {};
   const load = name => {
     if (clips[name]) return clips[name];
@@ -1806,6 +1814,28 @@ const sfx = (() => {
       voice({ f: [55, 52], dur: 3, vol: .3, type: 'triangle', attack: .4, wet: .6 });
       voice({ type: 'noise', dur: 1.3, vol: .09, attack: .8, filt: ['bandpass', 1800, 900], q: 2, wet: .8 });
       [1661, 1760].forEach((f, i) => voice({ f: [f, f * .985], at: .3 + i * .05, dur: 2.4, vol: .03, wet: .9 }));
+    },
+    // Double or Nothing's (gambler.js, Build 0.21): a pachinko ball striking (v: how hard), a metal door shut (v), rough cursed energy
+    // grinding (v), and a reel stopping (i: each a step higher; 3 is the payout)
+    ball(v = 1) {
+      voice({ f: [2900, 2600], dur: .12, vol: .06 * v, type: 'triangle', wet: .3 });
+      voice({ f: [4700, 4300], dur: .08, vol: .035 * v, wet: .3 });
+      voice({ type: 'noise', dur: .03, vol: .14 * v, filt: ['highpass', 5000] });
+    },
+    door(v = 1) {
+      voice({ f: [120, 60], dur: .3, vol: .45 * v, type: 'triangle', wet: .4 });
+      voice({ type: 'noise', dur: .18, vol: .35 * v, filt: ['bandpass', 900, 300], q: 1.4 });
+      voice({ f: [780, 760], at: .02, dur: .5, vol: .04 * v, type: 'square', filt: ['lowpass', 2400], wet: .6 });
+    },
+    rough(v = 1) {
+      voice({ type: 'noise', dur: .45, vol: .3 * v, attack: .02, filt: ['bandpass', 600, 2600], q: 3, wet: .3 });
+      for (let i = 0; i < 8; i++) voice({ type: 'noise', at: Math.random() * .35, dur: .02, vol: .12 * v, filt: ['bandpass', 2000 + Math.random() * 4000], q: 6 });
+      voice({ f: [90, 45], dur: .4, vol: .35 * v, wet: .3 });
+    },
+    ding(i = 0) {
+      const f = [1568, 1760, 2093, 2637][Math.min(3, i)];
+      voice({ f: [f, f], dur: .5, vol: .08, wet: .6 }); voice({ f: [f * 2, f * 2], dur: .3, vol: .03, wet: .6 });
+      if (i >= 3) [523.3, 659.3, 784, 1046.5].forEach((q, j) => voice({ f: [q, q], at: j * .08, dur: .6, vol: .06, type: 'triangle', wet: .7 }));
     },
     // bandages torn away all at once (the Slit Mouth's awakening, 0.20v1)
     rip() {
@@ -2418,7 +2448,7 @@ window.JU = { sfx, flash, bolts: blackFlash, reduceMotion, startGame, exitGame, 
 // Load every game script fresh on each page load. The dev server sends no cache headers, so without this a reload
 // could run a mix of old and new files (new menu, old moves) while the game is being worked on.
 ['account.js', 'announce.js', 'game.js', 'fx2.js', 'chars.js', 'street.js', 'walk.js', 'foes.js', 'cuts.js', 'sukuna.js', 'school.js', 'story.js', 'story2.js', 'tech.js', 'tech_a.js',
-  'tech_b.js', 'sets.js', 'story3.js', 'cast2.js', 'script.js', 'naoya.js', 'ch45.js', 'ch67.js', 'clan.js', 'clan_a.js', 'clan_b.js', 'boss.js', 'bossfx.js', 'boss_a.js', 'boss_b.js', 'boss_c.js', 'training.js', 'choso.js', 'domain.js', 'domain2.js', 'mahito.js', 'combo.js', 'combat.js', 'cast3.js', 'ch810.js', 'ch1112.js', 'cast4.js', 'ch1316.js', 'cast5.js', 'ch1721.js', 'combat2.js', 'judge.js', 'awaken.js', 'alimit.js', 'ats.js', 'switcher.js', 'tools.js', 'smark.js', 'cast6.js', 'ch2230.js', 'plants.js', 'clash.js', 'block.js', 'cannon.js', 'tced.js', 'shibuya.js', 'kyoto.js', 'evasive.js', 'kokusen.js', 'mp.js', 'pvp.js', 'vengeful.js', 'manga.js', 'haruta.js', 'ratio.js', 'reaper.js', 'inumaki.js', 'kirara.js', 'soul.js', 'slit.js', 'especial.js', 'yen.js', 'subtech.js', 'metro.js', 'jjh.js', 'shinjuku.js', 'notes.js', 'shop.js', 'ps.js', 'raid.js', 'touch.js'].forEach(src => {
+  'tech_b.js', 'sets.js', 'story3.js', 'cast2.js', 'script.js', 'naoya.js', 'ch45.js', 'ch67.js', 'clan.js', 'clan_a.js', 'clan_b.js', 'boss.js', 'bossfx.js', 'boss_a.js', 'boss_b.js', 'boss_c.js', 'training.js', 'choso.js', 'domain.js', 'domain2.js', 'mahito.js', 'combo.js', 'combat.js', 'cast3.js', 'ch810.js', 'ch1112.js', 'cast4.js', 'ch1316.js', 'cast5.js', 'ch1721.js', 'combat2.js', 'judge.js', 'awaken.js', 'alimit.js', 'ats.js', 'switcher.js', 'tools.js', 'smark.js', 'cast6.js', 'ch2230.js', 'plants.js', 'clash.js', 'block.js', 'cannon.js', 'tced.js', 'shibuya.js', 'kyoto.js', 'evasive.js', 'kokusen.js', 'mp.js', 'pvp.js', 'vengeful.js', 'manga.js', 'haruta.js', 'ratio.js', 'reaper.js', 'inumaki.js', 'kirara.js', 'soul.js', 'slit.js', 'gambler.js', 'especial.js', 'yen.js', 'subtech.js', 'metro.js', 'jjh.js', 'shinjuku.js', 'notes.js', 'shop.js', 'ps.js', 'raid.js', 'touch.js'].forEach(src => {
   const s = document.createElement('script');
   s.src = src + '?v=' + Date.now(); s.async = false;      // async = false keeps them running in this order
   document.body.appendChild(s);
