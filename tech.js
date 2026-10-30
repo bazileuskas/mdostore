@@ -273,6 +273,7 @@ JU.tech = {
   add, TECH, ORDER, SLOTS, mount, apply, revert, roll, charge, tk: { sprite, orb, beam, shout, dot, near },
   equip(id) { equipped = id; try { localStorage.setItem('ju.tech', id); } catch (e) {} noToji(id); },
   drain() { awk = 0; bar(); },                      // (an awakening that keeps its bar, awkKeep, empties it itself once it has gone off)
+  refresh() { bar(); },                             // (one that has written over the bar's line itself puts it back: idg.js)
   get name() { const t = TECH[equipped]; return t ? t.name : ''; }, get active() { return active; }, get using() { return !!active || based; }, get equipped() { return equipped; }, get skin() { return (active && active.skin) || null; }
 };
 })();

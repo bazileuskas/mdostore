@@ -5,6 +5,12 @@
 // Newest first. v = the build, jp = the seal stamped beside it, pic = notes/<pic>.jpg, cap = what the picture shows.
 // A new update goes at the top of this list.
 const NOTES = [
+  { v: '0.22', name: 'Idle Death Gamble', jp: '坐殺博徒', date: '30 Oct 2026', pic: 'idg', cap: 'Idle Death Gamble: a reach, the jackpot, a Double Lock and Sky Fever', items: [
+    'Double or Nothing has his domain: G, IDLE DEATH GAMBLE. A pachinko machine as big as the sky. Every door and ball of his that lands comes out green, red, gold or rainbow, and sets a reach going on the screen: Transit Card, Seat Struggle, Potty Emergency or the Friday Night Final Train. The better the colour, the better the chance. Rainbow is a sure thing, and so are four counters (E) in a row',
+    'THE JACKPOT: the domain is gone, and for 4 minutes 11 seconds he has no cooldowns and heals faster than anything can hurt him. Nothing puts him down. Odd numbers: the next one opens with better odds. Even: faster spins. Five spins, and a miss costs one. Not in 1v1s',
+    '15 new variants. In the air: 1 Reserve Shower, 2 Drop Shutter, 3 Rough Meteor, 4 Fever Spike. Held: 1 Reserve Barrage, 3 All In (up to 70)',
+    'With E: E then 1 Rebound Ball, E then 2 Closing Time, E then 3 Door Ram (while the doors are up), 2 then E Double Lock, 4 then E Spring Door',
+    'And: 2 then 3 Door Breaker, 2 then 1 Pinball, 3 then 4 Sky Fever, 1 then 4 Volley (kick your own ball into them)'] },
   { v: '0.21v3', name: 'Click', jp: 'カチッ', date: '30 Oct 2026', pic: 'click', cap: 'Click: a Reserve Ball leaving his hand', items: [
     'Reserve Balls sounds better: the pachinko clip that rang like an alarm is gone. Now there is a click as the ball leaves his hand, and a solid clack when it hits'] },
   { v: '0.21v2', name: 'No Stun', jp: '不動', date: '30 Oct 2026', pic: 'nostun', cap: 'Reserve Balls on a straight line, No stun, the doors where the ball stops, and 110 on 7 7 7', items: [
