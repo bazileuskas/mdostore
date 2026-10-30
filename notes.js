@@ -5,6 +5,11 @@
 // Newest first. v = the build, jp = the seal stamped beside it, pic = notes/<pic>.jpg, cap = what the picture shows.
 // A new update goes at the top of this list.
 const NOTES = [
+  { v: '0.22v2', name: 'Fifty Variants', jp: '五十変化', date: '30 Oct 2026', pic: 'variants', cap: 'Ricochet Downpour, MAX Cross, Supernova Rendezvous and the Constellation Cage', items: [
+    'True Direct Cursed Energy Discharge: 50 VARIANTS on top of every mode\'s 4 moves, E and G. A variant is a run of keys, each one soon after the last; the last key of the run turns into the variant',
+    '24 fusions: a move, switch mode, a move in the other mode (Direction 3 then MAX 2 is Ricochet Downpour). 24 chains of three keys in one mode (Direction 3, 2, 4 is Ricochet Cross Rose). And two that go through all four modes: Full Spectrum and Granite Apocalypse',
+    'Better sounds and effects, the anime\'s and the manga\'s: impact frames, focus lines and the sound written into the picture (ドォン) on the big hits, and real beam, explosion and heavy-punch sounds',
+    'Star-Crossed: the Fever has its own four moves now. Meteor Shower, Supernova Rendezvous, Constellation Cage and Comet Flight'] },
   { v: '0.22v1', name: 'Direct Discharge', jp: '直接放出', date: '30 Oct 2026', pic: 'discharge', cap: 'Overflow, the Granite raid, Omnidirectional Discharge and City Breaker', items: [
     'NEW SECRET CT: DIRECT CURSED ENERGY DISCHARGE. A stronger Cursed Cannon with new moves: Point-Blank (hold it), Granite Lance, Discharge Step, Overflow, E Recoil Counter, G Zero Distance (600)',
     'It drops from the Granite Cannon at the end of a GRANITE RAID: on a public server, Granite raid in the list of who is there. It takes two players or more. Everyone in it rolls when it is cleared: 3%',

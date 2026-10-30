@@ -26,6 +26,10 @@ const DK = JU.dced.kit, { COL, beam, ray, onLine, impact, burstFx, cone, pillar,
 const { rnd, clamp, lerp, ease } = E, TAU = Math.PI * 2, SLOTS = T.SLOTS;
 const SKY = [-.42, -.36, 2.9, 2.7, .4, -.56, 0], OPEN = [-.2, -.14, 1.9, -1.2, .46, -.46, 0], HEAD = [.7, .5, .3, -.4, .7, -.6, 0], HAMMER = [.4, .2, 3, 3, .6, -.5, 0], KNEE = [.3, .2, 1, .6, 2.3, -.3, 0];
 const face = p => { const o = E.P2; if (o && !o.ko) p.face = sideOf(p, o); };
+// 0.22v2 (the user: "better sfx and vfx for TDCED like from the anime and manga"): the big ones get impact frames, focus lines and the sound
+// written in (modeset.js), over real clips (myinstants: home-tdc-*; and the game's own Hollow Purple blast, heavy punch and Black Flash)
+const clipOf = (name, vol) => { if (sfx.file) sfx.file(name, vol); };
+const manga = (p, word, col, kind, snd) => { if (JU.ms) JU.ms.bigHit(p, E.P2, word, col, kind); if (snd) clipOf(snd, .85); };
 const fist = (p, front = true) => { const h = E.hand(p, front), s = hs(p); return [p.x + (h[0] - p.x) * s, p.y + (h[1] - p.y) * s]; };
 // which way he is pushing as he does it: down (S), away from them (back), or neither
 const dirOf = p => { const s = E.keys.has('s') || E.keys.has('arrowdown'), x = (E.keys.has('d') || E.keys.has('arrowright') ? 1 : 0) - (E.keys.has('a') || E.keys.has('arrowleft') ? 1 : 0); return s ? 'down' : x && x === -p.face ? 'back' : 'fwd'; };
@@ -183,7 +187,7 @@ const DIR_AIR = {
 const SKYPIERCE = { name: 'Sky Pierce', dur: .7, run(p, m, t) {      // 1 again, once a Down Blast has them up: after them, up the line they went
   const o = E.P2;
   p.vx = 0; p.rate = 40; p.target = t < .1 ? SKY : RECOIL;
-  if (t >= .1 && !m.f) { m.f = 1; face(p); const z = muzzle(p), a = at(p, z[0], z[1], o, 1800, 3); beam(a.x0, a.y0, a.x1, a.y1, 44, .34, D_); sfx.cannon(2); shake(20); if (!o.ko) { hit(o, p.face, 40, D_, { kb: 900, lift: 700, stun: 1, stop: .14, heavy: 1 }); impact(o.x, mid(o), 1.2, D_); } label(p.x, p.y + 470, 'SKY PIERCE', D_.core); }
+  if (t >= .1 && !m.f) { m.f = 1; face(p); const z = muzzle(p), a = at(p, z[0], z[1], o, 1800, 3); beam(a.x0, a.y0, a.x1, a.y1, 44, .34, D_); sfx.cannon(2); shake(20); if (!o.ko) { hit(o, p.face, 40, D_, { kb: 900, lift: 700, stun: 1, stop: .14, heavy: 1 }); impact(o.x, mid(o), 1.2, D_); if (JU.ms) { JU.ms.focus(o.x, mid(o), .35); JU.ms.ono('バシュッ', o.x, mid(o) + 260, .9, D_.core); } } label(p.x, p.y + 470, 'SKY PIERCE', D_.core); }
   ENDS(p, m, t, .55);
 } };
 const REDIRECT = { name: 'Redirect', jp: '転向', cd: 12, guard: 'redirect', dur: 1.1 };
@@ -200,7 +204,7 @@ function maxBeam(p, o, w, n, life, more) {          // one MAX beam out of his h
   const z = muzzle(p), a = at(p, z[0], z[1], o, 2000, .4);
   beam(a.x0, a.y0, a.x1, a.y1, w, life, MX, { keep: true }); sfx.cannon(2); sfx.roar(life); shake(30 + w / 10); E.zoomIn(.4);
   if (a.floor) { V.crack(a.x1, 300); V.rocks(a.x1, 0, 14); C.cubes(a.x1, 20, 8); smoke(a.x1, 20, 8, 1.2, MX); }
-  if (up(o) && onLine(o, a, w)) { hit(o, p.face, n, MX, Object.assign({ kb: 1500, lift: 560, stun: 1, stop: .24, heavy: 1, ring: 1 }, more)); impact(o.x, mid(o), 2, MX); V.impact(.14, o.x, mid(o)); C.cubes(o.x, 40, 8); return true; }
+  if (up(o) && onLine(o, a, w)) { hit(o, p.face, n, MX, Object.assign({ kb: 1500, lift: 560, stun: 1, stop: .24, heavy: 1, ring: 1 }, more)); impact(o.x, mid(o), 2, MX); V.impact(.14, o.x, mid(o)); C.cubes(o.x, 40, 8); manga(p, w > 200 ? 'ドォォォン' : 'ドォン', MX.core, 'bw'); return true; }
   return false;
 }
 const MAX = {
@@ -234,7 +238,7 @@ const MAX = {
     if (t < .4) { p.target = LOWER; if (Math.random() < .8) V.mote(p.x, p.y + 190 * SIZE, 'white'); return; }
     if (!m.f) {
       m.f = 1; p.pose = OPEN.slice(); const y = p.y + 190 * SIZE; burstFx(p.x, y, 1.6, MX); sfx.cannon(2); sfx.blast(); shake(36); E.zoomIn(.3); V.crack(p.x, 320); E.addDust(p.x - 120); E.addDust(p.x + 120);
-      if (up(o) && Math.abs(o.x - p.x) < 520 && Math.abs(o.y - p.y) < 400) { hit(o, o.x >= p.x ? 1 : -1, 120, MX, { kb: 1600, lift: 700, stun: 1, stop: .2, heavy: 1, ring: 1 }); offer('strikes', FOLLOW, 1.1, () => !E.P2.ko); }
+      if (up(o) && Math.abs(o.x - p.x) < 520 && Math.abs(o.y - p.y) < 400) { hit(o, o.x >= p.x ? 1 : -1, 120, MX, { kb: 1600, lift: 700, stun: 1, stop: .2, heavy: 1, ring: 1 }); offer('strikes', FOLLOW, 1.1, () => !E.P2.ko); manga(p, null, MX.core, 'neg'); }
     }
     p.target = t < .7 ? OPEN : POSE.idle; ENDS(p, m, t, .85);
   } },
@@ -284,7 +288,7 @@ const MAX_AIR = {
     p.rate = 40;
     if (!m.d) { m.d = 1; p.vy = -2800; face(p); if (up(o)) p.vx = clamp((o.x - p.x) / .3, -2200, 2200); sfx.whoosh(); }
     p.target = HAMMER;
-    if (m.land === undefined) { if (!p.ground && t < 1.3) return; m.land = t; p.vx = 0; burstFx(p.x, 60, 1.4, MX); pillar(p.x, 140, .4, MX); sfx.cannon(2); shake(40); E.zoomIn(.4); C.cubes(p.x, 20, 10); smoke(p.x, 20, 10, 1.4, MX); if (up(o) && Math.abs(o.x - p.x) < 380 && o.y < 300) hit(o, o.x >= p.x ? 1 : -1, 110, MX, { kb: 1200, lift: 900, stun: 1, stop: .22, heavy: 1, ring: 1 }); }
+    if (m.land === undefined) { if (!p.ground && t < 1.3) return; m.land = t; p.vx = 0; burstFx(p.x, 60, 1.4, MX); pillar(p.x, 140, .4, MX); sfx.cannon(2); shake(40); E.zoomIn(.4); C.cubes(p.x, 20, 10); smoke(p.x, 20, 10, 1.4, MX); if (up(o) && Math.abs(o.x - p.x) < 380 && o.y < 300) { hit(o, o.x >= p.x ? 1 : -1, 110, MX, { kb: 1200, lift: 900, stun: 1, stop: .22, heavy: 1, ring: 1 }); manga(p, 'ズドン', MX.core, 'bw'); } }
     ENDS(p, m, t, m.land + .45);
   } }
 };
@@ -396,7 +400,7 @@ const SPRAY = { name: 'Spray', dur: .45, run(p, m, t) {      // as Scatter comes
 const ZR = COL.red;
 function punch(p, o, n, h, big) {                   // a punch with it let go out of the fist as it lands
   const w = fist(p);
-  cone(w[0], w[1], p.face, big ? 380 : 220, ZR, big ? .24 : .16); sfx.hit(!!big); if (big) sfx.cannon(0);
+  cone(w[0], w[1], p.face, big ? 380 : 220, ZR, big ? .24 : .16); sfx.hit(!!big); if (big) { sfx.cannon(0); clipOf('home-love-slam', .7); }
   if (!o.ko && Math.abs(o.x - p.x) < 300 && Math.abs(o.y - p.y) < 260 && o.state !== 'up') { hit(o, p.face, n, ZR, h); impact(o.x, mid(o), big ? 1.2 : .6, ZR); return true; }
   return false;
 }
@@ -598,7 +602,7 @@ const OMNI = { name: 'Omnidirectional Discharge', dur: 4.2, run(p, m, t) {      
     if (got || (up(o) && Math.abs(o.x - p.x) < 260)) { hit(o, p.face, 12, D_, { kb: 0, stun: .6, stop: .015 }); if (can(o) && !o.ground) o.vy = Math.max(o.vy, 60); }
   }
   if (t >= 3.2 && !m.fin) {
-    m.fin = 1; face(p); burstFx(p.x, y, 1.6, D_); sfx.cannon(2); sfx.bf(); shake(50); E.stop(.12); show = { kind: 'flash', t0: E.T, dur: .35, col: '255,255,255' };
+    m.fin = 1; face(p); burstFx(p.x, y, 1.6, D_); sfx.cannon(2); sfx.bf(); shake(50); E.stop(.12); show = { kind: 'flash', t0: E.T, dur: .35, col: '255,255,255' }; manga(p, '全方位', D_.core, 'bw', 'home-gojo-purple-boom');
     for (let i = 0; i < 16; i++) { const tx = o && !o.ko ? o.x : p.x + p.face * 600, ty = o && !o.ko ? mid(o) : 150, a0 = i * TAU / 16, sx = p.x + Math.cos(a0) * 220, sy = y + Math.sin(a0) * 220; beam(sx, sy, tx + (tx - sx) * .4, ty + (ty - sy) * .4, 30, .5, D_, { bare: i > 0 }); }
     if (o && !o.ko) { hit(o, p.face, 184, D_, { kb: 1700, lift: 800, stun: 1.2, stop: .3, heavy: 1, ring: 1 }); V.impact(.2, o.x, mid(o)); C.cubes(o.x, 40, 10); smoke(o.x, 20, 10, 1.4, D_); }
   }
@@ -617,7 +621,7 @@ const CITY = { name: 'City Breaker', dur: 5, run(p, m, t) {      // Granite Blas
   if (!m.f) {
     m.f = 1; const z = muzzle(p), dx = Math.max(240, ((o.x || 0) - z[0]) * p.face), dy = clamp((o && !o.ko ? mid(o) : 150) - z[1], -.12 * dx, .05 * dx), n = Math.hypot(dx, dy);
     m.ux = p.face * dx / n; m.uy = dy / n; m.f0 = p.face;
-    beam(z[0], z[1], z[0] + m.ux * 3000, z[1] + m.uy * 3000, 360, 2.1, MX, { keep: true }); sfx.cannon(2); sfx.roar(2.2); shake(60); V.split(p.face > 0 ? .06 : -.06);
+    beam(z[0], z[1], z[0] + m.ux * 3000, z[1] + m.uy * 3000, 360, 2.1, MX, { keep: true }); sfx.cannon(2); sfx.roar(2.2); shake(60); V.split(p.face > 0 ? .06 : -.06); clipOf('home-tdc-beam', .8);
     if (!JU.reduceMotion) { show = { kind: 'city', t0: E.T, dur: .7, seed: 1 + (Math.random() * 1e6 | 0) }; E.stop(.7); }
   }
   const u = t - 2;
@@ -630,7 +634,7 @@ const CITY = { name: 'City Breaker', dur: 5, run(p, m, t) {      // Granite Blas
     }
     return;
   }
-  if (!m.end) { m.end = 1; p.vx = 0; if (o && !o.ko) { hit(o, m.f0, 600, MX, { kb: 2200, lift: 800, stun: 1.2, stop: .34, heavy: 1, ring: 1 }); V.impact(.2, o.x, mid(o)); C.cubes(o.x, 40, 12, 1.3); smoke(o.x, 20, 14, 1.6, MX); } sfx.bf(); shake(50); show = { kind: 'flash', t0: E.T, dur: .4, col: '235,245,255' }; }
+  if (!m.end) { m.end = 1; p.vx = 0; if (o && !o.ko) { hit(o, m.f0, 600, MX, { kb: 2200, lift: 800, stun: 1.2, stop: .34, heavy: 1, ring: 1 }); V.impact(.2, o.x, mid(o)); C.cubes(o.x, 40, 12, 1.3); smoke(o.x, 20, 14, 1.6, MX); } sfx.bf(); shake(50); show = { kind: 'flash', t0: E.T, dur: .4, col: '235,245,255' }; manga(p, '都市破壊', '#ffffff', 'bw', 'home-gojo-purple-boom'); }
   p.target = POSE.idle; ENDS(p, m, t, 4.6);
 } };
 const THOUSAND = { name: 'Thousand Granite', dur: 4.4, run(p, m, t) {      // up, and a hundred of them out of his hair, one after another, at them
@@ -644,7 +648,7 @@ const THOUSAND = { name: 'Thousand Granite', dur: 4.4, run(p, m, t) {      // up
     shoot(z[0], z[1], o, 2600, 4, SC, { spread: rnd(-.12, .12), face: p.face, r: 8, h: { kb: 10, stun: .3, stop: .004 } });
     if (m.n % 3 === 0) sfx.zap(); if (m.n % 10 === 0) shake(8);
   }
-  if (t >= 3.5 && !m.fin) { m.fin = 1; label(p.x, p.y + 480, 'ONE THOUSAND', SC.core, 1.4); burstFx(p.x, p.y + 190 * SIZE, 1, SC); }
+  if (t >= 3.5 && !m.fin) { m.fin = 1; label(p.x, p.y + 480, 'ONE THOUSAND', SC.core, 1.4); burstFx(p.x, p.y + 190 * SIZE, 1, SC); if (JU.ms && o && !o.ko) JU.ms.ono('ドドドドド', o.x, mid(o) + 300, 1.2, SC.core); }
   if (t > 3.6) p.target = POSE.fall;
   if ((p.ground && t > 3.7) || t > 4.3) E.endMove(p);
 } };
@@ -676,7 +680,7 @@ const COURSE = { name: 'Dessert: Full Course', dur: 9, run(p, m, t) {
     m.fin = 1; pin = null; E.root.classList.remove('cine'); p.pose = POSE.cross.slice();
     const w = fist(p); cone(w[0], w[1], f, 700, ZR, .4); burstFx(o.x, mid(o), 1.6, ZR); sfx.cannon(2); sfx.bf(); shake(60); E.stop(.15);
     if (!o.ko) { hit(o, f, 700, ZR, { kb: 2600, lift: 800, stun: 1.2, stop: .34, heavy: 1, ring: 1 }); V.impact(.22, o.x, mid(o)); for (let i = 0; i < 6; i++) V.bolt(o.x + rnd(-200, 200), mid(o) + rnd(-160, 200), o.x + rnd(-320, 320), mid(o) + rnd(-200, 260), '#ff2440', .2, 3, '#120306'); }
-    show = { kind: 'flash', t0: E.T, dur: .5, col: '255,255,255' }; label(p.x, p.y + 500, 'DESSERT', ZR.core, 1.6);
+    show = { kind: 'flash', t0: E.T, dur: .5, col: '255,255,255' }; label(p.x, p.y + 500, 'DESSERT', ZR.core, 1.6); manga(p, 'ドグシャァ', ZR.core, 'red', 'home-nanami-bf');
   }
   p.target = u < 4.1 ? POSE.cross : POSE.idle; ENDS(p, m, t, m.g + 4.4);
 } };

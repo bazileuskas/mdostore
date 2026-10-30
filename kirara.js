@@ -516,12 +516,14 @@ function begin(p) {
   if (Z) Z.flash(PRGB, .3, .3);
   fev.music = sfx.song('home-kirara-awk', 0, 1.2, .55, true);
   shownT = -1;
+  feverLabels();                                    // (0.22v2: the fever's own four on the hotbar)
 }
 function endFev(quiet) {
   const f = fev;
   if (!f) return;
   fev = null; clearInterval(watch);
   if (f.music) f.music.stop(1.6);
+  feverLabels(); ult.length = 0;
   if (f.paused && Fi.fight.paused) Fi.fight.paused = false;
   if (on()) JU.tech.drain();
   if (!quiet && on() && JU.manga) JU.manga.think(E.P1, "...THE FEVER'S GONE COLD.", { life: 1.6 });
@@ -560,8 +562,144 @@ function drawSky(dt) {
 }
 void CRUX;
 
+/* ================= Build 0.22v2: the fever's own moves (the user: "star crossed ult moves") =================
+   While the fever lasts, 1 to 4 are these instead (the names and numbers are ours):
+   1 METEOR SHOWER: nine shooting stars down out of the sky onto them, 10 each (and two stars on them a hit, as everything in the fever)
+   2 SUPERNOVA RENDEZVOUS: whatever star they wear, all the way in, round once, and a heel that sets a star off in them: 120
+   3 CONSTELLATION CAGE: five stars round them, joined up one line at a time (12 a line, and they cannot get out), then shut on them: 40
+   4 COMET FLIGHT: a comet, through them six times (16) and down into them (40) */
+const ult = [];                                     // what the fever's moves leave about: { kind, ... }
+const MSTEP = .085;
+const ULT = {
+  strikes: { name: 'Meteor Shower', cd: 3, dur: 1.3, run(p, m, t) {
+    const o = E.P2;
+    p.vx = 0; p.rate = 30; p.target = t < 1 ? POSE.kiRaise : POSE.idle;
+    if (!m.s) { m.s = 1; m.n = 0; sfx.twinkle(); E.fx.push({ k: 2, x: p.x, y: p.y + 470, n: 'METEOR SHOWER', col: PINK, t: 0, life: 1 }); }
+    while (m.n < 9 && t >= .15 + m.n * MSTEP) {
+      const x = clamp((live(o) ? o.x : p.x + p.face * 400) + rnd(-90, 90), -980, 980), i = m.n++;
+      ult.push({ kind: 'meteor', x0: x + rnd(-500, -260) * p.face, y0: 1200, x, t: 0, life: .26, hit: false, rot: rnd(0, TAU) });
+      if (i % 2) sfx.star(i % 4);
+    }
+  } },
+  crush: { name: 'Supernova Rendezvous', cd: 7, dur: 1.15, run(p, m, t) {
+    const o = E.P2, f = p.face;
+    p.vx = 0; p.rate = 34;
+    if (!m.s) { m.s = 1; m.o = live(o) ? o : null; m.x0 = m.o ? m.o.x : 0; sfx.cross(); E.zoomIn(.8); }
+    const q = m.o;
+    if (t < .32) { p.target = POSE.kiReach; if (q && !q.ko && !duel() && !q.net) { q.x = lerp(m.x0, clamp(p.x + f * 120, -960, 960), ease(Math.min(1, t / .3))); q.vx = 0; Object.assign(q, { state: 'hurt', stun: .7, act: null, tele: 0 }); } if (q && Math.random() < .9) V.mote(q.x, q.y + 170, 'pink'); return; }
+    if (t < .48) { p.target = POSE.manjiWind; p.spin = Math.cos((t - .32) / .16 * TAU); p.rate = 30; return; }
+    p.spin = 1; p.target = t < .8 ? POSE.manji : POSE.idle; p.rate = 46;
+    if (m.done) return;
+    m.done = 1;
+    if (duel() && q) p.x = clamp(q.x - f * 120, -960, 960);
+    if (!q || q.ko) return;
+    E.applyHit(q, f, { dmg: exact(q, 120), kb: 1300, lift: 800, stun: 1, stop: .3, heavy: 1, col: PINK, fixed: 1, mute: 1, nostar: 1 });
+    setMark(q, 1);
+    ult.push({ kind: 'nova', x: q.x, y: q.y + 180, t: 0, life: .7 });
+    burstAt(q.x, q.y + 180, 2.2); sfx.bf(); sfx.star(4); shake(40); E.zoomIn(.4);
+    if (JU.ms) JU.ms.bigHit(p, q, 'キラッ', PINK, 'neg');
+    if (Z) { Z.flash(PRGB, .45, .3); Z.shock(q.x, 800, PRGB, .5, 14); }
+    E.fx.push({ k: 2, x: q.x, y: q.y + 540, n: 'SUPERNOVA', col: PINK, t: 0, life: 1.4 });
+  } },
+  div: { name: 'Constellation Cage', cd: 9, dur: 2, run(p, m, t) {
+    const o = E.P2;
+    p.vx = 0; p.rate = 22; p.target = t < 1.7 ? POSE.kiRaise : POSE.idle;
+    if (!m.s) {
+      m.s = 1; m.o = live(o) ? o : null; m.n = 0;
+      const cx = m.o ? m.o.x : p.x + p.face * 400, cy = m.o ? m.o.y + 190 : 190;
+      m.cage = { kind: 'cage', pts: Array.from({ length: 5 }, (_, i) => [cx + Math.cos(-Math.PI / 2 + i * TAU / 5) * 230, cy + Math.sin(-Math.PI / 2 + i * TAU / 5) * 210]), lines: 0, t: 0, life: 2, shut: 0 };
+      ult.push(m.cage); sfx.cross();
+    }
+    const q = m.o;
+    if (q && !q.ko && !duel() && !q.net && t < 1.5) Object.assign(q, { state: 'hurt', stun: .4, act: null, tele: 0, vx: 0 });      // (nothing gets out of it)
+    while (m.n < 5 && t >= .25 + m.n * .2) {
+      m.n++; m.cage.lines = m.n; sfx.star((m.n - 1) % 4);
+      if (q && !q.ko) { E.applyHit(q, q.x >= p.x ? 1 : -1, { dmg: exact(q, 12), kb: 0, stun: .6, stop: .04, col: GOLD, fixed: 1, mute: 1 }); burstAt(q.x, q.y + 180, .5); }
+    }
+    if (t >= 1.35 && !m.shut) {
+      m.shut = 1; m.cage.shut = E.T;
+      if (q && !q.ko) { E.applyHit(q, q.x >= p.x ? 1 : -1, { dmg: exact(q, 40), kb: 900, lift: 600, stun: 1, stop: .22, heavy: 1, col: PINK, fixed: 1, mute: 1 }); burstAt(q.x, q.y + 180, 1.6); }
+      sfx.bf(); shake(30); if (JU.ms && q) JU.ms.bigHit(p, q, '封', PINK, 'neg');
+    }
+  } },
+  manji: { name: 'Comet Flight', cd: 12, dur: 2.2, run(p, m, t) {
+    const o = E.P2;
+    p.rate = 40;
+    if (!m.s) { m.s = 1; m.n = 0; m.x0 = p.x; m.side = 1; p.inv = Math.max(p.inv || 0, 2); sfx.whoosh(); sfx.twinkle(); E.fx.push({ k: 2, x: p.x, y: p.y + 470, n: 'COMET FLIGHT', col: PINK, t: 0, life: 1 }); }
+    const q = live(o) ? o : null, cx = q ? q.x : m.x0 + p.face * 300;
+    if (m.n < 6) {
+      const leg = Math.floor(t / .2), u = (t % .2) / .2;
+      if (leg >= m.n + 1 || leg > 5) {             // each time through them: a blow
+        m.n++;
+        if (q && !q.ko) { E.applyHit(q, m.side, { dmg: exact(q, 16), kb: 0, stun: .6, stop: .04, col: PINK, fixed: 1, mute: 1 }); burstAt(q.x, q.y + 180, .6); if (Math.abs(q.y) < 1 && !duel() && !q.net && !q.poise) Object.assign(q, { ground: false, state: 'air', y: 1, vy: 300 }); }
+        m.side = -m.side; sfx.star(m.n % 4);
+      }
+      p.x = clamp(cx + m.side * lerp(420, -420, ease(u)), -980, 980); p.y = 260 + Math.sin(u * Math.PI) * 140; p.vy = 0; p.ground = false; p.face = -m.side;
+      p.target = POSE.kiFly;
+      ult.push({ kind: 'tail', x: p.x, y: p.y + 180, t: 0, life: .28 });
+      return;
+    }
+    if (!m.down) { m.down = t; p.vy = -2800; if (q) p.vx = clamp((q.x - p.x) / .2, -2600, 2600); }
+    p.target = POSE.kiLand;
+    if (!m.hit && (p.ground || t - m.down > .4)) {
+      m.hit = 1; p.vx = 0;
+      burstAt(p.x, 120, 2); sfx.bf(); shake(36); if (Z) Z.shock(p.x, 700, PRGB, .45, 12);
+      if (q && !q.ko && Math.abs(q.x - p.x) < 320) { E.applyHit(q, q.x >= p.x ? 1 : -1, { dmg: exact(q, 40), kb: 1200, lift: 700, stun: 1, stop: .24, heavy: 1, col: PINK, fixed: 1, mute: 1 }); if (JU.ms) JU.ms.bigHit(p, q, 'ドォン', PINK, 'bw'); }
+    }
+    if (m.hit && t > m.down + .8) E.endMove(p);
+  } }
+};
+function ultTick(dt) {
+  const o = E.P2;
+  for (let i = ult.length - 1; i >= 0; i--) {
+    const u = ult[i];
+    u.t += dt;
+    if (u.kind === 'meteor' && !u.hit && u.t >= u.life) {      // it lands
+      u.hit = true; burstAt(u.x, 30, .7); E.addDust(u.x); shake(8);
+      if (live(o) && !(o.inv > 0) && Math.abs(o.x - u.x) < 110 * (o.scale || 1) && o.y < 380) E.applyHit(o, o.x >= u.x ? 1 : -1, { dmg: exact(o, 10), kb: 60, stun: .5, stop: .03, col: GOLD, fixed: 1, mute: 1 });
+    }
+    if (u.t > u.life + (u.kind === 'meteor' ? .25 : 0)) ult.splice(i, 1);
+  }
+}
+function drawUlt() {
+  for (const u of ult) {
+    const a = Math.max(0, 1 - Math.max(0, u.t - u.life * .7) / (u.life * .3 + .001));
+    if (u.kind === 'meteor') {                       // a shooting star coming down, its tail behind it
+      const k0 = Math.min(1, u.t / u.life), x = lerp(u.x0, u.x, k0), y = lerp(u.y0, 30, k0), c = F(x, y), tl = F(lerp(u.x0, u.x, Math.max(0, k0 - .35)), lerp(u.y0, 30, Math.max(0, k0 - .35))), k = c[2];
+      if (u.hit) continue;
+      lit(() => { g.strokeStyle = `rgba(${PRGB},.75)`; g.lineWidth = 14 * k; g.lineCap = 'round'; g.beginPath(); g.moveTo(tl[0], tl[1]); g.lineTo(c[0], c[1]); g.stroke(); g.strokeStyle = 'rgba(255,248,236,.95)'; g.lineWidth = 4 * k; g.stroke(); E.glow(E.GLOW.gold, c[0], c[1], 110 * k, 1); });
+      starPath(c[0], c[1], 20 * k, 8 * k, u.rot + u.t * 12); g.fillStyle = '#fff6d8'; g.fill();
+    } else if (u.kind === 'nova') {                  // the star going off in them
+      const c = F(u.x, u.y), k = c[2], e = 1 - (1 - Math.min(1, u.t / u.life)) ** 2;
+      lit(() => { E.glow(E.GLOW.pink, c[0], c[1], 900 * e * k, 1 - e); E.glow(E.GLOW.gold, c[0], c[1], 500 * e * k, 1 - e); });
+      g.save(); g.globalAlpha = 1 - e; starPath(c[0], c[1], 380 * e * k, 150 * e * k, e * 2); g.strokeStyle = '#fff'; g.lineWidth = 6 * k; g.stroke(); g.restore();
+    } else if (u.kind === 'cage') {                  // the five stars, the lines between them, and then all of it shutting
+      const sh = u.shut ? Math.min(1, (E.T - u.shut) / .25) : 0, cx = u.pts.reduce((s, q) => s + q[0], 0) / 5, cy = u.pts.reduce((s, q) => s + q[1], 0) / 5;
+      const pt = q => F(lerp(q[0], cx, sh), lerp(q[1], cy, sh));
+      g.save(); g.globalAlpha = a;
+      lit(() => {
+        g.strokeStyle = `rgba(${PRGB},.9)`; g.lineWidth = 5; g.lineCap = 'round';
+        for (let i = 0; i < u.lines; i++) { const s0 = pt(u.pts[i]), s1 = pt(u.pts[(i + 2) % 5]); g.beginPath(); g.moveTo(s0[0], s0[1]); g.lineTo(s1[0], s1[1]); g.stroke(); }      // (a star drawn the way stars are, every other point)
+        for (const q of u.pts) { const c = pt(q); E.glow(E.GLOW.gold, c[0], c[1], 90 * c[2], .9); }
+      });
+      for (const q of u.pts) { const c = pt(q); starPath(c[0], c[1], 18 * c[2], 7 * c[2], E.T * 3); g.fillStyle = '#fff6d8'; g.fill(); g.lineWidth = 2; g.strokeStyle = PINK; g.stroke(); }
+      g.restore();
+    } else if (u.kind === 'tail') {                  // the comet's tail
+      const c = F(u.x, u.y), k = c[2], f = 1 - u.t / u.life;
+      lit(() => { E.glow(E.GLOW.pink, c[0], c[1], 160 * k * f, f); E.glow(E.GLOW.white, c[0], c[1], 60 * k * f, f); });
+    }
+  }
+}
+// the hotbar while it lasts: the fever's four, or the usual four again
+function feverLabels() {
+  if (!on()) return;
+  const set = fevOn() ? ULT : BASE;
+  for (const k of JU.tech.SLOTS) { E.hud.mv[k].querySelector('b').textContent = set[k].name; E.CD[k] = set[k].cd; E.cd[k] = Math.min(E.cd[k], set[k].cd); }
+}
+
 /* ================= the technique ================= */
-const MOVES = { strikes: SHOOT, crush: MEET, div: STAMP, manji: FLIGHT };
+const BASE = { strikes: SHOOT, crush: MEET, div: STAMP, manji: FLIGHT };
+const MOVES = { get strikes() { return fevOn() ? ULT.strikes : SHOOT; }, get crush() { return fevOn() ? ULT.crush : MEET; }, get div() { return fevOn() ? ULT.div : STAMP; }, get manji() { return fevOn() ? ULT.manji : FLIGHT; } };      // (0.22v2: the fever's own four while it lasts)
 JU.tech.add('kirara', { name: 'Star-Crossed', jp: '星間飛行', mark: '星', who: 'Love Rendezvous', odds: 2.5, col: PINK, glow: 'pink', moves: MOVES,
   limited: ENDS, skin: KIRARA, as: ['Star-Crossed', '星'], awaken, awkName: 'Fever', awkKeep: true,
   get awkHits() { return !fev; },                   // (in the fever the bar is the time left: hits do not fill it)
@@ -599,6 +737,7 @@ H.tick = dt => {
     }
   }
   if (shots.length) flyShots(dt);
+  if (ult.length) ultTick(dt);
   if (flight && !(E.P1.move && E.P1.move.def === FLIGHT)) flight = null;      // (cut short)
   flightTick(dt); pinsTick(dt);
   rules(dt);
@@ -606,13 +745,13 @@ H.tick = dt => {
 H.fx = dt => {
   fx0(dt);
   if (!on()) return;
-  drawCross(); drawPins(); drawShots(); drawFlight(); drawRules();
+  drawCross(); drawPins(); drawShots(); drawFlight(); drawRules(); if (ult.length) drawUlt();
 };
-const clear = () => { mark = 0; markO = null; shots.length = 0; crossS = null; stampT = pushT = neverT = 0; pins.length = 0; flight = null; pinCool = 0; };
+const clear = () => { mark = 0; markO = null; shots.length = 0; crossS = null; stampT = pushT = neverT = 0; pins.length = 0; flight = null; pinCool = 0; ult.length = 0; };
 H.reset = () => { reset0(); clear(); endFev(true); sky = 0; };
 H.fightStart = (cfg, wave) => { start0(cfg, wave); clear(); if (!wave) { endFev(true); sky = 0; } };      // (the fever lasts through the waves of one fight)
 
-JU.kirara = { SKIN: KIRARA, MOVES, esp: CROSS, ENDS, STARS,      // (esp: E, especial.js)
+JU.kirara = { SKIN: KIRARA, MOVES, ULT, esp: CROSS, ENDS, STARS,      // (esp: E, especial.js)
   get fever() { return fev && { t: +fev.t.toFixed(2), intro: fev.intro, music: !!(fev.music && fev.music.playing), sky: +sky.toFixed(2) }; },
   get state() { return { mark, star: mark ? STARS[mark - 1][0] : null, on: markO === E.P2, shots: shots.length, cross: crossS ? +crossS.t.toFixed(2) : null,
     pins: pins.map(q => ({ x: Math.round(q.x), y: q.y, t: +q.t.toFixed(2) })), flight: flight ? { leg: flight.i, of: flight.legs.length, hits: flight.hits } : null }; },

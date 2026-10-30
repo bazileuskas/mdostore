@@ -1227,7 +1227,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
   </div>
 
   <div class="side" aria-hidden="true" lang="ja">領域展開</div>
-  <div class="hud tl"><b lang="ja">呪</b>Fan project · Build 0.22v1 · Direct Discharge</div>
+  <div class="hud tl"><b lang="ja">呪</b>Fan project · Build 0.22v2 · Fifty Variants</div>
   <div class="hud bl">↑ ↓ Select &nbsp;·&nbsp; Enter Confirm</div>
   <div class="hud br">Title screen</div>
   <div class="acct" id="acct">
@@ -1446,7 +1446,19 @@ const sfx = (() => {
     // Build 0.22v1: the songs the user asked for while True Direct Cursed Energy Discharge is equipped (tdced.js). At home AIZO is their own
     // copy, home-aizo; online the only AIZO on myinstants is the intro
     'home-jane': [MI + 'jane-youre-early.mp3', 0, 0],                                               // "Jane youre early"
-    'home-tdc-aizo': [MI + 'aizo.mp3', 0, 0] };                                                      // "AIZO"
+    'home-tdc-aizo': [MI + 'aizo.mp3', 0, 0],                                                       // "AIZO"
+    // Build 0.22v2: True Direct Cursed Energy Discharge's beams and blasts (tdced2.js, dced.js), and the Love Reapers' katana (lovereap.js)
+    'home-tdc-shoot': [MI + 'laser-beam-charge-and-shoot.mp3', 6.9, 8.98],                         // "Laser beam charge and shoot": the shot
+    'home-tdc-charge': [MI + 'laser-beam-charge-and-shoot.mp3', 5.4, 6.9],                         // and the charge before it
+    'home-tdc-beam': [MI + 'cyclops-optic-energy-beam.mp3', .6, 2.6],                              // "cyclops optic energy beam"
+    'home-tdc-boom': [MI + 'very-big-explosion.mp3', 0, 2.2],                                      // "Very big explosion"
+    'home-tdc-sweep': [MI + 'turning_laser_beam.mp3', .1, 1.3],                                    // "Turning Laser Beam"
+    'home-lr-iai': [MI + 'katana-samurai.mp3', .2, 1.08],                                          // "Katana samurai"
+    'home-lr-schwing': [MI + 'katana-schwing.mp3', .14, .9],                                       // "katana schwing"
+    'home-lr-stab': [MI + 'katana-3-stab.mp3', 1.5, 2],                                            // "Katana 3 Stab"
+    'home-lr-parry': [MI + 'katana-2-deflect.mp3', .06, .9],                                       // "Katana 2 Deflect"
+    'home-lr-draw': [MI + 'katana-sound-gmod-source.mp3', .04, .7],                                // "Katana Draw Effect"
+    'home-lr-slash': [MI + 'slash-sword.mp3', .08, .7] };                                          // "slash sword."
   const clips = {};
   const load = name => {
     if (clips[name]) return clips[name];
@@ -2475,7 +2487,7 @@ window.JU = { sfx, flash, bolts: blackFlash, reduceMotion, startGame, exitGame, 
 // Load every game script fresh on each page load. The dev server sends no cache headers, so without this a reload
 // could run a mix of old and new files (new menu, old moves) while the game is being worked on.
 ['account.js', 'announce.js', 'game.js', 'fx2.js', 'chars.js', 'street.js', 'walk.js', 'foes.js', 'cuts.js', 'sukuna.js', 'school.js', 'story.js', 'story2.js', 'tech.js', 'tech_a.js',
-  'tech_b.js', 'sets.js', 'story3.js', 'cast2.js', 'script.js', 'naoya.js', 'ch45.js', 'ch67.js', 'clan.js', 'clan_a.js', 'clan_b.js', 'boss.js', 'bossfx.js', 'boss_a.js', 'boss_b.js', 'boss_c.js', 'training.js', 'choso.js', 'domain.js', 'domain2.js', 'mahito.js', 'combo.js', 'combat.js', 'cast3.js', 'ch810.js', 'ch1112.js', 'cast4.js', 'ch1316.js', 'cast5.js', 'ch1721.js', 'combat2.js', 'judge.js', 'awaken.js', 'alimit.js', 'ats.js', 'switcher.js', 'tools.js', 'smark.js', 'cast6.js', 'ch2230.js', 'plants.js', 'clash.js', 'block.js', 'cannon.js', 'tced.js', 'shibuya.js', 'kyoto.js', 'evasive.js', 'kokusen.js', 'mp.js', 'pvp.js', 'vengeful.js', 'manga.js', 'haruta.js', 'ratio.js', 'reaper.js', 'inumaki.js', 'kirara.js', 'soul.js', 'slit.js', 'gambler.js', 'especial.js', 'yen.js', 'subtech.js', 'metro.js', 'jjh.js', 'shinjuku.js', 'notes.js', 'shop.js', 'ps.js', 'raid.js', 'touch.js', 'idg.js', 'dced.js', 'tdced.js'].forEach(src => {
+  'tech_b.js', 'sets.js', 'story3.js', 'cast2.js', 'script.js', 'naoya.js', 'ch45.js', 'ch67.js', 'clan.js', 'clan_a.js', 'clan_b.js', 'boss.js', 'bossfx.js', 'boss_a.js', 'boss_b.js', 'boss_c.js', 'training.js', 'choso.js', 'domain.js', 'domain2.js', 'mahito.js', 'combo.js', 'combat.js', 'cast3.js', 'ch810.js', 'ch1112.js', 'cast4.js', 'ch1316.js', 'cast5.js', 'ch1721.js', 'combat2.js', 'judge.js', 'awaken.js', 'alimit.js', 'ats.js', 'switcher.js', 'tools.js', 'smark.js', 'cast6.js', 'ch2230.js', 'plants.js', 'clash.js', 'block.js', 'cannon.js', 'tced.js', 'shibuya.js', 'kyoto.js', 'evasive.js', 'kokusen.js', 'mp.js', 'pvp.js', 'vengeful.js', 'manga.js', 'haruta.js', 'ratio.js', 'reaper.js', 'inumaki.js', 'kirara.js', 'soul.js', 'slit.js', 'gambler.js', 'especial.js', 'yen.js', 'subtech.js', 'metro.js', 'jjh.js', 'shinjuku.js', 'notes.js', 'shop.js', 'ps.js', 'raid.js', 'touch.js', 'idg.js', 'modeset.js', 'dced.js', 'tdced.js', 'tdced2.js'].forEach(src => {
   const s = document.createElement('script');
   s.src = src + '?v=' + Date.now(); s.async = false;      // async = false keeps them running in this order
   document.body.appendChild(s);

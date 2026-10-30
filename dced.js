@@ -38,8 +38,11 @@ const COL = {                                       // rgb for the glow, the cor
   teal: { rgb: '98,255,217', core: '#62ffd9', img: 'teal' },
   red: { rgb: '255,77,109', core: '#ff4d6d', img: 'red' }
 };
-// a beam from (x0, y0) to (x1, y1), w wide, there for life seconds: o.keep holds its width to the end, o.bare leaves the light at its mouth out
+// a beam from (x0, y0) to (x1, y1), w wide, there for life seconds: o.keep holds its width to the end, o.bare leaves the light at its mouth out.
+// 0.22v2: a big one (110 wide or more) goes off with a real shot under the built sound (myinstants, home-tdc-shoot), unless o.quiet
+const clip = (name, vol) => { if (sfx.file) sfx.file(name, vol); };
 function beam(x0, y0, x1, y1, w, life, Cc, o = {}) {
+  if (w >= 110 && !o.quiet) clip('home-tdc-shoot', Math.min(1, .45 + w / 500));
   V.custom(life, u => {
     const p0 = F(x0, y0), p1 = F(x1, y1), k = p0[2], al = Math.min(1, (1 - u) * 2.4);
     const wd = w * k * (u < .12 ? .6 + u / .3 : 1 - (u - .12) * (o.keep ? .15 : .75));
@@ -86,6 +89,7 @@ function impact(x, y, s, Cc) {
 // a burst all round a point: a white ball opening, and light thrown out of it every way
 function burstFx(x, y, s, Cc) {
   const n = 16, rays = Array.from({ length: n }, (_, i) => [i / n * TAU + rnd(-.12, .12), rnd(240, 430), rnd(8, 20)]);
+  if (s >= 1.2) { clip('home-tdc-boom', Math.min(1, .4 + s * .25)); if (JU.ms) JU.ms.ono('ドォン', x + rnd(-80, 80), y + 260 * s, .9 + s * .25, Cc.core); }      // (0.22v2: a big one is an explosion, and says so)
   V.custom(.28, u => {
     const c = F(x, y), k = c[2] * s, e = 1 - (1 - u) * (1 - u), al = 1 - u;
     lit(() => { E.glow(E.GLOW[Cc.img], c[0], c[1], 760 * e * k, al); E.glow(E.GLOW.white, c[0], c[1], 420 * e * k, al); });
@@ -122,6 +126,7 @@ function pillar(x, w, life, Cc) {
     g.restore();
   });
   V.crack(x, w * 3); V.rocks(x, 0, 8); E.addDust(x);
+  if (w >= 100) clip('home-tdc-boom', .55);
 }
 // one that falls out of the sky, wandering on its way, and lands on x; land(x) when it does
 function drop(x, Cc, land, fall = .2) {
@@ -157,6 +162,11 @@ function shotsTick(dt) {
     const s = shots[i];
     s.t += dt;
     const x0 = s.x, y0 = s.y;
+    if (s.home && o && !o.ko && s.t > (s.homeAfter || 0)) {      // (0.22v2: it finds them, turning toward them at s.home a second, as fast as ever)
+      const tx = o.x - s.x, ty = mid(o) - s.y, L = Math.hypot(tx, ty) || 1, sp = Math.max(500, Math.hypot(s.vx, s.vy)), k = 1 - Math.exp(-dt * s.home);
+      const nx = s.vx + (tx / L * sp - s.vx) * k, ny = s.vy + (ty / L * sp - s.vy) * k, n = Math.hypot(nx, ny) || 1;
+      s.vx = nx / n * sp; s.vy = ny / n * sp;
+    }
     s.vy -= s.grav * dt; s.x += s.vx * dt; s.y += s.vy * dt;
     s.trail.push([s.x, s.y]); if (s.trail.length > 7) s.trail.shift();
     if (s.fuse !== undefined && s.t >= s.fuse) { if (s.split) s.split(s); shots.splice(i, 1); continue; }
@@ -183,6 +193,7 @@ function shotsTick(dt) {
 function drawShots() {
   for (const s of shots) {
     const c = F(s.x, s.y), k = c[2], r = s.r * k;
+    if (s.draw) { s.draw(s, c, k); continue; }      // (one with a look of its own: a crescent of a cut, lovereap.js)
     if (s.trail.length > 1) {
       g.save(); g.lineCap = 'round';
       lit(() => { for (let i = 1; i < s.trail.length; i++) { const a = F(s.trail[i - 1][0], s.trail[i - 1][1]), b = F(s.trail[i][0], s.trail[i][1]), u = i / (s.trail.length - 1); g.strokeStyle = `rgba(${s.Cc.rgb},${.5 * u})`; g.lineWidth = r * 2 * u; g.beginPath(); g.moveTo(a[0], a[1]); g.lineTo(b[0], b[1]); g.stroke(); } });
