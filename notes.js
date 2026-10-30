@@ -5,6 +5,8 @@
 // Newest first. v = the build, jp = the seal stamped beside it, pic = notes/<pic>.jpg, cap = what the picture shows.
 // A new update goes at the top of this list.
 const NOTES = [
+  { v: '0.21v3', name: 'Click', jp: 'カチッ', date: '30 Oct 2026', pic: 'click', cap: 'Click: a Reserve Ball leaving his hand', items: [
+    'Reserve Balls sounds better: the pachinko clip that rang like an alarm is gone. Now there is a click as the ball leaves his hand, and a solid clack when it hits'] },
   { v: '0.21v2', name: 'No Stun', jp: '不動', date: '30 Oct 2026', pic: 'nostun', cap: 'Reserve Balls on a straight line, No stun, the doors where the ball stops, and 110 on 7 7 7', items: [
     'Private servers: NO STUN in the + menu. Hits still hurt, but nothing stops you: no stagger, no launch, no knockdown, and whatever move you are in goes on. A small NO STUN shows over you when it saves you. Like the rest of the menu, not in a 1v1',
     'Double or Nothing: Reserve Balls is a shot now, not a throw. The ball goes in a straight line at where they are, fast, with a trail behind it, until it hits them, the floor or a wall (still 20 and a stun). 1 then 2 and 1 then 3 still work: the doors close where it stops, and you can jump on it a moment after it has hit',

@@ -1212,7 +1212,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
   </div>
 
   <div class="side" aria-hidden="true" lang="ja">領域展開</div>
-  <div class="hud tl"><b lang="ja">呪</b>Fan project · Build 0.21v2 · No Stun</div>
+  <div class="hud tl"><b lang="ja">呪</b>Fan project · Build 0.21v3 · Click</div>
   <div class="hud bl">↑ ↓ Select &nbsp;·&nbsp; Enter Confirm</div>
   <div class="hud br">Title screen</div>
   <div class="acct" id="acct">
@@ -1420,8 +1420,8 @@ const sfx = (() => {
     // Build 0.20v1: the music under the two awakenings, the anime's own, as myinstants has it (sfx.song, looping)
     'home-slit-awk': [MI + 'yuuuuta-vs-ryu-vs-oro-theme.mp3', 0, 0],                                 // "Yuuuuta vs ryu vs oro theme": Unmasked
     'home-kirara-awk': [MI + 'jjk-theme-season-3.mp3', 0, 0],                                        // "Jjk theme season 3": Fever
-    // Build 0.21: Double or Nothing's (gambler.js): pachinko balls, doors shut, slammed and kicked in, a hard kick, reels and a payout
-    'home-gb-pachinko': [MI + 'pachinko.mp3', .45, 1.5],                                             // "pachinko"
+    // Build 0.21: Double or Nothing's (gambler.js): doors shut, slammed and kicked in, a hard kick, reels and a payout (0.21v3: the pachinko
+    // balls' clip is gone, the user found it like an alarm: the ball has a built click and clack now, below)
     'home-gb-door': [MI + 'metal-door-closing.mp3', .08, .72],                                       // "Metal Door Closing"
     'home-gb-slam': [MI + 'door-slam.mp3', .2, 1.3],                                                 // "door slam"
     'home-gb-bust': [MI + 'door-kick.mp3', .42, 1.4],                                                // "Door kick"
@@ -1816,11 +1816,19 @@ const sfx = (() => {
       [1661, 1760].forEach((f, i) => voice({ f: [f, f * .985], at: .3 + i * .05, dur: 2.4, vol: .03, wet: .9 }));
     },
     // Double or Nothing's (gambler.js, Build 0.21): a pachinko ball striking (v: how hard), a metal door shut (v), rough cursed energy
-    // grinding (v), and a reel stopping (i: each a step higher; 3 is the payout)
+    // grinding (v), and a reel stopping (i: each a step higher; 3 is the payout). 0.21v3, the user: the ball's sound was like an alarm. Its
+    // two high notes are gone: it strikes with a clack now, and a click() goes with it as it leaves his hand
     ball(v = 1) {
-      voice({ f: [2900, 2600], dur: .12, vol: .06 * v, type: 'triangle', wet: .3 });
-      voice({ f: [4700, 4300], dur: .08, vol: .035 * v, wet: .3 });
-      voice({ type: 'noise', dur: .03, vol: .14 * v, filt: ['highpass', 5000] });
+      voice({ type: 'noise', dur: .03, vol: .45 * v, attack: .001, filt: ['bandpass', 2400], q: 1.3 });
+      voice({ f: [3100, 2500], dur: .04, vol: .035 * v, type: 'triangle', attack: .001 });
+      voice({ f: [170, 70], dur: .1, vol: .25 * v, attack: .002 });
+    },
+    // a catch let go: two ticks close together, the first bright and the second lower, and a little weight under them
+    click(v = 1) {
+      voice({ type: 'noise', dur: .012, vol: .5 * v, attack: .0008, filt: ['bandpass', 3800], q: 1.6 });
+      voice({ f: [2200, 1500], dur: .018, vol: .07 * v, type: 'triangle', attack: .0008 });
+      voice({ type: 'noise', at: .028, dur: .016, vol: .3 * v, attack: .0008, filt: ['bandpass', 2100], q: 2 });
+      voice({ f: [220, 120], dur: .05, vol: .2 * v, attack: .001 });
     },
     door(v = 1) {
       voice({ f: [120, 60], dur: .3, vol: .45 * v, type: 'triangle', wet: .4 });

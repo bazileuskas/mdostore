@@ -21,8 +21,9 @@
        energy (45)
      4 then 3 then 2: in place of the second kick the doors hold them, the reels spin up over them and stop on 7 7 7, and he kicks the
        rough energy through the doors and them (110)
-   Sounds: clips from myinstants (pachinko balls, a metal door, a door slammed, a door kicked in, a hard kick, reels, a jackpot: home-gb-* at
-   home), and built ones (sfx.ball, door, rough, ding). The anime has no clean sound effects of these on myinstants, only voices */
+   Sounds: clips from myinstants (a metal door, a door slammed, a door kicked in, a hard kick, reels, a jackpot: home-gb-* at home), and built
+   ones (sfx.ball, click, door, rough, ding). The anime has no clean sound effects of these on myinstants, only voices. 0.21v3, the user: the
+   ball's pachinko clip was like an alarm. Gone: a click as the ball leaves his hand, and a clack and a hit when it lands on them */
 (() => {
 'use strict';
 
@@ -33,7 +34,7 @@ const lit = fn => { g.globalCompositeOperation = 'lighter'; fn(); g.globalCompos
 const exact = (o, n) => n / (o.dr || 1);            // a hit worth the stated amount, whatever the target is made of
 const duel = () => !!(Fi.fight.cfg && Fi.fight.cfg.pvp);
 const play = (name, vol, alt) => { if (!sfx.file(name, vol) && alt) alt(); };      // a clip (myinstants' online, sounds/home-* at home), or a built one
-sfx.preload(['home-gb-pachinko', 'home-gb-door', 'home-gb-slam', 'home-gb-jackpot', 'home-gb-reels', 'home-gb-kick', 'home-gb-bust']);
+sfx.preload(['home-gb-door', 'home-gb-slam', 'home-gb-jackpot', 'home-gb-reels', 'home-gb-kick', 'home-gb-bust']);
 const GREEN = '#3cf08a', GRGB = '60,240,138', GOLD = '#ffd24a', DRGB = '255,210,74';
 const live = o => !!o && !o.ko && !(o.alpha < 1);
 const hs = o => o.scale || 1;
@@ -136,7 +137,7 @@ function throwBall(p) {
   if (live(o) && (o.x - x) * p.face > 30) { const dx = o.x - x, dy = mid(o) - y, L = Math.hypot(dx, dy); ux = dx / L; uy = dy / L; }
   const b = { x, y, vx: ux * BALL_V, vy: uy * BALL_V, t: 0, face: p.face, doors: false, landed: false, hit: false, spent: false, ride: false, spin: 0, trail: [[x, y]] };
   balls.push(b);
-  play('home-gb-pachinko', .45, () => sfx.ball()); sfx.whoosh();
+  sfx.click(); sfx.whoosh();
   V.ring(x, y, 70, '#e6edf5', .12); V.sparks(x, y, 'white', 4);      // off his fingers
   return b;
 }
@@ -176,7 +177,7 @@ function ballsTick(dt) {
     if (at) {
       b.x = at[0]; b.y = at[1]; b.hit = true;
       E.applyHit(o, b.face, { dmg: exact(o, 20), kb: 160, stun: .9, stop: .06, col: '#e6edf5', fixed: 1, mute: 1 });
-      sfx.ball(1.2); play('home-gb-pachinko', .4); V.sparks(b.x, b.y, 'green', 10); V.ring(b.x, b.y, 110, '#e6edf5', .16); if (Z) Z.flare(b.x, b.y, '230,240,255', 240, .14);
+      sfx.ball(1.2); sfx.hit(false); V.sparks(b.x, b.y, 'green', 10); V.ring(b.x, b.y, 110, '#e6edf5', .16); if (Z) Z.flare(b.x, b.y, '230,240,255', 240, .14);
       stopBall(b, -b.face * 240, 360);
       continue;
     }
