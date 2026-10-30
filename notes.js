@@ -5,6 +5,11 @@
 // Newest first. v = the build, jp = the seal stamped beside it, pic = notes/<pic>.jpg, cap = what the picture shows.
 // A new update goes at the top of this list.
 const NOTES = [
+  { v: '0.21v1', name: 'Jackpot', jp: '大当たり', date: '30 Oct 2026', pic: 'jackpot', cap: 'A train door for the last kick, JACKPOT x1.5, what is owed counting down, and paid out', items: [
+    'Double or Nothing hits a lot harder: kicks 6, 6, 6, 7. Reserve Balls 20. Shutter Doors 25, and shut in for 1.6 seconds. Rough Energy 42. Fever Breaker 20 and 30. Riding the ball 48, 4 then 2 is 15 and 45, the 7 7 7 kick 90, and Bouncer Doors sends 60 back',
+    'His doors are a train\'s now, not a casino\'s: grey, a dark frame, a window up top, a handle, and a paler kick plate at the bottom. And he has no skin of his own any more: he looks like you',
+    'The fifth kick does not send them flying any more: a train door slams across into them and they go tumbling (12, then the door 10). Hold jump on the fifth for an uppercut (14, up they go), and in the air the fifth is a down slam (28, into the floor)',
+    'New sub technique: JACKPOT. Every move you land is a 50/50, rolled once for the move. Pays now: it hits 1.5x as hard and 20% of your health comes back. Pays later: a third of the damage now, a third some time later, and the last third ten seconds after, doubled, with 40 health back when it lands. Gold coins over them count down what is still owed. Strikes do not gamble, only moves. Free for now: SUB TECHNIQUES on the title screen'] },
   { v: '0.21', name: 'Double or Nothing', jp: '一か八か', date: '30 Oct 2026', pic: 'gambler', cap: 'Shut in, the reels on 7 7 7, and green legs', items: [
     'Early Access: Double or Nothing, a gambler who lives for the fever, with the Restless Gambler of Jujutsu Shenanigans for a moveset: pachinko balls, shutter doors, and cursed energy so rough it grinds. His strikes are all kicks, five of them, and his legs light up green with every one (4, 4, 4, 5, 8)',
     '1 Reserve Balls: a pachinko ball flung at them, 12 and a stun. 2 Shutter Doors: two doors slam shut on them, 16, and they are shut in there for a second and a half. 3 Rough Energy: rough energy gathered into one kick, 28, and they go flying. 4 Fever Breaker: kicked into a door that comes up behind them (14), and off it the length of the arena (20)',

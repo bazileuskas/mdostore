@@ -1,22 +1,24 @@
 /* JUJUTSU UNLIMITEDS — early access (Build 0.21): DOUBLE OR NOTHING. A gambler who lives for the fever: kicks for strikes, pachinko balls,
-   shutter doors, and cursed energy so rough it grinds. The user asked for the gambler of Jujutsu Shenanigans' moveset (Reserve Balls, Shutter
+   train doors, and cursed energy so rough it grinds. The user asked for the gambler of Jujutsu Shenanigans' moveset (Reserve Balls, Shutter
    Doors, Rough Energy, Fever Breaker, a door counter), a gambling name of three words, five strikes that are all legs and light his legs up
-   green, and four combos of their own (below). His look is my own: silver hair swept back, a green dealer's visor with a card in the band,
-   shirt sleeves rolled up, a dark waistcoat and a green bow tie, two-tone shoes.
-   STRIKES: five kicks (4, 4, 4, 5, 8: front, round, knee, hook, axe), his legs lit green for each
-   1 RESERVE BALLS: a pachinko ball flung at them, bouncing: 12 and a stun (a bounce first and it knocks them back)
-   2 SHUTTER DOORS: two shutters slam shut on them from either side: 16, and shut in there for 1.4 seconds
-   3 ROUGH ENERGY: rough cursed energy gathered into his leg and let go in one kick: 28, and they go flying
-   4 FEVER BREAKER: kicked back into a door that has come up behind them (14), and kicked off it the length of the arena (20)
-   E BOUNCER DOORS: doors in front of him for 0.9 seconds. A blow into them comes straight back through them: 40. A shot only breaks them
+   green, and four combos of their own (below). 0.21v1, the user again: more damage; the doors are a train's (their picture: grey, a dark
+   frame, a window high up, a handle, a paler kick plate), not a casino's; no skin of his own, so he looks as the player does; an uppercut
+   and a down slam; and the last kick no longer sends them flying: a door comes across into them and they tumble.
+   STRIKES: five kicks (6, 6, 6, 7, then the last), his legs lit green for each. The last: held jump on the ground = an uppercut (14, up they
+     go); in the air = a down slam (28, into the floor); otherwise a kick (12) and a door slammed into them that sends them tumbling (10)
+   1 RESERVE BALLS: a pachinko ball flung at them, bouncing: 20 and a stun (a bounce first and it knocks them back)
+   2 SHUTTER DOORS: a train's doors slam shut on them from either side: 25, and shut in there for 1.6 seconds
+   3 ROUGH ENERGY: rough cursed energy gathered into his leg and let go in one kick: 42, and they go flying
+   4 FEVER BREAKER: kicked back into a door that has come up behind them (20), and kicked off it the length of the arena (30)
+   E BOUNCER DOORS: doors in front of him for 0.9 seconds. A blow into them comes straight back through them: 60. A shot only breaks them
    COMBOS (the user's own):
      1 then 2 (the ball still out): the doors close where the ball comes down
      1 then 3 (the ball still out), or 3 then 1 (while the energy gathers): he jumps on the ball and rides it 0.7 seconds; when it comes down
-       near them, Rough Energy, and it cannot miss (32)
-     4 then 2 (before the second kick): the doors shut on them (10), and in place of the kick a leg brought down on them full of rough
-       energy (30)
+       near them, Rough Energy, and it cannot miss (48)
+     4 then 2 (before the second kick): the doors shut on them (15), and in place of the kick a leg brought down on them full of rough
+       energy (45)
      4 then 3 then 2: in place of the second kick the doors hold them, the reels spin up over them and stop on 7 7 7, and he kicks the
-       rough energy through the doors and them (60)
+       rough energy through the doors and them (90)
    Sounds: clips from myinstants (pachinko balls, a metal door, a door slammed, a door kicked in, a hard kick, reels, a jackpot: home-gb-* at
    home), and built ones (sfx.ball, door, rough, ding). The anime has no clean sound effects of these on myinstants, only voices */
 (() => {
@@ -46,43 +48,11 @@ function footAt(f, front) {
   return [f.x + (x * cr - y * sr) * f.face * K * (f.spin === undefined ? 1 : f.spin) * s, f.y - (x * sr + y * cr - hip) * K * s];
 }
 
-/* ================= how he looks ================= */
-const shade = (hex, f) => { const n = parseInt(hex.slice(1), 16); return `rgb(${Math.min(255, (n >> 16) * f) | 0},${Math.min(255, (n >> 8 & 255) * f) | 0},${Math.min(255, (n & 255) * f) | 0})`; };
-function poly(fill, pts) {
-  g.beginPath(); g.moveTo(pts[0], pts[1]);
-  for (let i = 2; i < pts.length; i += 2) g.lineTo(pts[i], pts[i + 1]);
-  g.closePath(); g.fillStyle = fill; g.fill(); g.lineWidth = 2.5; g.strokeStyle = LINE; g.stroke();
-}
-const SKN = ['#e3c09c', '#f2d6b8'], SHIRT = ['#e7e6df', '#f6f5ef'], VEST = '#262a35', SLACK = ['#1c1e25', '#292c36'], SHOE = ['#ece6d8', '#f8f3e9'], HAIRC = '#b7bdca';
-const GAMBLER = {
-  torso: SHIRT,
-  armF: [SHIRT[0], SHIRT[1], SKN[0], SKN[1], .44], armB: [shade(SHIRT[0], .72), shade(SHIRT[1], .72), shade(SKN[0], .8), shade(SKN[1], .8), .44],      // (sleeves rolled: the forearms bare)
-  legF: [SLACK[0], SLACK[1], SHOE[0], SHOE[1], .17], legB: [shade(SLACK[0], .7), shade(SLACK[1], .7), shade(SHOE[0], .72), shade(SHOE[1], .72), .17],
-  chest() {
-    g.fillStyle = VEST; g.beginPath(); g.moveTo(-30, -TOR + 4); g.lineTo(2, -TOR + 4); g.lineTo(13, -TOR + 34); g.lineTo(24, -TOR + 4); g.lineTo(30, -TOR + 4); g.lineTo(30, 5); g.lineTo(-30, 5); g.closePath(); g.fill();      // the waistcoat, a V open at the throat
-    g.strokeStyle = 'rgba(255,255,255,.12)'; g.lineWidth = 1.5; g.beginPath(); g.moveTo(13, -TOR + 34); g.lineTo(13, 2); g.stroke();
-    g.fillStyle = GOLD; for (const y of [-TOR + 42, -TOR + 54, -TOR + 66]) { g.beginPath(); g.arc(16, y, 2.2, 0, TAU); g.fill(); }
-    g.fillStyle = '#f4f1e6'; g.fillRect(-22, -TOR + 22, 9, 12); g.fillStyle = '#c21f3a'; g.fillRect(-20, -TOR + 24, 3, 3);      // a card in the pocket
-    g.fillStyle = '#1fa860'; g.beginPath(); g.moveTo(13, -TOR + 9); g.lineTo(4, -TOR + 4); g.lineTo(4, -TOR + 14); g.closePath(); g.moveTo(13, -TOR + 9); g.lineTo(22, -TOR + 4); g.lineTo(22, -TOR + 14); g.closePath(); g.fill();      // a green bow tie
-    g.fillStyle = '#14703f'; g.beginPath(); g.arc(13, -TOR + 9, 2.4, 0, TAU); g.fill();
-  },
-  head() {
-    E.headBase(SKN[0], SKN[1]);
-    poly(HAIRC, [-28, 6, -31, -18, -20, -34, 4, -38, 22, -32, 28, -20, 14, -24, 2, -22, -10, -24, -18, -14, -22, 2]);      // silver, swept back
-    poly(HAIRC, [18, -26, 30, -14, 26, -4, 22, -16]);                                     // and a lock fallen forward
-    g.fillStyle = 'rgba(46,200,110,.72)'; g.beginPath(); g.moveTo(-24, -16); g.lineTo(26, -16); g.lineTo(40, -9); g.lineTo(26, -7); g.lineTo(-24, -9); g.closePath(); g.fill();      // the dealer's visor, green and see-through
-    g.lineWidth = 2; g.strokeStyle = LINE; g.stroke();
-    g.fillStyle = '#123d26'; g.fillRect(-25, -18, 51, 4);                                 // its band
-    g.save(); g.translate(-12, -24); g.rotate(-.25); g.fillStyle = '#f4f1e6'; g.fillRect(-4, -7, 8, 11); g.fillStyle = '#c21f3a'; g.fillRect(-1.5, -3, 3, 3); g.restore();      // a card in it
-    g.fillStyle = '#1b1720'; g.fillRect(4, 1, 8, 2.6); g.fillRect(16, 1, 7, 2.6);          // eyes half shut, sure of himself
-    g.strokeStyle = LINE; g.lineWidth = 1.8; g.beginPath(); g.moveTo(8, 15); g.quadraticCurveTo(16, 20, 23, 13); g.stroke();      // a grin
-    g.fillStyle = '#ffffff'; g.fillRect(11, 15, 9, 2);
-    g.fillStyle = '#f4f1e6'; g.fillRect(-6, 8, 5, 5); g.lineWidth = 1; g.strokeRect(-6, 8, 5, 5); g.fillStyle = LINE; g.fillRect(-4, 10, 1.4, 1.4);      // a die for an earring
-  }
-};
-const HOT = Object.assign({}, GAMBLER, {             // the same, with his legs lit green: while he kicks
-  legF: ['#2fd97a', '#86ffbf', '#d8ffe9', '#f2fff7', .17], legB: ['#1f9a56', '#4cc986', '#a8e9c6', '#c6f2da', .17] });
-const mine = f => f.skin === GAMBLER || f.skin === HOT;
+/* ================= how he looks: as the player does (no skin of his own: the user's), his legs lit green while he kicks ================= */
+const GREEN_LEGS = { legF: ['#2fd97a', '#86ffbf', '#d8ffe9', '#f2fff7', .17], legB: ['#1f9a56', '#4cc986', '#a8e9c6', '#c6f2da', .17] };
+const hot = new Map(), cool = new Map();            // a look with green legs, made once for each look he has; and back
+function greenOf(sk) { if (cool.has(sk)) return sk; if (!hot.has(sk)) { const h = Object.assign({}, sk, GREEN_LEGS); hot.set(sk, h); cool.set(h, sk); } return hot.get(sk); }
+const unGreen = sk => cool.get(sk) || sk;
 Object.assign(POSE, {
   gbFront: [-.35, 0, .55, -.7, 1.45, -.15, 0],
   gbRound: [-.52, .1, .95, -.35, 1.78, -.05, 0],
@@ -93,19 +63,63 @@ Object.assign(POSE, {
   gbSnap: [-.05, -.12, 2.5, .6, .32, -.32, 0],       // a hand up: doors
   gbCharge: [-.18, .05, .8, 1.6, .5, -.55, 0],       // rough energy gathering, low
   gbSurf: [.12, -.1, 2.1, 1.25, .5, -.6, 0],         // riding the ball
-  gbGuard: [.05, 0, 1.95, 1.75, .4, -.4, 0]          // behind his doors
+  gbGuard: [.05, 0, 1.95, 1.75, .4, -.4, 0],         // behind his doors
+  gbUp: [-.45, -.25, 1.2, .5, 2.95, -.3, 0],          // a kick straight up: the uppercut
+  gbDive: [.2, .15, 2.4, 2.2, 1.1, .4, 0]             // coming down on them, heel first
 });
 
 /* ================= his strikes: five kicks ================= */
-const KICK_DEF = [['kickWind', 'gbFront', 4, 185, 180, 0], ['gbFront', 'gbRound', 4, 190, 190, 0], ['gbKneeW', 'gbKnee', 4, 150, 200, 0], ['gbHookW', 'gbHook', 5, 195, 240, 0], ['gbAxeW', 'gbAxe', 8, 205, 640, 520]];
-const KICKS = KICK_DEF.map(([pre, pose, dmg, reach, kb, lift], i) => Object.assign({}, M.m1[Math.min(i, 3)], {
-  pre, pose, n: 5, kick: 1, lunge: 230 + i * 25, strike: i === 4 ? .15 : .08, dur: i === 4 ? .5 : .3, sw: 'rgba(110,255,170,.95)', whoosh: () => sfx.whoosh(),
-  hit: { reach, dmg, kb, lift: lift || 0, stun: i === 4 ? .9 : .36, stop: i === 4 ? .1 : .045, heavy: i === 4 ? 1 : 0, col: GREEN, gb: i + 1 } }));
-function m1(i) {
+const KICK_DEF = [['kickWind', 'gbFront', 6, 185, 180], ['gbFront', 'gbRound', 6, 190, 190], ['gbKneeW', 'gbKnee', 6, 150, 200], ['gbHookW', 'gbHook', 7, 195, 240]];
+const KICKS = KICK_DEF.map(([pre, pose, dmg, reach, kb], i) => Object.assign({}, M.m1[i], {
+  pre, pose, n: 5, kick: 1, lunge: 230 + i * 25, strike: .08, dur: .3, sw: 'rgba(110,255,170,.95)', whoosh: () => sfx.whoosh(),
+  hit: { reach, dmg, kb, stun: .36, stop: .045, col: GREEN, gb: i + 1 } }));
+const jumping = () => E.keys.has('w') || E.keys.has(' ') || E.keys.has('arrowup');
+// the last of the five, three ways: a door into them (on the ground), an uppercut (jump held), a down slam (in the air)
+const FIN5 = { m1: 1, n: 5, dur: .6, run(p, m, t) {
+  p.rate = 42;
+  if (t < .12) { p.target = POSE.gbHookW; if (p.ground) p.vx = p.face * 120; return; }
+  p.target = t < .34 ? POSE.gbRound : POSE.idle; if (p.ground) p.vx = t < .2 ? p.face * 280 : 0;
+  if (!m.sw) { m.sw = 1; sfx.whoosh(); }
+  if (!m.done && t < .3 && E.tryHit(p, { reach: 205, dmg: 12, kb: 0, stun: .6, stop: .08, heavy: 1, col: GREEN, gb: 5 })) { m.done = 1; slamDoor(p, E.P2); }
+} };
+const UP5 = { m1: 1, n: 5, dur: .62, run(p, m, t) {
+  p.rate = 44;
+  if (t < .1) { p.target = POSE.kickWind; return; }
+  p.target = t < .4 ? POSE.gbUp : POSE.jump;
+  if (!m.hop) { m.hop = 1; p.vy = 700; p.ground = false; sfx.whoosh(); }
+  if (!m.done && t < .32 && E.tryHit(p, { reach: 205, dmg: 14, kb: 60, lift: 1180, stun: .9, stop: .1, heavy: 1, col: GREEN, gb: 5 })) {
+    m.done = 1; const o = E.P2;
+    roughBurst(o.x, mid(o) + 60, .7); label(o.x, o.y + 460 * hs(o), 'UP', GREEN, .8);
+  }
+} };
+const DOWN5 = { m1: 1, n: 5, dur: 1, run(p, m, t) {
+  p.rate = 40;
+  if (t < .12) { p.target = POSE.gbAxeW; p.vy = Math.max(p.vy, 0); return; }
+  p.target = POSE.gbDive;
+  if (!m.dive) { m.dive = 1; p.vy = -1900; sfx.whoosh(); }
+  if (!m.done && E.tryHit(p, { reach: 225, dmg: 28, kb: 120, stun: 1, stop: .16, heavy: 1, col: GREEN, gb: 6 })) {
+    m.done = 1; const o = E.P2;
+    if (can(p, o)) Object.assign(o, { ground: false, state: 'air', y: Math.max(o.y, 30), vy: -2400, vx: 0, bounced: true });
+    roughBurst(o.x, Math.max(80, mid(o) - 40), 1); V.crack(o.x, 320); V.rocks(o.x, 0, 12); E.addDust(o.x); shake(28);
+    label(o.x, o.y + 460 * hs(o), 'DOWN', GREEN, .8);
+  }
+  if (p.ground && t > .2) { if (!m.landT) { m.landT = t; E.addDust(p.x); shake(10); } if (t > m.landT + .2) E.endMove(p); }
+} };
+function m1(i) {                                    // his five: kicks, and the last of them as above
   const p = E.P1;
-  if (!mine(p)) return true;                        // in somebody else's body: the ordinary strikes
-  p.move = { def: KICKS[i] || KICKS[0], i: KICKS[i] ? i : 0, t: 0 };
+  p.move = { def: i < 4 ? KICKS[i] : !p.ground ? DOWN5 : jumping() ? UP5 : FIN5, i: Math.min(i, 4), t: 0 };
   return false;
+}
+// the last kick lands, and a door comes across into them: they go tumbling (the ragdoll is the Vengeful Artist's: vengeful.js, h.flung)
+function slamDoor(p, o) {
+  const x0 = clamp(p.x - p.face * 60, -960, 960), x1 = clamp(o.x + p.face * 150, -960, 960);
+  doors.push({ sweep: true, x0, x1, x: x0, t: 0, life: .5, face: p.face });
+  E.after(.1, () => {
+    if (o.ko) return;
+    E.applyHit(o, p.face, { dmg: exact(o, 10), kb: 1150, lift: 420, stun: 1, stop: .12, heavy: 1, col: '#c9ced6', fixed: 1, mute: 1, flung: 1 });
+    play('home-gb-slam', .8, () => sfx.door(1.2)); shake(22); E.addDust(o.x); V.sparks(o.x, mid(o), 'white', 10);
+    label(o.x, o.y + 460 * hs(o), 'DOOR', '#d6dbe2', .8);
+  });
 }
 
 /* ================= 1 — Reserve Balls ================= */
@@ -137,7 +151,7 @@ function ballsTick(dt) {
     b.vy -= BALL_G * dt; b.x += b.vx * dt; b.y += b.vy * dt;
     if (!b.hit && live(o) && !(o.inv > 0) && o.state !== 'down' && o.state !== 'up' && Math.abs(o.x - b.x) < 60 * hs(o) && b.y > o.y - 10 && b.y < o.y + 380 * hs(o)) {
       b.hit = true;
-      E.applyHit(o, b.face, { dmg: exact(o, 12), kb: b.bounce ? 560 : 110, lift: b.bounce ? 260 : 0, stun: .9, stop: .06, col: '#e6edf5', fixed: 1, mute: 1 });
+      E.applyHit(o, b.face, { dmg: exact(o, 20), kb: b.bounce ? 560 : 110, lift: b.bounce ? 260 : 0, stun: .9, stop: .06, col: '#e6edf5', fixed: 1, mute: 1 });
       sfx.ball(1.2); play('home-gb-pachinko', .4); V.sparks(b.x, b.y, 'green', 8); if (Z) Z.flare(b.x, b.y, '230,240,255', 220, .14);
       land(b); b.vx *= -.3; b.vy = 420;
     }
@@ -161,7 +175,7 @@ function drawBall(b) {
 /* ================= 2 — Shutter Doors ================= */
 const doors = [];                                   // { x, t, hold, o, hitDone, dmg, single, burst }: a pair shutting (or one door standing)
 function shut(x, o = {}) {
-  const d = { x, t: 0, hold: o.hold === undefined ? 1.4 : o.hold, o: null, hitDone: false, dmg: o.dmg === undefined ? 16 : o.dmg, noHit: !!o.noHit, target: o.target || null, single: !!o.single, face: o.face || 1, burst: 0, keep: !!o.keep };
+  const d = { x, t: 0, hold: o.hold === undefined ? 1.6 : o.hold, o: null, hitDone: false, dmg: o.dmg === undefined ? 25 : o.dmg, noHit: !!o.noHit, target: o.target || null, single: !!o.single, face: o.face || 1, burst: 0, keep: !!o.keep };
   doors.push(d);
   play('home-gb-door', .75, () => sfx.door()); sfx.door(.6);
   return d;
@@ -173,6 +187,7 @@ function doorsTick(dt) {
     const d = doors[i];
     d.t += dt;
     if (d.single) { if (d.t > (d.life || 1)) doors.splice(i, 1); continue; }
+    if (d.sweep) { d.x = lerp(d.x0, d.x1, ease(Math.min(1, d.t / .14))); if (d.t > d.life) doors.splice(i, 1); continue; }
     if (!d.hitDone && d.t >= SHUT) {               // shut: whoever is between them is in there
       d.hitDone = true; shake(16); E.addDust(d.x); V.rocks(d.x, 0, 6);
       if (Z) Z.shock(d.x, 360, DRGB, .3, 8);
@@ -196,28 +211,39 @@ function burstDoors(d) {                            // through them: the doors i
   if (!d || d.burst) return;
   d.burst = d.t;
   play('home-gb-bust', .6, () => sfx.door(1.4)); shake(26);
-  if (Z) for (let i = 0; i < 26; i++) Z.emit(3, d.x + rnd(-120, 120), rnd(60, 460), rnd(-900, 900), rnd(100, 900), rnd(6, 14), rnd(.6, 1.2), i % 3 ? '122,15,30' : '255,210,74', { g: 1800, vr: rnd(-14, 14), rot: rnd(0, TAU), edge: 'rgba(10,6,12,.85)' });
+  if (Z) for (let i = 0; i < 26; i++) Z.emit(3, d.x + rnd(-120, 120), rnd(60, 460), rnd(-900, 900), rnd(100, 900), rnd(6, 14), rnd(.6, 1.2), i % 4 === 0 ? '242,245,248' : i % 2 ? '155,158,163' : '38,44,53', { g: 1800, vr: rnd(-14, 14), rot: rnd(0, TAU), edge: 'rgba(10,6,12,.85)' });      // (grey door, dark frame, the window's glass)
 }
-// one door of a pair: chrome round a deep red face, gold trim, a window of lamps, a gold 7
-function panel(x0, y0, w, h, k, side, t) {
-  g.fillStyle = '#c9d0dc'; g.fillRect(x0, y0, w, h); g.lineWidth = 3 * k; g.strokeStyle = LINE; g.strokeRect(x0, y0, w, h);
-  const ix = x0 + 8 * k, iy = y0 + 8 * k, iw = w - 16 * k, ih = h - 16 * k;
-  g.fillStyle = '#7a0f1e'; g.fillRect(ix, iy, iw, ih);
-  g.fillStyle = 'rgba(0,0,0,.22)'; g.fillRect(ix + iw * (side > 0 ? 0 : .7), iy, iw * .3, ih);
-  g.strokeStyle = GOLD; g.lineWidth = 2.4 * k; g.strokeRect(ix + 4 * k, iy + 4 * k, iw - 8 * k, ih - 8 * k);
-  for (let j = 0; j < 9; j++) {                      // lamps down the edge, running
-    const y = iy + (j + .5) * ih / 9, on = ((j + Math.floor(t * 14)) % 3) === 0;
-    g.fillStyle = on ? '#fff6c8' : '#8a6a20'; g.beginPath(); g.arc(side > 0 ? ix + iw - 7 * k : ix + 7 * k, y, 3.6 * k, 0, TAU); g.fill();
-  }
-  g.fillStyle = GOLD; g.font = `${Math.round(54 * k)}px Anton, Impact, sans-serif`; g.textAlign = 'center'; g.textBaseline = 'middle';
-  g.lineWidth = 4 * k; g.strokeStyle = '#3a0610'; g.strokeText('7', ix + iw / 2, iy + ih * .45); g.fillText('7', ix + iw / 2, iy + ih * .45);
+// one train door (the user's picture): grey, a dark frame round it, a window high up, a handle on the side that opens, a paler kick plate along
+// the bottom, and a dark line down the hinge side. side: which way it opens (-1: its open edge is on its right)
+function panel(x0, y0, w, h, k, side) {
+  const f = Math.max(4 * k, w * .075), ix = x0 + f, iy = y0 + f, iw = w - 2 * f, ih = h - 2 * f;
+  g.fillStyle = '#262c35'; g.fillRect(x0, y0, w, h);
+  g.fillStyle = '#9b9ea3'; g.fillRect(ix, iy, iw, ih);
+  g.fillStyle = '#c9cbce'; g.fillRect(ix, iy + ih * .84, iw, ih * .16);
+  g.fillStyle = 'rgba(255,255,255,.07)'; g.fillRect(ix, iy, iw * .45, ih * .84);
+  const wx = ix + iw * .2, wy = iy + ih * .1, ww = iw * .6, wh = ih * .36;
+  g.fillStyle = '#262c35'; g.fillRect(wx - f * .6, wy - f * .6, ww + f * 1.2, wh + f * 1.2);
+  g.fillStyle = '#f2f5f8'; g.fillRect(wx, wy, ww, wh);
+  g.strokeStyle = 'rgba(150,180,200,.55)'; g.lineWidth = 2 * k; g.beginPath(); g.moveTo(wx + ww * .2, wy + wh * .85); g.lineTo(wx + ww * .7, wy + wh * .15); g.stroke();      // a glint on the glass
+  const hx = side > 0 ? ix + iw * .1 : ix + iw * .82, hy = iy + ih * .56;
+  g.fillStyle = '#b8babe'; g.fillRect(hx, hy, iw * .08, ih * .11); g.lineWidth = 2 * k; g.strokeStyle = '#262c35'; g.strokeRect(hx, hy, iw * .08, ih * .11);
+  g.fillStyle = '#262c35'; g.fillRect(side > 0 ? x0 + w - f * 1.7 : x0 + f * .7, iy, f * .5, ih);
+  g.lineWidth = 2.5 * k; g.strokeStyle = '#0e1116'; g.strokeRect(x0, y0, w, h);
 }
 function drawDoors() {
   for (const d of doors) {
     const c = F(d.x, 0), k = c[2], H2 = 500 * k, W2 = 120 * k, top = F(d.x, 500);
     if (d.single) {                                  // one door, standing behind somebody: they are about to be kicked into it
       const u = Math.min(1, d.t / .12), a = Math.min(1, ((d.life || 1) - d.t) * 4);
-      g.save(); g.globalAlpha = a; panel(c[0] - W2 / 2, c[1] - H2 * u, W2, H2 * u, k, d.face, E.T); g.restore();
+      g.save(); g.globalAlpha = a; panel(c[0] - W2 / 2, c[1] - H2 * u, W2, H2 * u, k, d.face); g.restore();
+      continue;
+    }
+    if (d.sweep) {                                   // one coming across, fast, into them
+      const a = Math.min(1, (d.life - d.t) * 5), w = 130 * k, h = 440 * k;
+      g.save(); g.globalAlpha = a; panel(c[0] - w / 2, c[1] - h, w, h, k, d.face);
+      g.strokeStyle = 'rgba(230,236,244,.7)'; g.lineWidth = 3 * k;
+      for (let i = 0; i < 5; i++) { const y = c[1] - h * (.15 + i * .17); g.beginPath(); g.moveTo(c[0] - d.face * w * .6, y); g.lineTo(c[0] - d.face * (w * .6 + 140 * k), y); g.stroke(); }      // and the rush of it
+      g.restore();
       continue;
     }
     const u = Math.min(1, d.t / SHUT), close = ease(u), endT = SHUT + d.hold;
@@ -226,9 +252,9 @@ function drawDoors() {
     const a = d.burst ? Math.max(0, 1 - (d.t - d.burst) / .12) : 1 - open;
     if (a <= 0) continue;
     g.save(); g.globalAlpha = a;
-    if (d.hitDone && !d.burst && d.t < endT) lit(() => { g.strokeStyle = `rgba(${DRGB},${.5 + .3 * Math.sin(E.T * 20)})`; g.lineWidth = 10 * k; g.strokeRect(c[0] - W2 * 2 - 6 * k, top[1] - 6 * k, W2 * 4 + 12 * k, H2 + 12 * k); });      // shut: the frame lit up
-    panel(c[0] - gap - W2 * 2, top[1], W2 * 2, H2, k, -1, E.T);
-    panel(c[0] + gap, top[1], W2 * 2, H2, k, 1, E.T + .3);
+    panel(c[0] - gap - W2 * 2, top[1], W2 * 2, H2, k, -1);
+    panel(c[0] + gap, top[1], W2 * 2, H2, k, 1);
+    if (d.hitDone && d.t < SHUT + .12) lit(() => { g.strokeStyle = `rgba(255,255,255,${1 - (d.t - SHUT) / .12})`; g.lineWidth = 8 * k; g.beginPath(); g.moveTo(c[0], top[1]); g.lineTo(c[0], c[1]); g.stroke(); });      // the moment they meet
     g.restore();
   }
 }
@@ -287,7 +313,7 @@ const ROUGH = { name: 'Rough Energy', cd: 8, dur: .95, run(p, m, t) {
   gather = null;
   const gap = (o.x - p.x) * p.face;                 // (in on them first, from as far as a fight starts)
   p.target = t < .62 ? POSE.gbRound : POSE.idle; p.vx = t < .54 && gap > 165 && !m.done ? p.face * 1350 : 0;
-  if (!m.done && t > .32 && t < .58 && E.tryHit(p, { reach: 250, dmg: exact(o, 28), kb: 1250, lift: 620, stun: 1, stop: .2, heavy: 1, col: GREEN, fixed: 1, mute: 1 })) {
+  if (!m.done && t > .32 && t < .58 && E.tryHit(p, { reach: 250, dmg: exact(o, 42), kb: 1250, lift: 620, stun: 1, stop: .2, heavy: 1, col: GREEN, fixed: 1, mute: 1 })) {
     m.done = 1; roughBurst(o.x, mid(o), 1); play('home-gb-kick', .9, () => sfx.hit(true)); shake(26); E.zoomIn(.3);
   }
 } };
@@ -319,7 +345,7 @@ const RIDE = { name: 'Ball Ride', dur: 1.8, run(p, m, t) {
     m.done = 1;
     if (!o.ko) {
       p.x = clamp(o.x - p.face * 130, -960, 960);
-      E.applyHit(o, p.face, { dmg: exact(o, 32), kb: 1300, lift: 650, stun: 1, stop: .22, heavy: 1, col: GREEN, fixed: 1, mute: 1 });
+      E.applyHit(o, p.face, { dmg: exact(o, 48), kb: 1300, lift: 650, stun: 1, stop: .22, heavy: 1, col: GREEN, fixed: 1, mute: 1 });
       roughBurst(o.x, mid(o), 1.15); play('home-gb-kick', 1, () => sfx.hit(true)); shake(30); E.zoomIn(.35);
       label(o.x, o.y + 470 * hs(o), 'GUARANTEED', GREEN, 1.3);
     }
@@ -342,7 +368,7 @@ const FEVER = { name: 'Fever Breaker', cd: 10, dur: 3.4, run(p, m, t) {
     if (t < .2) return;
     m.k1 = 1;
     if (live(o) && gap > -40 && gap < 260 && o.state !== 'down' && o.state !== 'up') {
-      E.applyHit(o, f, { dmg: exact(o, 14), kb: 0, stun: 1.2, stop: .08, heavy: 1, col: GREEN, fixed: 1, mute: 1 });
+      E.applyHit(o, f, { dmg: exact(o, 20), kb: 0, stun: 1.2, stop: .08, heavy: 1, col: GREEN, fixed: 1, mute: 1 });
       play('home-gb-kick', .8, () => sfx.hit(true)); shake(12);
       m.door = clamp(o.x + f * 230, -930, 930); m.x0 = o.x;
       doors.push({ x: m.door, t: 0, single: true, life: 1.1, face: f });
@@ -362,13 +388,13 @@ const FEVER = { name: 'Fever Breaker', cd: 10, dur: 3.4, run(p, m, t) {
   if (!m.end) {
     m.end = m.doors && m.rough ? 'jackpot' : m.doors ? 'slam' : m.rough ? 'rough' : 'kick'; m.et = t;
     if (m.end === 'kick') {                        // the second kick: the length of the arena
-      E.applyHit(o, f, { dmg: exact(o, 20), kb: 1400, lift: 520, stun: .9, stop: .16, heavy: 1, col: GREEN, fixed: 1, mute: 1 });
+      E.applyHit(o, f, { dmg: exact(o, 30), kb: 1400, lift: 520, stun: .9, stop: .16, heavy: 1, col: GREEN, fixed: 1, mute: 1 });
       play('home-gb-kick', 1, () => sfx.hit(true)); shake(22); V.ring(o.x, mid(o), 260, GREEN, .3); E.addBlast(o.x, mid(o), GRGB, 220);
     } else if (m.end === 'rough') {                // 4 then 3: the second kick full of rough energy
-      E.applyHit(o, f, { dmg: exact(o, 28), kb: 1450, lift: 600, stun: 1, stop: .2, heavy: 1, col: GREEN, fixed: 1, mute: 1 });
+      E.applyHit(o, f, { dmg: exact(o, 42), kb: 1450, lift: 600, stun: 1, stop: .2, heavy: 1, col: GREEN, fixed: 1, mute: 1 });
       roughBurst(o.x, mid(o), 1); play('home-gb-kick', 1, () => sfx.hit(true)); shake(26);
     } else {                                        // 4 then 2 (and 3): the doors shut on them
-      m.shut = shut(clamp(o.x, -930, 930), { target: o, hold: m.end === 'jackpot' ? 2.2 : 1.2, dmg: m.end === 'jackpot' ? 0 : 10, noHit: m.end === 'jackpot', keep: true });
+      m.shut = shut(clamp(o.x, -930, 930), { target: o, hold: m.end === 'jackpot' ? 2.2 : 1.2, dmg: m.end === 'jackpot' ? 0 : 15, noHit: m.end === 'jackpot', keep: true });
       label(o.x, o.y + 470 * hs(o), m.end === 'jackpot' ? 'ALL OR NOTHING' : 'SHUT IN', GOLD, 1.2);
       if (m.end === 'jackpot') { play('home-gb-reels', .7, () => sfx.ding(0)); reels = { t: 0, x: o.x, stop: [], o }; }
     }
@@ -382,7 +408,7 @@ const FEVER = { name: 'Fever Breaker', cd: 10, dur: 3.4, run(p, m, t) {
     gather = s < .48 ? { f: p, t: .3, s: .9 } : null;
     if (s >= .48 && !m.slam) {
       m.slam = 1; p.vy = -1600;
-      if (!o.ko) E.applyHit(o, f, { dmg: exact(o, 30), kb: 300, lift: 0, stun: 1.1, stop: .22, heavy: 1, col: GREEN, fixed: 1, mute: 1 });
+      if (!o.ko) E.applyHit(o, f, { dmg: exact(o, 45), kb: 300, lift: 0, stun: 1.1, stop: .22, heavy: 1, col: GREEN, fixed: 1, mute: 1 });
       if (can(p, o)) Object.assign(o, { ground: false, state: 'air', y: Math.max(o.y, 30), vy: -2200, vx: 0, bounced: true });
       burstDoors(m.shut); roughBurst(o.x, Math.max(80, mid(o) - 60), 1.2); play('home-gb-kick', 1, () => sfx.hit(true));
       V.crack(o.x, 380); V.rocks(o.x, 0, 16); E.addDust(o.x); shake(34); E.zoomIn(.35);
@@ -400,7 +426,7 @@ const FEVER = { name: 'Fever Breaker', cd: 10, dur: 3.4, run(p, m, t) {
   if (s >= 1.36 && !m.kick) {
     m.kick = 1; gather = null; imp = { t: 0, o, p };
     p.x = clamp(o.x - f * 130, -960, 960);
-    if (!o.ko) E.applyHit(o, f, { dmg: exact(o, 60), kb: 1700, lift: 800, stun: 1.2, stop: .3, heavy: 1, col: GREEN, fixed: 1, mute: 1 });
+    if (!o.ko) E.applyHit(o, f, { dmg: exact(o, 90), kb: 1700, lift: 800, stun: 1.2, stop: .3, heavy: 1, col: GREEN, fixed: 1, mute: 1 });
     burstDoors(m.shut); roughBurst(o.x, mid(o), 1.6); play('home-gb-kick', 1, () => sfx.hit(true)); shake(44); E.zoomIn(.5); E.stop(.12);
     if (Z) { Z.flash('255,255,255', .35, .14); Z.shock(o.x, 720, GRGB, .55, 14); }
     for (let i = 0; i < 30; i++) coins.push({ x: o.x, y: mid(o), vx: rnd(-900, 900), vy: rnd(300, 1200), t: 0, r: rnd(0, TAU) });
@@ -468,8 +494,8 @@ function drawGuard() {
   if (!G) return;
   const c = F(G.x, 0), k = c[2], top = F(G.x, 380), u = Math.min(1, (.9 - G.t) / .1 + .001);
   g.save(); g.globalAlpha = Math.min(1, G.t / .1 + .2);
-  panel(c[0] - 70 * k * u, top[1], 70 * k * u, c[1] - top[1], k, -1, E.T);
-  panel(c[0], top[1], 70 * k * u, c[1] - top[1], k, 1, E.T + .3);
+  panel(c[0] - 70 * k * u, top[1], 70 * k * u, c[1] - top[1], k, -1);
+  panel(c[0], top[1], 70 * k * u, c[1] - top[1], k, 1);
   lit(() => { g.strokeStyle = `rgba(${GRGB},${.4 + .3 * Math.sin(E.T * 24)})`; g.lineWidth = 6 * k; g.strokeRect(c[0] - 74 * k, top[1] - 4 * k, 148 * k, c[1] - top[1] + 8 * k); });
   g.restore();
 }
@@ -483,8 +509,8 @@ const MOVES = { strikes: BALLS, crush: { name: 'Shutter Doors', cd: 7, dur: .5, 
   shut(clamp(x, -930, 930));
 } }, div: ROUGH, manji: FEVER };
 JU.tech.add('gambler', { name: 'Double or Nothing', jp: '一か八か', mark: '博', who: 'Pachinko, doors, and rough energy', odds: 0, col: GREEN, glow: 'green', moves: MOVES,
-  early: true, skin: GAMBLER, as: ['Double or Nothing', '一か八か'], m1,
-  hint: '<b>1</b> Reserve Balls · <b>2</b> Shutter Doors · <b>3</b> Rough Energy · <b>4</b> Fever Breaker · <b>E</b> Bouncer Doors · combos: <b>1</b>→<b>2</b> doors where the ball lands, <b>1</b>→<b>3</b> or <b>3</b>→<b>1</b> ride it, <b>4</b>→<b>2</b> slam, <b>4</b>→<b>3</b>→<b>2</b> jackpot' });
+  early: true, m1,
+  hint: '<b>1</b> Reserve Balls · <b>2</b> Shutter Doors · <b>3</b> Rough Energy · <b>4</b> Fever Breaker · <b>E</b> Bouncer Doors · 5th kick: hold jump = uppercut, in the air = down slam · combos: <b>1</b>→<b>2</b> doors where the ball lands, <b>1</b>→<b>3</b> or <b>3</b>→<b>1</b> ride it, <b>4</b>→<b>2</b> slam, <b>4</b>→<b>3</b>→<b>2</b> jackpot' });
 const DEF = JU.tech.TECH.gambler, on = () => JU.tech.active === DEF;
 
 /* ---------- wiring ---------- */
@@ -526,10 +552,10 @@ H.guard = (face, a, mul) => {                        // Bouncer Doors: what come
   if (m && m.def === ESP) m.burst = m.t;
   const o = E.P2;
   play('home-gb-bust', .9, () => sfx.door(1.4)); play('home-gb-kick', .8); shake(28); E.zoomIn(.3);
-  if (Z) for (let i = 0; i < 22; i++) Z.emit(3, x + rnd(-60, 60), rnd(60, 360), p.face * rnd(200, 1100), rnd(100, 800), rnd(6, 13), rnd(.6, 1.1), i % 3 ? '122,15,30' : '255,210,74', { g: 1800, vr: rnd(-14, 14), rot: rnd(0, TAU), edge: 'rgba(10,6,12,.85)' });
+  if (Z) for (let i = 0; i < 22; i++) Z.emit(3, x + rnd(-60, 60), rnd(60, 360), p.face * rnd(200, 1100), rnd(100, 800), rnd(6, 13), rnd(.6, 1.1), i % 4 === 0 ? '242,245,248' : i % 2 ? '155,158,163' : '38,44,53', { g: 1800, vr: rnd(-14, 14), rot: rnd(0, TAU), edge: 'rgba(10,6,12,.85)' });
   if (live(o) && Math.abs(o.x - p.x) < 520) E.after(.05, () => {
     if (o.ko) return;
-    E.applyHit(o, p.face, { dmg: exact(o, 40), kb: 1150, lift: 420, stun: 1, stop: .2, heavy: 1, col: GREEN, fixed: 1, mute: 1 });
+    E.applyHit(o, p.face, { dmg: exact(o, 60), kb: 1150, lift: 420, stun: 1, stop: .2, heavy: 1, col: GREEN, fixed: 1, mute: 1 });
     V.ring(o.x, mid(o), 300, GREEN, .3); E.addBlast(o.x, mid(o), GRGB, 260);
     label(o.x, o.y + 470 * hs(o), 'BOUNCED', GREEN, 1.2);
   });
@@ -540,13 +566,13 @@ H.hit = (o, face, h) => {                            // his kicks land with a cr
   if (!on() || !h.gb) return;
   const w = footAt(E.P1, h.gb !== 4);
   V.sparks(w[0], w[1], 'green', h.gb === 5 ? 10 : 4);
-  if (h.gb === 5) { play('home-gb-kick', .7, () => sfx.hit(true)); E.addBlast(o.x, mid(o), GRGB, 180); } else sfx.hit(false);
+  if (h.gb >= 5) { play('home-gb-kick', .7, () => sfx.hit(true)); E.addBlast(o.x, mid(o), GRGB, 180); } else sfx.hit(false);
 };
 H.tick = dt => {
   tick0(dt);
-  if (!on()) { balls.length = doors.length = grit.length = coins.length = 0; guard = gather = reels = imp = null; return; }
+  if (!on()) { balls.length = doors.length = grit.length = coins.length = 0; guard = gather = reels = imp = null; if (cool.has(E.P1.skin)) E.P1.skin = unGreen(E.P1.skin); return; }
   const p = E.P1, kicking = p.move && p.move.def.m1;
-  if (mine(p)) p.skin = kicking ? HOT : GAMBLER;    // his legs lit green while he kicks
+  if (kicking) p.skin = greenOf(p.skin); else if (cool.has(p.skin)) p.skin = unGreen(p.skin);      // his legs lit green while he kicks
   if (guard && (guard.t -= dt) <= 0) guard = null;
   if (gather && !(p.move && (p.move.def === ROUGH || p.move.def === RIDE || p.move.def === FEVER))) gather = null;
   if (reels) reels.t += dt;
@@ -562,10 +588,10 @@ H.fx = dt => {
   for (const b of balls) drawBall(b);
   drawGather(); drawGrit(); drawCoins(); drawReels(); drawImpact();
 };
-const clear = () => { balls.length = doors.length = grit.length = coins.length = 0; guard = gather = reels = imp = null; };
+const clear = () => { balls.length = doors.length = grit.length = coins.length = 0; guard = gather = reels = imp = null; if (cool.has(E.P1.skin)) E.P1.skin = unGreen(E.P1.skin); };
 H.reset = () => { reset0(); clear(); };
 H.fightStart = (cfg, wave) => { start0(cfg, wave); clear(); };
 
-JU.gambler = { SKIN: GAMBLER, HOT, MOVES, KICKS, esp: ESP,      // (esp: E, especial.js)
+JU.gambler = { MOVES, KICKS, FIN5, UP5, DOWN5, esp: ESP, greenOf,      // (esp: E, especial.js)
   get state() { return { balls: balls.map(b => ({ x: Math.round(b.x), y: Math.round(b.y), landed: b.landed, doors: b.doors, ride: b.ride })), doors: doors.map(d => ({ x: Math.round(d.x), shut: d.hitDone, held: !!d.o, single: d.single })), guard: !!guard, reels: !!reels, grit: grit.length, coins: coins.length }; } };
 })();
