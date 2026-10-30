@@ -5,6 +5,12 @@
 // Newest first. v = the build, jp = the seal stamped beside it, pic = notes/<pic>.jpg, cap = what the picture shows.
 // A new update goes at the top of this list.
 const NOTES = [
+  { v: '0.22v3', name: 'Love Reapers', jp: '純愛', date: '30 Oct 2026', pic: 'lovereapers', cap: 'Rika\'s Rampage, Pure Love: Final Declaration, a Mutual Love barrage and Authentic Mutual Love', items: [
+    'Three new Secret CTs after the Love Reaper, free for now (Awaken CT, the Secret CT row): True Love Reaper, Final Love Reaper and True Final Love Reaper',
+    'True Love Reaper: two modes, Rika and the katana. Each has 4 moves of its own, its own E, and 20 variants. G: Rika: Full Manifestation',
+    'Final Love Reaper: three modes, Rika, the katana and his fists, 16 variants each, and it all hits 20% harder. G: Pure Love: Final Declaration',
+    'True Final Love Reaper: six modes (Rika, katana, fists, Cursed Speech, Copy, Mutual Love), 10 variants each, 45% harder, with real sounds for every part of it. G: Domain Expansion: Authentic Mutual Love (every blow inside it brings a katana up out of the ground; when it closes, all of them at once)',
+    'A variant is a run of keys: one in the air, one held, two or three in a row in a mode, or a key, a switch and a key in another mode. A variant can be the start of a longer one. Right click: the next mode. RMB + Z, X, T, Y, H or N: that mode'] },
   { v: '0.22v2', name: 'Fifty Variants', jp: '五十変化', date: '30 Oct 2026', pic: 'variants', cap: 'Ricochet Downpour, MAX Cross, Supernova Rendezvous and the Constellation Cage', items: [
     'True Direct Cursed Energy Discharge: 50 VARIANTS on top of every mode\'s 4 moves, E and G. A variant is a run of keys, each one soon after the last; the last key of the run turns into the variant',
     '24 fusions: a move, switch mode, a move in the other mode (Direction 3 then MAX 2 is Ricochet Downpour). 24 chains of three keys in one mode (Direction 3, 2, 4 is Ricochet Cross Rose). And two that go through all four modes: Full Spectrum and Granite Apocalypse',

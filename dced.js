@@ -171,7 +171,7 @@ function shotsTick(dt) {
     s.trail.push([s.x, s.y]); if (s.trail.length > 7) s.trail.shift();
     if (s.fuse !== undefined && s.t >= s.fuse) { if (s.split) s.split(s); shots.splice(i, 1); continue; }
     let hit = false;
-    if (up(o) && !s.done) {                          // swept: fast ones cover more than they are wide in a frame
+    if ((s.down ? o && !o.ko && !(o.alpha < 1) : up(o)) && !s.done) {      // swept: fast ones cover more than they are wide in a frame (down: one that hits them lying there or getting up too, as the rest of a combo does: lovereap.js)
       const n = Math.max(1, Math.ceil(Math.hypot(s.x - x0, s.y - y0) / 20)), half = 50 * hs(o) + s.r, top = o.y + 380 * hs(o);
       for (let j = 1; j <= n && !hit; j++) { const x = lerp(x0, s.x, j / n), y = lerp(y0, s.y, j / n); if (Math.abs(o.x - x) < half && y > o.y - 10 - s.r && y < top + s.r) { hit = true; s.x = x; s.y = y; } }
     }

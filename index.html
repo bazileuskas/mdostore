@@ -425,11 +425,11 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 .throat b{font:600 .42em/1 var(--f-ui);letter-spacing:.2em;color:#c9c2ff}
 .throat.low b{color:#ff5a6e}
 /* Build 0.22v1: True Direct Cursed Energy Discharge's four modes, on his health bar (tdced.js) */
-.tdm{display:none;gap:.3em;margin-top:.15em;padding-left:.3em;font:600 clamp(8px,min(.75vw,1.35vh),14px)/1 var(--f-ui);letter-spacing:.1em}
-.game.tdmon[data-mode="fight"] .tdm{display:flex}
-.tdm i{display:grid;gap:.18em;padding:.3em .5em .25em;font-style:normal;color:var(--c);border:1px solid var(--c);background:rgba(8,6,14,.62);opacity:.5;transition:opacity .15s,background .15s}
-.tdm i.on{opacity:1;background:var(--c);color:#05070c}
-.tdm u{text-decoration:none;font-size:.78em;letter-spacing:.06em;opacity:.85}
+.tdm,.lrm{display:none;gap:.3em;margin-top:.15em;padding-left:.3em;font:600 clamp(8px,min(.75vw,1.35vh),14px)/1 var(--f-ui);letter-spacing:.1em}
+.game.tdmon[data-mode="fight"] .tdm,.game.lrmon[data-mode="fight"] .lrm{display:flex}
+.tdm i,.lrm i{display:grid;gap:.18em;padding:.3em .5em .25em;font-style:normal;color:var(--c);border:1px solid var(--c);background:rgba(8,6,14,.62);opacity:.5;transition:opacity .15s,background .15s}
+.tdm i.on,.lrm i.on{opacity:1;background:var(--c);color:#05070c}
+.tdm u,.lrm u{text-decoration:none;font-size:.78em;letter-spacing:.06em;opacity:.85}
 .mir.on{display:flex}
 .mir i{width:1.05em;height:.9em;clip-path:polygon(50% 0,100% 100%,0 100%);background:rgba(255,255,255,.16);transition:background .25s}
 .mir i.full{background:linear-gradient(180deg,#fff6c2,#ffd86b 50%,#ff7ab6)}
@@ -1227,7 +1227,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
   </div>
 
   <div class="side" aria-hidden="true" lang="ja">領域展開</div>
-  <div class="hud tl"><b lang="ja">呪</b>Fan project · Build 0.22v2 · Fifty Variants</div>
+  <div class="hud tl"><b lang="ja">呪</b>Fan project · Build 0.22v3 · Love Reapers</div>
   <div class="hud bl">↑ ↓ Select &nbsp;·&nbsp; Enter Confirm</div>
   <div class="hud br">Title screen</div>
   <div class="acct" id="acct">
@@ -2487,7 +2487,7 @@ window.JU = { sfx, flash, bolts: blackFlash, reduceMotion, startGame, exitGame, 
 // Load every game script fresh on each page load. The dev server sends no cache headers, so without this a reload
 // could run a mix of old and new files (new menu, old moves) while the game is being worked on.
 ['account.js', 'announce.js', 'game.js', 'fx2.js', 'chars.js', 'street.js', 'walk.js', 'foes.js', 'cuts.js', 'sukuna.js', 'school.js', 'story.js', 'story2.js', 'tech.js', 'tech_a.js',
-  'tech_b.js', 'sets.js', 'story3.js', 'cast2.js', 'script.js', 'naoya.js', 'ch45.js', 'ch67.js', 'clan.js', 'clan_a.js', 'clan_b.js', 'boss.js', 'bossfx.js', 'boss_a.js', 'boss_b.js', 'boss_c.js', 'training.js', 'choso.js', 'domain.js', 'domain2.js', 'mahito.js', 'combo.js', 'combat.js', 'cast3.js', 'ch810.js', 'ch1112.js', 'cast4.js', 'ch1316.js', 'cast5.js', 'ch1721.js', 'combat2.js', 'judge.js', 'awaken.js', 'alimit.js', 'ats.js', 'switcher.js', 'tools.js', 'smark.js', 'cast6.js', 'ch2230.js', 'plants.js', 'clash.js', 'block.js', 'cannon.js', 'tced.js', 'shibuya.js', 'kyoto.js', 'evasive.js', 'kokusen.js', 'mp.js', 'pvp.js', 'vengeful.js', 'manga.js', 'haruta.js', 'ratio.js', 'reaper.js', 'inumaki.js', 'kirara.js', 'soul.js', 'slit.js', 'gambler.js', 'especial.js', 'yen.js', 'subtech.js', 'metro.js', 'jjh.js', 'shinjuku.js', 'notes.js', 'shop.js', 'ps.js', 'raid.js', 'touch.js', 'idg.js', 'modeset.js', 'dced.js', 'tdced.js', 'tdced2.js'].forEach(src => {
+  'tech_b.js', 'sets.js', 'story3.js', 'cast2.js', 'script.js', 'naoya.js', 'ch45.js', 'ch67.js', 'clan.js', 'clan_a.js', 'clan_b.js', 'boss.js', 'bossfx.js', 'boss_a.js', 'boss_b.js', 'boss_c.js', 'training.js', 'choso.js', 'domain.js', 'domain2.js', 'mahito.js', 'combo.js', 'combat.js', 'cast3.js', 'ch810.js', 'ch1112.js', 'cast4.js', 'ch1316.js', 'cast5.js', 'ch1721.js', 'combat2.js', 'judge.js', 'awaken.js', 'alimit.js', 'ats.js', 'switcher.js', 'tools.js', 'smark.js', 'cast6.js', 'ch2230.js', 'plants.js', 'clash.js', 'block.js', 'cannon.js', 'tced.js', 'shibuya.js', 'kyoto.js', 'evasive.js', 'kokusen.js', 'mp.js', 'pvp.js', 'vengeful.js', 'manga.js', 'haruta.js', 'ratio.js', 'reaper.js', 'inumaki.js', 'kirara.js', 'soul.js', 'slit.js', 'gambler.js', 'especial.js', 'yen.js', 'subtech.js', 'metro.js', 'jjh.js', 'shinjuku.js', 'notes.js', 'shop.js', 'ps.js', 'raid.js', 'touch.js', 'idg.js', 'modeset.js', 'dced.js', 'tdced.js', 'tdced2.js', 'lovereap.js'].forEach(src => {
   const s = document.createElement('script');
   s.src = src + '?v=' + Date.now(); s.async = false;      // async = false keeps them running in this order
   document.body.appendChild(s);

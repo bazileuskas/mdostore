@@ -335,13 +335,13 @@ function shoulder(p) {                              // her front shoulder, on th
   const bob = Math.sin(E.T * 1.6) * 14, c = P(p.x - p.face * 125, p.y + 10 + bob, ZP + 160), k = c[2] * 1.08;
   return [c[0] + p.face * 66 * k, c[1] - 416 * k, k];
 }
-function longArm(p, hx, hy, shut) {                 // the arm, out of her shoulder and bent up at the elbow, to her hand at (hx, hy)
+function longArm(p, hx, hy, shut, al) {             // the arm, out of her shoulder and bent up at the elbow, to her hand at (hx, hy) (al: how much of it shows: lovereap.js)
   const S = shoulder(p), H2 = F(hx, hy), k = S[2], dx = H2[0] - S[0], dy = H2[1] - S[1], L = Math.hypot(dx, dy) || 1;
   let nx = -dy / L, ny = dx / L;
   if (ny > 0) { nx = -nx; ny = -ny; }               // (the elbow always up)
   const bend = Math.min(.22, 120 / L + .08), ex = (S[0] + H2[0]) / 2 + nx * L * bend, ey = (S[1] + H2[1]) / 2 + ny * L * bend;
   g.save(); g.lineCap = 'round'; g.lineJoin = 'round';
-  g.globalAlpha = Math.min(1, rk.a * 1.1);
+  g.globalAlpha = al !== undefined ? al : Math.min(1, rk.a * 1.1);
   g.beginPath(); g.moveTo(S[0], S[1]); g.lineTo(ex, ey); g.strokeStyle = LINE; g.lineWidth = 28 * k; g.stroke(); g.strokeStyle = BONE; g.lineWidth = 20 * k; g.stroke();
   g.beginPath(); g.moveTo(ex, ey); g.lineTo(H2[0], H2[1]); g.strokeStyle = LINE; g.lineWidth = 24 * k; g.stroke(); g.strokeStyle = BONE; g.lineWidth = 16 * k; g.stroke();
   g.strokeStyle = SHADE; g.lineWidth = 4 * k; g.beginPath(); g.moveTo(lerp(S[0], ex, .2), lerp(S[1], ey, .2) + 5 * k); g.lineTo(lerp(S[0], ex, .85), lerp(S[1], ey, .85) + 5 * k); g.stroke();      // a ridge of bone along it
@@ -687,6 +687,7 @@ H.reset = () => { reset0(); clear(); };
 H.fightStart = (cfg, wave) => { start0(cfg, wave); if (!wave) clear(); };
 
 JU.reaper = { MOVES, CL_K, CL_R, RS1, RS2, CRUSH, REAPER, drawRika, esp: BEAM,      // (esp: E, especial.js)
+  kit: { katana, drawRika, longArm, fist, slamHand, claw, blink, mouth, shoulder, floorHit, CUTS, LILAC, LRGB, BONE, STEEL },      // (what the Love Reapers of 0.22v3 draw with: lovereap.js)
   get crush() { return crush && { shut: crush.shut, sq: crush.sq, held: !!crush.o }; },
   get finisher() { return fin && { t: +fin.t.toFixed(2) }; }, get waiting() { return !!rsWait; },
   get mode() { return rk.mode; }, set mode(v) { rk.mode = v === 'rika' ? 'rika' : 'katana'; labels(); }, get rika() { return { a: +rk.a.toFixed(2), act: rk.act && rk.act.kind }; } };
