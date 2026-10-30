@@ -5,6 +5,10 @@
 // Newest first. v = the build, jp = the seal stamped beside it, pic = notes/<pic>.jpg, cap = what the picture shows.
 // A new update goes at the top of this list.
 const NOTES = [
+  { v: '0.21v2', name: 'No Stun', jp: '不動', date: '30 Oct 2026', pic: 'nostun', cap: 'Reserve Balls on a straight line, No stun, the doors where the ball stops, and 110 on 7 7 7', items: [
+    'Private servers: NO STUN in the + menu. Hits still hurt, but nothing stops you: no stagger, no launch, no knockdown, and whatever move you are in goes on. A small NO STUN shows over you when it saves you. Like the rest of the menu, not in a 1v1',
+    'Double or Nothing: Reserve Balls is a shot now, not a throw. The ball goes in a straight line at where they are, fast, with a trail behind it, until it hits them, the floor or a wall (still 20 and a stun). 1 then 2 and 1 then 3 still work: the doors close where it stops, and you can jump on it a moment after it has hit',
+    'The jackpot, 4 then 3 then 2, hits harder: the last kick is 110 (it was 90), 130 with the first kick'] },
   { v: '0.21v1', name: 'Jackpot', jp: '大当たり', date: '30 Oct 2026', pic: 'jackpot', cap: 'A train door for the last kick, JACKPOT x1.5, what is owed counting down, and paid out', items: [
     'Double or Nothing hits a lot harder: kicks 6, 6, 6, 7. Reserve Balls 20. Shutter Doors 25, and shut in for 1.6 seconds. Rough Energy 42. Fever Breaker 20 and 30. Riding the ball 48, 4 then 2 is 15 and 45, the 7 7 7 kick 90, and Bouncer Doors sends 60 back',
     'His doors are a train\'s now, not a casino\'s: grey, a dark frame, a window up top, a handle, and a paler kick plate at the bottom. And he has no skin of his own any more: he looks like you',

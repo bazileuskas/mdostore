@@ -96,10 +96,14 @@ function hurt(face, a, mul = 1) {
   const p = E.P1;
   if (H.guard && H.guard(face, a, mul)) return false;
   if (p.dashT > 0 || p.inv > 0 || p.dead || p.ps === 'down' || p.ps === 'up' || fight.paused) return false;
-  if (p.move) E.endMove(p);
+  const firm = !!(H.noStun && H.noStun(p, a));      // it hurts, but it stops nothing: not his move, not him (a private server's No stun: ps.js)
+  if (p.move && !firm) E.endMove(p);
   const raw = a.dmg * mul * (H.foePower ? H.foePower(a) : 1), dmg = a.exact ? raw : Math.round(raw);     // something may have weakened it, or put more behind its hits (exact: a duel's blows are counted to the fraction)
-  p.hp = Math.max(fight.floor, p.hp - dmg); p.flash = .1; p.face = -face; p.vx = face * a.kb;
-  if (a.lift) { p.vy = a.lift; p.ground = false; p.y = Math.max(p.y, 1); p.ps = 'air'; } else { p.ps = 'hurt'; p.stun = a.stun || .4; }
+  p.hp = Math.max(fight.floor, p.hp - dmg); p.flash = .1;
+  if (!firm) {
+    p.face = -face; p.vx = face * a.kb;
+    if (a.lift) { p.vy = a.lift; p.ground = false; p.y = Math.max(p.y, 1); p.ps = 'air'; } else { p.ps = 'hurt'; p.stun = a.stun || .4; }
+  }
   E.stop(.08); cam.shake = Math.max(cam.shake, a.lift ? 20 : 11); cam.kick -= face * .04;
   E.addSpark(p.x + face * 20, p.y + 150, '#ff5a6e', a.lift ? 130 : 80); E.addNum(p.x, p.y + 270, a.exact ? +(a.shown || dmg).toFixed(1) : dmg, '#ff5a6e');
   V.ring(p.x, p.y + 150, a.lift ? 170 : 90, '#ff2440'); if (a.lift) V.rocks(p.x, 0, 6);

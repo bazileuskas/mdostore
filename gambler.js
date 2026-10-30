@@ -3,22 +3,24 @@
    Doors, Rough Energy, Fever Breaker, a door counter), a gambling name of three words, five strikes that are all legs and light his legs up
    green, and four combos of their own (below). 0.21v1, the user again: more damage; the doors are a train's (their picture: grey, a dark
    frame, a window high up, a handle, a paler kick plate), not a casino's; no skin of his own, so he looks as the player does; an uppercut
-   and a down slam; and the last kick no longer sends them flying: a door comes across into them and they tumble.
+   and a down slam; and the last kick no longer sends them flying: a door comes across into them and they tumble. 0.21v2, the user:
+   Reserve Balls a shot on a straight line, not something thrown; and the jackpot (4, 3, 2) a bit harder.
    STRIKES: five kicks (6, 6, 6, 7, then the last), his legs lit green for each. The last: held jump on the ground = an uppercut (14, up they
      go); in the air = a down slam (28, into the floor); otherwise a kick (12) and a door slammed into them that sends them tumbling (10)
-   1 RESERVE BALLS: a pachinko ball flung at them, bouncing: 20 and a stun (a bounce first and it knocks them back)
+   1 RESERVE BALLS: a pachinko ball shot at them on a straight line, as fast as a shot: 20 and a stun (0.21v2: no arc and no bounce)
    2 SHUTTER DOORS: a train's doors slam shut on them from either side: 25, and shut in there for 1.6 seconds
    3 ROUGH ENERGY: rough cursed energy gathered into his leg and let go in one kick: 42, and they go flying
    4 FEVER BREAKER: kicked back into a door that has come up behind them (20), and kicked off it the length of the arena (30)
    E BOUNCER DOORS: doors in front of him for 0.9 seconds. A blow into them comes straight back through them: 60. A shot only breaks them
    COMBOS (the user's own):
      1 then 2 (the ball still out): the doors close where the ball comes down
-     1 then 3 (the ball still out), or 3 then 1 (while the energy gathers): he jumps on the ball and rides it 0.7 seconds; when it comes down
+     1 then 3 (the ball still out, or just come off them), or 3 then 1 (while the energy gathers): he jumps on the ball and rides it 0.7
+       seconds; when it comes down
        near them, Rough Energy, and it cannot miss (48)
      4 then 2 (before the second kick): the doors shut on them (15), and in place of the kick a leg brought down on them full of rough
        energy (45)
      4 then 3 then 2: in place of the second kick the doors hold them, the reels spin up over them and stop on 7 7 7, and he kicks the
-       rough energy through the doors and them (90)
+       rough energy through the doors and them (110)
    Sounds: clips from myinstants (pachinko balls, a metal door, a door slammed, a door kicked in, a hard kick, reels, a jackpot: home-gb-* at
    home), and built ones (sfx.ball, door, rough, ding). The anime has no clean sound effects of these on myinstants, only voices */
 (() => {
@@ -123,48 +125,81 @@ function slamDoor(p, o) {
 }
 
 /* ================= 1 — Reserve Balls ================= */
-const BALL_V = 1250, BALL_G = 2000, BALL_R = 22;
-const balls = [];                                   // { x, y, vx, vy, t, bounce, face, doors, landed, hit, ride, spin, lt }
+// 0.21v2 (the user's): not something thrown any more but a shot, on a straight line. No arc and no bounce: it goes at where the middle of them
+// was when it left his hand (nobody in front of him: straight ahead), as fast as a shot, until it reaches them, the floor or a wall. Then it
+// drops, spent, and is gone half a second later (long enough for the doors, 1 then 2, or the ride, 1 then 3, to find it)
+const BALL_V = 1900, BALL_G = 2000, BALL_R = 22, BALL_SPENT = .5;
+const balls = [];                                   // { x, y, vx, vy, t, face, doors, landed, lt, hit, spent, ride, spin, trail }
 function throwBall(p) {
-  const w = handAt(p, true);
-  const b = { x: w[0] + p.face * 20, y: Math.max(BALL_R, w[1]), vx: p.face * BALL_V, vy: 320, t: 0, bounce: 0, face: p.face, doors: false, landed: false, hit: false, ride: false, spin: 0 };
+  const w = handAt(p, true), o = E.P2, x = w[0] + p.face * 20, y = Math.max(BALL_R + 30, w[1]);
+  let ux = p.face, uy = 0;
+  if (live(o) && (o.x - x) * p.face > 30) { const dx = o.x - x, dy = mid(o) - y, L = Math.hypot(dx, dy); ux = dx / L; uy = dy / L; }
+  const b = { x, y, vx: ux * BALL_V, vy: uy * BALL_V, t: 0, face: p.face, doors: false, landed: false, hit: false, spent: false, ride: false, spin: 0, trail: [[x, y]] };
   balls.push(b);
   play('home-gb-pachinko', .45, () => sfx.ball()); sfx.whoosh();
+  V.ring(x, y, 70, '#e6edf5', .12); V.sparks(x, y, 'white', 4);      // off his fingers
   return b;
 }
-const BALLS = { name: 'Reserve Balls', cd: 4, dur: .45, run(p, m, t) {
-  p.vx = 0; p.rate = 38; p.target = t < .12 ? POSE.hookWind : t < .32 ? POSE.gbThrow : POSE.idle;
-  if (!m.s && t >= .12) { m.s = 1; throwBall(p); }
+const BALLS = { name: 'Reserve Balls', cd: 4, dur: .4, run(p, m, t) {
+  p.vx = 0; p.rate = 38; p.target = t < .1 ? POSE.hookWind : t < .3 ? POSE.gbThrow : POSE.idle;
+  if (!m.s && t >= .1) { m.s = 1; throwBall(p); }
 } };
-function land(b) {                                  // where it comes down: doors waiting for it close there
+function land(b) {                                  // where it stops: doors waiting for it close there
   if (b.landed) return;
   b.landed = true; b.lt = b.t;
   if (b.doors) { b.doors = false; shut(clamp(b.x, -930, 930), { from: 'ball' }); label(b.x, 470, 'WHERE IT LANDS', GOLD, 1); }
 }
 function pop(b) { V.sparks(b.x, b.y, 'white', 6); V.ring(b.x, b.y, 80, '#e6edf5', .2); }
+// did it go through them on its way from (x0, y0) to where it is now (at twice the game's speed it covers more than they are wide in a frame)
+function through(b, x0, y0, o) {
+  const n = Math.max(1, Math.ceil(Math.hypot(b.x - x0, b.y - y0) / 24)), half = 60 * hs(o), top = o.y + 380 * hs(o);
+  for (let i = 1; i <= n; i++) { const x = lerp(x0, b.x, i / n), y = lerp(y0, b.y, i / n); if (Math.abs(o.x - x) < half && y > o.y - 10 && y < top) return [x, y]; }
+  return null;
+}
+function stopBall(b, vx, vy) { land(b); b.spent = true; b.trail.length = 0; b.vx = vx; b.vy = vy; }
 function ballsTick(dt) {
   const o = E.P2;
   for (let i = balls.length - 1; i >= 0; i--) {
     const b = balls[i];
     b.t += dt; b.spin += dt * 22 * b.face;
     if (b.ride) continue;                            // (ridden: the ride moves it)
-    b.vy -= BALL_G * dt; b.x += b.vx * dt; b.y += b.vy * dt;
-    if (!b.hit && live(o) && !(o.inv > 0) && o.state !== 'down' && o.state !== 'up' && Math.abs(o.x - b.x) < 60 * hs(o) && b.y > o.y - 10 && b.y < o.y + 380 * hs(o)) {
-      b.hit = true;
-      E.applyHit(o, b.face, { dmg: exact(o, 20), kb: b.bounce ? 560 : 110, lift: b.bounce ? 260 : 0, stun: .9, stop: .06, col: '#e6edf5', fixed: 1, mute: 1 });
-      sfx.ball(1.2); play('home-gb-pachinko', .4); V.sparks(b.x, b.y, 'green', 8); if (Z) Z.flare(b.x, b.y, '230,240,255', 220, .14);
-      land(b); b.vx *= -.3; b.vy = 420;
+    if (b.spent) {                                   // dropping off whatever stopped it, and gone
+      b.vy -= BALL_G * dt; b.x += b.vx * dt; b.y += b.vy * dt;
+      if (b.y <= BALL_R) { b.y = BALL_R; b.vy = b.vy < -250 ? -b.vy * .3 : 0; b.vx *= Math.exp(-dt * 6); }
+      if (b.t - b.lt > BALL_SPENT) { pop(b); balls.splice(i, 1); }
+      continue;
     }
-    if (b.y <= BALL_R) {
-      b.y = BALL_R; land(b);
-      if (b.bounce < 2 && b.vy < -150) { b.vy = -b.vy * .5; b.bounce++; b.vx *= .72; sfx.ball(.7); E.addDust(b.x); } else { b.vy = 0; b.vx *= Math.exp(-dt * 3); }
+    const x0 = b.x, y0 = b.y;
+    b.x += b.vx * dt; b.y += b.vy * dt;
+    b.trail.push([b.x, b.y]); if (b.trail.length > 8) b.trail.shift();
+    const at = live(o) && !(o.inv > 0) && o.state !== 'down' && o.state !== 'up' ? through(b, x0, y0, o) : null;
+    if (at) {
+      b.x = at[0]; b.y = at[1]; b.hit = true;
+      E.applyHit(o, b.face, { dmg: exact(o, 20), kb: 160, stun: .9, stop: .06, col: '#e6edf5', fixed: 1, mute: 1 });
+      sfx.ball(1.2); play('home-gb-pachinko', .4); V.sparks(b.x, b.y, 'green', 10); V.ring(b.x, b.y, 110, '#e6edf5', .16); if (Z) Z.flare(b.x, b.y, '230,240,255', 240, .14);
+      stopBall(b, -b.face * 240, 360);
+      continue;
     }
-    if (b.t > 1.6 || Math.abs(b.x) > 990) { pop(b); balls.splice(i, 1); }
+    if (b.y <= BALL_R || Math.abs(b.x) > 975 || b.y > 1300 || b.t > 1.2) {      // the floor, a wall, or out of the picture
+      const floor = b.y <= BALL_R;
+      b.x = clamp(b.x, -975, 975); b.y = clamp(b.y, BALL_R, 1300);
+      sfx.ball(.7); V.sparks(b.x, b.y, 'white', 5); if (floor) E.addDust(b.x);
+      stopBall(b, floor ? b.vx * .25 : -Math.sign(b.x) * 160, floor ? 260 : 120);
+    }
   }
 }
 function drawBall(b) {
   const c = F(b.x, b.y), k = c[2], r = BALL_R * k;
-  lit(() => E.glow(E.GLOW.white, c[0], c[1], r * 4, .35));
+  if (b.trail.length > 1 && !b.spent && !b.ride) {   // the line it is on, behind it: white in green, thinning out
+    g.save(); g.lineCap = 'round'; g.globalCompositeOperation = 'lighter';
+    for (let i = 1; i < b.trail.length; i++) {
+      const a = F(b.trail[i - 1][0], b.trail[i - 1][1]), q = F(b.trail[i][0], b.trail[i][1]), u = i / (b.trail.length - 1);
+      g.strokeStyle = `rgba(${GRGB},${.4 * u})`; g.lineWidth = r * 2.3 * u; g.beginPath(); g.moveTo(a[0], a[1]); g.lineTo(q[0], q[1]); g.stroke();
+      g.strokeStyle = `rgba(255,255,255,${.7 * u})`; g.lineWidth = r * 1.1 * u; g.beginPath(); g.moveTo(a[0], a[1]); g.lineTo(q[0], q[1]); g.stroke();
+    }
+    g.restore();
+  }
+  lit(() => E.glow(E.GLOW.white, c[0], c[1], r * 4, b.spent ? .2 : .35));
   const gr = g.createRadialGradient(c[0] - r * .35, c[1] - r * .4, r * .1, c[0], c[1], r);
   gr.addColorStop(0, '#ffffff'); gr.addColorStop(.35, '#dfe6ef'); gr.addColorStop(.8, '#8d97a8'); gr.addColorStop(1, '#4b5262');
   g.fillStyle = gr; g.beginPath(); g.arc(c[0], c[1], r, 0, TAU); g.fill(); g.lineWidth = 2 * k; g.strokeStyle = LINE; g.stroke();
@@ -322,7 +357,7 @@ const ROUGH = { name: 'Rough Energy', cd: 8, dur: .95, run(p, m, t) {
 const RIDE = { name: 'Ball Ride', dur: 1.8, run(p, m, t) {
   const b = m.b, o = E.P2, dt = t - (m.lt || 0);
   m.lt = t;
-  if (!m.s) { m.s = 1; b.ride = true; b.y = Math.max(b.y, 70); m.dir = live(o) ? (Math.sign(o.x - b.x) || p.face) : p.face; sfx.whoosh(); sfx.rough(.7); label(p.x, p.y + 430, 'ALL IN', GREEN, 1); }
+  if (!m.s) { m.s = 1; b.ride = true; b.spent = false; b.trail.length = 0; b.y = Math.max(b.y, 70); m.dir = live(o) ? (Math.sign(o.x - b.x) || p.face) : p.face; sfx.whoosh(); sfx.rough(.7); label(p.x, p.y + 430, 'ALL IN', GREEN, 1); }
   p.inv = Math.max(p.inv || 0, .25);
   if (t < .7 && !m.down) {                          // up on it, rolling at them
     const tx = live(o) ? o.x : b.x + m.dir * 900;
@@ -426,7 +461,7 @@ const FEVER = { name: 'Fever Breaker', cd: 10, dur: 3.4, run(p, m, t) {
   if (s >= 1.36 && !m.kick) {
     m.kick = 1; gather = null; imp = { t: 0, o, p };
     p.x = clamp(o.x - f * 130, -960, 960);
-    if (!o.ko) E.applyHit(o, f, { dmg: exact(o, 90), kb: 1700, lift: 800, stun: 1.2, stop: .3, heavy: 1, col: GREEN, fixed: 1, mute: 1 });
+    if (!o.ko) E.applyHit(o, f, { dmg: exact(o, 110), kb: 1700, lift: 800, stun: 1.2, stop: .3, heavy: 1, col: GREEN, fixed: 1, mute: 1 });
     burstDoors(m.shut); roughBurst(o.x, mid(o), 1.6); play('home-gb-kick', 1, () => sfx.hit(true)); shake(44); E.zoomIn(.5); E.stop(.12);
     if (Z) { Z.flash('255,255,255', .35, .14); Z.shock(o.x, 720, GRGB, .55, 14); }
     for (let i = 0; i < 30; i++) coins.push({ x: o.x, y: mid(o), vx: rnd(-900, 900), vy: rnd(300, 1200), t: 0, r: rnd(0, TAU) });
@@ -533,7 +568,7 @@ H.press = (a, inScene) => {                          // the combos: a second mov
       if (b.landed) shut(clamp(b.x, -930, 930)); else { b.doors = true; label(b.x, b.y + 120, 'DOORS ↓', GOLD, .7); }
       return true;
     }
-    if (b && !b.landed && b.t < .7 && a === 'div' && ready('div') && !(m && (m.def === FEVER || m.def === RIDE))) {      // 1 then 3: up on the ball
+    if (b && (!b.landed || b.t - b.lt < .25) && b.t < .8 && a === 'div' && ready('div') && !(m && (m.def === FEVER || m.def === RIDE))) {      // 1 then 3: up on the ball (in the air, or just come off them)
       spend('div'); startRide(p, b); return true;
     }
   }
@@ -593,5 +628,5 @@ H.reset = () => { reset0(); clear(); };
 H.fightStart = (cfg, wave) => { start0(cfg, wave); clear(); };
 
 JU.gambler = { MOVES, KICKS, FIN5, UP5, DOWN5, esp: ESP, greenOf,      // (esp: E, especial.js)
-  get state() { return { balls: balls.map(b => ({ x: Math.round(b.x), y: Math.round(b.y), landed: b.landed, doors: b.doors, ride: b.ride })), doors: doors.map(d => ({ x: Math.round(d.x), shut: d.hitDone, held: !!d.o, single: d.single })), guard: !!guard, reels: !!reels, grit: grit.length, coins: coins.length }; } };
+  get state() { return { balls: balls.map(b => ({ x: Math.round(b.x), y: Math.round(b.y), vx: Math.round(b.vx), vy: Math.round(b.vy), landed: b.landed, hit: b.hit, spent: b.spent, doors: b.doors, ride: b.ride })), doors: doors.map(d => ({ x: Math.round(d.x), shut: d.hitDone, held: !!d.o, single: d.single })), guard: !!guard, reels: !!reels, grit: grit.length, coins: coins.length }; } };
 })();

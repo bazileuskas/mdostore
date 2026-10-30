@@ -1,7 +1,8 @@
 /* JUJUTSU UNLIMITEDS — Build 0.14: servers. Free Exploration asks where now: a PUBLIC server, that anybody playing can drop into (five to a
    server: when one is full the next one opens), or a PRIVATE one, made fresh under a code to give to friends (or joined with a friend's code).
    A private server has the + menu (the button at the right, or P):
-     you: fly, no cooldowns, god mode, an awakening that never empties, moon gravity, how hard you hit, how fast the game runs, your health
+     you: fly, no cooldowns, no stun (0.21v2, the user's: hits still hurt, but never stop him or his moves), god mode, an awakening that never
+       empties, moon gravity, how hard you hit, how fast the game runs, your health
      dummies: a plain one, one with 1 health, an immortal one, one that attacks, one that blocks from the front, one that uses its Evasive
      a fight with any curse or boss; a district to go to (one that is open to him); the curses on the street
      build mode: blocks put down in the street (click to place, right click to take one away, R to turn it, 1 to 6 or the bar for which kind),
@@ -16,7 +17,7 @@ const { clamp, rnd } = E;
 const esc = x => String(x).replace(/[<>&"]/g, '');
 
 /* ================= what is set ================= */
-const OFF = { fly: false, nocd: false, god: false, awk: false, moon: false, dmg: 1, speed: 1, hp: 0, dhp: 300, build: false, blk: 0, rot: false };
+const OFF = { fly: false, nocd: false, nostun: false, god: false, awk: false, moon: false, dmg: 1, speed: 1, hp: 0, dhp: 300, build: false, blk: 0, rot: false };
 const O = Object.assign({}, OFF);
 const on = () => !!(M && M.on && M.kind === 'private');
 const duel = () => !!(Fi.fight.cfg && Fi.fight.cfg.pvp);
@@ -31,7 +32,7 @@ function choose(body) {
     <div class="seahd"><button class="sback" data-srv="back" aria-label="Back to Play">‹ Play</button><b>Free Exploration</b><span lang="ja">自由探索</span><i>Where to?</i></div>
     <div class="duo">
       <button class="mode" data-mode="free" data-mp="public"><b>Public server</b><span lang="ja">公開</span><i>Anybody playing can drop in: up to five to a server, and the next one opens when it is full. Challenge whoever you meet to a 1v1.</i></button>
-      <button class="mode" data-mode="free" data-mp="private" style="border-left-color:#ffd23d"><b>Private server</b><span lang="ja" style="color:#ffd23d">私設</span><i>Your own, under a code to give your friends, and the + menu: fly, no cooldowns, god mode, your health, dummies, any curse to fight, and build mode.</i></button>
+      <button class="mode" data-mode="free" data-mp="private" style="border-left-color:#ffd23d"><b>Private server</b><span lang="ja" style="color:#ffd23d">私設</span><i>Your own, under a code to give your friends, and the + menu: fly, no cooldowns, no stun, god mode, your health, dummies, any curse to fight, and build mode.</i></button>
     </div>
     ${M ? M.codeCard() : ''}
   </div>`;
@@ -226,7 +227,7 @@ function paint() {
   const fight = mode() === 'fight', street = mode() === 'street', cfg = Fi.fight.cfg;
   panel.innerHTML = `<header><b>Private server</b><u>${esc(M.code || '')}</u><button type="button" data-ps="close" aria-label="Close">✕</button></header>
     <h4>You</h4>
-    <div class="psgrid">${tog('fly', 'Fly', 'Space up · Ctrl down (in a fight W and S too)')}${tog('nocd', 'No cooldowns')}${tog('god', 'God mode', 'Your health never drops')}${tog('awk', 'Awakening always full')}${tog('moon', 'Moon gravity')}${cyc('dmg', 'Damage', [1, 2, 5, 10])}${cyc('speed', 'Game speed', [1, .5, 1.5, 2])}</div>
+    <div class="psgrid">${tog('fly', 'Fly', 'Space up · Ctrl down (in a fight W and S too)')}${tog('nocd', 'No cooldowns')}${tog('nostun', 'No stun', 'Hits still hurt, but never stop you or your moves')}${tog('god', 'God mode', 'Your health never drops')}${tog('awk', 'Awakening always full')}${tog('moon', 'Moon gravity')}${cyc('dmg', 'Damage', [1, 2, 5, 10])}${cyc('speed', 'Game speed', [1, .5, 1.5, 2])}</div>
     <div class="psrow"><label>Your health <input data-in="hp" type="number" min="1" max="99999" inputmode="numeric" value="${O.hp || ''}" placeholder="100"></label><button type="button" data-ps="hp">Set</button>${[100, 500, 1000, 9999].map(v => `<button type="button" data-ps="hp" data-v="${v}">${v}</button>`).join('')}${fight ? '<button type="button" data-ps="heal">Heal</button>' : ''}</div>
     <h4>Dummies</h4>
     <div class="psgrid">${DUMMIES.map(d => `<button type="button" data-ps="fight" data-id="${d[0]}" data-kind="${d[1]}"><b>${d[2]}</b><i>${d[3]}</i></button>`).join('')}</div>
@@ -337,10 +338,11 @@ function key(a) {
 }
 
 /* ================= in a fight ================= */
-const tick0 = H.tick, pre0 = H.playerPre, grav0 = H.gravity, speed0 = H.speed, pow0 = H.power, hit0 = H.hit, shield0 = H.shield, fx0 = H.fx, start0 = H.fightStart;
+const tick0 = H.tick, pre0 = H.playerPre, grav0 = H.gravity, speed0 = H.speed, pow0 = H.power, hit0 = H.hit, shield0 = H.shield, fx0 = H.fx, start0 = H.fightStart, nostun0 = H.noStun;
 H.speed = () => (speed0 ? speed0() : 1) * (live() ? O.speed : 1);
 H.gravity = p => (grav0 ? grav0(p) : 1) * (p === E.P1 && live() ? (O.fly && !p.ps ? 0 : O.moon ? .35 : 1) : 1);
 H.playerPre = (p, o, dt) => {
+  if (live() && O.nostun && p.ps && !p.dead) { p.ps = null; p.stun = 0; }      // No stun: whatever else put him down (a guard broken), he is straight back up
   const r = pre0 ? pre0(p, o, dt) : false;
   if (!r && live() && O.fly && !p.dead) {           // flying: up while jump is held, down while S is, and otherwise he stays where he is
     const up = keys.has('w') || keys.has(' ') || keys.has('arrowup') || flyUp, down = keys.has('s') || keys.has('arrowdown') || keys.has('control') || flyDown;
@@ -350,6 +352,14 @@ H.playerPre = (p, o, dt) => {
   return r;
 };
 H.power = (h, o) => (pow0 ? pow0(h, o) : 1) * (live() && o === E.P2 ? O.dmg : 1);
+// No stun: a hit on him still hurts, but stops nothing (foes.js asks before it staggers him, launches him or cuts his move short)
+let shrugT = -9;                                   // (when it last said so over him: not every hit)
+H.noStun = (p, a) => {
+  if (nostun0 && nostun0(p, a)) return true;
+  if (!live() || !O.nostun) return false;
+  if (E.T - shrugT > 2) { shrugT = E.T; E.fx.push({ k: 2, x: p.x, y: p.y + 360, n: 'NO STUN', col: '#f4efe4', t: 0, life: .6 }); }
+  return true;
+};
 H.hit = (o, face, h) => { hit0(o, face, h); if (o === E.P2 && o.psKind === 'immortal') o.hp = o.max; };      // the immortal one is whole again at once
 // the blocking dummy's guard: anything ordinary from in front of it is stopped; something heavy (into the air, 16 or more, a block breaker) breaks it
 H.shield = (o, face, h) => {
