@@ -34573,8 +34573,9 @@ JU.lovereap = { MODES, TIERS, ULTS, pick, setMode,
    THE SEVEN VARIANTS (ours): 1 Supernova Hail (BLOOD, 3 in the air) · 2 Falling Needle (BLOOD, 4 in the air) · 3 Crimson Supernova (BLOOD, 3 just
      after Slicing Exorcism lands) · 4 Edge Whirl (STACK, 1 in the air) · 5 Heavy Meteorite (STACK, 3 held to the end) · 6 Bound Execution (STACK, 1
      while Crimson Binding holds them) · 7 Tethered Pierce (Crimson Binding, switch to BLOOD, 4 while they are still bound).
-   G, THE ULT OF THE MODE HE IS IN (30 s; the mode is held while it lasts). Music: "Fight Alongside" is not anywhere the site can play it from, so a
-     loop built in index.html (sfx.tune 'fight-alongside') plays; at home sounds/home-fight-alongside.mp3 plays instead, if it is there.
+   G, THE ULT OF THE MODE HE IS IN (30 s; the mode is held while it lasts). Music: "Fight Alongside", from the moment G is pressed. At home it is
+     the user's own recording of it (sent the same day: sounds/home-fight-alongside.mp3, gitignored, never on the site); it is not anywhere the
+     public site can play it from, so there a loop built in index.html plays instead (sfx.tune 'fight-alongside').
      BLOOD: BIG BROTHER (お兄ちゃん): 1 Blood Rain, 2 Wing King, 3 Plasma Wave (the user's three); 4 stays Piercing Blood.
      STACK: DEATH PAINTING (九相図, ours): 1 Nine Stages, 2 Crimson Crucifix, 3 Decay (his brothers' Rot Technique); 4 stays Supernova Embrace. */
 (() => {
@@ -34918,6 +34919,7 @@ const TETHER = { name: 'Tethered Pierce', dur: .8, glow: 'red', run(p, m, t) {
 /* ================= G: the ults ================= */
 const ULT_T = 30, INTRO_T = 2.8;
 let ult = null, watch = 0, shownT = -1, tint = 0;  // { mode, t, intro, paused, music }; how far the stage has gone to the ult's colour
+if (/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) sfx.preload(['home-fight-alongside']);      // (the user's copy of the song, at home: loaded ahead, or the first ult would get the built loop)
 const ultOn = () => !!ult && !ult.intro;
 const ULT_NAME = ['Big Brother', 'Death Painting'], ULT_JP = ['お兄ちゃん', '九相図'];
 function awaken(p) {
@@ -34927,6 +34929,7 @@ function awaken(p) {
   p.inv = Math.max(p.inv || 0, INTRO_T + .3);
   p.move = { def: INTRO[mode], t: 0 };
   E.zoomIn(INTRO_T);
+  ult.music = sfx.tune('fight-alongside');          // (from G: the intro plays over the song's opening bars)
   clearInterval(watch); watch = setInterval(() => { if (ult && E.root.dataset.mode !== 'fight') endUlt(true); if (!ult) clearInterval(watch); }, 250);
 }
 const INTRO = [
@@ -34951,7 +34954,6 @@ function begin(p) {
   E.banner(ULT_JP[ult.mode], ULT_NAME[ult.mode].toUpperCase()); sfx.bf(); sfx.blast(); shake(26);
   V.ring(p.x, p.y + 170, 520, ult.mode ? HOT : BLOOD, .45); V.sparks(p.x, p.y + 200, 'red', 26); E.addBlast(p.x, p.y + 170, RGB, 520);
   if (Z) { Z.flash(RGB, .35, .3); Z.shock(p.x, 800, RGB, .5, 14); }
-  ult.music = sfx.tune('fight-alongside');
   for (const k of SLOTS) if (ULTS[ult.mode][k]) E.cd[k] = 0;      // the ult's own moves are there at once
   shownT = -1; relabel();
 }
