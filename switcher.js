@@ -21,6 +21,7 @@ const WINDOW = .4;                                  // how long after a swap a s
 let clapAt = -9;                                    // when he last changed places with something
 const KOKU_T = 1, KOKU_DMG = 190, LOCK = 20;         // the Black Flash: how long after the swap with the stone it is there; what it does; how long Boogie Woogie is gone after
 let stoneAt = -9, lockT = 0;                        // when he last changed places with the stone; and how long Boogie Woogie has left to be gone
+const hype = () => !!(JU.switcher && JU.switcher.hype && JU.switcher.hype());      // (Build 0.23: his ult, Climax, is on: climax.js)
 sfx.preload(['home-todo-bf']);
 
 /* ---------- Ground Slam: what is left of the floor afterwards ---------- */
@@ -91,6 +92,7 @@ function swap(p, o) {                               // with whoever he is fighti
   else if (!o.ko && o.state !== 'down') Object.assign(o, { state: 'hurt', stun: .55, act: null, tele: 0 });   // it takes it a moment to work out where it is
   p.face = o.x >= p.x ? 1 : -1; o.face = -p.face;
   clap(a.x, a.y, b.x, b.y); clapAt = E.T;
+  if (hype() && !o.ko) { stoneAt = E.T; if (E.cd.crush <= 0) E.fx.push({ k: 2, x: p.x, y: p.y + 470, n: '2  ·  BLACK FLASH', col: '#ff5a6e', t: 0, life: KOKU_T }); }      // (in Climax every swap opens the Black Flash, not only the stone's)
 }
 function toStone(p) {                               // with the pebble: he is wherever it had got to, and it drops where he was standing
   const a = { x: p.x, y: p.y };
@@ -116,6 +118,7 @@ const KOKU = { name: 'Stitcher Punch', dur: 1.3, glow: 'red', run(p, m, t) {
   const W = .2, o = E.P2;
   if (t < W) {
     p.vx = 0; p.rate = 40; p.target = BACK;
+    if (hype()) { const gap = (o.x - p.x) * p.face; if (gap > 220 && !o.ko) p.vx = p.face * Math.min(3200, (gap - 200) / Math.max(.03, W - t)); }      // (in Climax a swap can leave him further off than the stone does: he closes it as he winds up)
     if (!m.c) { m.c = 1; m.clip = sfx.file('home-todo-bf', 1); if (!m.clip) sfx.charge(); shout(p, '黒閃', '#ff5a6e'); }      // (the clip's own crack comes a fifth of a second in: as the punch lands)
     const w = E.hand(p, false); V.mote(w[0], w[1], 'red'); V.mote(w[0], w[1], 'blue');
     return;
@@ -212,7 +215,7 @@ H.press = (a, inScene) => {
     const p = E.P1;
     if (a === 'crush' && E.T - stoneAt < KOKU_T && E.cd.crush <= 0 && !p.dead && !p.ps && (free(p) || (p.move && (p.move.def === MOVES.strikes || p.move.def === PERFECT)))) {      // the Black Flash
       stoneAt = -9; if (p.move) E.endMove(p);
-      E.cd.crush = MOVES.crush.cd; lockT = LOCK; E.cd.strikes = Math.max(E.cd.strikes, LOCK);
+      E.cd.crush = MOVES.crush.cd; lockT = hype() ? 0 : LOCK; E.cd.strikes = Math.max(E.cd.strikes, lockT);      // (and in Climax it takes nothing away)
       p.move = { def: KOKU, key: 'crush', t: 0 }; E.hud.mv.crush.classList.add('act');
       return true;
     }
@@ -234,7 +237,7 @@ H.m1rate = () => (rate0 ? rate0() : 1) * (on() ? M1_RATE : 1);
 H.tick = dt => {
   tick0(dt);
   rubble(dt);
-  if (lockT > 0) { lockT -= dt; E.cd.strikes = Math.max(E.cd.strikes, lockT); }      // Boogie Woogie, gone after the Black Flash
+  if (lockT > 0) { lockT = hype() ? 0 : lockT - dt; E.cd.strikes = Math.max(E.cd.strikes, lockT); }      // Boogie Woogie, gone after the Black Flash (not in Climax)
   if (!on()) return;
   const p = E.P1, o = E.P2, dir = (E.keys.has('d') || E.keys.has('arrowright') ? 1 : 0) - (E.keys.has('a') || E.keys.has('arrowleft') ? 1 : 0);
   if (free(p) && p.ground && dir) p.x = clamp(p.x - dir * 360 * (1 - SLOW) * dt, -965, 965);     // that much of every step is taken back off him

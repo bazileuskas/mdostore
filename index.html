@@ -425,11 +425,11 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 .throat b{font:600 .42em/1 var(--f-ui);letter-spacing:.2em;color:#c9c2ff}
 .throat.low b{color:#ff5a6e}
 /* Build 0.22v1: True Direct Cursed Energy Discharge's four modes, on his health bar (tdced.js) */
-.tdm,.lrm{display:none;gap:.3em;margin-top:.15em;padding-left:.3em;font:600 clamp(8px,min(.75vw,1.35vh),14px)/1 var(--f-ui);letter-spacing:.1em}
-.game.tdmon[data-mode="fight"] .tdm,.game.lrmon[data-mode="fight"] .lrm{display:flex}
-.tdm i,.lrm i{display:grid;gap:.18em;padding:.3em .5em .25em;font-style:normal;color:var(--c);border:1px solid var(--c);background:rgba(8,6,14,.62);opacity:.5;transition:opacity .15s,background .15s}
-.tdm i.on,.lrm i.on{opacity:1;background:var(--c);color:#05070c}
-.tdm u,.lrm u{text-decoration:none;font-size:.78em;letter-spacing:.06em;opacity:.85}
+.tdm,.lrm,.bbm{display:none;gap:.3em;margin-top:.15em;padding-left:.3em;font:600 clamp(8px,min(.75vw,1.35vh),14px)/1 var(--f-ui);letter-spacing:.1em}
+.game.tdmon[data-mode="fight"] .tdm,.game.lrmon[data-mode="fight"] .lrm,.game.bbmon[data-mode="fight"] .bbm{display:flex}
+.tdm i,.lrm i,.bbm i{display:grid;gap:.18em;padding:.3em .5em .25em;font-style:normal;color:var(--c);border:1px solid var(--c);background:rgba(8,6,14,.62);opacity:.5;transition:opacity .15s,background .15s}
+.tdm i.on,.lrm i.on,.bbm i.on{opacity:1;background:var(--c);color:#05070c}
+.tdm u,.lrm u,.bbm u{text-decoration:none;font-size:.78em;letter-spacing:.06em;opacity:.85}
 .mir.on{display:flex}
 .mir i{width:1.05em;height:.9em;clip-path:polygon(50% 0,100% 100%,0 100%);background:rgba(255,255,255,.16);transition:background .25s}
 .mir i.full{background:linear-gradient(180deg,#fff6c2,#ffd86b 50%,#ff7ab6)}
@@ -1227,7 +1227,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
   </div>
 
   <div class="side" aria-hidden="true" lang="ja">領域展開</div>
-  <div class="hud tl"><b lang="ja">呪</b>Fan project · Build 0.22v4 · Back Switch</div>
+  <div class="hud tl"><b lang="ja">呪</b>Fan project · Build 0.23 · Big Brother</div>
   <div class="hud bl">↑ ↓ Select &nbsp;·&nbsp; Enter Confirm</div>
   <div class="hud br">Title screen</div>
   <div class="acct" id="acct">
@@ -1435,6 +1435,7 @@ const sfx = (() => {
     // Build 0.20v1: the music under the two awakenings, the anime's own, as myinstants has it (sfx.song, looping)
     'home-slit-awk': [MI + 'yuuuuta-vs-ryu-vs-oro-theme.mp3', 0, 0],                                 // "Yuuuuta vs ryu vs oro theme": Unmasked
     'home-kirara-awk': [MI + 'jjk-theme-season-3.mp3', 0, 0],                                        // "Jjk theme season 3": Fever
+    'home-todo-awk': [MI + 'todo-beatdown.mp3', 0, 0],                                              // "todo beatdown" (tagged climaxjumping): Climax, Build 0.23
     // Build 0.21: Double or Nothing's (gambler.js): doors shut, slammed and kicked in, a hard kick, reels and a payout (0.21v3: the pachinko
     // balls' clip is gone, the user found it like an alarm: the ball has a built click and clack now, below)
     'home-gb-door': [MI + 'metal-door-closing.mp3', .08, .72],                                       // "Metal Door Closing"
@@ -1459,6 +1460,18 @@ const sfx = (() => {
     'home-lr-parry': [MI + 'katana-2-deflect.mp3', .06, .9],                                       // "Katana 2 Deflect"
     'home-lr-draw': [MI + 'katana-sound-gmod-source.mp3', .04, .7],                                // "Katana Draw Effect"
     'home-lr-slash': [MI + 'slash-sword.mp3', .08, .7] };                                          // "slash sword."
+  // the built loops (tune): Overtime's four bars in D minor, and Fight Alongside's in E minor (Build 0.23). bass: [sixteenth, above the root,
+  // how long]; lead: [sixteenth of the whole loop, note, how long]
+  const TUNES = {
+    overtime: { bpm: 132, vol: .34, root: [38, 34, 36, 33], ch: [[62, 65, 69], [58, 62, 65], [60, 64, 67], [57, 61, 64]], kick: [0, 6, 8, 11], snare: [4, 12],      // Dm, B flat, C, A: round again
+      bass: [[0, 0, 2], [2, 0, 1], [3, 12, 1], [4, 0, 2], [6, 7, 2], [8, 0, 2], [10, 12, 1], [11, 0, 1], [12, 7, 2], [14, 10, 2]],
+      lead: [[0, 74, 3], [3, 77, 3], [6, 76, 2], [8, 74, 4], [12, 69, 4], [16, 70, 3], [19, 74, 3], [22, 77, 2], [24, 76, 4], [28, 74, 4], [32, 72, 3], [35, 76, 3], [38, 79, 2],
+        [40, 77, 4], [44, 76, 4], [48, 81, 2], [50, 79, 2], [52, 77, 2], [54, 76, 2], [56, 73, 4], [60, 76, 4]] },
+    'fight-alongside': { bpm: 148, vol: .32, root: [40, 36, 38, 35], ch: [[64, 67, 71], [60, 64, 67], [62, 66, 69], [59, 63, 66]], kick: [0, 3, 8, 10, 14], snare: [4, 12], leadType: 'sawtooth',      // Em, C, D, B
+      bass: [[0, 0, 1], [1, 0, 1], [2, 12, 1], [3, 0, 1], [4, 0, 1], [5, 7, 1], [6, 12, 1], [7, 0, 1], [8, 0, 1], [9, 0, 1], [10, 12, 1], [11, 0, 1], [12, 7, 1], [13, 10, 1], [14, 12, 1], [15, 7, 1]],
+      lead: [[0, 71, 4], [4, 74, 2], [6, 76, 2], [8, 79, 6], [14, 78, 2], [16, 76, 4], [20, 72, 2], [22, 74, 2], [24, 76, 6], [30, 74, 2], [32, 74, 4], [36, 78, 2], [38, 81, 2],
+        [40, 79, 4], [44, 78, 4], [48, 75, 3], [51, 78, 3], [54, 81, 2], [56, 83, 4], [60, 78, 4]] }
+  };
   const clips = {};
   const load = name => {
     if (clips[name]) return clips[name];
@@ -1681,7 +1694,10 @@ const sfx = (() => {
     },
     // music, built here and played round and round for as long as it is wanted: tune(name) starts it and gives back { stop() }, which
     // fades it out. The copy at home plays sounds/home-<name>.mp3 instead, when there is one (never on the public site).
-    // 'overtime': Ratio Man's awakening. Quick and tense, in D minor: drums, a walking bass, strings under it and a motif over them, four bars
+    // 'overtime': Ratio Man's awakening. Quick and tense, in D minor: drums, a walking bass, strings under it and a motif over them, four bars.
+    // 'fight-alongside' (Build 0.23): the Blood Brother's ults. The anime's "Fight Alongside" is nowhere the site can play it from, so this is a
+    // loop of our own in its spirit: driving, in E minor, at 148, a line climbing over it (the copy at home plays sounds/home-fight-alongside.mp3
+    // instead, if one is put there). The bars themselves are in TUNES, by the clip table
     tune(name) {
       const none = { stop() {} };
       if (!on) return none;
@@ -1691,31 +1707,54 @@ const sfx = (() => {
         try { const pl = el.play(); if (pl && pl.catch) pl.catch(() => {}); } catch (e) {}
         return { stop() { let k = 0; const iv = setInterval(() => { el.volume = Math.max(0, .6 * (1 - ++k / 8)); if (k >= 8) { clearInterval(iv); el.pause(); } }, 100); } };
       }
-      if (!a || name !== 'overtime') return none;
+      const S = TUNES[name];
+      if (!a || !S) return none;
       const bus = a.createGain(), t0 = a.currentTime;
-      bus.gain.setValueAtTime(.0001, t0); bus.gain.exponentialRampToValueAtTime(.34, t0 + .5); bus.connect(a.destination);
-      const S16 = 60 / 132 / 4, BAR = S16 * 16, f = m => 440 * Math.pow(2, (m - 69) / 12);
-      const ROOT = [38, 34, 36, 33], CH = [[62, 65, 69], [58, 62, 65], [60, 64, 67], [57, 61, 64]];      // Dm, B flat, C, A: round again
-      const BASS = [[0, 0, 2], [2, 0, 1], [3, 12, 1], [4, 0, 2], [6, 7, 2], [8, 0, 2], [10, 12, 1], [11, 0, 1], [12, 7, 2], [14, 10, 2]];      // [sixteenth, above the root, how long]
-      const LEAD = [[0, 74, 3], [3, 77, 3], [6, 76, 2], [8, 74, 4], [12, 69, 4], [16, 70, 3], [19, 74, 3], [22, 77, 2], [24, 76, 4], [28, 74, 4], [32, 72, 3], [35, 76, 3], [38, 79, 2],
-        [40, 77, 4], [44, 76, 4], [48, 81, 2], [50, 79, 2], [52, 77, 2], [54, 76, 2], [56, 73, 4], [60, 76, 4]];
+      bus.gain.setValueAtTime(.0001, t0); bus.gain.exponentialRampToValueAtTime(S.vol, t0 + .5); bus.connect(a.destination);
+      const S16 = 60 / S.bpm / 4, BAR = S16 * 16, f = m => 440 * Math.pow(2, (m - 69) / 12), LEN = S.root.length * 16;
       let next = t0 + .08, step = 0, alive = true;
       const pump = () => {                         // what is due in the next third of a second, put down now
         if (!alive) return;
         while (next < a.currentTime + .35) {
-          const at = Math.max(0, next - a.currentTime), s = step % 64, bar = s >> 4, b = s & 15, o = { out: bus };
-          if (b === 0 || b === 6 || b === 8 || b === 11) voice(Object.assign({ f: [130, 42], at, dur: .16, vol: .55 }, o));
-          if (b === 4 || b === 12) { voice(Object.assign({ type: 'noise', at, dur: .12, vol: .3, filt: ['bandpass', 1900], q: .9 }, o)); voice(Object.assign({ f: [210, 160], at, dur: .07, vol: .12, type: 'triangle' }, o)); }
+          const at = Math.max(0, next - a.currentTime), s = step % LEN, bar = s >> 4, b = s & 15, o = { out: bus };
+          if (S.kick.includes(b)) voice(Object.assign({ f: [130, 42], at, dur: .16, vol: .55 }, o));
+          if (S.snare.includes(b)) { voice(Object.assign({ type: 'noise', at, dur: .12, vol: .3, filt: ['bandpass', 1900], q: .9 }, o)); voice(Object.assign({ f: [210, 160], at, dur: .07, vol: .12, type: 'triangle' }, o)); }
           if (!(b & 1)) voice(Object.assign({ type: 'noise', at, dur: b & 2 ? .05 : .03, vol: b & 2 ? .09 : .05, filt: ['highpass', 7000] }, o));
-          for (const [st, iv, len] of BASS) if (st === b) voice(Object.assign({ f: [f(ROOT[bar] + iv), f(ROOT[bar] + iv)], at, dur: len * S16 * .95, vol: .3, type: 'sawtooth', filt: ['lowpass', 520, 300] }, o));
-          if (b === 0) for (const m of CH[bar]) voice(Object.assign({ f: [f(m), f(m)], at, dur: BAR * .98, vol: .05, type: 'sawtooth', attack: .25, filt: ['lowpass', 1300, 900] }, o));
-          for (const [st, m, len] of LEAD) if (st === s) { voice(Object.assign({ f: [f(m), f(m)], at, dur: len * S16 * .9, vol: .07, type: 'square', filt: ['lowpass', 2600, 1800] }, o)); voice(Object.assign({ f: [f(m + 12), f(m + 12)], at, dur: len * S16 * .6, vol: .025, type: 'triangle' }, o)); }
+          for (const [st, iv, len] of S.bass) if (st === b) voice(Object.assign({ f: [f(S.root[bar] + iv), f(S.root[bar] + iv)], at, dur: len * S16 * .95, vol: .3, type: 'sawtooth', filt: ['lowpass', 520, 300] }, o));
+          if (b === 0) for (const m of S.ch[bar]) voice(Object.assign({ f: [f(m), f(m)], at, dur: BAR * .98, vol: .05, type: 'sawtooth', attack: .25, filt: ['lowpass', 1300, 900] }, o));
+          for (const [st, m, len] of S.lead) if (st === s) { voice(Object.assign({ f: [f(m), f(m)], at, dur: len * S16 * .9, vol: .07, type: S.leadType || 'square', filt: ['lowpass', 2600, 1800] }, o)); voice(Object.assign({ f: [f(m + 12), f(m + 12)], at, dur: len * S16 * .6, vol: .025, type: 'triangle' }, o)); }
           next += S16; step++;
         }
       };
       pump();
       const iv = setInterval(pump, 100);
       return { stop() { if (!alive) return; alive = false; clearInterval(iv); const t = a.currentTime; bus.gain.cancelScheduledValues(t); bus.gain.setValueAtTime(Math.max(.0001, bus.gain.value), t); bus.gain.exponentialRampToValueAtTime(.0001, t + .8); setTimeout(() => bus.disconnect(), 1200); } };
+    },
+    // Build 0.23, the Blood Brother's ults (brother.js). Blood Rain: a bed of it falling for as long as it lasts (secs), drops landing all through it
+    bloodRain(secs = 9) {
+      voice({ type: 'noise', dur: secs, vol: .1, attack: .8, filt: ['bandpass', 1500, 1300], q: .5, wet: .4 });
+      voice({ type: 'noise', dur: secs, vol: .07, attack: 1, filt: ['lowpass', 500, 450], q: .7 });
+      for (let i = 0; i < secs * 7; i++) voice({ type: 'noise', at: Math.random() * secs, dur: .02 + Math.random() * .03, vol: .05 + Math.random() * .06, filt: ['bandpass', 900 + Math.random() * 2600], q: 3 });
+    },
+    // a drop of it landing on somebody: small and wet
+    drop() { voice({ type: 'noise', dur: .035, vol: .1, filt: ['lowpass', 2200, 500] }); voice({ f: [300, 120], dur: .04, vol: .05 }); },
+    // Wing King: the wings opening, one great beat of them
+    wing() {
+      voice({ type: 'noise', dur: .45, vol: .42, attack: .03, filt: ['bandpass', 380, 1500], q: 1.2, wet: .4 });
+      voice({ f: [90, 34], dur: .5, vol: .45, wet: .3 });
+      voice({ type: 'noise', at: .08, dur: .3, vol: .2, filt: ['lowpass', 900, 200] });
+    },
+    // Plasma Wave: blood pressed until it hums (the charge), and then all of it let go at once, crackling
+    plasma() {
+      voice({ f: [55, 110], dur: .8, vol: .28, type: 'sawtooth', attack: .3, filt: ['lowpass', 300, 1400], wet: .4 });
+      voice({ type: 'noise', dur: .8, vol: .16, attack: .5, filt: ['bandpass', 600, 2400], q: 2 });
+      for (let i = 0; i < 8; i++) voice({ type: 'noise', at: .2 + Math.random() * .55, dur: .015 + Math.random() * .02, vol: .12, filt: ['highpass', 3000] });
+    },
+    plasmaGo() {
+      voice({ f: [70, 22], dur: 1.6, vol: .8, wet: .5 });
+      voice({ type: 'noise', dur: 1.5, vol: .5, attack: .02, filt: ['lowpass', 3200, 160], wet: .6 });
+      voice({ f: [180, 60], dur: .8, vol: .22, type: 'sawtooth', filt: ['lowpass', 1600, 240] });
+      for (let i = 0; i < 16; i++) voice({ type: 'noise', at: Math.random() * 1.2, dur: .015 + Math.random() * .025, vol: .14, filt: ['highpass', 2600] });
     },
     // Rika (reaper.js): 0 a growl, from something much bigger than the room; 1 her scream
     rika(kind = 0) {
@@ -2487,7 +2526,7 @@ window.JU = { sfx, flash, bolts: blackFlash, reduceMotion, startGame, exitGame, 
 // Load every game script fresh on each page load. The dev server sends no cache headers, so without this a reload
 // could run a mix of old and new files (new menu, old moves) while the game is being worked on.
 ['account.js', 'announce.js', 'game.js', 'fx2.js', 'chars.js', 'street.js', 'walk.js', 'foes.js', 'cuts.js', 'sukuna.js', 'school.js', 'story.js', 'story2.js', 'tech.js', 'tech_a.js',
-  'tech_b.js', 'sets.js', 'story3.js', 'cast2.js', 'script.js', 'naoya.js', 'ch45.js', 'ch67.js', 'clan.js', 'clan_a.js', 'clan_b.js', 'boss.js', 'bossfx.js', 'boss_a.js', 'boss_b.js', 'boss_c.js', 'training.js', 'choso.js', 'domain.js', 'domain2.js', 'mahito.js', 'combo.js', 'combat.js', 'cast3.js', 'ch810.js', 'ch1112.js', 'cast4.js', 'ch1316.js', 'cast5.js', 'ch1721.js', 'combat2.js', 'judge.js', 'awaken.js', 'alimit.js', 'ats.js', 'switcher.js', 'tools.js', 'smark.js', 'cast6.js', 'ch2230.js', 'plants.js', 'clash.js', 'block.js', 'cannon.js', 'tced.js', 'shibuya.js', 'kyoto.js', 'evasive.js', 'kokusen.js', 'mp.js', 'pvp.js', 'vengeful.js', 'manga.js', 'haruta.js', 'ratio.js', 'reaper.js', 'inumaki.js', 'kirara.js', 'soul.js', 'slit.js', 'gambler.js', 'especial.js', 'yen.js', 'subtech.js', 'metro.js', 'jjh.js', 'shinjuku.js', 'notes.js', 'shop.js', 'ps.js', 'raid.js', 'touch.js', 'idg.js', 'modeset.js', 'dced.js', 'tdced.js', 'tdced2.js', 'lovereap.js'].forEach(src => {
+  'tech_b.js', 'sets.js', 'story3.js', 'cast2.js', 'script.js', 'naoya.js', 'ch45.js', 'ch67.js', 'clan.js', 'clan_a.js', 'clan_b.js', 'boss.js', 'bossfx.js', 'boss_a.js', 'boss_b.js', 'boss_c.js', 'training.js', 'choso.js', 'domain.js', 'domain2.js', 'mahito.js', 'combo.js', 'combat.js', 'cast3.js', 'ch810.js', 'ch1112.js', 'cast4.js', 'ch1316.js', 'cast5.js', 'ch1721.js', 'combat2.js', 'judge.js', 'awaken.js', 'alimit.js', 'ats.js', 'switcher.js', 'tools.js', 'smark.js', 'cast6.js', 'ch2230.js', 'plants.js', 'clash.js', 'block.js', 'cannon.js', 'tced.js', 'shibuya.js', 'kyoto.js', 'evasive.js', 'kokusen.js', 'mp.js', 'pvp.js', 'vengeful.js', 'manga.js', 'haruta.js', 'ratio.js', 'reaper.js', 'inumaki.js', 'kirara.js', 'soul.js', 'slit.js', 'gambler.js', 'especial.js', 'yen.js', 'subtech.js', 'metro.js', 'jjh.js', 'shinjuku.js', 'notes.js', 'shop.js', 'ps.js', 'raid.js', 'touch.js', 'idg.js', 'modeset.js', 'dced.js', 'tdced.js', 'tdced2.js', 'lovereap.js', 'brother.js', 'climax.js'].forEach(src => {
   const s = document.createElement('script');
   s.src = src + '?v=' + Date.now(); s.async = false;      // async = false keeps them running in this order
   document.body.appendChild(s);

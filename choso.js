@@ -10,7 +10,7 @@ const { rnd, clamp, lerp, ease, ZP } = E, TAU = Math.PI * 2, { orb, shout, dot, 
 const shake = v => { cam.shake = Math.max(cam.shake, v); };
 const lit = fn => { g.globalCompositeOperation = 'lighter'; fn(); g.globalCompositeOperation = 'source-over'; };
 
-const ENDS = Date.parse('2026-10-11T07:10:00Z');   // seven days from the day he arrived. Move this date to run the event again
+const ENDS = Date.parse('2026-11-07T12:00:00Z');   // seven days. Move this date to run the event again (it first ran to 11 Oct 07:10Z; back on 31 Oct in Build 0.23, with brother.js)
 
 /* ================= how he looks ================= */
 const shade = (hex, f) => { const n = parseInt(hex.slice(1), 16); return `rgb(${Math.min(255, (n >> 16) * f) | 0},${Math.min(255, (n >> 8 & 255) * f) | 0},${Math.min(255, (n & 255) * f) | 0})`; };

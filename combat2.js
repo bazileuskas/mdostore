@@ -1,5 +1,7 @@
 /* JUJUTSU UNLIMITEDS — Combat Update 2: the uppercut, the Black Flash uppercut and the slam that follows it,
-   and three moves that change when they are used in the air (Cursed Strikes, Blade Arm, Mach) */
+   and three moves that change when they are used in the air (Cursed Strikes, Blade Arm, Mach).
+   Build 0.23 (the user: "ADD some more variants to yuji like 2 more variants"): Crushing Blow and Manji Kick in the air as well,
+   SKYFALL CRUSH and MANJI WHEEL, so every one of his four has an air version now */
 (() => {
 'use strict';
 
@@ -140,6 +142,47 @@ const AIRMACH = { name: 'Mach', dur: 2.2, glow: 'gold', run(p, m, t) {
   p.target = POSE.div; p.vy = -2400; p.vx = p.face * 120;
   if (p.ground) { m.land = t; crater(p.x + p.face * 70, 380); }
 } };
+// Crushing Blow in the air (Build 0.23): SKYFALL CRUSH. He turns over once and comes down two-fisted like a hammer: 16, and they go into the
+// floor; where he lands the floor jumps, and that catches them again even lying there (8)
+const SKYFALL = { name: 'Crushing Blow', dur: 1.6, glow: 'fire', run(p, m, t) {
+  const o = E.P2, FIRE = '#ff8c50';
+  p.rate = 46;
+  if (dive(p, m, t, .18, POSE.crush, 1600,
+    () => { if (E.tryHit(p, { reach: 190, dmg: 16, kb: 200, stun: .9, stop: .16, heavy: 1, col: FIRE })) { m.done = 1; spike(p, o); V.impact(.1, o.x, o.y + 150); } },
+    () => {
+      const x = p.x + p.face * 70;
+      p.spin = 1; crater(x, 340); V.ring(x, 40, 320, FIRE, .35); V.fire(x, 20, 10); E.addRing(x, '255,150,90', 380);
+      if (!o.ko && Math.abs(o.x - x) < 270 && o.y < 140 && !(o.inv > 0)) {      // (straight onto them: tryHit would not touch somebody lying down)
+        E.applyHit(o, p.face, { dmg: 8, kb: 160, lift: 420, stun: .6, stop: .1, heavy: 1, col: FIRE });
+        if (JU.ms) JU.ms.ono('ドン', o.x, o.y + 330, .7, FIRE, .6);
+      }
+    })) return;
+  if (t < .18) { p.target = POSE.crushWind; p.vy = Math.max(p.vy, 80); p.vx *= .85; p.spin = Math.cos(t / .18 * Math.PI * 2); if (!m.lb) { m.lb = 1; hint('SKYFALL CRUSH'); } }
+  else { p.spin = 1; if (Math.random() < .8) V.puff('fire', p.x, p.y + 80, -p.vx * .1, 220, 44, .25); }
+} };
+// Manji Kick in the air (Build 0.23): MANJI WHEEL. Heels over head at them: the turning legs catch them twice on the way (5, 5), and the heel
+// comes down on them (18) hard enough to bounce them off the floor, and him back up off them, still in the air to do something else
+const WHEEL = { name: 'Manji Kick', dur: 1.4, glow: 'blue', run(p, m, t) {
+  const o = E.P2, hs = o.scale || 1;
+  p.rate = 52;
+  if (m.end !== undefined) { p.spin = 1; p.target = p.ground ? POSE.idle : POSE.fall; if (t > m.end + .22 || p.ground) E.endMove(p); return; }
+  if (p.ground && t > .05) { m.end = t; p.vx = 0; p.spin = 1; E.addDust(p.x); return; }
+  if (t < .1) { p.target = POSE.manjiWind; p.vy = Math.max(p.vy, 60); p.vx *= .85; return; }
+  if (!m.aim) { m.aim = 1; m.n = 0; p.face = o.x >= p.x ? 1 : -1; sfx.whoosh(); hint('MANJI WHEEL'); m.vx = clamp((o.x - p.face * 70 - p.x) / Math.max(.18, p.y / 1100), -1800, 1800); }
+  p.vx = m.vx; p.vy = -1100; p.spin = Math.cos((t - .1) * 22); p.target = POSE.manji;
+  if (Math.random() < .5) V.puff('blue', p.x, p.y + 140, -p.vx * .1, 120, 34, .2);
+  const near = !o.ko && Math.abs(o.x - p.x) < 175 * hs && p.y < o.y + 330 * hs && p.y > o.y - 60 && o.state !== 'down' && o.state !== 'up';
+  if (near && m.n < 2 && t > .12 + m.n * .1) { m.n++; sfx.whoosh(); swing(p, 150, 120); E.applyHit(o, p.face, { dmg: 5, kb: 40, stun: .6, stop: .04 }); }
+  if (near && m.n >= 2 && !m.heel && t > .34) {     // the heel
+    m.heel = 1; m.end = t; p.spin = 1; p.target = POSE.crush;
+    sfx.blast(); shake(26); V.slash(o.x, o.y + 260 * hs, p.face > 0 ? -1.3 : Math.PI + 1.3, 360, '#ffffff', 16);
+    E.applyHit(o, p.face, { dmg: 18, kb: 180, stun: .9, stop: .16, heavy: 1, ring: 1 });
+    spike(p, o, 1500); V.impact(.1, o.x, o.y + 150);
+    if (JU.ms) JU.ms.ono('卍', o.x, o.y + 380, .8, '#9fd8ff', .7);
+    p.vy = 760; p.vx = -p.face * 160;            // and up off them
+  }
+} };
+const swing = (p, y, r) => V.ring(p.x + p.face * 70, p.y + y, r, '#9fd8ff', .14);      // (the turning legs' arc)
 function air(p, k, def) {
   if (p.ground || !free(p) || E.cd[k] > 0) return false;
   E.cd[k] = E.CD[k]; p.move = { def, key: k, t: 0 }; E.hud.mv[k].classList.add('act');
@@ -190,7 +233,12 @@ H.press = (a, inScene) => {
     } else if (a === 'strikes') {
       const mine = own('strikes');
       if (mine ? mine === BLADE && air(p, a, AIRBLADE) : air(p, a, DROP)) return true;
-    } else if (a === 'manji' && own('manji') === MACH && air(p, a, AIRMACH)) return true;
+    } else if (a === 'crush') {
+      if (!own('crush') && air(p, a, SKYFALL)) return true;      // (Build 0.23)
+    } else if (a === 'manji') {
+      const mine = own('manji');
+      if (mine ? mine === MACH && air(p, a, AIRMACH) : air(p, a, WHEEL)) return true;      // (Manji Wheel: Build 0.23)
+    }
   }
   return press0 ? press0(a, inScene) : false;
 };
@@ -238,5 +286,5 @@ const clear = () => { armed = false; follow = lastUp = dazed = null; jumpAt = pr
 H.reset = () => { reset0(); clear(); };
 H.fightStart = (cfg, wave) => { clear(); start0(cfg, wave); };
 
-JU.combat2 = { UPPER, SLAM, DROP, AIRBLADE, AIRMACH, STUN, stun, get follow() { return follow; }, get dazed() { return dazed && { t: dazed.t, down: !!dazed.down, set: !!dazed.set }; } };
+JU.combat2 = { UPPER, SLAM, DROP, AIRBLADE, AIRMACH, SKYFALL, WHEEL, STUN, stun, get follow() { return follow; }, get dazed() { return dazed && { t: dazed.t, down: !!dazed.down, set: !!dazed.set }; } };
 })();

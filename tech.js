@@ -116,9 +116,12 @@ const near = (p, range) => { const o = E.P2, d = (o.x - p.x) * p.face; return d 
 
 /* ---------- the roll (Cursed Technique screen on the title menu) ---------- */
 // a card for whoever is coming next. It says that somebody is, and gives a different hint each time it is pressed
-const HINTS = ['Stars that come in the wrong order never meet.', 'A third year who spent most of the year away from school.', 'Everybody it touches gets a star. The order matters.', 'Stands at the side of somebody who likes to gamble.', 'Some things can only come close one at a time.'];      // (Build 0.17's, for the Star-Crossed: guessed by the user, and here in 0.18, kirara.js)
+// (Build 0.23's: the user guessed 0.17's Star-Crossed "pretty eaisily" and asked for hard ones this time, for somebody niche and strong.
+// Who it is stays out of the game and the notes until they guess it or say so)
+const HINTS = ["A thousand years at somebody's side, and never once asked why.", 'Never needs a fire to keep the meat fresh.', 'Knelt to a face it had never seen, and knew it at once.',
+  'Nobody has ever settled what to call it. It has never cared.', 'Followed its master into whatever comes next, one step behind.'];
 let hintAt = 0;
-const TEASE = false;                                // (put away in 0.2v6; back in 0.17 for the next limited character; away again in 0.18, when it arrived)
+const TEASE = true;                                 // (put away in 0.2v6; back in 0.17 for the next limited character; away again in 0.18, when it arrived; back in 0.23 for another)
 // a limited technique (def.limited = the moment it leaves) is rolled for first, at its own odds, for as long as it is here.
 // If it does not come up, the usual table decides
 const live = t => !t.limited || Date.now() < t.limited;
@@ -150,8 +153,8 @@ function show(fresh) {
   document.querySelectorAll('.tcard[data-tech]').forEach(c => { c.classList.toggle('on', c.dataset.tech === equipped); c.classList.toggle('lock', !mine(c.dataset.tech)); });
   stamp();
 }
-// (a limited technique is shown only while it is here: one that has left stays in the slots of whoever holds it, and nowhere else. Since
-// Build 0.12, when Blood Brother's card came off the list, there is no room on it for more than the one that is here now)
+// (a limited technique is shown only while it is here: one that has left stays in the slots of whoever holds it, and nowhere else. Two can
+// be here at once, a card each: Build 0.23 brought the Blood Brother back while the Star-Crossed was still here)
 function mount(body) {
   body.innerHTML = `<div class="roll"><button class="paper" id="paper" aria-label="Roll a cursed technique"><b lang="ja">封</b><i>Click to roll</i></button>
     <div class="rres" id="rres" aria-live="polite"></div>

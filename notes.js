@@ -5,6 +5,14 @@
 // Newest first. v = the build, jp = the seal stamped beside it, pic = notes/<pic>.jpg, cap = what the picture shows.
 // A new update goes at the top of this list.
 const NOTES = [
+  { v: '0.23', name: 'Big Brother', jp: 'お兄ちゃん', date: '31 Oct 2026', pic: 'bigbrother', cap: 'Blood Rain, Wing King, Plasma Wave, and the Clapping Brawler\'s Climax', items: [
+    'The Blood Brother is back for a limited time, to 7 November: roll it from the talisman (2.5%) or look for it in the Daily Shop. Right click switches between its two modes',
+    'A new mode, Flowing Red Scale: Stack. The blood runs hot through all of him: his strikes come a quarter quicker and land a quarter harder, and he is quicker on his feet. 1 Blood Edge, three cuts. 2 Crimson Binding: ropes of blood, and they are pulled in and held. 3 Blood Meteorite: hold it to grow it. 4 Supernova Embrace',
+    'Seven new variants: Supernova Hail (3 in the air), Falling Needle (4 in the air), Crimson Supernova (3 just after Slicing Exorcism lands), Edge Whirl (Stack: 1 in the air), Heavy Meteorite (Stack: 3 held to the end), Bound Execution (Stack: 1 while Crimson Binding holds them), Tethered Pierce (bind them, switch to Blood Manipulation, 4)',
+    'G is the ult of the mode you are in, with music of its own. Blood Manipulation: BIG BROTHER. 1 Blood Rain: nine seconds of it, 2 a drop. 2 Wing King: wings of blood, and six seconds of his strikes landing on their own at double damage, then the wings drag them in, everything slows, and they go into the floor. 3 Plasma Wave. Stack: DEATH PAINTING. 1 Nine Stages, 2 Crimson Crucifix, 3 Decay (his brothers\' rot)',
+    'The Clapping Brawler has an ult: CLIMAX (G), with Climax Jumping playing. Thirty seconds of a concert: Boogie Woogie with no cooldown, every swap opens the Black Flash Stitcher Punch, and his strikes land a quarter harder',
+    'The Vessel: two new variants, Skyfall Crush (2 in the air) and Manji Wheel (4 in the air). All four of his moves have an air version now',
+    'A new teaser on the Cursed Technique screen: somebody else is coming. The hints are harder this time'] },
   { v: '0.22v4', name: 'Back Switch', jp: '逆', date: '31 Oct 2026', pic: 'backswitch', cap: 'F + right click, going back: Direction to Zero Range to Scatter, and Rika to Mutual Love to Copy', items: [
     'F + right click switches mode the other way, back to the one before. For True Direct Cursed Energy Discharge and all three Love Reapers',
     'Either order works: hold F and right click, or hold right click and press F. Right click alone still goes on to the next one'] },
