@@ -714,7 +714,7 @@ function drawShow() {
 
 JU.tech.add('tdced', { name: 'True Direct Cursed Energy Discharge', jp: '真・直接呪力放出', mark: '真', who: 'Granite Cannon, four ways at once', odds: 0, col: '#4fd8ff', glow: 'blue', moves: MOVES,
   awakened: true, secret: true, skin: JU.cast6.ISHIGORI, as: ['Granite Cannon', '砲'], scale: SIZE,
-  hint: '<b>Right click</b> next mode · <b>RMB + Z</b> Direction · <b>T + RMB</b> MAX · <b>RMB + X</b> Scatter · <b>Y + RMB</b> Zero Range · <b>G</b> the mode\'s awakening',
+  hint: '<b>Right click</b> next mode · <b>F + RMB</b> previous mode · <b>RMB + Z</b> Direction · <b>T + RMB</b> MAX · <b>RMB + X</b> Scatter · <b>Y + RMB</b> Zero Range · <b>G</b> the mode\'s awakening',
   get awkName() { return AWK[mode].name; }, awkHits: false, awkStart: 0, awaken });      // (the bar says which one G is, in the mode he is in)
 const DEF = JU.tech.TECH.tdced, on = () => JU.tech.active === DEF;
 JU.awakened.LIST.push({ id: 'tdced', secret: true, name: 'True Direct Cursed Energy Discharge', mark: '真', col: '#4fd8ff',
@@ -722,13 +722,14 @@ JU.awakened.LIST.push({ id: 'tdced', secret: true, name: 'True Direct Cursed Ene
   later: () => (JU.dced.found && JU.dced.tcedOpen() ? 'Both are yours: press to combine them.' : 'Combine Direct Cursed Energy Discharge (a Secret CT) with True Cursed Energy Discharge (Awakened CT).'),
   open: () => dev() || JU.dced.combined, combine: () => !dev() && !JU.dced.combined && JU.dced.found && JU.dced.tcedOpen(), fuse: () => JU.dced.combine() });
 
-/* ---------- switching: right click goes on to the next; with Z, T, X or Y down it goes to that one ---------- */
+/* ---------- switching: right click goes on to the next; with Z, T, X or Y down it goes to that one; with F down (0.22v4), back to the one before ---------- */
 const KEYS = { z: 0, t: 1, x: 2, y: 3 };
-let rmb = false, cycleAt = 0, tAt = 0;
+let rmb = false, cycleAt = 0, tAt = 0, went = false;      // went: right click still down from a press that has gone on to the next already (F then goes back past it)
 E.root.addEventListener('pointerdown', e => { if (e.button === 2) rmb = true; });
 addEventListener('pointerup', e => { if (e.button === 2) rmb = false; });
 addEventListener('blur', () => { rmb = false; });
 const altDown = () => rmb || E.keys.has('c');
+const backDown = () => E.keys.has('f') || E.keys.has('hold:block');      // (F is Block too: the guard goes up as well, as it would)
 function relabel() {
   for (const k of SLOTS) { const d = MODES[mode].moves[k]; E.hud.mv[k].querySelector('b').textContent = d.name; E.CD[k] = d.cd; }
   paintModes(); if (T.refresh) T.refresh();
@@ -752,7 +753,8 @@ H.press = (a, inScene) => {
     const p = E.P1;
     if (a === 'alt') {
       for (const k in KEYS) if (E.keys.has(k)) { tAt = 0; setMode(KEYS[k]); return true; }
-      cycleAt = E.T || .001; return true;          // (alone: the next one, a moment from now, in case Z, T, X or Y is coming)
+      if (backDown()) { cycleAt = 0; tAt = 0; setMode((mode + 3) % 4); return true; }      // F + right click: the one before
+      cycleAt = E.T || .001; return true;          // (alone: the next one, a moment from now, in case Z, T, X, Y or F is coming)
     }
     if (a === 'takeover') { if (altDown()) { setMode(1); return true; } tAt = E.T || .001; return true; }      // T: is right click coming
     if (E.root.dataset.mode === 'fight' && SLOTS.includes(a)) {
@@ -764,10 +766,11 @@ H.press = (a, inScene) => {
   }
   return press0 ? press0(a, inScene) : false;
 };
-addEventListener('keydown', e => {                  // Z, T, X or Y pressed while right click is held down
+addEventListener('keydown', e => {                  // Z, T, X, Y or F pressed while right click is held down
   if (!on() || e.repeat || !altDown()) return;
   const k = e.key.toLowerCase();
-  if (KEYS[k] !== undefined) { cycleAt = 0; tAt = 0; setMode(KEYS[k]); }
+  if (KEYS[k] !== undefined) { cycleAt = 0; tAt = 0; went = false; setMode(KEYS[k]); }
+  else if (k === 'f') { const n = went ? 2 : 1; cycleAt = 0; tAt = 0; went = false; setMode((mode + 4 - n) % 4); }
 });
 
 /* ---------- the strip of the four, on his health bar ---------- */
@@ -783,7 +786,8 @@ H.tick = dt => {
   if (!on()) { if (E.root.classList.contains('tdmon')) E.root.classList.remove('tdmon'); return; }
   for (let i = 0; i < 4; i++) { if (ecds[i] > 0) ecds[i] = Math.max(0, ecds[i] - dt); if (i !== mode) for (const k of SLOTS) if (waits[i][k] > 0) waits[i][k] = Math.max(0, waits[i][k] - dt); }
   if (swcd > 0) swcd -= dt;
-  if (cycleAt && E.T - cycleAt > .12) { cycleAt = 0; tAt = 0; setMode((mode + 1) % 4); }
+  if (cycleAt && E.T - cycleAt > .12) { cycleAt = 0; tAt = 0; setMode((mode + 1) % 4); went = altDown(); }
+  if (went && !altDown()) went = false;
   if (tAt && E.T - tAt > .35) { tAt = 0; if (press0) press0('takeover', false); }      // no right click came: T is the clan's again
   if (stance && (stance.t -= dt) <= 0) stance = null;
   if (pin && !(E.P1.move && E.P1.move.def === COURSE)) { pin = null; E.root.classList.remove('cine'); }

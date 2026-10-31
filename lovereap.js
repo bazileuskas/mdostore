@@ -5,7 +5,7 @@
    counter), and a pool of variants: in the air, held, two or three keys in a row in that mode, and into the next mode (a move, a switch, a
    move in the other mode). Each technique takes its modes' pools as the user counted them: 20 a mode for True, 16 for Final, 10 for True
    Final (more of the cross-mode ones the more modes there are). Higher tiers hit harder (x1, x1.2, x1.45).
-   Right click: the next mode. RMB + Z, RMB + X, T + RMB, Y + RMB, RMB + H, RMB + N: that mode straight away (in the order of the strip).
+   Right click: the next mode (F + right click, 0.22v4: the one before). RMB + Z, RMB + X, T + RMB, Y + RMB, RMB + H, RMB + N: that mode straight away (in the order of the strip).
    G is each technique's own: Rika: Full Manifestation (True), Pure Love: Final Declaration (Final), Domain Expansion: Authentic Mutual Love
    (True Final). Free for now: the user has not said how they are earned.
    Sounds: myinstants' katana (draw, iai, schwing, stab, parry, slash: home-lr-*), and the game's own: Rika screaming his name, the teleport,
@@ -507,7 +507,7 @@ for (const tr of TIERS) {
   const moves = {};
   for (const k of SLOTS) Object.defineProperty(moves, k, { enumerable: true, get: () => MODES[tr.modes[tech === tr ? mi : 0]].base[k] });
   T.add(tr.id, { name: tr.name, jp: tr.jp, mark: tr.mark, who: tr.who, odds: 0, col: tr.col, glow: 'purple', moves, awakened: true, secret: true, skin: SKIN, as: [tr.name, '純愛'],
-    hint: `<b>Right click</b> next mode · ${tr.modes.map((m, i) => `<b>${KEYS6[i]}</b> ${MODES[m].name}`).join(' · ')} · <b>G</b> ${tr.ult === 'manifest' ? 'Full Manifestation' : tr.ult === 'declare' ? 'Final Declaration' : 'Authentic Mutual Love'}`,
+    hint: `<b>Right click</b> next mode · <b>F + RMB</b> previous mode · ${tr.modes.map((m, i) => `<b>${KEYS6[i]}</b> ${MODES[m].name}`).join(' · ')} · <b>G</b> ${tr.ult === 'manifest' ? 'Full Manifestation' : tr.ult === 'declare' ? 'Final Declaration' : 'Authentic Mutual Love'}`,
     m1(i) { const p = E.P1; if (tech !== tr || !['katana', 'mutual'].includes(MO())) return true; p.move = { def: R.CUTS[i], i, t: 0 }; return false; },
     awkName: tr.ult === 'manifest' ? 'Rika: Full Manifestation' : tr.ult === 'declare' ? 'Pure Love: Final Declaration' : 'Authentic Mutual Love', awkHits: false, awkStart: 0,
     awkKeep: tr.ult === 'domain',                   // (the domain empties the bar itself once it has opened, as idg.js does)
@@ -642,11 +642,13 @@ function begin(p, def, slot, keepCd) {
 }
 
 /* ================= switching ================= */
-let rmb = false, cycleAt = 0, tAt = 0;
+let rmb = false, cycleAt = 0, tAt = 0, went = false;      // went: right click still down from a press that has gone on to the next already (F then goes back past it)
 E.root.addEventListener('pointerdown', e => { if (e.button === 2) rmb = true; });
 addEventListener('pointerup', e => { if (e.button === 2) rmb = false; });
 addEventListener('blur', () => { rmb = false; });
 const altDown = () => rmb || E.keys.has('c');
+const backDown = () => E.keys.has('f') || E.keys.has('hold:block');      // (F is Block too: the guard goes up as well, as it would)
+const back = n => setMode((mi + tech.modes.length * 2 - n) % tech.modes.length);
 function relabel() {
   if (!tech) return;
   for (const k of SLOTS) { const d = MODES[MO()].base[k]; E.hud.mv[k].querySelector('b').textContent = d.name; E.CD[k] = d.cd; }
@@ -670,7 +672,11 @@ const press0 = H.press;
 H.press = (a, inScene) => {
   if (!inScene && tech && T.active === tech.def && !E.P1.dead) {
     const p = E.P1;
-    if (a === 'alt') { for (const k in MKEY) if (E.keys.has(k) && MKEY[k] < tech.modes.length) { tAt = 0; setMode(MKEY[k]); return true; } cycleAt = E.T || .001; return true; }
+    if (a === 'alt') {
+      for (const k in MKEY) if (E.keys.has(k) && MKEY[k] < tech.modes.length) { tAt = 0; setMode(MKEY[k]); return true; }
+      if (backDown()) { cycleAt = 0; tAt = 0; back(1); return true; }      // F + right click: the one before
+      cycleAt = E.T || .001; return true;
+    }
     if (a === 'takeover' && tech.modes.length > 2) { if (altDown()) { setMode(2); return true; } tAt = E.T || .001; return true; }      // (T: is right click coming)
     if (E.root.dataset.mode === 'fight' && KEYS.includes(a) && !p.ps && !busy(p)) {
       const m0 = MO(), c = ms.find(tech.seqs, tech.id, m0, a);
@@ -687,7 +693,8 @@ H.press = (a, inScene) => {
 addEventListener('keydown', e => {                  // a mode's key pressed while right click is held
   if (!tech || T.active !== tech.def || e.repeat || !altDown()) return;
   const k = e.key.toLowerCase();
-  if (MKEY[k] !== undefined && MKEY[k] < tech.modes.length) { cycleAt = 0; tAt = 0; setMode(MKEY[k]); }
+  if (MKEY[k] !== undefined && MKEY[k] < tech.modes.length) { cycleAt = 0; tAt = 0; went = false; setMode(MKEY[k]); }
+  else if (k === 'f') { const n = went ? 2 : 1; cycleAt = 0; tAt = 0; went = false; back(n); }      // (if this right click has gone on already, that is undone too)
 });
 
 /* ---------- the strip of its modes, on his health bar ---------- */
@@ -713,7 +720,8 @@ H.tick = dt => {
   const p = E.P1, m = p.move;
   rq = rikaQ(dt);
   for (let i = 0; i < tech.modes.length; i++) { if (tech.ecd[i] > 0) tech.ecd[i] = Math.max(0, tech.ecd[i] - dt); if (i !== mi) for (const k of SLOTS) if (tech.waits[i][k] > 0) tech.waits[i][k] = Math.max(0, tech.waits[i][k] - dt); }
-  if (cycleAt && E.T - cycleAt > .12) { cycleAt = 0; tAt = 0; setMode((mi + 1) % tech.modes.length); }
+  if (cycleAt && E.T - cycleAt > .12) { cycleAt = 0; tAt = 0; setMode((mi + 1) % tech.modes.length); went = altDown(); }
+  if (went && !altDown()) went = false;
   if (tAt && E.T - tAt > .35) { tAt = 0; if (press0) press0('takeover', false); }
   if (stance && (stance.t -= dt) <= 0) stance = null;
   if (rk.arm && !(m && m.held)) rk.arm = null;

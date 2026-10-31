@@ -5,6 +5,9 @@
 // Newest first. v = the build, jp = the seal stamped beside it, pic = notes/<pic>.jpg, cap = what the picture shows.
 // A new update goes at the top of this list.
 const NOTES = [
+  { v: '0.22v4', name: 'Back Switch', jp: '逆', date: '31 Oct 2026', pic: 'backswitch', cap: 'F + right click, going back: Direction to Zero Range to Scatter, and Rika to Mutual Love to Copy', items: [
+    'F + right click switches mode the other way, back to the one before. For True Direct Cursed Energy Discharge and all three Love Reapers',
+    'Either order works: hold F and right click, or hold right click and press F. Right click alone still goes on to the next one'] },
   { v: '0.22v3', name: 'Love Reapers', jp: '純愛', date: '30 Oct 2026', pic: 'lovereapers', cap: 'Rika\'s Rampage, Pure Love: Final Declaration, a Mutual Love barrage and Authentic Mutual Love', items: [
     'Three new Secret CTs after the Love Reaper, free for now (Awaken CT, the Secret CT row): True Love Reaper, Final Love Reaper and True Final Love Reaper',
     'True Love Reaper: two modes, Rika and the katana. Each has 4 moves of its own, its own E, and 20 variants. G: Rika: Full Manifestation',
