@@ -116,10 +116,10 @@ const near = (p, range) => { const o = E.P2, d = (o.x - p.x) * p.face; return d 
 
 /* ---------- the roll (Cursed Technique screen on the title menu) ---------- */
 // a card for whoever is coming next. It says that somebody is, and gives a different hint each time it is pressed
-// (Build 0.23's: the user guessed 0.17's Star-Crossed "pretty eaisily" and asked for hard ones this time, for somebody niche and strong.
-// Who it is stays out of the game and the notes until they guess it or say so)
-const HINTS = ["A thousand years at somebody's side, and never once asked why.", 'Never needs a fire to keep the meat fresh.', 'Knelt to a face it had never seen, and knew it at once.',
-  'Nobody has ever settled what to call it. It has never cared.', 'Followed its master into whatever comes next, one step behind.'];
+// (Build 0.23v1's. The user guessed 0.17's Star-Crossed "pretty eaisily", and 0.23's at once as well, and asked for someone from the third season
+// with hints ten times harder. Who it is stays out of the game and the notes until they guess it or say so)
+const HINTS = ['Write its name in two characters: a black bird, then a white one.', 'Once led the three lights.', 'Would pull what birds fly through like a sheet off a bed.',
+  'One corner of a square nobody could close.', 'Its trick was borrowed by somebody who never gives anything back.'];
 let hintAt = 0;
 const TEASE = true;                                 // (put away in 0.2v6; back in 0.17 for the next limited character; away again in 0.18, when it arrived; back in 0.23 for another)
 // a limited technique (def.limited = the moment it leaves) is rolled for first, at its own odds, for as long as it is here.

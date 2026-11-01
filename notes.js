@@ -5,6 +5,9 @@
 // Newest first. v = the build, jp = the seal stamped beside it, pic = notes/<pic>.jpg, cap = what the picture shows.
 // A new update goes at the top of this list.
 const NOTES = [
+  { v: '0.23v1', name: 'Ten Times Harder', jp: '謎', date: '1 Nov 2026', pic: 'teaser2', cap: 'The teaser card, with its first hint', items: [
+    'The teaser on the Cursed Technique screen has somebody new: a character from the third season',
+    'Five new hints, and they are a lot harder than the last ones. Press the card for the next'] },
   { v: '0.23', name: 'Big Brother', jp: 'お兄ちゃん', date: '31 Oct 2026', pic: 'bigbrother', cap: 'Blood Rain, Wing King, Plasma Wave, and the Clapping Brawler\'s Climax', items: [
     'The Blood Brother is back for a limited time, to 7 November: roll it from the talisman (2.5%) or look for it in the Daily Shop. Right click switches between its two modes',
     'A new mode, Flowing Red Scale: Stack. The blood runs hot through all of him: his strikes come a quarter quicker and land a quarter harder, and he is quicker on his feet. 1 Blood Edge, three cuts. 2 Crimson Binding: ropes of blood, and they are pulled in and held. 3 Blood Meteorite: hold it to grow it. 4 Supernova Embrace',
