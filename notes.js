@@ -5,6 +5,12 @@
 // Newest first. v = the build, jp = the seal stamped beside it, pic = notes/<pic>.jpg, cap = what the picture shows.
 // A new update goes at the top of this list.
 const NOTES = [
+  { v: '0.24', name: 'General of the Sky', jp: '天空', date: '3 Nov 2026', pic: 'generalofthesky', cap: 'Direct Flight, Sky Distortion, Falling Sky, and the arena opened out to its new border', items: [
+    'A new limited character, the General of the Sky, here for a week (to 10 November): roll it from the talisman (2.5%) or look for it in the Daily Shop',
+    '1 Direct Flight: in at them, and up with them. W A S D fly the two of you about, quicker than walking, and the arena opens out: its walls go back to a new border, and stay there for the rest of the fight. Click to let go of them in the air (20). Let go of them high enough and they take 70 when they reach the floor. Click again while they fall and the General dives after them and slams them down (30)',
+    '2 Sky Distortion: the sky warps round them and throws them up (50). 3 Falling Sky: a sheet of the sky pulled down onto them (40), and they are pinned under it. 4 is still to come. E Sky Mirror: a pane of sky in front, and whatever hits it goes back (40)',
+    'Two variants: Distortion Spike (2 in the air, 45, into the floor) and Sky Wall Crash (fly them into the new border during Direct Flight, 25)',
+    'The teaser card is gone: you guessed who it was'] },
   { v: '0.23v1', name: 'Ten Times Harder', jp: '謎', date: '1 Nov 2026', pic: 'teaser2', cap: 'The teaser card, with its first hint', items: [
     'The teaser on the Cursed Technique screen has somebody new: a character from the third season',
     'Five new hints, and they are a lot harder than the last ones. Press the card for the next'] },

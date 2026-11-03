@@ -121,7 +121,7 @@ const near = (p, range) => { const o = E.P2, d = (o.x - p.x) * p.face; return d 
 const HINTS = ['Write its name in two characters: a black bird, then a white one.', 'Once led the three lights.', 'Would pull what birds fly through like a sheet off a bed.',
   'One corner of a square nobody could close.', 'Its trick was borrowed by somebody who never gives anything back.'];
 let hintAt = 0;
-const TEASE = true;                                 // (put away in 0.2v6; back in 0.17 for the next limited character; away again in 0.18, when it arrived; back in 0.23 for another)
+const TEASE = false;                                // (put away in 0.2v6; back in 0.17 for the next limited character; away again in 0.18, when it arrived; back in 0.23 for another; away in 0.24, guessed and arrived: uro.js)
 // a limited technique (def.limited = the moment it leaves) is rolled for first, at its own odds, for as long as it is here.
 // If it does not come up, the usual table decides
 const live = t => !t.limited || Date.now() < t.limited;

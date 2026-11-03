@@ -14,8 +14,9 @@ const ease = t => 1 - (1 - t) ** 3;
 /* ================= view ================= */
 const ZP = 600;          // depth of the fighting plane; 1 world unit = 1 view unit there
 const CAM_Y = 160;       // camera height
-const STAGE = 1050;      // side walls sit at ±STAGE
+const STAGE = 1050;      // side walls sit at ±STAGE (further out while hooks.wide says so: below)
 const BOUND = 965;       // fighters stay inside ±BOUND
+const wide = () => (hooks.wide ? hooks.wide() : 0);      // Build 0.24: how much further than STAGE the arena reaches on each side right now (the General of the Sky opens it up)
 const BACK = ZP + 520;   // depth of the back wall
 const GRAV = 2700;
 let W = 0, H = 0, DPR = 1, S = 1, VW = 1280, VH = 720, GY = 580, HY = 420, ZNEAR = 300;
@@ -133,20 +134,20 @@ function drawFloor() {
   gr.addColorStop(0, '#34122a'); gr.addColorStop(.2, '#180b1f'); gr.addColorStop(1, '#08050d');
   g.fillStyle = gr; g.fillRect(-80, HY, VW + 160, VH - HY + 320);
   // stone tiles
-  const TS = 150;
+  const TS = 150, SW = STAGE + wide(), NT = Math.ceil(SW / TS);
   g.beginPath();
   for (let zi = Math.floor(ZNEAR / TS); zi * TS < BACK; zi++) {
     const za = Math.max(ZNEAR, zi * TS), zb = Math.min(BACK, (zi + 1) * TS);
-    for (let i = -STAGE / TS; i < STAGE / TS; i++) {
+    for (let i = -NT; i < NT; i++) {
       if ((i + zi) & 1) continue;
-      const a = P(i * TS, 0, za), b = P((i + 1) * TS, 0, za), c = P((i + 1) * TS, 0, zb), d = P(i * TS, 0, zb);
+      const x0 = Math.max(-SW, i * TS), x1 = Math.min(SW, (i + 1) * TS), a = P(x0, 0, za), b = P(x1, 0, za), c = P(x1, 0, zb), d = P(x0, 0, zb);
       g.moveTo(a[0], a[1]); g.lineTo(b[0], b[1]); g.lineTo(c[0], c[1]); g.lineTo(d[0], d[1]); g.closePath();
     }
   }
   g.fillStyle = 'rgba(255,190,210,.045)'; g.fill();
   g.beginPath();
-  for (let i = -STAGE / TS; i <= STAGE / TS; i++) { const a = P(i * TS, 0, ZNEAR), b = P(i * TS, 0, BACK); g.moveTo(a[0], a[1]); g.lineTo(b[0], b[1]); }
-  for (let z = Math.ceil(ZNEAR / TS) * TS; z <= BACK; z += TS) { const a = P(-STAGE, 0, z), b = P(STAGE, 0, z); g.moveTo(a[0], a[1]); g.lineTo(b[0], b[1]); }
+  for (let i = -NT; i <= NT; i++) { const x = clamp(i * TS, -SW, SW), a = P(x, 0, ZNEAR), b = P(x, 0, BACK); g.moveTo(a[0], a[1]); g.lineTo(b[0], b[1]); }
+  for (let z = Math.ceil(ZNEAR / TS) * TS; z <= BACK; z += TS) { const a = P(-SW, 0, z), b = P(SW, 0, z); g.moveTo(a[0], a[1]); g.lineTo(b[0], b[1]); }
   g.strokeStyle = 'rgba(255,120,150,.12)'; g.lineWidth = 1.5; g.stroke();
   // seal painted on the floor
   g.strokeStyle = 'rgba(255,36,64,.42)'; g.lineWidth = 3;
@@ -184,16 +185,17 @@ function drawBack() {
   box(0, 600, zt - 10, 940, 30, 80, '#8f1224', '#560a16');
   box(0, 630, zt - 16, 1010, 34, 92, '#15090d', '#0a0407');
   // back wall, open in the middle
+  const SW = STAGE + wide();
   for (const s of [-1, 1]) {
-    const cx = s * (STAGE + 330) / 2, w = STAGE - 330;
+    const cx = s * (SW + 330) / 2, w = SW - 330;
     box(cx, 0, BACK, w, 118, 70, '#1c1024', '#120a18', '#3a2444');
     g.fillStyle = 'rgba(0,0,0,.3)';
-    for (let x = 330; x <= STAGE; x += 144) { const a = P(s * x, 118, BACK), b = P(s * x, 0, BACK); g.fillRect(a[0] - 2, a[1], 4, b[1] - a[1]); }
+    for (let x = 330; x <= SW; x += 144) { const a = P(s * x, 118, BACK), b = P(s * x, 0, BACK); g.fillRect(a[0] - 2, a[1], 4, b[1] - a[1]); }
     box(cx, 118, BACK - 14, w + 20, 16, 98, '#2a1a34', '#1a0f20', '#4a3058');
   }
   // side walls running away from the camera
   for (const s of [-1, 1]) {
-    const x = s * STAGE, a = P(x, 0, ZNEAR), b = P(x, 0, BACK), c = P(x, 340, BACK), d = P(x, 340, ZNEAR);
+    const x = s * SW, a = P(x, 0, ZNEAR), b = P(x, 0, BACK), c = P(x, 340, BACK), d = P(x, 340, ZNEAR);
     const gr = g.createLinearGradient(a[0], 0, b[0], 0);
     gr.addColorStop(0, '#0a0610'); gr.addColorStop(1, '#241330');
     quad(a, b, c, d); g.fillStyle = gr; g.fill();
@@ -757,8 +759,9 @@ function updateFoe(dt, o = P2) {
     }
   }
   o.x += o.vx * dt;
-  if (Math.abs(o.x) > BOUND) {
-    o.x = clamp(o.x, -BOUND, BOUND);
+  const eb = hooks.bound ? hooks.bound() : BOUND;    // (Build 0.24: the arena can be wider than it was; the foe's edge is the player's)
+  if (Math.abs(o.x) > eb) {
+    o.x = clamp(o.x, -eb, eb);
     if (Math.abs(o.vx) > 320) { addSpark(o.x + Math.sign(o.x) * 30, o.y + 150, '#fff', 90); cam.shake = Math.max(cam.shake, 12); sfx.hit(true); o.vx *= -.45; }
     else o.vx = 0;
   }
@@ -776,13 +779,13 @@ function update(dt, real) {
     // bodies can't overlap (a dash slips through)
     const dx = P2.x - P1.x, min = 39 + 39 * (P2.scale || 1);
     if (P1.ground && P2.ground && P2.state !== 'down' && P1.dashT <= 0 && Math.abs(dx) < min && Math.abs(P1.y - P2.y) < 120) {
-      const s = dx >= 0 ? 1 : -1, push = min - Math.abs(dx);
-      P1.x = clamp(P1.x - s * push * .7, -BOUND, BOUND); P2.x = clamp(P2.x + s * push * .3, -BOUND, BOUND);
+      const s = dx >= 0 ? 1 : -1, push = min - Math.abs(dx), eb = hooks.bound ? hooks.bound() : BOUND;
+      P1.x = clamp(P1.x - s * push * .7, -eb, eb); P2.x = clamp(P2.x + s * push * .3, -eb, eb);
     }
     if (comboT > 0 && (comboT -= dt) <= 0) { combo = 0; comboDmg = 0; hud.combo.classList.remove('on'); }
     if (hooks.tick) hooks.tick(dt);
   }
-  const lim = Math.max(0, STAGE - VW / 2);
+  const lim = Math.max(0, STAGE + wide() - VW / 2);
   cam.x = lerp(cam.x, clamp((P1.x + P2.x) / 2, -lim, lim), 1 - Math.exp(-real * 6));
   if (zoomT > 0) zoomT -= real;
   cam.zoom = lerp(cam.zoom, zoomT > 0 ? 1.16 : 1, 1 - Math.exp(-real * 9));
