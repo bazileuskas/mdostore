@@ -1,4 +1,4 @@
-/* JUJUTSU UNLIMITEDS — early access (Build 0.20): SLIT MOUTH. A curse out of an old story, and one of the strongest a curse user had when he
+/* JUJUTSU UNLIMITEDS — SLIT MOUTH (early access from Build 0.20; released in 0.25, at 30%, with her own moves while unmasked and four variants: below). A curse out of an old story, and one of the strongest a curse user had when he
    was a second year. Tall, a light trench coat belted tight, long black hair hanging over a face wrapped in bandages, eyes that open in the
    hair when she is excited, bandaged hands, and under it all a mouth cut from ear to ear, full of teeth. The user asked for a niche curse,
    "kinda strong", weaker than the Shadow Summoner but stronger than the Kugisaki clan, and left the choice to me. Drawn after the anime's
@@ -456,7 +456,7 @@ function begin(p) {
   if (unm.paused) { unm.paused = false; Fi.fight.paused = false; }
   E.banner('口裂け', 'UNMASKED'); sfx.shear(); shake(20);
   unm.music = sfx.song('home-slit-awk', 0, 1.2, .55, true);
-  shownT = -1;
+  shownT = -1; unmLabels();                         // (0.25: her own four while it lasts)
   void p;
 }
 function endUnm(quiet) {
@@ -466,6 +466,7 @@ function endUnm(quiet) {
   if (u.music) u.music.stop(1.6);
   if (u.paused && Fi.fight.paused) Fi.fight.paused = false;
   look.mouthTo = look.eyesTo = 0;
+  unmLabels();
   if (on()) JU.tech.drain();
   if (!quiet && on() && JU.manga) JU.manga.think(E.P1, '...THEY STILL SAY NO.', { life: 1.6 });
 }
@@ -510,12 +511,205 @@ function vignette() {                               // her corridor's blue, at t
   g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.fillStyle = gr; g.fillRect(0, 0, W, Hh); g.restore();
 }
 
+/* ================= Build 0.25 (released): her own four while she is unmasked, and four variants =================
+   The user: "finish up slit mouth and release it". The names and the numbers are ours.
+   UNMASKED, 1 to 4 are these instead: 1 SHEAR STORM: twelve pairs round her, then at them one after another (5 each) · 2 EAR TO EAR: hold of
+   them, and their mouth cut to match hers: 35, a bleed (4 x4), and nothing of theirs with a name for four seconds · 3 CAN'T OUTRUN HER: she is
+   behind them before they know it, and the big shears shut: 55 · 4 SCISSOR EXECUTION: shears the height of the room open over them, and shut: 90.
+   VARIANTS: SCISSOR HAIL (1 in the air: seven pairs down at them, 6 each, as Scissor Rain's) · LEAPING SLIT (2 in the air: down on them shears first, 36 and a bleed)
+   · BOUND SLIT (2 while the bandage holds them: 45 and a longer bleed) · REELED IN (4 while the bandage holds them: Snip Snip at once, eleven of
+   them and the cut across) */
+const free = p => !p.move && !p.ps && !p.dead && !(p.dashT > 0);
+const storm = [];                                   // { a, t, go, tg, x, y, vx, vy, rot, out }: Shear Storm's twelve
+let exec = null;                                    // { x, t, shut }: the great pair, open over them
+const trail = [];                                   // { f, t }: what is left of her where she ran (Can't Outrun Her)
+const SHADE = E.flat('#4a0610', '#6e0c18');
+const ULT = {
+  strikes: { name: 'Shear Storm', cd: 5, dur: 1.15, run(p, m, t) {
+    const o = E.P2;
+    p.vx = 0; p.rate = 30; p.target = t < .5 ? POSE.slAsk : POSE.slFling;
+    if (m.s) return;
+    m.s = 1; sfx.snip(1); sfx.whoosh(); label(p.x, p.y + 460, 'SHEAR STORM', RED, 1);
+    for (let i = 0; i < 12; i++) storm.push({ a: i / 12 * TAU, t: 0, go: .45 + i * .05, tg: live(o) ? o : null, x: p.x, y: p.y + 200, rot: 0, out: false });
+  } },
+  crush: { name: 'Ear to Ear', cd: 8, dur: 1.5, run(p, m, t) {
+    const o = E.P2, f = p.face, gap = (o.x - p.x) * f;
+    p.rate = 44;
+    if (m.got === undefined) {
+      if (!m.s) { m.s = 1; sfx.whoosh(); }
+      if (t > .38) { p.vx = 0; p.target = POSE.idle; if (t > .5) E.endMove(p); return; }
+      p.target = POSE.slLunge; p.vx = gap > 150 ? f * 1600 : 0;
+      if (gap > -30 && gap < 180 && live(o) && o.state !== 'down' && o.state !== 'up') { m.got = t; p.vx = 0; sfx.hit(true); }
+      return;
+    }
+    const s = t - m.got;
+    p.vx = 0; p.target = s < .32 ? POSE.slGrab : POSE.slLunge;
+    if (can(p, o) && s < .5) { o.vx = 0; Object.assign(o, { state: 'hurt', stun: .5, act: null, tele: 0 }); }
+    held = { open: s < .32 ? Math.min(1, s / .12) : Math.max(0, 1 - (s - .32) / .05), s: 1.2 };
+    if (s >= .34 && !m.cut) {
+      m.cut = 1; sfx.shear(); play('home-slit-snip', 1, () => sfx.snip(1.4)); shake(22); E.zoomIn(.3);
+      if (!o.ko) {
+        E.applyHit(o, f, { dmg: exact(o, 35), kb: 260, stun: 1, stop: .2, heavy: 1, col: RED, fixed: 1, mute: 1 });
+        const c = faceAt(o); blood(c[0], c[1], 16, f); bleed(o, 4, 4, f);
+        slits.push({ o, t: 0, life: 9 }); silenced = { o, t: 4 };
+        V.slash(c[0], c[1], f > 0 ? -.12 : Math.PI + .12, 300, RED, 12);
+        if (JU.manga) JU.manga.say(p, 'NOW WE MATCH.', { life: 1.2 });
+        label(o.x, o.y + 460 * (o.scale || 1), 'EAR TO EAR', RED, 1.3);
+      }
+    }
+  } },
+  div: { name: "Can't Outrun Her", cd: 9, dur: 1.1, run(p, m, t) {
+    const o = E.P2;
+    p.rate = 50;
+    if (!m.s) { m.s = 1; m.o = live(o) ? o : null; m.x0 = p.x; sfx.whoosh(); look.mouthTo = 1; look.eyesTo = 1; }
+    const q = m.o, eb = H.bound ? H.bound() : 965;
+    if (t < .22) {                                   // she runs, faster than anybody can: what is left of her where she was, and she is behind them
+      const behind = q ? clamp(q.x - (q.face || -p.face) * 150, -eb, eb) : clamp(p.x + p.face * 400, -eb, eb);
+      p.x = lerp(m.x0, behind, ease(t / .22)); p.vx = 0; p.target = POSE.dash;
+      if (Math.random() < .8) trail.push({ f: Object.assign({}, p, { pose: p.pose.slice() }), t: 0 });
+      return;
+    }
+    if (!m.turn) { m.turn = 1; if (q) p.face = q.x >= p.x ? 1 : -1; label(p.x, p.y + 440, 'BEHIND YOU', RED, .9); sfx.snip(.7); }
+    p.vx = 0; p.target = t < .55 ? POSE.slGrab : POSE.slLunge;
+    held = { open: t < .55 ? Math.min(1, (t - .22) / .1) : Math.max(0, 1 - (t - .55) / .05), s: 2.2 };
+    if (t >= .58 && !m.cut) {
+      m.cut = 1; sfx.shear(); play('home-slit-snip', 1); shake(30);
+      if (q && live(q) && Math.abs(q.x - p.x) < 330 && !(q.inv > 0)) {
+        E.applyHit(q, p.face, { dmg: exact(q, 55), kb: 700, lift: 380, stun: 1, stop: .22, heavy: 1, col: RED, fixed: 1, mute: 1 });
+        blood(q.x, mid(q), 22, p.face); if (JU.cut) JU.cut.slice(q.x, mid(q), p.face > 0 ? .2 : Math.PI - .2, 480, { shift: 12, life: .5, col: RRGB });
+        if (JU.ms) JU.ms.bigHit(p, q, '斬', RED, 'red');
+      }
+    }
+    if (t > 1) look.mouthTo = look.eyesTo = 1;
+  } },
+  manji: { name: 'Scissor Execution', cd: 14, dur: 1.7, run(p, m, t) {
+    const o = E.P2;
+    p.vx = 0; p.rate = 22; p.target = t < .75 ? POSE.slAsk : POSE.slGrab;
+    if (!m.s) {
+      m.s = 1; m.o = live(o) ? o : null; m.x = m.o ? m.o.x : p.x + p.face * 420;
+      exec = { x: m.x, f: p.face, t: 0, shut: 0 }; sfx.snip(.6); E.zoomIn(1.1);
+      if (JU.manga) JU.manga.say(p, 'HOLD STILL.', { life: 1 });
+    }
+    if (m.o && t < .75 && can(p, m.o)) { m.o.vx = 0; Object.assign(m.o, { state: 'hurt', stun: .4, act: null, tele: 0 }); }      // too frightened to move
+    if (t >= .78 && !m.cut) {
+      m.cut = 1; exec.shut = exec.t; sfx.shear(); sfx.blast(); play('home-slit-snip', 1); shake(46); E.zoomIn(.5);
+      if (JU.cut) { JU.cut.slice(m.x, 200, 0, 1100, { shift: 26, life: .7, col: RRGB, w: 2 }); if (JU.cut.frame) JU.cut.frame(.45, m.x, 200); }
+      const q = m.o;
+      if (q && live(q) && Math.abs(q.x - m.x) < 300 && !(q.inv > 0)) {
+        E.applyHit(q, p.face, { dmg: exact(q, 90), kb: 500, lift: 600, stun: 1, stop: .3, heavy: 1, col: RED, fixed: 1, mute: 1 });
+        blood(q.x, mid(q), 30, 1); blood(q.x, mid(q), 24, -1);
+        if (JU.ms) JU.ms.bigHit(p, q, '断', RED, 'red');
+        label(q.x, q.y + 500 * (q.scale || 1), 'EXECUTION', RED, 1.5);
+      }
+    }
+  } }
+};
+function stormTick(dt) {
+  const p = E.P1;
+  for (let i = storm.length - 1; i >= 0; i--) {
+    const s = storm[i];
+    s.t += dt;
+    if (s.t < s.go) { const a = s.a + s.t * 7; s.x = p.x + Math.cos(a) * 160; s.y = p.y + 210 + Math.sin(a) * 120; s.rot = -a; continue; }      // round her
+    if (!s.out) {                                    // at them
+      s.out = true; const o = s.tg && live(s.tg) ? s.tg : null, tx = o ? o.x : p.x + p.face * 900, ty = o ? mid(o) : 220, d = Math.hypot(tx - s.x, ty - s.y) || 1;
+      s.vx = (tx - s.x) / d * 1900; s.vy = (ty - s.y) / d * 1900; s.rot = Math.atan2(-s.vy, s.vx); sfx.whoosh();
+    }
+    s.x += s.vx * dt; s.y += s.vy * dt;
+    const o = s.tg, hs = o ? o.scale || 1 : 1;
+    if (live(o) && !(o.inv > 0) && o.state !== 'down' && Math.abs(o.x - s.x) < 60 * hs && s.y > o.y && s.y < o.y + 380 * hs) {
+      E.applyHit(o, s.vx > 0 ? 1 : -1, { dmg: exact(o, 5), kb: 60, stun: .45, stop: .02, col: RED, fixed: 1, mute: 1 });
+      sfx.snip(1); blood(s.x, s.y, 3, Math.sign(s.vx)); storm.splice(i, 1); continue;
+    }
+    if (s.t > s.go + .7 || Math.abs(s.x) > 2300 || s.y < 0) storm.splice(i, 1);
+  }
+}
+function drawExec() {                               // the great pair: open over them, trembling; then shut, and gone
+  const e = exec, u = e.shut ? (e.t - e.shut) : 0, a = e.shut ? Math.max(0, 1 - u / .45) : Math.min(1, e.t / .25);
+  if (e.shut && u > .45) { exec = null; return; }
+  const open = e.shut ? Math.max(0, .9 - u / .05) : .9 + .05 * Math.sin(E.T * 40), c = F(e.x - e.f * 230, 210), k = c[2];
+  lit(() => E.glow(E.GLOW.red, F(e.x, 210)[0], F(e.x, 210)[1], 700 * k, .35 * a));
+  shears(c[0], c[1], e.f > 0 ? 0 : Math.PI, open, 5.6 * k, a);
+}
+// Scissor Hail (1 in the air): seven pairs down at them (6 each: they are Scissor Rain's)
+const HAIL = { name: 'Scissor Rain', dur: .7, run(p, m, t) {
+  const o = E.P2;
+  p.rate = 36; p.target = t < .16 ? POSE.hookWind : t < .45 ? POSE.slFling : POSE.fall;
+  if (t < .45) { p.vy = Math.max(p.vy, 30); p.vx *= .85; }
+  if (m.go || t < .16) return;
+  m.go = 1; sfx.whoosh(); sfx.snip(.8); label(p.x, p.y + 420, 'SCISSOR HAIL', RED, .9);
+  const w = handAt(p, true), tx = live(o) ? o.x : p.x + p.face * 300, ty = live(o) ? mid(o) : 100;
+  for (let i = 0; i < 7; i++) { const x = tx + (i - 3) * 40, d = Math.hypot(x - w[0], ty - w[1]) || 1; flung.push({ x: w[0], y: w[1], vx: (x - w[0]) / d * 1600, vy: (ty - w[1]) / d * 1600, t: -i * .03, rot: 0, tg: o }); }
+} };
+// Leaping Slit (2 in the air): down on them, the shears first
+const LEAP = { name: 'Slit', dur: 1.4, run(p, m, t) {
+  const o = E.P2;
+  p.rate = 46;
+  if (m.land !== undefined) { p.vx = 0; p.target = t < m.land + .2 ? POSE.slLunge : POSE.idle; if (t > m.land + .32) { look.mouthTo = look.eyesTo = 0; E.endMove(p); } return; }
+  held = { open: m.cut ? 0 : 1, s: 1.5 };
+  if (t < .12) { p.target = POSE.crushWind; p.vy = Math.max(p.vy, 60); p.vx *= .85; if (!m.s) { m.s = 1; look.mouthTo = look.eyesTo = 1; sfx.whoosh(); } return; }
+  if (!m.aim) { m.aim = 1; p.face = o.x >= p.x ? 1 : -1; m.vx = clamp((o.x - p.face * 60 - p.x) / Math.max(.1, p.y / 1500), -2000, 2000); }
+  p.target = POSE.slLunge; p.vy = -1500; p.vx = m.vx;
+  const hs = o.scale || 1;
+  if (!m.cut && live(o) && Math.abs(o.x - p.x) < 170 * hs && Math.abs(mid(o) - (p.y + 150)) < 230 && o.state !== 'down' && !(o.inv > 0)) {
+    m.cut = 1; sfx.snip(1.6); play('home-slit-snip', 1); shake(18);
+    E.applyHit(o, p.face, { dmg: exact(o, 36), kb: 300, stun: .9, stop: .16, heavy: 1, col: RED, fixed: 1, mute: 1 });
+    const c = faceAt(o); blood(c[0], c[1], 12, p.face); bleed(o, 3, 3, p.face); label(o.x, o.y + 440 * hs, 'LEAPING SLIT', RED, 1);
+  }
+  if (p.ground && t > .14) { m.land = t; p.vy = 0; E.addDust(p.x); }
+} };
+// Bound Slit (2 while the bandage holds them): no getting away from it
+const BSLIT = { name: 'Slit', dur: .85, run(p, m, t) {
+  const o = m.o, f = p.face;
+  p.rate = 44;
+  const gap = live(o) ? (o.x - p.x) * f : 0;
+  p.vx = t < .3 && gap > 170 && !m.cut ? f * 1500 : 0;
+  p.target = t < .3 ? POSE.slLunge : t < .6 ? POSE.slLunge : POSE.idle;
+  if (!m.s) { m.s = 1; look.mouthTo = look.eyesTo = 1; sfx.whoosh(); label(p.x, p.y + 440, 'BOUND SLIT', RED, .9); }
+  held = { open: t < .3 ? Math.min(1, t / .1) : Math.max(0, 1 - (t - .3) / .05), s: 1.7 };
+  if (t > .3 && !m.cut) {
+    m.cut = 1; sfx.snip(1.8); play('home-slit-snip', 1); shake(22); E.zoomIn(.25);
+    if (live(o)) {
+      E.applyHit(o, f, { dmg: exact(o, 45), kb: 460, lift: 220, stun: .9, stop: .16, heavy: 1, col: RED, fixed: 1, mute: 1 });
+      const c = faceAt(o); V.slash(c[0], c[1], f > 0 ? -.15 : Math.PI + .15, 300, RED, 13); blood(c[0], c[1], 16, f); bleed(o, 4, 4, f);
+      for (let i = bound.length - 1; i >= 0; i--) if (bound[i].o === o) bound.splice(i, 1);      // (the shears go through the bandage too)
+    }
+  }
+  if (t > .75) { look.mouthTo = look.eyesTo = 0; }
+} };
+// Reeled In (4 while the bandage holds them): Snip Snip without the reach for them, and longer
+const REEL = { name: 'Snip Snip', dur: 2.2, run(p, m, t) {
+  const o = m.o, f = p.face;
+  p.vx = 0; p.target = POSE.slGrab; p.rate = 44;
+  if (!m.s) { m.s = 1; m.n = 0; look.mouthTo = look.eyesTo = 1; ringOf(o, 11, 2, true); play('home-slit-snips', .9, () => sfx.snip(1)); label(p.x, p.y + 440, 'REELED IN', RED, .9); }
+  if (can(p, o) && t < 1.9) { o.vx = 0; o.x = lerp(o.x, clamp(p.x + f * 150, -2000, 2000), .2); if (o.ground && o.state !== 'down') Object.assign(o, { state: 'hurt', stun: Math.max(o.stun || 0, .3), act: null, tele: 0 }); }
+  while (m.n < 11 && t >= .12 + m.n * .14) {
+    m.n++;
+    if (live(o)) E.applyHit(o, f, { dmg: exact(o, 5), kb: 0, stun: .6, stop: .02, col: RED, fixed: 1, mute: 1 });
+    sfx.snip(.9 + Math.random() * .4); if (m.n % 3 === 0) play('home-slit-snip', .6); blood(o.x + rnd(-30, 30), mid(o) + rnd(-50, 50), 3);
+  }
+  if (t >= 1.8 && !m.fin) {
+    m.fin = 1;
+    if (live(o)) E.applyHit(o, f, { dmg: exact(o, 12), kb: 760, lift: 380, stun: .9, stop: .2, heavy: 1, col: RED, fixed: 1, mute: 1 });
+    sfx.shear(); play('home-slit-snip', 1); shake(24);
+    if (JU.cut) { JU.cut.slice(o.x, mid(o), .55, 520, { shift: 10, life: .45, col: RRGB }); JU.cut.slice(o.x, mid(o), -.55, 520, { shift: 10, life: .45, delay: .05, col: RRGB }); }
+    blood(o.x, mid(o), 18, f);
+  }
+  if (t > 2.1) { look.mouthTo = look.eyesTo = 0; }
+} };
+// the hotbar while she is unmasked: her own four, or the usual four again
+const BASE = { strikes: RAIN, crush: CUT, div: BIND, manji: SNIPS };
+function unmLabels() {
+  if (!on()) return;
+  const set = unmOn() ? ULT : BASE;
+  for (const k of JU.tech.SLOTS) { E.hud.mv[k].querySelector('b').textContent = set[k].name; E.CD[k] = set[k].cd; E.cd[k] = Math.min(E.cd[k], set[k].cd); }
+}
+
 /* ================= the technique ================= */
-const MOVES = { strikes: RAIN, crush: CUT, div: BIND, manji: SNIPS };
-JU.tech.add('slit', { name: 'Slit Mouth', jp: '口裂け', mark: '裂', who: 'Am I pretty?', odds: 0, col: RED, glow: 'red', moves: MOVES,
-  early: true, gore: true, skin: SLIT, as: ['Slit Mouth', '口裂け'], awaken, awkName: 'Unmasked', awkKeep: true,
+const MOVES = { get strikes() { return unmOn() ? ULT.strikes : RAIN; }, get crush() { return unmOn() ? ULT.crush : CUT; }, get div() { return unmOn() ? ULT.div : BIND; }, get manji() { return unmOn() ? ULT.manji : SNIPS; } };
+JU.tech.add('slit', { name: 'Slit Mouth', jp: '口裂け', mark: '裂', who: 'Am I pretty?', odds: 30, col: RED, glow: 'red', moves: MOVES,      // (out of Early Access in 0.25, at 30%: the user's number from 0.20. Ten Shadows 19 -> 7, Transfiguration and Disaster Plants 14 -> 5, so the talisman still comes to 100)
+  gore: true, skin: SLIT, as: ['Slit Mouth', '口裂け'], awaken, awkName: 'Unmasked', awkKeep: true,
   get awkHits() { return !unm; },                   // (unmasked, the bar is the time left: hits do not fill it)
-  hint: '<b>1</b> Scissor Rain · <b>2</b> Slit · <b>3</b> Bandage Bind · <b>4</b> Snip Snip · <b>E</b> Am I Pretty?: answer for them with <b>1</b>, <b>2</b> or <b>3</b> · <b>G</b> Unmasked' });
+  hint: '<b>1</b> Scissor Rain · <b>2</b> Slit · <b>3</b> Bandage Bind · <b>4</b> Snip Snip · <b>E</b> Am I Pretty? · <b>G</b> Unmasked' });
 const DEF = JU.tech.TECH.slit, on = () => JU.tech.active === DEF;
 
 /* ---------- wiring ---------- */
@@ -532,6 +726,18 @@ H.press = (a, inScene) => {                          // while she is asking: 1, 
     const i = { strikes: 0, crush: 1, div: 2 }[a];
     if (i !== undefined) { pick(i); return true; }
     if (a === 'manji' || a === 'ok' || a === 'm1') return true;
+  }
+  if (!inScene && on() && !ask && !unmOn() && E.root.dataset.mode === 'fight' && !E.P1.dead && !E.P1.ps) {      // (0.25) the four variants
+    const p = E.P1, o = E.P2, ready = !(E.cd[a] > 0), b = bound.find(q => q.o === o && q.t < q.life && !o.ko);
+    const go = (def, extra) => { if (p.move) E.endMove(p); E.cd[a] = E.CD[a]; p.move = Object.assign({ def, key: a, t: 0 }, extra); E.hud.mv[a].classList.add('act'); return true; };
+    if (ready && b && (free(p) || (p.move && p.move.def === BIND))) {
+      if (a === 'crush') return go(BSLIT, { o });
+      if (a === 'manji') return go(REEL, { o });
+    }
+    if (ready && !p.ground && free(p)) {
+      if (a === 'strikes') return go(HAIL);
+      if (a === 'crush') return go(LEAP);
+    }
   }
   return press0 ? press0(a, inScene) : false;
 };
@@ -554,7 +760,10 @@ H.tick = dt => {
     }
   }
   if (ask && !(p.move && p.move.def === ESP)) { unpause(); ask = null; showUI(false); look.eyesTo = look.mouthTo = 0; }      // (cut short)
-  if (held && !(p.move && (p.move.def === CUT))) held = null;
+  if (held && !(p.move && [CUT, ULT.crush, ULT.div, LEAP, BSLIT].includes(p.move.def))) held = null;
+  if (storm.length) stormTick(dt);
+  if (exec) exec.t += dt;
+  for (let i = trail.length - 1; i >= 0; i--) if ((trail[i].t += dt) > .3) trail.splice(i, 1);
   if (band && !(p.move && p.move.def === BIND)) band = null;
   if (flung.length) flungTick(dt);
   if (pleased > 0 && Math.random() < dt * 6) V.mote(p.x, p.y + 250, 'red');
@@ -569,8 +778,11 @@ H.fx = dt => {
   for (const q of flung) { if (q.t < 0) continue; const c = F(q.x, q.y); lit(() => E.glow(E.GLOW.red, c[0], c[1], 60 * c[2], .4)); shears(c[0], c[1], q.rot * (q.vx > 0 ? 1 : -1), .5 + .5 * Math.sin(q.t * 40), 1.05 * c[2]); }
   drawBand(p);
   if (held) { const w = handAt(p, true), c = F(w[0], w[1]); shears(c[0], c[1], p.face > 0 ? -.15 : Math.PI + .15, held.open, held.s * c[2]); }
+  for (const s of storm) { const c = F(s.x, s.y); lit(() => E.glow(E.GLOW.red, c[0], c[1], 60 * c[2], .4)); shears(c[0], c[1], s.rot, s.out ? .2 : .5 + .5 * Math.sin(E.T * 30 + s.a * 5), 1.05 * c[2]); }
+  for (const tr of trail) E.drawFighter(E.over(tr.f, SHADE), .5 * (1 - tr.t / .3));      // (where she ran)
+  if (exec) drawExec();
 };
-const clear = () => { flung.length = bound.length = ring.length = slits.length = 0; band = held = null; pleased = 0; silenced = null; look.eyes = look.mouth = look.eyesTo = look.mouthTo = look.smile = 0; if (ask) unpause(); ask = null; showUI(false); };
+const clear = () => { flung.length = bound.length = ring.length = slits.length = storm.length = trail.length = 0; band = held = exec = null; pleased = 0; silenced = null; look.eyes = look.mouth = look.eyesTo = look.mouthTo = look.smile = 0; if (ask) unpause(); ask = null; showUI(false); };
 H.reset = () => { reset0(); clear(); endUnm(true); strips.length = 0; };
 H.fightStart = (cfg, wave) => { start0(cfg, wave); clear(); if (!wave) endUnm(true); };      // (unmasked lasts through the waves of one fight)
 

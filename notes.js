@@ -5,6 +5,10 @@
 // Newest first. v = the build, jp = the seal stamped beside it, pic = notes/<pic>.jpg, cap = what the picture shows.
 // A new update goes at the top of this list.
 const NOTES = [
+  { v: '0.25', name: 'Slit Mouth: Full Release', jp: '口裂け', date: '3 Nov 2026', pic: 'slitrelease', cap: 'Shear Storm, Can\'t Outrun Her, Scissor Execution and Bound Slit', items: [
+    'Slit Mouth is out of Early Access: roll it from the talisman, 30%. To keep the odds adding up to 100, Ten Shadows is now 7% (was 19) and Transfiguration and Disaster Plants are 5% (were 14). Anybody who had it in Early Access keeps its free slot',
+    'Unmasked (G) has her own four now. 1 Shear Storm: twelve pairs of shears round her, then at them one after another. 2 Ear to Ear: their mouth cut to match hers (35 and a bleed), and their own moves gone for four seconds. 3 Can\'t Outrun Her: she is behind them before they know it, and the big shears shut (55). 4 Scissor Execution: shears the height of the room open over them, and shut (90)',
+    'Four variants: Scissor Hail (1 in the air), Leaping Slit (2 in the air: down on them shears first, 36 and a bleed), Bound Slit (2 while Bandage Bind holds them: 45 and a longer bleed) and Reeled In (4 while Bandage Bind holds them: Snip Snip at once, and longer)'] },
   { v: '0.24', name: 'General of the Sky', jp: '天空', date: '3 Nov 2026', pic: 'generalofthesky', cap: 'Direct Flight, Sky Distortion, Falling Sky, and the arena opened out to its new border', items: [
     'A new limited character, the General of the Sky, here for a week (to 10 November): roll it from the talisman (2.5%) or look for it in the Daily Shop',
     '1 Direct Flight: in at them, and up with them. W A S D fly the two of you about, quicker than walking, and the arena opens out: its walls go back to a new border, and stay there for the rest of the fight. Click to let go of them in the air (20). Let go of them high enough and they take 70 when they reach the floor. Click again while they fall and the General dives after them and slams them down (30)',
