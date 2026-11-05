@@ -13,7 +13,12 @@
      hand shut round them. Lifted and put into the floor behind him (25), up and over and into the floor in front of him (25), held up in her
      fist and squeezed till things give (5 x4, a bone going with each), and thrown the length of the arena (30): 100 in all. Nothing there,
      and her hand shuts on the air. The hits are clips (myinstants, home-love-*), over built ones
-   4 is still to come.
+   4 COPY: CURSED SPEECH (Build 0.27; the user: "finish his ult and missing moves", left to us): the Cursed Speaker's words, his now. "DON'T
+     MOVE." and they cannot; three cuts while they stand there (15 each), and "BLAST AWAY." (30): 75.
+   G RIKA: FULL MANIFESTATION (Build 0.27, the ult): "RIKA. GIVE ME EVERYTHING." and she is all there, and bigger, for thirty seconds.
+     Everything he lands is a quarter harder, her claw follows every strike of his (3), and two of his four are hers: 1 RIKA: RAMPAGE (eight
+     swipes of her claws, 6 each, and both hands through them, 32: 80) and 4 PURE LOVE: FULL POWER (the beam, twice the size: 110).
+     Love Reaper left Early Access in the same build (5%; whoever had it there keeps its free slot).
    Rika is drawn after the user's picture of her (Build 0.17): a ridged shell of a head with long pale tendrils off the back of it, a mouth
    that is all teeth where a face would be, a starved ribcage, long thin arms and longer fingers, and no legs: from the waist down she is a
    black tail. Her scream is his name (myinstants' "YUTA", sfx.rika in index.html). The story's Rika, in chapter 15, is drawn the same way */
@@ -163,7 +168,7 @@ const rk = { a: SEE, mode: 'katana', act: null, flare: 0 };      // how much of 
 function rikaPose(dt) {
   const T = E.T, A = rk.act;
   if (A) A.t += dt;
-  let q = { arm: .25 + .05 * Math.sin(T * 1.7), raise: 0, mouth: .12 + .08 * Math.sin(T * .9) }, want = rk.flare > 0 ? .9 : SEE;
+  let q = { arm: .25 + .05 * Math.sin(T * 1.7), raise: 0, mouth: .12 + .08 * Math.sin(T * .9) }, want = ult ? 1 : rk.flare > 0 ? .9 : SEE;      // (all of her while she is fully manifested)
   if (A && A.kind === 'throw') {
     want = 1;
     const t = A.t;
@@ -189,7 +194,7 @@ function labels() {
   if (!on()) { if (tag) { tag.remove(); tag = null; } if (sub) { sub.remove(); sub = null; E.hud.mv.crush.classList.remove('twice'); } return; }
   if (!sub || !sub.isConnected) { sub = document.createElement('small'); sub.className = 'tsub'; sub.textContent = 'USE TWICE'; E.hud.mv.crush.appendChild(sub); }
   E.hud.mv.crush.classList.toggle('twice', !!rsWait);
-  E.CD.strikes = rk.mode === 'rika' ? CD_RIKA : CD_KATANA;
+  E.CD.strikes = ultOn() ? RAMPAGE.cd : rk.mode === 'rika' ? CD_RIKA : CD_KATANA;      // (Rika's own while she is fully out)
   if (!tag || !tag.isConnected) { tag = document.createElement('small'); tag.className = 'cnt'; E.hud.mv.strikes.appendChild(tag); }
   const txt = rk.mode === 'rika' ? 'Rika' : 'Katana';
   if (tag.textContent !== txt) tag.textContent = txt;
@@ -587,16 +592,163 @@ function finFx() {
   }
   g.restore();
 }
+/* ================= 4 (Build 0.27): COPY: CURSED SPEECH. "DON'T MOVE.", three cuts while they cannot, and "BLAST AWAY." ================= */
+const CS_CUT = 15, CS_BLAST = 30, CS_CD = 16, CS_HOLD = 1.6, CS_AT = [.52, .68, .84];
+let frozen = null;                                  // { o, t, x, y }: held where the word found them
+const holdable = o => !!o && !o.ko && !duel() && !o.net && !o.poise;
+function word(p, text, big) {                       // his mouth, and the word out of it: rings going out, and the air shaking
+  if (JU.manga) JU.manga.say(p, text, { life: big ? 1.2 : 1 });
+  for (let i = 0; i < 3; i++) E.after(i * .07, () => V.ring(p.x + p.face * 20, p.y + 330, 260 + i * 160, i ? LILAC : '#ffffff', .4));
+  if (Z) { Z.shock(p.x, big ? 700 : 480, LRGB, .4, big ? 12 : 8); if (big) Z.flash(LRGB, .25, .2); }
+  shake(big ? 24 : 12);
+  if (big) sfx.word(); else { sfx.charge(); sfx.whoosh(); }
+}
+const SPEECH = { name: 'Copy: Cursed Speech', cd: CS_CD, dur: 1.9, glow: 'purple', run(p, m, t) {
+  p.rate = 46; p.vx = 0;
+  if (!m.s) {
+    m.s = 1; const o = E.P2;
+    m.o = o && !o.ko && !(o.alpha < 1) && Math.abs(o.x - p.x) < 1000 ? o : null;
+    word(p, "DON'T MOVE.", false);
+    if (m.o && !(m.o.inv > 0)) {
+      frozen = { o: m.o, t: CS_HOLD, x: m.o.x, y: m.o.y };
+      E.fx.push({ k: 2, x: m.o.x, y: m.o.y + 420, n: 'CAN\'T MOVE', col: LILAC, t: 0, life: 1.2 }); V.ring(m.o.x, m.o.y + 160, 220, LILAC, .3);
+    }
+  }
+  const o = m.o;
+  if (!o || !frozen || frozen.o !== o) { p.target = t < .5 ? POSE.manjiWind : POSE.idle; if (t > .6 && !m.blast) E.endMove(p); else if (t > 1.6) E.endMove(p); return; }
+  if (t >= .42 && !m.went) { m.went = 1; const d = Math.sign(o.x - p.x) || p.face; blink(p, o.x - d * 125, d); }      // in at them, while they stand there
+  const n = CS_AT.filter(a => t >= a).length;
+  if (n > (m.n || 0)) {                             // three cuts
+    m.n = n;
+    const x = o.x + rnd(-20, 20), y = o.y + 160 * (o.scale || 1) + rnd(-40, 40);
+    hitIt(p, o, CS_CUT, { kb: 0, stun: 1, stop: .06 });
+    sfx.cut(.8 + n * .2); V.slash(x, y, rnd(0, TAU), 420, n === 3 ? LILAC : STEEL, 9); V.sparks(x, y, 'purple', 5);
+  }
+  p.target = t < .42 ? POSE.manjiWind : t < .94 ? (m.n & 1 ? POSE.lrCutA : POSE.lrCutB) : t < 1.3 ? POSE.manjiWind : t < 1.6 ? POSE.lrThrust : POSE.idle;
+  if (t >= 1.05 && !m.say) { m.say = 1; word(p, 'BLAST AWAY.', true); }
+  if (t >= 1.3 && !m.blast) {                       // and away they go
+    m.blast = 1; frozen = null;
+    hitIt(p, o, CS_BLAST, { kb: 1700, lift: 620, stun: .9, stop: .2, heavy: 1 });
+    V.ring(o.x, o.y + 160, 420, LILAC, .4); V.sparks(o.x, o.y + 160, 'purple', 16);
+    if (Z) Z.boom(o.x, o.y + 160, 130, LRGB, { n: 16, smoke: '30,20,40', hot: '255,230,250' });
+  }
+} };
+
+/* ================= G (Build 0.27): RIKA: FULL MANIFESTATION. All of her, for thirty seconds ================= */
+const ULT_T = 30, ULT_IN = 2.4, ULT_K = 1.25, ULT_CLAW = 3, RAMPAGE_N = 8, RAMPAGE_D = 6, RAMPAGE_FIN = 32, FULL_LOVE = 110;
+let ult = null, ultWatch = 0, ultShown = -1;        // { t, intro, paused }
+const ultOn = () => !!ult && !ult.intro;
+function awaken(p) {
+  if (ult) return;
+  ult = { t: ULT_T, intro: true, paused: false };
+  if (!duel() && !(H.foes && H.foes()) && !Fi.fight.paused) { Fi.fight.paused = true; ult.paused = true; }      // (the fight waits for her: not a duel's, not a raid's)
+  p.inv = Math.max(p.inv || 0, ULT_IN + .3);
+  if (p.move) E.endMove(p);
+  p.move = { def: MANIFEST, t: 0 };
+  clearInterval(ultWatch); ultWatch = setInterval(() => { if (ult && E.root.dataset.mode !== 'fight') ultEnd(true); if (!ult) clearInterval(ultWatch); }, 250);
+}
+const MANIFEST = { name: 'Rika', dur: ULT_IN, run(p, m, t) {
+  p.vx = 0; p.rate = 16; p.target = t < 1.2 ? POSE.manjiWind : POSE.lrCutC;
+  if (!m.a) { m.a = 1; if (JU.manga) JU.manga.think(p, 'RIKA. GIVE ME EVERYTHING.', { life: 1.2 }); rk.act = { kind: 'beam', t: 0 }; sfx.rika(0); if (Z) Z.dim(.7, ULT_IN); }
+  if (t >= 1.2 && !m.b) {
+    m.b = 1; sfx.rika(1); shake(30); E.zoomIn(1);
+    if (Z) { Z.flash(LRGB, .45, .3); Z.shock(p.x, 900, LRGB, .6, 16); Z.pillar(p.x - p.face * 125, 90, 1100, LRGB, .6); }
+    for (let i = 0; i < 18; i++) V.puff('purple', p.x - p.face * 125 + rnd(-160, 160), p.y + rnd(0, 520), rnd(-120, 120), rnd(80, 260), rnd(40, 80), .8);
+  }
+  if (t >= ULT_IN - .1 && !m.c) { m.c = 1; ultBegin(p); }
+} };
+function ultBegin(p) {
+  ult.intro = false; rk.act = null;
+  if (ult.paused) { ult.paused = false; Fi.fight.paused = false; }
+  E.banner('完全顕現', 'RIKA: FULL MANIFESTATION'); sfx.bf(); ultShown = -1; ultLabels();
+}
+function ultEnd(quiet) {
+  const u = ult;
+  if (!u) return;
+  ult = null; clearInterval(ultWatch);
+  if (u.paused && Fi.fight.paused) Fi.fight.paused = false;
+  if (on()) JU.tech.drain();
+  ultLabels();
+  if (!quiet && on() && JU.manga) JU.manga.think(E.P1, 'THANK YOU, RIKA.', { life: 1.6 });
+}
+const awkEl = document.getElementById('awk');
+function ultBar() {                                 // the bar while she is out: the time left
+  if (!ultOn() || !on()) return;
+  const sec = Math.max(0, Math.ceil(ult.t));
+  if (sec === ultShown) return;
+  ultShown = sec; awkEl.style.setProperty('--a', Math.max(0, ult.t / ULT_T)); awkEl.classList.remove('full');
+  awkEl.lastElementChild.textContent = 'Rika · ' + sec + 's';
+}
+function ultLabels() {                              // the hotbar's names: hers while she is out
+  if (!on()) return;
+  for (const k of ['strikes', 'manji']) { const d = MOVES[k]; E.hud.mv[k].querySelector('b').textContent = d.name; E.CD[k] = d.cd; }
+}
+// 1, hers: RIKA: RAMPAGE. Eight swipes of her claws, and both hands through them
+const RAMPAGE = { name: 'Rika: Rampage', cd: 10, dur: 1.7, glow: 'purple', run(p, m, t) {
+  const o = E.P2, f = p.face;
+  p.rate = 40; p.vx = 0; p.target = t < 1.4 ? POSE.manjiWind : POSE.idle;
+  if (!m.s) { m.s = 1; rk.act = { kind: 'throw', t: 0 }; sfx.rika(1); shout(p, 'RIKA', LILAC); }
+  const there = o && !o.ko && !(o.alpha < 1) && (o.x - p.x) * f > -80 && Math.abs(o.x - p.x) < 760;
+  const n = t < .3 ? 0 : Math.min(RAMPAGE_N, Math.floor((t - .3) / .09) + 1);
+  if (n > (m.n || 0)) {                             // her claws, one swipe after another
+    m.n = n;
+    const x = there ? o.x : p.x + f * 400, y = there ? o.y + 160 * (o.scale || 1) : 200, a = rnd(-1.2, 1.2) + (n & 1 ? 0 : Math.PI);
+    for (let i = 0; i < 3; i++) V.slash(x + Math.cos(a + 1.57) * (i - 1) * 26, y + Math.sin(a + 1.57) * (i - 1) * 26, a, 480, i === 1 ? '#ffffff' : BONE, 7, i * .01);
+    sfx.cut(.6 + Math.random() * .4);
+    if (there && !(o.inv > 0)) { hitIt(p, o, RAMPAGE_D, { kb: 20, stun: .6, stop: .03 }); V.sparks(x, y, 'purple', 4); }
+  }
+  if (t >= 1.12 && !m.fin) {                        // and both hands through them
+    m.fin = 1;
+    const x = there ? o.x : p.x + f * 400, y = there ? o.y + 160 * (o.scale || 1) : 200;
+    for (const a of [-.6, .6]) for (let i = 0; i < 4; i++) V.slash(x + (i - 1.5) * 22, y, (f > 0 ? 0 : Math.PI) + a, 760, i === 1 ? '#ffffff' : LILAC, 12, i * .015);
+    sfx.rika(0); sfx.cut(2); sfx.slam(1.4); shake(34); E.zoomIn(.4);
+    if (Z) { Z.boom(x, y, 170, LRGB, { n: 22, smoke: '30,20,40', hot: '255,230,250' }); Z.flash(LRGB, .3, .2); }
+    if (there && !(o.inv > 0)) hitIt(p, o, RAMPAGE_FIN, { kb: 1300, lift: 520, stun: 1, stop: .22, heavy: 1 });
+  }
+} };
+// 4, hers: PURE LOVE: FULL POWER. The beam, twice the size
+const FULL_BEAM = Object.assign({}, BEAM, { name: 'Pure Love: Full Power', cd: 18, dur: 2.3, run(p, m, t) {
+  const o = E.P2, f = p.face;
+  p.vx = 0; p.target = t < 1.7 ? POSE.manjiWind : POSE.idle;
+  if (!m.s) {
+    m.s = 1; rk.act = { kind: 'beam', t: 0 }; sfx.rika(1); if (Z) Z.dim(.7, 1.8);
+    V.custom(1.3, u => { const a = mouth(p), k = a[2], r = (40 + 190 * u * u) * k; lit(() => { E.glow(E.GLOW.purple, a[0], a[1], r * 5, .95); E.glow(E.GLOW.white, a[0], a[1], r * 1.7, .85); }); g.fillStyle = '#ffffff'; g.beginPath(); g.arc(a[0], a[1], r * .45, 0, TAU); g.fill(); }, .3);
+  }
+  if (t >= 1.3 && !m.fire) {
+    m.fire = 1;
+    const there = o && !o.ko && !(o.alpha < 1) && (o.x - p.x) * f > -60 && Math.abs(o.x - p.x) < 1600;
+    sfx.blast(); sfx.cannon(2); sfx.word(); shake(46); E.zoomIn(.6);
+    if (Z) { Z.flash(LRGB, .5, .35); Z.flash('255,255,255', .4, .15); Z.shock(p.x + f * 400, 1000, LRGB, .6, 16); }
+    const x1 = there ? o.x : p.x + f * 1600, y1 = there ? o.y + 160 * (o.scale || 1) : 140;
+    V.custom(.8, u => {
+      const a = mouth(p), b = F(x1 + f * 400, y1), k = b[2], w = 220 * k * (u < .15 ? u / .15 : 1 - (u - .15) * .9), al = Math.min(1, (1 - u) * 2.2);
+      g.save(); g.lineCap = 'round';
+      lit(() => {
+        g.strokeStyle = `rgba(${LRGB},${.35 * al})`; g.lineWidth = w * 2.6; g.beginPath(); g.moveTo(a[0], a[1]); g.lineTo(b[0], b[1]); g.stroke();
+        g.strokeStyle = `rgba(255,140,220,${.5 * al})`; g.lineWidth = w * 1.4; g.stroke();
+        E.glow(E.GLOW.purple, a[0], a[1], 760 * k * al, al); E.glow(E.GLOW.purple, b[0], b[1], 900 * k * al, al);
+      });
+      g.globalAlpha = al; g.strokeStyle = '#ffffff'; g.lineWidth = w * .55; g.beginPath(); g.moveTo(a[0], a[1]); g.lineTo(b[0], b[1]); g.stroke();
+      g.restore();
+    });
+    if (there) {
+      E.applyHit(o, f, { dmg: exact(o, FULL_LOVE), kb: 1600, lift: 520, stun: 1, stop: .25, heavy: 1, col: LILAC, fixed: 1, mute: 1 });
+      V.ring(x1, y1, 560, LILAC, .45); V.sparks(x1, y1, 'purple', 26); V.crack(o.x, 420);
+      if (Z) Z.boom(x1, y1, 240, LRGB, { n: 30, smoke: '40,20,60', hot: '255,230,250' });
+    }
+  }
+} });
+
 const MOVES = {
-  get strikes() { return rk.mode === 'rika' ? CL_R : CL_K; },
+  get strikes() { return ultOn() ? RAMPAGE : rk.mode === 'rika' ? CL_R : CL_K; },
   crush: RS1,
   div: CRUSH,
-  manji: { name: 'Coming soon', cd: 1, dur: .01, run() {} }
+  get manji() { return ultOn() ? FULL_BEAM : SPEECH; }
 };
 
-JU.tech.add('reaper', { name: 'Love Reaper', jp: '純愛', mark: '愛', who: 'Rika, and a katana', odds: 0, col: LILAC, glow: 'purple', moves: MOVES,
-  early: true, skin: REAPER, as: ['Love Reaper', '純愛'], m1,
-  hint: '<b>Right click</b> Rika\'s moves, or the sword\'s · <b>1</b> Cleaving Love · <b>2</b> Reaping Slash · <b>3</b> Crushing Love' });
+JU.tech.add('reaper', { name: 'Love Reaper', jp: '純愛', mark: '愛', who: 'Rika, and a katana', odds: 5, col: LILAC, glow: 'purple', moves: MOVES,      // (out of Early Access in 0.27, at 5%: our number, the user gave none)
+  skin: REAPER, as: ['Love Reaper', '純愛'], m1, awaken, awkName: 'Rika', awkKeep: true,
+  hint: '<b>Right click</b> Rika\'s moves, or the sword\'s · <b>1</b> Cleaving Love · <b>2</b> Reaping Slash · <b>3</b> Crushing Love · <b>4</b> Cursed Speech' });
 const DEF = JU.tech.TECH.reaper, on = () => JU.tech.active === DEF;
 
 /* ---------- wiring ---------- */
@@ -618,8 +770,17 @@ H.press = (a, inScene) => {
 let q = { arm: .25, raise: 0, mouth: .1 };
 H.tick = dt => {
   tick0(dt);
-  if (!on()) { if (tag || sub) labels(); rsWait = fin = null; return; }
+  if (!on()) { if (tag || sub) labels(); rsWait = fin = frozen = null; if (ult) ultEnd(true); return; }
   if (rsWait && ((rsWait.t -= dt) <= 0 || rsWait.o.ko || rsWait.o !== E.P2)) rsWait = null;
+  if (frozen) {                                     // "DON'T MOVE.": and they do not
+    const o = frozen.o;
+    if ((frozen.t -= dt) <= 0 || o.ko || o !== E.P2) frozen = null;
+    else if (holdable(o)) { Object.assign(o, { x: frozen.x, y: frozen.y, vx: 0, vy: 0, state: 'hurt', stun: .5, act: null, tele: 0 }); if (o.ai) o.ai.t = Math.max(o.ai.t || 0, .5); }
+  }
+  if (ult) {
+    if (!ult.intro && (ult.t -= dt) <= 0) ultEnd(false);
+    else { ultBar(); if (Math.random() < dt * 30) V.puff('purple', E.P1.x - E.P1.face * 125 + rnd(-140, 140), E.P1.y + rnd(20, 520), 0, rnd(60, 200), 50, .7); }
+  }
   if (fin) {                                        // the finisher: held up where the Black Flash left them while the lightning goes, then flying
     const o = fin.o;
     fin.t += dt;
@@ -653,7 +814,7 @@ H.under = dt => {
   for (const f of [E.P2, E.P1, ...(JU.raid ? JU.raid.allies() : [])]) {      // Rika, behind him (and behind the other one in a duel, or one in a raid with him, if that is who they are)
     if (f.skin !== REAPER || f.ko || (f.alpha !== undefined && f.alpha < .05)) continue;
     const mine = f === E.P1 && on(), bob = Math.sin(E.T * 1.6) * 14;
-    drawRika(f.x - f.face * 125, f.y + 10 + bob, ZP + 160, f.face, 1.08, mine ? rk.a : SEE, mine ? q : { arm: .25, raise: 0, mouth: .12 });
+    drawRika(f.x - f.face * 125, f.y + 10 + bob, ZP + 160, f.face, mine && ult ? 1.08 + .22 * (ult.intro ? Math.min(1, (ULT_T - ult.t + .01) * 2) : 1) : 1.08, mine ? rk.a : SEE, mine ? q : { arm: .25, raise: 0, mouth: .12 });
   }
 };
 const TRAIL = E.flat('#5a3a8a', LILAC);
@@ -680,13 +841,25 @@ H.fx = dt => {
   }
   if (fin && on()) finFx();
 };
-const clear = () => { rk.act = null; rk.flare = 0; rk.a = SEE; trail.length = 0; rsWait = fin = null; crush = null; };
+const clear = () => { rk.act = null; rk.flare = 0; rk.a = SEE; trail.length = 0; rsWait = fin = frozen = null; crush = null; if (ult) ultEnd(true); };
 const hit0 = H.hit;
-H.hit = (o, face, h) => { hit0(o, face, h); if (h.yuta) play('home-yuta-cut', .5 * h.yuta, () => sfx.hit(!!h.heavy)); };      // (his strikes: a katana landing)
+H.hit = (o, face, h) => {
+  hit0(o, face, h);
+  if (h.yuta) play('home-yuta-cut', .5 * h.yuta, () => sfx.hit(!!h.heavy));      // (his strikes: a katana landing)
+  if (h.yuta && ultOn() && on() && !o.ko) E.after(.07, () => {                  // and, while she is out, her claw after it
+    if (o.ko) return;
+    const y = o.y + 160 * (o.scale || 1);
+    for (let i = 0; i < 3; i++) V.slash(o.x + (i - 1) * 16, y, (face > 0 ? -.9 : Math.PI + .9), 300, i === 1 ? '#ffffff' : BONE, 5, i * .01);
+    hitIt(E.P1, o, ULT_CLAW, { kb: 0, stun: .3, stop: .02, col: BONE });
+  });
+};
+const power0 = H.power;
+H.power = (h, o) => (power0 ? power0(h, o) : 1) * (ultOn() && on() ? ULT_K : 1);      // (while she is out: everything a quarter harder)
 H.reset = () => { reset0(); clear(); };
 H.fightStart = (cfg, wave) => { start0(cfg, wave); if (!wave) clear(); };
 
-JU.reaper = { MOVES, CL_K, CL_R, RS1, RS2, CRUSH, REAPER, drawRika, esp: BEAM,      // (esp: E, especial.js)
+JU.reaper = { MOVES, CL_K, CL_R, RS1, RS2, CRUSH, SPEECH, RAMPAGE, FULL_BEAM, REAPER, drawRika, esp: BEAM,      // (esp: E, especial.js)
+  get ult() { return ult && { t: +ult.t.toFixed(1), intro: ult.intro }; }, get frozen() { return !!frozen; },
   kit: { katana, drawRika, longArm, fist, slamHand, claw, blink, mouth, shoulder, floorHit, CUTS, LILAC, LRGB, BONE, STEEL },      // (what the Love Reapers of 0.22v3 draw with: lovereap.js)
   get crush() { return crush && { shut: crush.shut, sq: crush.sq, held: !!crush.o }; },
   get finisher() { return fin && { t: +fin.t.toFixed(2) }; }, get waiting() { return !!rsWait; },

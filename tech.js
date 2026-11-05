@@ -139,6 +139,7 @@ function roll() {
   for (const id of ORDER) { const t = TECH[id]; if (t.limited && live(t) && !(JU.shop && JU.shop.holds('tech', id)) && Math.random() * 100 < t.odds) return id; }      // (a limited one he holds already is not rolled twice)
   const pool = ORDER.filter(id => !TECH[id].limited), total = pool.reduce((n, id) => n + TECH[id].odds, 0);      // (out of what they all come to. 105 from 0.17v1, when Miracle Dork joined at 5%;
   // 137 from 0.25v1: the user wanted Ten Shadows 20, Transfiguration and Disaster Plants 17 with Slit Mouth at 30, and said a total over 100 was fine.
+  // 142 from 0.27, when Love Reaper came out of Early Access at 5% (our number: the user gave none).
   // 100 again from 0.19, when the Cursed Speaker (15%) and Ratio Man (4%) came out of Early Access: Ten Shadows 31 -> 19, Transfiguration and
   // Disaster Plants 20 -> 14 each, so that every card's number is its real chance)
   let r = Math.random() * total;
@@ -277,6 +278,8 @@ JU.tech = {
   add, TECH, ORDER, SLOTS, mount, apply, revert, roll, charge, tk: { sprite, orb, beam, shout, dot, near },
   equip(id) { equipped = id; try { localStorage.setItem('ju.tech', id); } catch (e) {} noToji(id); },
   drain() { awk = 0; bar(); },                      // (an awakening that keeps its bar, awkKeep, empties it itself once it has gone off)
+  spend(n) { if (!(active && active.awaken) || awk < n) return false; awk -= n; bar(); return true; },      // (a part of it, if there is that much: the Lightning Beast's charges, beast.js)
+  get awk() { return awk; },
   refresh() { bar(); },                             // (one that has written over the bar's line itself puts it back: idg.js)
   get name() { const t = TECH[equipped]; return t ? t.name : ''; }, get active() { return active; }, get using() { return !!active || based; }, get equipped() { return equipped; }, get skin() { return (active && active.skin) || null; }
 };

@@ -5,6 +5,14 @@
 // Newest first. v = the build, jp = the seal stamped beside it, pic = notes/<pic>.jpg, cap = what the picture shows.
 // A new update goes at the top of this list.
 const NOTES = [
+  { v: '0.27', name: 'Beast Mode', jp: '獣', date: '5 Nov 2026', pic: 'beastmode', cap: 'Lightning Output: MAX, Beast Mode, and Love Reaper\'s ult', items: [
+    'The Lightning Beast is an Early Access technique now, not a limited one. Anybody who rolled it while it was limited keeps it',
+    'E is its LIGHTNING METER: five bars, one a press, and every bar is one more strike in the chain (seven, up to twelve). With all five the strikes go purple and land half as hard again, and 1 and 2 become their MAX moves. Using one of those spends the meter, and so does leaving it for twenty seconds; then it rests, four seconds for every bar that was in it',
+    'Thunderclap Barrage: MAX: thirteen claps, seven strikes of purple lightning, and a last of 40, 107 in all. Lightning Output: MAX takes them standing, down or flung: kicked into the air under lightning, and the staff planted where they come down, so they come down on it. E picks it up with them on it and slams them, five times; then 1 throws them off, and he goes up after them and drives them into the floor with it (80)',
+    'While the meter rests, E charges it from the Beast bar instead, a third of the bar a time, and the third charge is BEAST MODE: orange, thirty seconds. Three strikes, colossal (the third a down slam in the air, an uppercut with jump held), Beast: Lightning Barrage (into the floor, 80, and orange lightning out of his hands, 40) and Lightning Output: BEAST MODE (a long dash; if it meets them they go the length of the arena, and he is on them: the staff, and seventy strikes of orange lightning, 110). G with the Beast bar full and the meter resting is all three charges at once',
+    'Love Reaper is out of Early Access: roll it from the talisman (5%). Whoever had it in Early Access keeps its free slot',
+    'Its 4: Copy: Cursed Speech. "DON\'T MOVE." and they cannot, three cuts while they stand there, and "BLAST AWAY.": 75',
+    'And its ult on G: Rika: Full Manifestation. All of her, and bigger, for thirty seconds: everything he lands a quarter harder, her claw after every strike of his, and two of her own in place of his: 1 Rika: Rampage (eight swipes and both hands through them, 80) and 4 Pure Love: Full Power (the beam, twice the size, 110)'] },
   { v: '0.26v1', name: 'Real Hits', jp: '打', date: '5 Nov 2026', pic: 'realhits', cap: 'The Lightning Beast\'s seven strikes, each a step lower', items: [
     'The Lightning Beast\'s strikes sound like the staff hitting something now: one solid hit, played a step lower on each of the seven. The crackle they had before had a voice in it',
     'The same hit is in Electric Reversal\'s blow to the ribs. The dash into Thunderclap Barrage, the stance and the blink behind them crackle instead'] },
