@@ -5,6 +5,10 @@
 // Newest first. v = the build, jp = the seal stamped beside it, pic = notes/<pic>.jpg, cap = what the picture shows.
 // A new update goes at the top of this list.
 const NOTES = [
+  { v: '0.27v2', name: 'Thunder God\'s Wrath', jp: '雷神', date: '5 Nov 2026', pic: 'wrath', cap: 'The Lightning Beast\'s 4: the stomp, the punch, the kick, and what comes down when it kills', items: [
+    'The Lightning Beast has its 4: Thunder God\'s Wrath (22 s). He stomps, and the floor goes off round him in lightning (5): whoever is near enough is stunned where they stand',
+    'Then he is in at them: a punch with all of it in it (11), and a kick with the lightning in it that no guard holds and that sends them flying, end over end (14). 30 in all, or 25 if the stomp did not catch them',
+    'If it kills them, a bolt comes down out of the sky onto them in the air, and they go up in blue and white. With the meter full it is purple, and in Beast Mode orange, like the rest of his moves'] },
   { v: '0.27v1', name: 'Last Stand', jp: '最期', date: '5 Nov 2026', pic: 'laststand', cap: 'The Lightning Beast, about to die: Beast Mode, and twenty seconds', items: [
     'The first time in a fight the Lightning Beast would die, he does not: he goes into Beast Mode as a last attempt, and all his health comes back',
     'Then it runs out of him, a tick every second, for twenty seconds. Nothing else can take it meanwhile: they can still knock him about, but the twenty seconds are the twenty seconds',
