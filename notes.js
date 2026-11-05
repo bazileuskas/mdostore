@@ -5,9 +5,12 @@
 // Newest first. v = the build, jp = the seal stamped beside it, pic = notes/<pic>.jpg, cap = what the picture shows.
 // A new update goes at the top of this list.
 const NOTES = [
+  { v: '0.26v1', name: 'Real Hits', jp: '打', date: '5 Nov 2026', pic: 'realhits', cap: 'The Lightning Beast\'s seven strikes, each a step lower', items: [
+    'The Lightning Beast\'s strikes sound like the staff hitting something now: one solid hit, played a step lower on each of the seven. The crackle they had before had a voice in it',
+    'The same hit is in Electric Reversal\'s blow to the ribs. The dash into Thunderclap Barrage, the stance and the blink behind them crackle instead'] },
   { v: '0.26', name: 'Lightning Beast', jp: '雷獣', date: '5 Nov 2026', pic: 'lightningbeast', cap: 'The Lightning Beast, the Mythical Warrior clan, and the General of the Sky\'s 4', items: [
     'A new limited technique, the LIGHTNING BEAST, here for a week (to 12 November): roll it from the talisman (2.5%). You fight as the Thunder God, with his staff in your hand',
-    'Seven strikes with the staff instead of four, lightning off the end of it every time, and the same crackle each time, a step lower than the one before',
+    'Seven strikes with the staff instead of four, lightning off the end of it every time, and the same hit each time, a step lower than the one before',
     '1 Thunderclap Barrage: in at them, three quick punches, and an uppercut with lightning in it that puts them in the air (34). 2 Lightning Discharge: a grab no guard stops, a kick that sends them back, and a bolt let go straight through them (50). 3 Electric Reversal: a counter stance for a second. Hit him in it and he is behind them: their ribs, then into the floor with them, and the floor goes up in lightning (40, and they are down). 4 is still to come',
     'A new limited clan, MYTHICAL WARRIOR, here for a week as well: draw it from a clan talisman (2%). +30% damage on everything you land, exact-number moves included, and fire cannot hurt you: flames, Fuga, a burning domain. It touches you and does nothing',
     'The General of the Sky has its 4: Sky Turnover. It takes the sky by its edge and turns it over like a sheet: the picture goes upside down, they fall up into it (25), and when it turns back they come down out of it (45)',

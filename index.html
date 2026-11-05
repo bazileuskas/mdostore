@@ -1227,7 +1227,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
   </div>
 
   <div class="side" aria-hidden="true" lang="ja">領域展開</div>
-  <div class="hud tl"><b lang="ja">呪</b>Fan project · Build 0.26 · Lightning Beast</div>
+  <div class="hud tl"><b lang="ja">呪</b>Fan project · Build 0.26v1 · Real Hits</div>
   <div class="hud bl">↑ ↓ Select &nbsp;·&nbsp; Enter Confirm</div>
   <div class="hud br">Title screen</div>
   <div class="acct" id="acct">
@@ -1460,8 +1460,9 @@ const sfx = (() => {
     'home-lr-parry': [MI + 'katana-2-deflect.mp3', .06, .9],                                       // "Katana 2 Deflect"
     'home-lr-draw': [MI + 'katana-sound-gmod-source.mp3', .04, .7],                                // "Katana Draw Effect"
     'home-lr-slash': [MI + 'slash-sword.mp3', .08, .7],                                            // "slash sword."
-    // Build 0.26: the Lightning Beast's (beast.js). Its strikes are the first crackle of this one, each of the seven played lower than the last
-    'home-lb-m1': [MI + 'kashimo-black-flash.mp3', .05, .34],                                      // "kashimo black flash"
+    // Build 0.26: the Lightning Beast's (beast.js). Its strikes are one punch, each of the seven played lower than the last (0.26v1: it was the
+    // first crackle of "kashimo black flash", and the user heard a voice in it)
+    'home-lb-m1': [MI + 'punch-sound-effect-remastered.mp3', .25, .49],                            // "Punch sound effect remastered"
     'home-lb-crack': [MI + 'thunder-crack.mp3', .15, 1.8],                                         // "Thunder Crack"
     'home-lb-shock': [MI + 'electric-shock.mp3', 0, 1.15] };                                       // "Electric Shock"
   // the built loops (tune): Overtime's four bars in D minor, and Fight Alongside's in E minor (Build 0.23). bass: [sixteenth, above the root,

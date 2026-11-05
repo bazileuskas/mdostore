@@ -2,8 +2,9 @@
    make it look like the staff in this image [a long red pole, gold at both ends, a black grip and a gold ring next to each] ... make him have 7 m1s
    and each m1 will emit lightning from it and each m1 make a different m1 sound by that i mean use the same one but make it lower pitch each time.
    have 3 moves for nOW", with the three described:
-   STRIKES: seven, with the staff, and lightning off it each time. Each one's sound is the same crackle (home-lb-m1, the first crackle of a clip
-     from the anime: at home our copy, online straight from where it is posted, index.html's WEB) played lower than the one before.
+   STRIKES: seven, with the staff, and lightning off it each time. Each one's sound is the same hit (home-lb-m1: at home our copy, online
+     straight from where it is posted, index.html's WEB) played lower than the one before. Build 0.26v1: it was the first crackle of a clip from
+     the anime, and that had a voice in it ("in kashimo or something sayin BLA. makew iot an actual hitting sfx"); it is a punch now.
    1 THUNDERCLAP BARRAGE (14 s): in at them, three quick punches (6 each), and an uppercut with all of it in it that puts them in the air (16).
      The opening can be blocked.
    2 LIGHTNING DISCHARGE (20 s): a grab (no guard stops it), a kick that sends them back (10), and a bolt let go straight through them (40).
@@ -80,7 +81,7 @@ const SW = [['jab', 'jab', 0, -.25, .05, 205, 60], ['crushWind', 'crush', 1, 2.1
   ['manjiWind', 'manji', 2, .3, .3 - TAU, 210, 0], ['jab', 'cross', 1, -.2, .08, 215, 70], ['divWind', 'div', 2, 2.35, -1.05, 205, 0], ['kickWind', 'hook', 3, -1.25, 2.1, 225, 20]];
 function strike(i) {                                // the moment it goes: the sound, and lightning off the end of it
   const p = E.P1;
-  play('home-lb-m1', .62, () => sfx.zap(RATE[i]), RATE[i]);
+  play('home-lb-m1', .62, () => sfx.hit(i === 6), RATE[i]);      // (no clip to be had: the plain hit, at least)
   sfx.whoosh();
   const sw = st.swing, tip = tipOf(p, sw ? lerp(sw.a0, sw.a1, .6) : st.a), f = p.face;      // (where the end of it is about to be)
   if (Z) {
@@ -117,7 +118,7 @@ const PUNCH = [.26, .36, .46], UP_AT = .64;
 const BARRAGE = { name: 'Thunderclap Barrage', cd: 14, dur: 1.05, glow: 'blue', staff: 2.4, run(p, m, t) {
   const o = E.P2;
   p.rate = 46;
-  if (!m.s) { m.s = 1; facing(p, o); sfx.whoosh(); play('home-lb-m1', .5, () => sfx.zap(1.2), 1.15); if (Z) Z.dust(p.x, 6, -p.face); }
+  if (!m.s) { m.s = 1; facing(p, o); sfx.whoosh(); sfx.zap(1.2); if (Z) Z.dust(p.x, 6, -p.face); }
   if (t < .24) {                                    // in at them, a streak of it behind him
     const gap = live(o) ? (o.x - p.x) * p.face : 999;
     p.target = POSE.dash; p.vx = gap > 125 ? p.face * 2400 : 0;
@@ -196,7 +197,7 @@ const DISCHARGE = { name: 'Lightning Discharge', cd: 20, dur: 1.75, glow: 'blue'
 const STANCE_T = 1;
 const STANCE = { name: 'Electric Reversal', cd: 18, dur: STANCE_T + .1, glow: 'blue', staff: .12, run(p, m, t) {
   p.vx = 0; p.rate = 30; p.target = GUARD;
-  if (!m.s) { m.s = 1; play('home-lb-m1', .4, () => sfx.zap(.8), .8); label(p.x, p.y + 440, 'ELECTRIC REVERSAL', BOLT, .9); }
+  if (!m.s) { m.s = 1; sfx.zap(.8); label(p.x, p.y + 440, 'ELECTRIC REVERSAL', BOLT, .9); }
   st.charge = 1;
   if (Math.random() < .5) zapAt(p.x + rnd(-60, 60), p.y + rnd(60, 280), 1, 130, 2);
   if (t > STANCE_T) { st.charge = 0; E.endMove(p); }
@@ -209,13 +210,13 @@ const REVERSE = { name: 'Electric Reversal', dur: .95, glow: 'blue', staff: 2.3,
     const x0 = p.x, y0 = p.y, side = p.x >= o.x ? 1 : -1, eb = H.bound ? H.bound() : 965;
     p.x = clamp(o.x - side * 115, -eb, eb); p.y = 0; p.vy = 0; p.face = o.x >= p.x ? 1 : -1;
     if (Z) { Z.lightning(x0, y0 + 170, p.x, 170, KZ, .22, 6, 2); zapAt(x0, y0 + 170, 4, 200); }
-    V.sparks(p.x, 170, 'blue', 10); play('home-lb-m1', .55, () => sfx.zap(1.1), 1.1); sfx.whoosh(); E.stop(.05);
+    V.sparks(p.x, 170, 'blue', 10); sfx.zap(1.1); sfx.whoosh(); E.stop(.05);
   }
   if (t < .3) {                                     // the ribs
     p.target = t < .1 ? POSE.hookWind : POSE.hook;
     if (t >= .1 && !m.rib && live(o)) {
       m.rib = 1;
-      E.applyHit(o, p.face, { dmg: 12, kb: 30, stun: 1.3, stop: .1, col: BOLT, mute: 1 }); sfx.hit(true);
+      E.applyHit(o, p.face, { dmg: 12, kb: 30, stun: 1.3, stop: .1, col: BOLT, mute: 1 }); play('home-lb-m1', .7, () => sfx.hit(true), .9);
       V.sparks(o.x, mid(o), 'blue', 8); zapAt(o.x, mid(o), 3, 170); big(p, o, 'ガッ');
     }
     return;
