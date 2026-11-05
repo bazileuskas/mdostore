@@ -31,6 +31,12 @@
      hit of his reaches three times as far (the technique's aim, which tryHit asks), and the strikes and the slams find them higher up and a
      little behind him as well (wide); the dash of Lightning Output: BEAST MODE catches them from three times as far, and Thunder God's
      Wrath's stomp goes twice as wide. A bolt off the end of each strike shows how far it goes.
+   Build 0.28v2, the user's: "add more variants to all kashimo modes". 3 and 4 were the same move in every mode, only coloured; now each has
+     its own MAX (purple, and like the other MAX moves it spends the meter) and Beast Mode (orange) version, so every mode has four of its own:
+     ELECTRIC REVERSAL: MAX (a longer stance; six purple strikes and the floor up under them, 90; with nothing come at him, its charge let go
+     round him, 15), BEAST: ELECTRIC REVERSAL (an explosion all round him that throws them up, him up after them and down with them, 30 and 70),
+     THUNDER GOD'S WRATH: MAX (a wider stomp, a heavier fist and kick, three bolts after them, 80) and THUNDER GOD'S WRATH: BEAST MODE (a stomp
+     the whole floor feels, six fists, the kick, and a bolt the size of a tower, 144).
    The look is the Thunder God's (cast6.js, KASHIMO), the staff in his hand and not on his back */
 (() => {
 'use strict';
@@ -718,26 +724,31 @@ const B_OUTPUT = { name: 'Lightning Output: BEAST MODE', cd: 20, dur: 6, glow: '
   if (m.end !== undefined && k > m.end + .45) { p.ground = p.y <= 1; E.endMove(p); }
 } };
 
-/* ================= 3 — ELECTRIC REVERSAL ================= */
+/* ================= 3 — ELECTRIC REVERSAL, and (Build 0.28v2) its MAX and Beast Mode versions ================= */
 const STANCE_T = 1;
-const STANCE = { name: 'Electric Reversal', cd: 18, dur: STANCE_T + .1, glow: 'blue', staff: .12, run(p, m, t) {
-  const P = pal();
-  p.vx = 0; p.rate = 30; p.target = GUARD;
-  if (!m.s) { m.s = 1; sfx.zap(.8); label(p.x, p.y + 440, 'ELECTRIC REVERSAL', P.col, .9); }
-  st.charge = 1;
-  if (Math.random() < .5) zapAt(p.x + rnd(-60, 60), p.y + rnd(60, 280), 1, 130, 2, P.rgb);
-  if (t > STANCE_T) { st.charge = 0; E.endMove(p); }
-} };
+// a counter stance: hit in it, and its counter (v.counter) goes instead. MAX's spends the meter, and lets its charge go if nothing comes at him
+function stanceOf(v) {
+  return { name: v.name, cd: 18, dur: v.T + .1, stance: 1, v, get glow() { return (v.pal ? PAL[v.pal] : pal()).glow; }, staff: .12, run(p, m, t) {
+    if (!m.P) { m.P = v.pal ? PAL[v.pal] : pal(); if (v.spend) spend(); }
+    const P = m.P;
+    p.vx = 0; p.rate = 30; p.target = GUARD;
+    if (!m.s) { m.s = 1; sfx.zap(.8); label(p.x, p.y + 440, v.label, P.col, .9); }
+    st.charge = 1;
+    if (Math.random() < (v.pal ? .8 : .5)) zapAt(p.x + rnd(-60, 60), p.y + rnd(60, 280), 1, 130, 2, P.rgb);
+    if (t > v.T) { st.charge = 0; if (v.expire) v.expire(p, P); E.endMove(p); }
+  } };
+}
+function blinkBehind(p, o, P) {                     // behind them, before the blow has finished landing
+  st.charge = 0;
+  const x0 = p.x, y0 = p.y, side = p.x >= o.x ? 1 : -1, eb = bound();
+  p.x = clamp(o.x - side * 115, -eb, eb); p.y = 0; p.vy = 0; p.face = o.x >= p.x ? 1 : -1;
+  if (Z) { Z.lightning(x0, y0 + 170, p.x, 170, P.rgb, .22, 6, 2); zapAt(x0, y0 + 170, 4, 200, 3, P.rgb); }
+  V.sparks(p.x, 170, P.spark, 10); sfx.zap(1.1); sfx.whoosh(); E.stop(.05);
+}
 const REVERSE = { name: 'Electric Reversal', dur: .95, glow: 'blue', staff: 2.3, run(p, m, t) {
   const o = m.o, P = m.P || (m.P = pal());
   p.rate = 50; p.vx = 0;
-  if (!m.s) {                                       // behind them, before the blow has finished landing
-    m.s = 1; st.charge = 0; p.inv = Math.max(p.inv || 0, 1);
-    const x0 = p.x, y0 = p.y, side = p.x >= o.x ? 1 : -1, eb = bound();
-    p.x = clamp(o.x - side * 115, -eb, eb); p.y = 0; p.vy = 0; p.face = o.x >= p.x ? 1 : -1;
-    if (Z) { Z.lightning(x0, y0 + 170, p.x, 170, P.rgb, .22, 6, 2); zapAt(x0, y0 + 170, 4, 200, 3, P.rgb); }
-    V.sparks(p.x, 170, P.spark, 10); sfx.zap(1.1); sfx.whoosh(); E.stop(.05);
-  }
+  if (!m.s) { m.s = 1; p.inv = Math.max(p.inv || 0, 1); blinkBehind(p, o, P); }
   if (t < .3) {                                     // the ribs
     p.target = t < .1 ? POSE.hookWind : POSE.hook;
     if (t >= .1 && !m.rib && live(o)) {
@@ -761,10 +772,90 @@ const REVERSE = { name: 'Electric Reversal', dur: .95, glow: 'blue', staff: 2.3,
     ono('バリバリ', x, 420, P.col, 1); label(x, 600, 'REVERSAL', P.col, 1.1);
   }
 } };
-function guard(face, a) {                           // hit in the stance: it never lands
+// MAX: behind them, six strikes of purple into them, and the floor under them goes up (6 x 6, and 54: 90)
+const MAX_REVERSE = { name: 'Electric Reversal: MAX', dur: 1.3, glow: 'purple', staff: 2.3, run(p, m, t) {
+  const o = m.o, P = PAL.purple;
+  p.rate = 56; p.vx = 0;
+  if (!m.s) { m.s = 1; p.inv = Math.max(p.inv || 0, 1.3); blinkBehind(p, o, P); }
+  if (t < .45) {
+    const n = Math.min(6, Math.floor(t / .07) + 1);
+    p.target = n % 2 ? POSE.hook : POSE.jab;
+    while ((m.n || 0) < n && live(o)) {
+      m.n = (m.n || 0) + 1;
+      E.applyHit(o, p.face, { dmg: 6, kb: 25, stun: 1.2, stop: .03, col: P.col, mute: 1 }); play('home-lb-m1', .5, () => sfx.hit(false), 1.1 - m.n * .05);
+      V.sparks(o.x, mid(o), P.spark, 5); zapAt(o.x, mid(o), 2, 160, 3, P.rgb);
+    }
+    return;
+  }
+  p.target = t < .55 ? POSE.crushWind : t < .9 ? UPPER : POSE.idle;
+  if (t >= .55 && !m.up) {
+    m.up = 1;
+    const x = live(o) ? o.x : p.x + p.face * 120;
+    if (live(o)) E.applyHit(o, p.face, { dmg: 54, kb: 120, lift: 1300, stun: 1.2, stop: .22, heavy: 1, col: P.col, mute: 1 });
+    play('home-lb-crack', .9, () => sfx.thunder()); sfx.blast(); shake(36); E.zoomIn(.3);
+    if (Z) { Z.pillar(x, 110, 1100, P.rgb, .55); Z.flash(WHITE, .35, .2); Z.shock(x, 700, P.rgb, .45, 14); Z.boom(x, 60, 150, P.rgb, { n: 16, hot: WHITE }); }
+    zapAt(x, 30, 10, 420, 5, P.rgb); V.crack(x, 320); ono('バリバリッ', x, 460, P.col, 1.1); label(x, 640, 'REVERSAL: MAX', P.col, 1.1);
+  }
+  if (t > 1.15) E.endMove(p);
+} };
+// MAX, with nothing come at him: the charge let go all round him (15)
+function discharge(p, P) {
+  const o = E.P2, x = p.x;
+  play('home-lb-shock', .7, () => sfx.zap(.9)); shake(20);
+  E.addRing(x, P.rgb, 420); V.ring(x, 160, 320, P.col, .3); zapAt(x, 170, 10, 340, 4, P.rgb); if (Z) Z.shock(x, 500, P.rgb, .4, 12);
+  if (live(o) && Math.abs(o.x - x) < 340 && !(o.inv > 0) && o.state !== 'down' && o.state !== 'up') E.applyHit(o, o.x >= x ? 1 : -1, { dmg: 15, kb: 600, lift: 300, stun: .9, stop: .1, heavy: 1, col: P.col, mute: 1 });
+  label(x, p.y + 500, 'DISCHARGE', P.col, .9);
+}
+// Beast Mode: an explosion of orange all round him that throws them up, and him up after them, and down with them into the floor (30, and 70)
+const B_REVERSE = { name: 'Beast: Electric Reversal', dur: 1.7, glow: 'fire', staff: 2.3, run(p, m, t) {
+  const o = m.o, P = PAL.orange;
+  p.rate = 50; p.vx = 0;
+  if (!m.s) {
+    m.s = 1; st.charge = 0; p.inv = Math.max(p.inv || 0, 1.6);
+    const x = p.x, y = p.y + 160;
+    play('home-lb-crack', 1, () => sfx.thunder(), .8); sfx.blast(); shake(38); E.zoomIn(.3);
+    if (Z) { Z.boom(x, y, 220, P.rgb, { n: 26, hot: WHITE }); Z.flash(P.rgb, .35, .3); Z.shock(x, 900, P.rgb, .5, 16); }
+    E.addBlast(x, y, P.rgb, 520); zapAt(x, y, 12, 460, 5, P.rgb); V.ring(x, y, 450, P.col, .35);
+    if (live(o) && Math.abs(o.x - x) < 450 + 40 * ((o.scale || 1) - 1) && !(o.inv > 0)) E.applyHit(o, o.x >= x ? 1 : -1, { dmg: 30, kb: 250, lift: 1050, stun: 1.4, stop: .14, heavy: 1, col: P.col, mute: 1 });
+    label(x, p.y + 560, 'BEAST: REVERSAL', P.col, 1.2);
+  }
+  if (t < .3) { p.target = ROAR; return; }
+  if (m.x0 === undefined) { m.x0 = p.x; facing(p, o); }
+  if (t < .55) {                                    // up after them
+    const u = ease((t - .3) / .25);
+    if (live(o)) { const eb = bound(); p.x = clamp(lerp(m.x0, o.x - p.face * 60, u), -eb, eb); p.y = lerp(0, Math.max(0, o.y), u); }
+    p.ground = false; p.vy = 0; p.target = POSE.jump;
+    if (Math.random() < .8) zapAt(p.x, p.y + 160, 1, 180, 3, P.rgb);
+    return;
+  }
+  if (m.gy === undefined) { m.gy = p.y; if (live(o)) sfx.hit(true); }
+  if (t < .8) {                                     // and down with them
+    const u = (t - .55) / .25;
+    p.y = lerp(m.gy, 0, u * u); p.vy = 0; p.target = POSE.crush;
+    if (holdable(o)) Object.assign(o, { x: p.x + p.face * 55, y: Math.max(0, p.y + 30), vx: 0, vy: 0, state: 'air', ground: false, stun: .6, act: null, tele: 0 });
+    return;
+  }
+  if (!m.slam) {
+    m.slam = 1; p.y = 0; p.ground = true;
+    const x = p.x + p.face * 55;
+    dent(x, true, P); E.zoomIn(.45);
+    if (Z) { Z.pillar(x, 120, 1100, P.rgb, .6); Z.flash(WHITE, .35, .25); Z.decal('crater', x, 280, P.rgb, 10, 0); }
+    if (live(o)) {
+      if (holdable(o)) Object.assign(o, { x, y: 0, vy: 0, vx: 0, ground: true, state: 'down', stun: 1.6 });
+      E.applyHit(o, p.face, { dmg: 70, kb: 40, stun: 1.6, stop: .26, heavy: 1, col: P.col, mute: 1 });
+      big(p, o, 'ドゴォン', P.col, 'neg');
+    }
+  }
+  p.target = t < 1.2 ? POSE.crush : POSE.idle;
+  if (t > 1.4) E.endMove(p);
+} };
+const STANCE = stanceOf({ name: 'Electric Reversal', label: 'ELECTRIC REVERSAL', T: STANCE_T, counter: () => REVERSE });
+const MAX_STANCE = stanceOf({ name: 'Electric Reversal: MAX', label: 'ELECTRIC REVERSAL: MAX', T: 1.4, pal: 'purple', spend: 1, counter: () => MAX_REVERSE, expire: discharge });
+const B_STANCE = stanceOf({ name: 'Beast: Electric Reversal', label: 'BEAST: ELECTRIC REVERSAL', T: 1.2, pal: 'orange', counter: () => B_REVERSE });
+function guard(face, a) {                           // hit in a stance: it never lands, and the counter goes instead
   const p = E.P1, m = p.move, o = E.P2;
-  if (!(m && m.def === STANCE && m.t <= STANCE_T) || p.dead || !live(o)) return false;
-  p.move = { def: REVERSE, t: 0, o };              // (the stance's wait is spent already: the counter is part of it)
+  if (!(m && m.def.stance && m.t <= m.def.v.T) || p.dead || !live(o)) return false;
+  p.move = { def: m.def.v.counter(), t: 0, o };    // (the stance's wait is spent already: the counter is part of it)
   return true;
 }
 
@@ -776,79 +867,88 @@ const foot = p => { const ps = p.pose, a = ps[4], hip = Math.max(Math.cos(ps[4])
 // a blow of it, and whether it was the one that killed them: then the sky has something to say (killBolt)
 function wrathHit(o, face, h) { const was = o.ko; E.applyHit(o, face, h); if (!was && o.ko && o === E.P2) killBolt(o); }
 function wrathTry(p, h) { const o = E.P2, was = o.ko, r = E.tryHit(p, h); if (r && !was && o.ko) killBolt(o); return r; }
-const WRATH = { name: "Thunder God's Wrath", cd: 22, dur: 2.6, get glow() { return pal().glow; }, staff: 2.45, run(p, m, t) {
-  const o = E.P2, P = m.P || (m.P = pal());
-  p.rate = 44;
-  if (!m.s) { m.s = 1; facing(p, o); sfx.zap(.75); label(p.x, p.y + 480, "THUNDER GOD'S WRATH", P.col, 1.2); }
-  const s = m.stunned;
-  if (s && live(s) && Math.random() < .45) zapAt(s.x + rnd(-30, 30), mid(s) + rnd(-70, 70), 1, 120, 2, P.rgb);      // (it crawls over them while they stand there)
-  if (t < STOMP_AT) {                               // the foot up, and the lightning gathering in it
-    p.vx = 0; p.target = STOMP_UP; st.charge = 1;
-    if (!p.ground) p.vy = Math.min(p.vy, -1800);    // (in the air: down to the floor for it)
-    if (Math.random() < .6) { const q = foot(p); zapAt(q[0], q[1], 1, 130, 2, P.rgb); }
-    return;
-  }
-  if (!m.stomp) { m.stomp = 1; st.charge = 0; stomp(p, m, P); }
-  if (t < STOMP_AT + .14) { p.vx = 0; p.target = STOMP; return; }
-  if (m.at === undefined) {                         // then in at them
-    if (!live(o)) { p.vx = 0; p.target = POSE.idle; if (t > STOMP_AT + .5) E.endMove(p); return; }      // (the stomp was enough)
-    if (m.r0 === undefined) { m.r0 = t; facing(p, o); sfx.whoosh(); sfx.zap(1.15); if (Z) Z.dust(p.x, 6, -p.face); }
-    const gap = (o.x - p.x) * p.face, eb = bound();
-    p.target = POSE.dash; p.vx = gap > 135 && Math.abs(p.x + p.face * 60) < eb ? p.face * 2600 : 0;
-    if (Z && Math.random() < .85) Z.lightning(p.x - p.face * 30, p.y + rnd(60, 260), p.x - p.face * rnd(140, 280), p.y + rnd(40, 280), P.rgb, .1, 2.5, 0);
-    if (gap <= 135 || t - m.r0 > RUSH_T || p.vx === 0) { m.at = t; p.vx = 0; }
-    return;
-  }
-  const u = t - m.at;
-  p.vx = 0;
-  if (u < .1) {                                     // the fist drawn back, with all of it in it
-    p.target = PUNCH_W;
-    if (Math.random() < .8) { const h = E.hand(p, false); zapAt(h[0], h[1], 1, 110, 2, P.rgb); }
-    return;
-  }
-  if (!m.punch) { m.punch = 1; punch(p, o, P); }
-  if (u < .3) { p.target = PUNCH_P; return; }
-  if (u < .4) { p.target = POSE.kickWind; if (Math.random() < .8) { const q = foot(p); zapAt(q[0], q[1], 1, 120, 2, P.rgb); } return; }
-  if (!m.kick) { m.kick = 1; kick(p, o, P); }
-  if (u < .72) { p.target = POSE.kick; if (Math.random() < .7) { const q = foot(p); zapAt(q[0], q[1], 1, 140, 2, P.rgb); } return; }
-  p.target = POSE.idle;
-  if (u > 1) E.endMove(p);
-} };
-function stomp(p, m, P) {                           // the foot down, and the floor goes off round him: whatever is near enough stands there stunned
-  const x = p.x + p.face * 30, o = E.P2, STOMP_R = STOMP_R0 * (beastOn() ? 2 : 1);
-  play('home-lb-crack', .7, () => sfx.thunder()); sfx.blast(); shake(22); E.stop(.05);
-  V.crack(x, 260); V.rocks(x, 0, 8); E.addRing(x, P.rgb, STOMP_R + 100); V.ring(x, 30, STOMP_R, P.col, .3); V.sparks(x, 20, P.spark, 12);
+// Thunder God's Wrath, and (Build 0.28v2) its MAX and Beast Mode versions: the stomp, in at them, the fist (or a run of them), the kick, and (v.sky) the sky after them
+function wrathOf(v) {
+  return { name: v.name, cd: 22, dur: 3.6, wrath: 1, v, get glow() { return (v.pal ? PAL[v.pal] : pal()).glow; }, staff: 2.45, run(p, m, t) {
+    const o = E.P2;
+    if (!m.P) { m.P = v.pal ? PAL[v.pal] : pal(); if (v.spend) spend(); }
+    const P = m.P, n = v.punches.length, PEND = .1 + (n - 1) * .07 + .2, KICK_AT = PEND + .1;
+    p.rate = 44;
+    if (!m.s) { m.s = 1; facing(p, o); sfx.zap(.75); label(p.x, p.y + 480, v.label, P.col, 1.2); }
+    const s = m.stunned;
+    if (s && live(s) && Math.random() < .45) zapAt(s.x + rnd(-30, 30), mid(s) + rnd(-70, 70), 1, 120, 2, P.rgb);      // (it crawls over them while they stand there)
+    if (t < STOMP_AT) {                             // the foot up, and the lightning gathering in it
+      p.vx = 0; p.target = STOMP_UP; st.charge = 1;
+      if (!p.ground) p.vy = Math.min(p.vy, -1800);  // (in the air: down to the floor for it)
+      if (Math.random() < .6) { const q = foot(p); zapAt(q[0], q[1], 1, 130, 2, P.rgb); }
+      return;
+    }
+    if (!m.stomp) { m.stomp = 1; st.charge = 0; stomp(p, m, P, v); }
+    if (t < STOMP_AT + .14) { p.vx = 0; p.target = STOMP; return; }
+    if (m.at === undefined) {                       // then in at them
+      if (!live(o)) { p.vx = 0; p.target = POSE.idle; if (t > STOMP_AT + .5) E.endMove(p); return; }      // (the stomp was enough)
+      if (m.r0 === undefined) { m.r0 = t; facing(p, o); sfx.whoosh(); sfx.zap(1.15); if (Z) Z.dust(p.x, 6, -p.face); }
+      const gap = (o.x - p.x) * p.face, eb = bound();
+      p.target = POSE.dash; p.vx = gap > 135 && Math.abs(p.x + p.face * 60) < eb ? p.face * 2600 : 0;
+      if (Z && Math.random() < .85) Z.lightning(p.x - p.face * 30, p.y + rnd(60, 260), p.x - p.face * rnd(140, 280), p.y + rnd(40, 280), P.rgb, .1, 2.5, 0);
+      if (gap <= 135 || t - m.r0 > RUSH_T || p.vx === 0) { m.at = t; p.vx = 0; }
+      return;
+    }
+    const u = t - m.at;
+    p.vx = 0;
+    if (u < .1) {                                   // the fist drawn back, with all of it in it
+      p.target = PUNCH_W;
+      if (Math.random() < .8) { const h = E.hand(p, false); zapAt(h[0], h[1], 1, 110, 2, P.rgb); }
+      return;
+    }
+    const due = Math.min(n, Math.floor((u - .1) / .07) + 1);
+    while ((m.np || 0) < due) { m.np = (m.np || 0) + 1; punch(p, o, P, v.punches[m.np - 1], m.np === n); }
+    if (u < PEND) { p.target = m.np % 2 ? PUNCH_P : POSE.jab; return; }
+    if (u < KICK_AT) { p.target = POSE.kickWind; if (Math.random() < .8) { const q = foot(p); zapAt(q[0], q[1], 1, 120, 2, P.rgb); } return; }
+    if (!m.kick) { m.kick = 1; kick(p, o, P, v.kick); }
+    if (u < KICK_AT + .32) { p.target = POSE.kick; if (Math.random() < .7) { const q = foot(p); zapAt(q[0], q[1], 1, 140, 2, P.rgb); } return; }
+    p.target = POSE.idle;
+    if (v.sky) { const k = u - KICK_AT, d = Math.min(v.sky[0], Math.floor((k - .3) / .16) + 1); while ((m.ns || 0) < d) { m.ns = (m.ns || 0) + 1; skyBolt(E.P2, P, v.sky[1], v.sky[0] === 1); } }
+    if (u > KICK_AT + .6 + (v.sky ? .3 + v.sky[0] * .16 : 0)) E.endMove(p);
+  } };
+}
+function stomp(p, m, P, v) {                        // the foot down, and the floor goes off round him: whatever is near enough stands there stunned
+  const x = p.x + p.face * 30, o = E.P2, STOMP_R = STOMP_R0 * v.stomp[1], huge = STOMP_R > 600;
+  play('home-lb-crack', huge ? 1 : .7, () => sfx.thunder(), huge ? .8 : 1); sfx.blast(); shake(huge ? 38 : 22); E.stop(.05);
+  V.crack(x, huge ? 420 : 260); V.rocks(x, 0, huge ? 16 : 8); E.addRing(x, P.rgb, STOMP_R + 100); V.ring(x, 30, STOMP_R, P.col, .3); V.sparks(x, 20, P.spark, huge ? 20 : 12);
   if (Z) {
-    Z.shock(x, STOMP_R + 180, P.rgb, .4, 12); Z.dust(x, 10); Z.decal('scorch', x, 150, P.rgb, 6, 0);
-    for (let i = 0; i < 10; i++) { const d = i % 2 ? 1 : -1, l = rnd(STOMP_R * .55, STOMP_R + 40); Z.lightning(x, 6, x + d * l, rnd(0, 80), P.rgb, rnd(.16, .3), 3, 2); }      // along the floor, both ways
+    Z.shock(x, STOMP_R + 180, P.rgb, .4, 12); Z.dust(x, huge ? 18 : 10); Z.decal('scorch', x, huge ? 240 : 150, P.rgb, 6, 0);
+    for (let i = 0; i < (huge ? 18 : 10); i++) { const d = i % 2 ? 1 : -1, l = rnd(STOMP_R * .55, STOMP_R + 40); Z.lightning(x, 6, x + d * l, rnd(0, 80), P.rgb, rnd(.16, .3), huge ? 4 : 3, 2); }      // along the floor, both ways
+    if (huge) { Z.flash(P.rgb, .3, .3); Z.dim(.4, .4); }
   }
-  ono('ドンッ', x - p.face * 60, 300, P.col, 1, .4);
-  if (!live(o) || o.state === 'down' || o.state === 'up' || o.inv > 0 || o.y > 220 || Math.abs(o.x - x) > STOMP_R + 40 * ((o.scale || 1) - 1)) return;
-  wrathHit(o, o.x >= p.x ? 1 : -1, { dmg: W_STOMP, kb: 0, stun: STUN_T, stop: .08, col: P.col, mute: 1 });
+  ono(huge ? 'ズドォン' : 'ドンッ', x - p.face * 60, 300, P.col, huge ? 1.3 : 1, .4);
+  if (!live(o) || o.state === 'down' || o.state === 'up' || o.inv > 0 || o.y > (huge ? 400 : 220) || Math.abs(o.x - x) > STOMP_R + 40 * ((o.scale || 1) - 1)) return;
+  wrathHit(o, o.x >= p.x ? 1 : -1, { dmg: v.stomp[0], kb: 0, stun: v.stun || STUN_T, stop: .08, col: P.col, mute: 1 });
   if (!live(o) || o.blockAt === E.T) return;        // (killed by it, or it was blocked: ps.js)
   m.stunned = o;
   zapAt(o.x, mid(o), 5, 210, 3, P.rgb); V.sparks(o.x, mid(o), P.spark, 10); sfx.zap(.9);
   label(o.x, o.y + 420, 'STUNNED', P.col, .9);
 }
-function punch(p, o, P) {                           // a fist with all of it in it
+function punch(p, o, P, dmg = W_PUNCH, heavy = true) {      // a fist with all of it in it (and the run of them before it in Beast Mode, lighter)
   sfx.whoosh();
-  const h = E.hand(p, false), f = p.face;
-  if (!(live(o) && wrathTry(p, { reach: 195, dmg: W_PUNCH, kb: 90, stun: 1, stop: .16, heavy: 1, col: P.col, mute: 1 }))) {      // (nothing there: it goes off into the air)
+  const h = E.hand(p, !heavy), f = p.face;
+  if (!(live(o) && wrathTry(p, { reach: 195, dmg, kb: heavy ? 90 : 30, stun: 1, stop: heavy ? .16 : .04, heavy: heavy ? 1 : 0, col: P.col, mute: 1 }))) {      // (nothing there: it goes off into the air)
     if (Z) Z.lightning(h[0], h[1], h[0] + f * 360, h[1] + rnd(-40, 40), P.rgb, .18, 5, 2);
     return;
   }
   const x = o.x - f * 20, y = mid(o);
+  if (!heavy) { play('home-lb-m1', .6, () => sfx.hit(false), 1 + rnd(0, .3)); V.sparks(x, y, P.spark, 6); zapAt(x, y, 2, 180, 3, P.rgb); return; }
   play('home-lb-m1', .95, () => sfx.hit(true), .72); sfx.zap(.85); shake(26); E.zoomIn(.2);
   E.addBlast(x, y, P.rgb, 330); V.ring(x, y, 230, P.col, .25); V.sparks(x, y, P.spark, 14); zapAt(x, y, 7, 300, 4, P.rgb);
   if (Z) { Z.flare(x, y, P.rgb, 300, .2); Z.flash(WHITE, .18, .12); for (let i = 0; i < 2; i++) Z.lightning(x, y, x + f * rnd(320, 460), y + rnd(-90, 90), P.rgb, .2, 6, 3); }      // (and out through the back of them)
   ono('ドゴッ', o.x + rnd(-40, 40), o.y + 420 * (o.scale || 1), P.col, 1.1, .6);
 }
 let trail = null;                                   // { o, t, P }: the lightning going with them, wherever the kick sent them
-function kick(p, o, P) {                            // a kick with the lightning in it (no guard holds it), and they go flying, end over end (vengeful.js: flung)
+function kick(p, o, P, dmg = W_KICK) {              // a kick with the lightning in it (no guard holds it), and they go flying, end over end (vengeful.js: flung)
   sfx.whoosh();
   const q = foot(p), f = p.face;
   if (Z) Z.lightning(q[0], q[1], q[0] + f * rnd(260, 380), q[1] + rnd(-30, 50), P.rgb, .2, 6, 3);
-  if (!(live(o) && wrathTry(p, { reach: 220, dmg: W_KICK, kb: 1500, lift: 720, stun: 1, stop: .2, heavy: 1, col: P.col, mute: 1, brk: 1, flung: 1 }))) return;
+  if (!(live(o) && wrathTry(p, { reach: 220, dmg, kb: 1500, lift: 720, stun: 1, stop: .2, heavy: 1, col: P.col, mute: 1, brk: 1, flung: 1 }))) return;
   const x = o.x - f * 10, y = mid(o);
   play('home-lb-crack', .85, () => sfx.thunder()); sfx.hit(true); shake(32); E.zoomIn(.3);
   E.addBlast(x, y, P.rgb, 420); V.ring(x, y, 300, P.col, .3); V.sparks(x, y, P.spark, 18); zapAt(x, y, 9, 360, 4, P.rgb);
@@ -856,6 +956,22 @@ function kick(p, o, P) {                            // a kick with the lightning
   big(p, o, 'バキィッ', P.col, 'neg');
   if (live(o)) trail = { o, t: 0, P };
 }
+function skyBolt(o, P, dmg, huge) {                 // and the sky after them, wherever the kick sent them
+  if (!live(o)) return;
+  const x = o.x, y = mid(o), was = o.ko;
+  sky(x, y, P.rgb, huge ? 14 : 8);
+  if (Z) { Z.pillar(x, huge ? 120 : 60, 1100, P.rgb, huge ? .6 : .35); Z.flash(WHITE, huge ? .3 : .12, .15); }
+  play('home-lb-crack', huge ? 1 : .7, () => sfx.thunder(), huge ? .8 : 1.1); shake(huge ? 34 : 16);
+  V.sparks(x, y, P.spark, huge ? 18 : 8); zapAt(x, y, huge ? 8 : 4, huge ? 360 : 220, 4, P.rgb);
+  chip(o, dmg, P.col);
+  if (!was && o.ko) killBolt(o);
+  if (huge) ono('ドガァン', x, y + 300, P.col, 1.2, .8);
+}
+const WRATH = wrathOf({ name: "Thunder God's Wrath", label: "THUNDER GOD'S WRATH", stomp: [W_STOMP, 1], punches: [W_PUNCH], kick: W_KICK });
+// MAX (spends the meter): a wider stomp, a heavier fist and kick, and three bolts down on them after (8, 16, 20, 3 x 12: 80)
+const MAX_WRATH = wrathOf({ name: "Thunder God's Wrath: MAX", label: "THUNDER GOD'S WRATH: MAX", pal: 'purple', spend: 1, stomp: [8, 1.5], stun: 1.5, punches: [16], kick: 20, sky: [3, 12] });
+// Beast Mode: a stomp the whole floor feels, six fists of orange, the kick, and one bolt the size of a tower (20, 6 x 9, 40, 30: 144)
+const B_WRATH = wrathOf({ name: "Thunder God's Wrath: BEAST MODE", label: "THUNDER GOD'S WRATH: BEAST MODE", pal: 'orange', stomp: [20, 2.6], stun: 1.8, punches: [9, 9, 9, 9, 9, 9], kick: 40, sky: [1, 30] });
 function trailTick(dt) {
   const s = trail, o = s.o;
   if ((s.t += dt) > .9 || o !== E.P2) { trail = null; return; }
@@ -913,15 +1029,15 @@ function finTick(dt) {
 const MOVES = {
   get strikes() { return beastOn() ? B_BARRAGE : full() ? MAX_BARRAGE : BARRAGE; },
   get crush() { return beastOn() ? B_OUTPUT : full() ? OUTPUT_MAX : DISCHARGE; },
-  div: STANCE, manji: WRATH };
+  get div() { return beastOn() ? B_STANCE : full() ? MAX_STANCE : STANCE; },
+  get manji() { return beastOn() ? B_WRATH : full() ? MAX_WRATH : WRATH; } };
 let shownL = '';
 function relabel() {                                // the hotbar's names, as the meter changes them
   if (!on()) { shownL = ''; return; }
-  const a = MOVES.strikes, b = MOVES.crush, key = a.name + '|' + b.name;
+  const ks = ['strikes', 'crush', 'div', 'manji'], ds = ks.map(k => MOVES[k]), key = ds.map(d => d.name).join('|');      // (all four change with the mode from 0.28v2)
   if (key === shownL) return;
   shownL = key;
-  E.hud.mv.strikes.querySelector('b').textContent = a.name; E.CD.strikes = a.cd;
-  E.hud.mv.crush.querySelector('b').textContent = b.name; E.CD.crush = b.cd;
+  ks.forEach((k, i) => { E.hud.mv[k].querySelector('b').textContent = ds[i].name; E.CD[k] = ds[i].cd; });
 }
 const SKIN = Object.assign({}, JU.cast6.KASHIMO, {
   back() {                                          // on his back only where it is not in his hand (walking about the city)
@@ -957,7 +1073,7 @@ H.tick = dt => {
   if (!on()) { if (imp) impEnd(); held = null; st.charge = 0; fin = trail = null; paintMeter(); return; }
   const p = E.P1;
   if (held && !(p.move && (p.move.def === DISCHARGE || p.move.def === OUTPUT_MAX))) held = null;
-  if (st.charge && !(p.move && (p.move.def === STANCE || p.move.def === CHARGE || p.move.def === WRATH))) st.charge = 0;
+  if (st.charge && !(p.move && (p.move.def.stance || p.move.def === CHARGE || p.move.def.wrath))) st.charge = 0;
   if (E.root.dataset.mode === 'fight') meterTick(dt);
   if (ls.on) lastTick(dt);
   if (imp) impTick(dt);
@@ -994,7 +1110,7 @@ const clear = () => {
 H.reset = () => { reset0(); clear(); };
 H.fightStart = (cfg, wave) => { start0(cfg, wave); if (!wave) clear(); };
 
-JU.beast = { MOVES, BARRAGE, MAX_BARRAGE, B_BARRAGE, DISCHARGE, OUTPUT_MAX, B_OUTPUT, STANCE, REVERSE, WRATH, SKIN, st, mt, esp: ESP,      // (esp: E, especial.js)
+JU.beast = { MOVES, BARRAGE, MAX_BARRAGE, B_BARRAGE, DISCHARGE, OUTPUT_MAX, B_OUTPUT, STANCE, REVERSE, WRATH, MAX_STANCE, MAX_REVERSE, B_STANCE, B_REVERSE, MAX_WRATH, B_WRATH, SKIN, st, mt, esp: ESP,      // (esp: E, especial.js)
   get last() { return { on: ls.on, used: ls.used, t: +ls.t.toFixed(2) }; },
   get fin() { return fin && { t: +fin.t.toFixed(2), hit: !!fin.hit }; },
   get state() { return { bars: mt.bars, cd: +mt.cd.toFixed(1), ult: mt.ult, beast: +mt.beast.toFixed(1), chain: chainLen(), imp: imp && { phase: imp.phase, slams: imp.slams, t: +imp.t.toFixed(2) }, planted: !!st.planted }; } };

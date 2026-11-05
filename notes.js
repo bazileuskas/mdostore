@@ -5,6 +5,11 @@
 // Newest first. v = the build, jp = the seal stamped beside it, pic = notes/<pic>.jpg, cap = what the picture shows.
 // A new update goes at the top of this list.
 const NOTES = [
+  { v: '0.28v2', name: 'Every Mode', jp: '変化', date: '5 Nov 2026', pic: 'everymode', cap: 'The Lightning Beast\'s 3 and 4 in MAX and in Beast Mode', items: [
+    'The Lightning Beast\'s 3 and 4 were the same move in every mode, only coloured. Now each has a MAX version and a Beast Mode version of its own, so every mode has four moves of its own. The MAX ones spend the meter, as the other MAX moves do',
+    'Electric Reversal: MAX: a longer stance. Hit him in it and he is behind them: six strikes of purple, and the floor goes up under them (90). If nothing comes at him, its charge is let go all round him (15)',
+    'Beast: Electric Reversal: hit him in it and the orange goes off all round him and throws them up (30), and he goes up after them and comes down with them into the floor (70)',
+    'Thunder God\'s Wrath: MAX: a wider stomp, a heavier fist and kick, and three bolts down on them after (80). Thunder God\'s Wrath: BEAST MODE: a stomp the whole floor feels, six fists of orange, the kick, and a bolt the size of a tower (144)'] },
   { v: '0.28v1', name: 'Restocked', jp: '補充', date: '5 Nov 2026', pic: 'restocked', cap: 'Registration restocked, and the reach of Beast Mode', items: [
     'Registration has real sounds now: a receipt torn for each thing he buys, the crack of a bat, a mitt, the knives, cardboard, a car crash and its engine (higher for the scooter, lower for the bus), an explosion, wood breaking, the extinguisher and the hose, a house coming down, a pistol, a sniper rifle and its bolt, pins going down, a reel, a sledgehammer and a jackhammer. Online they play straight from where they are posted',
     'Four more cards, so the deck is fourteen: Bowling Strike (a ball along the floor, 28, and they go over like a pin), Shopping Spree (a trolley: it scoops them up and goes into the wall with them in it, 32), Fishing Trip (hooked, reeled in, and the rod up under the chin, 28) and Renovation (a sledgehammer, 32)',
