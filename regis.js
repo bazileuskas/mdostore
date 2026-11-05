@@ -16,12 +16,17 @@
      its extra variant, the same thing bigger, or more of it. The Coupon on the Extra Coupon (Coupon, then Extra Coupon) makes it a PRIZE: the
      next of the eight is not done at all, and its receipt buys a random cursed tool (at the Cursed Tools reel's odds, tools.js), a pistol with
      two bullets or a sniper rifle with one, which takes that key until it is used up.
+   Build 0.28v1, the user's: "add real sound effects for registration from the internet. also add more moves to him and also on the internet
+     take the inspiration from the models on the internet to make cars, the bat and everything else look 10000000000000000000x better".
+     SOUNDS: real ones for all of it (home-rg-*: at home our cut of each, everywhere else straight from where it is posted, index.html's WEB),
+     the built ones only where a clip cannot be had. FOUR MORE, each with its coupon and extra variant, so the deck is fourteen: Bowling
+     Strike, Shopping Spree, Fishing Trip and Renovation. And everything he buys drawn again, after photographs of the real things.
    The look is the Receipt Man's (cast6.js, REGGIE), and the Receipt Man is what the game calls him */
 (() => {
 'use strict';
 
 const E = JU.eng, g = E.g, F = E.F, cam = E.cam, H = E.hooks, POSE = E.POSE, LINE = E.LINE, V = JU.vfx, sfx = JU.sfx, Fi = JU.fights, T = JU.tech, Z = JU.bossfx;
-const { rnd, clamp, lerp } = E, TAU = Math.PI * 2, SLOTS = T.SLOTS;
+const { rnd, clamp, lerp, ease } = E, TAU = Math.PI * 2, SLOTS = T.SLOTS;
 const PAPER = '#f1eee2', PRGB = '241,238,226', CPN = '#7dffb0', CRGB = '125,255,176', XTR = '#ffb347', XRGB = '255,179,71', GOLD = '#ffd84a', GRGB = '255,216,74', WHITE = '255,255,255';
 const WOOD = '#c8955a', WOOD2 = '#9c6b38', WRGB = '170,118,66', STEEL = '#dfe6ee', CARD = '#c99c5f', CARD2 = '#ad8148', CRD = '190,146,92', TAPE = '#eadcae', GLASS = '200,230,255', RED = '#e2383c';
 const ARMED = { coupon: CPN, extra: XTR, prize: GOLD };
@@ -49,6 +54,10 @@ const ono = (text, x, y, col = PAPER, s = .9, life = .8) => { if (JU.ms) JU.ms.o
 const exact = (o, n) => n / (o.dr || 1);
 const dtOf = (m, t) => { const d = m.lt === undefined ? 0 : t - m.lt; m.lt = t; return d; };
 const pick = a => a[Math.random() * a.length | 0];
+const play = (name, vol, alt, rate = 1) => { if (!sfx.file(name, vol, rate)) alt(); };      // the clip (at home ours, online from where it is posted), or a built sound
+sfx.preload(['home-rg-rip', 'home-rg-tear', 'home-rg-bat', 'home-rg-mitt', 'home-rg-stamp', 'home-rg-slash', 'home-rg-stab', 'home-rg-box', 'home-rg-crash', 'home-rg-engine',
+  'home-rg-boom', 'home-rg-wood', 'home-rg-smash', 'home-rg-spray', 'home-rg-hose', 'home-rg-splash', 'home-rg-collapse', 'home-rg-pistol', 'home-rg-sniper', 'home-rg-bolt',
+  'home-rg-bowl', 'home-rg-reel', 'home-rg-hammer', 'home-rg-jack']);
 
 // a blow of his that does not go through tryHit (a ball, a car, a house): on them wherever they are, worth exactly what it says
 function hit(o, face, dmg, more) {
@@ -75,131 +84,440 @@ function receipt(x, y, n = 10, rgb = PRGB) {        // a receipt held up and bur
   for (let i = 0; i < 8; i++) Z.emit(5, x, y, rnd(-200, 200), rnd(0, 400), rnd(3, 5), rnd(.3, .6), '255,170,80');
   Z.flare(x, y, '255,210,120', 220, .16);
 }
-function buy(p, what, col = PAPER) { const h = E.hand(p, true); receipt(h[0], h[1]); sfx.rip(); label(p.x, p.y + 480, what, col, 1.1); }
+function buy(p, what, col = PAPER) { const h = E.hand(p, true); receipt(h[0], h[1]); play('home-rg-rip', .7, () => sfx.rip()); label(p.x, p.y + 480, what, col, 1.1); }
 const gone = (p, front = true) => { const h = E.hand(p, front); receipt(h[0], h[1], 5); };      // and what it bought, gone back into it
 function bits(x, y, n, rgb, spread = 500, size = 10) {      // pieces of whatever it was
   if (Z) for (let i = 0; i < n; i++) Z.emit(3, x + rnd(-50, 50), y + rnd(-40, 40), rnd(-spread, spread), rnd(150, 900), rnd(size * .5, size * 1.4), rnd(.6, 1.3), rgb, { g: 1700, vr: rnd(-14, 14), rot: rnd(0, TAU), w: rnd(.25, .7), edge: 'rgba(30,20,12,.55)' });
 }
 function puffs(x, y, n, rgb = '232,234,238', s = 60, spread = 220, up = 120) { if (Z) for (let i = 0; i < n; i++) Z.emit(2, x + rnd(-40, 40), y + rnd(-20, 20), rnd(-spread, spread), rnd(20, up), s * rnd(.7, 1.3), rnd(.6, 1.2), rgb, { s1: 2.4, a: .6, dr: 2.2 }); }
-function thud(x, hard) { sfx.blast(); if (hard) sfx.rough(1.1); else sfx.land(); shake(hard ? 36 : 14); V.crack(x, hard ? 340 : 160); V.rocks(x, 0, hard ? 12 : 4); if (Z) { Z.dust(x, hard ? 14 : 5); if (hard) Z.shock(x, 640, '235,225,205', .45, 12); } }
+function thud(x, hard, quiet) { if (!quiet) { sfx.blast(); if (hard) sfx.rough(1.1); else sfx.land(); } shake(hard ? 36 : 14); V.crack(x, hard ? 340 : 160); V.rocks(x, 0, hard ? 12 : 4); if (Z) { Z.dust(x, hard ? 14 : 5); if (hard) Z.shock(x, 640, '235,225,205', .45, 12); } }
 
-/* ================= what he buys, drawn: (0, 0) the middle of the bottom of each, +x the way it faces, +y down the screen ================= */
+/* ================= what he buys, drawn (Build 0.28v1: all of it again, after photographs of the real things: a 1992 Corolla, a Vespa LX150,
+   an International school bus, a fire engine with its ladders, a wood bat's taper, a CO2 extinguisher, a brick ranch house, a Queen Anne chair,
+   an Empire sofa, a Glock, a K14 rifle and the rest; looked at on Wikimedia Commons, drawn here in the game's own lines).
+   (0, 0) is the middle of the bottom of each, +x the way it faces, +y down the screen; a thing in a hand runs along +x out of the hand ================= */
 let LWK = 1;                                        // (line widths, kept the same however big the thing is drawn)
-function R(x, y, w, h, fill, l = 3) { g.fillStyle = fill; g.fillRect(x, y, w, h); g.lineWidth = l * LWK; g.strokeStyle = LINE; g.strokeRect(x, y, w, h); }
-function Q(fill, pts, l = 3) { g.beginPath(); g.moveTo(pts[0], pts[1]); for (let i = 2; i < pts.length; i += 2) g.lineTo(pts[i], pts[i + 1]); g.closePath(); g.fillStyle = fill; g.fill(); g.lineWidth = l * LWK; g.lineJoin = 'round'; g.strokeStyle = LINE; g.stroke(); }
-function O(x, y, r, fill, l = 3) { g.beginPath(); g.arc(x, y, r, 0, TAU); g.fillStyle = fill; g.fill(); g.lineWidth = l * LWK; g.strokeStyle = LINE; g.stroke(); }
-const wheel = (x, y, r) => { O(x, y, r, '#17171b'); O(x, y, r * .42, '#9aa3ad', 2); };
-function bat(len = 150, col = WOOD) {               // from its knob (0) to the end of its barrel (len), along x
-  g.beginPath(); g.moveTo(0, -4); g.lineTo(len * .32, -4.5); g.quadraticCurveTo(len * .62, -10, len - 11, -11); g.arc(len - 11, 0, 11, -Math.PI / 2, Math.PI / 2); g.quadraticCurveTo(len * .62, 10, len * .32, 4.5); g.lineTo(0, 4); g.closePath();
-  g.fillStyle = col; g.fill(); g.lineWidth = 3 * LWK; g.lineJoin = 'round'; g.strokeStyle = LINE; g.stroke();
-  g.fillStyle = 'rgba(255,255,255,.3)'; g.fillRect(len * .4, -7.5, len * .48, 3);
-  g.fillStyle = '#26262c'; g.fillRect(3, -4, len * .24, 8);
-  R(-7, -7.5, 7, 15, '#26262c', 2);
+const hexn = h => parseInt(h.slice(1), 16), chan = (n, s) => n >> s & 255;
+const lighten = (hex, a) => { const n = hexn(hex), c = s => Math.round(chan(n, s) + (255 - chan(n, s)) * a); return `rgb(${c(16)},${c(8)},${c(0)})`; };
+const darken = (hex, a) => { const n = hexn(hex), c = s => Math.round(chan(n, s) * (1 - a)); return `rgb(${c(16)},${c(8)},${c(0)})`; };
+function lgr(x0, y0, x1, y1, ...cols) { const gr = g.createLinearGradient(x0, y0, x1, y1); cols.forEach((c, i) => gr.addColorStop(i / (cols.length - 1), c)); return gr; }
+function rgr(x, y, r, ...cols) { const gr = g.createRadialGradient(x - r * .35, y - r * .4, r * .05, x, y, r); cols.forEach((c, i) => gr.addColorStop(i / (cols.length - 1), c)); return gr; }
+function ink(l = 3) { g.lineWidth = l * LWK; g.lineJoin = 'round'; g.lineCap = 'round'; g.strokeStyle = LINE; g.stroke(); }
+function fillInk(fill, l = 3) { g.fillStyle = fill; g.fill(); if (l) ink(l); }      // (l 0: no outline)
+function pts(p) { g.beginPath(); g.moveTo(p[0], p[1]); for (let i = 2; i < p.length; i += 2) g.lineTo(p[i], p[i + 1]); g.closePath(); }
+function R(x, y, w, h, fill, l = 3) { g.beginPath(); g.rect(x, y, w, h); fillInk(fill, l); }
+function RR(x, y, w, h, r, fill, l = 3) { g.beginPath(); g.roundRect(x, y, w, h, r); fillInk(fill, l); }
+function Q(fill, p, l = 3) { pts(p); fillInk(fill, l); }
+function O(x, y, r, fill, l = 3) { g.beginPath(); g.arc(x, y, r, 0, TAU); fillInk(fill, l); }
+function E2(x, y, rx, ry, fill, l = 3, rot = 0) { g.beginPath(); g.ellipse(x, y, rx, ry, rot, 0, TAU); fillInk(fill, l); }
+const thin = (x0, y0, x1, y1, col, w = 1.5) => { g.strokeStyle = col; g.lineWidth = w * LWK; g.beginPath(); g.moveTo(x0, y0); g.lineTo(x1, y1); g.stroke(); };
+function shine(x0, y0, x1, y1, a = .35, w = 3) { g.save(); g.globalAlpha *= a; g.lineCap = 'round'; thin(x0, y0, x1, y1, '#ffffff', w); g.restore(); }
+function ground(w, a = .3) { g.fillStyle = `rgba(0,0,0,${a})`; g.beginPath(); g.ellipse(0, -1, w, w * .07, 0, 0, TAU); g.fill(); }      // its shadow on the floor
+function word(text, x, y, size, col, face = 1, weight = 'bold') {      // writing on a thing, the right way round whichever way it faces
+  g.save(); g.translate(x, y); g.scale(face < 0 ? -1 : 1, 1); g.font = `${weight} ${size}px Anton, Impact, sans-serif`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillStyle = col; g.fillText(text, 0, 0); g.restore();
+}
+// a wheel: its tyre, a rim of five spokes turned by `spin` (how far it has rolled, over its radius), and the hub
+function wheel(x, y, r, spin = 0, rim = '#c9ced6') {
+  O(x, y, r, '#141418');
+  g.strokeStyle = 'rgba(255,255,255,.1)'; g.lineWidth = 2 * LWK; g.beginPath(); g.arc(x, y, r * .82, 0, TAU); g.stroke();
+  g.beginPath(); g.arc(x, y, r * .62, 0, TAU); fillInk(lgr(x, y - r * .6, x, y + r * .6, lighten(rim, .5), rim, darken(rim, .4)), 2);
+  g.save(); g.translate(x, y); g.rotate(spin); g.fillStyle = darken(rim, .55);
+  for (let i = 0; i < 5; i++) { g.rotate(TAU / 5); g.beginPath(); g.ellipse(0, -r * .37, r * .11, r * .17, 0, 0, TAU); g.fill(); }
+  g.restore();
+  O(x, y, r * .15, darken(rim, .2), 1.5);
+}
+
+/* ---------- the bat, the ball ---------- */
+function bat(len = 160, col = WOOD) {               // a wood bat from its knob (0) to the end of its barrel (len): the taper of a real one
+  const L = len, hr = 3.6, br = 9.5;
+  g.beginPath(); g.moveTo(2, -hr); g.lineTo(L * .34, -hr - .4); g.bezierCurveTo(L * .52, -hr - 1, L * .6, -br, L * .74, -br); g.lineTo(L - br, -br); g.arc(L - br, 0, br, -Math.PI / 2, Math.PI / 2);
+  g.lineTo(L * .74, br); g.bezierCurveTo(L * .6, br, L * .52, hr + 1, L * .34, hr + .4); g.lineTo(2, hr); g.closePath();
+  g.fillStyle = lgr(0, -br, 0, br, lighten(col, .45), col, darken(col, .35)); g.fill();
+  g.save(); g.clip();                               // the grain, and a burn of a maker's stamp on the barrel
+  for (let i = 0; i < 5; i++) thin(L * .3 + i * 9, -6 + i * 3, L - 8, -7 + i * 3.4, 'rgba(90,50,20,.22)', 1);
+  g.fillStyle = 'rgba(40,20,10,.55)'; g.beginPath(); g.ellipse(L * .78, 0, 10, 4.5, 0, 0, TAU); g.fill();
+  g.fillStyle = 'rgba(255,255,255,.35)'; g.fillRect(L * .45, -br * .62, L * .5, 2.2);
+  g.restore();
+  ink(3);
+  g.fillStyle = '#23232a'; g.beginPath(); g.rect(4, -hr - .6, L * .22, hr * 2 + 1.2); g.fill();      // the grip tape, wound on
+  for (let x = 7; x < L * .22; x += 6) thin(x, -hr, x + 3, hr, 'rgba(255,255,255,.14)', 1.2);
+  g.beginPath(); g.ellipse(1, 0, 3.5, 7.5, 0, 0, TAU); fillInk('#2c2c33', 2);      // the knob
 }
 function ball(r = 12) {
-  O(0, 0, r, '#fbfbf4', 2.5);
-  g.strokeStyle = '#d23a3a'; g.lineWidth = 2 * LWK;
-  g.beginPath(); g.arc(-r * 1.3, 0, r, -.7, .7); g.stroke(); g.beginPath(); g.arc(r * 1.3, 0, r, Math.PI - .7, Math.PI + .7); g.stroke();
+  g.beginPath(); g.arc(0, 0, r, 0, TAU); fillInk(rgr(0, 0, r, '#ffffff', '#f2f0e8', '#c9c5b8'), 2.5);
+  g.strokeStyle = '#d0353a'; g.lineWidth = 1.6 * LWK;
+  for (const s of [-1, 1]) {
+    g.beginPath(); g.arc(s * r * 1.32, 0, r, s > 0 ? Math.PI - .72 : -.72, s > 0 ? Math.PI + .72 : .72); g.stroke();
+    for (let i = -2; i <= 2; i++) { const a = (s > 0 ? Math.PI : 0) + i * .28, cx = s * r * 1.32 + Math.cos(a) * r, cy = Math.sin(a) * r; thin(cx - 2.2 * s, cy - 1.6, cx + 1.4 * s, cy, '#d0353a', 1.2); }      // the stitches
+  }
 }
-function knife() { R(-26, -5, 28, 10, '#3a2a22', 2.5); Q(STEEL, [2, -7, 58, -7, 78, 1, 2, 7], 2.5); g.fillStyle = '#ffffff'; g.fillRect(6, -5, 44, 2); }
-function cleaver() { R(-36, -6, 38, 12, '#3a2a22', 3); Q(STEEL, [2, -14, 2, 12, 122, 12, 122, -56, 22, -56], 3); O(104, -40, 6, '#9aa3ad', 2); g.fillStyle = '#ffffff'; g.fillRect(6, 6, 110, 3); }
-function chair() {                                  // a wooden chair, standing, its seat to +x
-  R(-36, -160, 10, 160, WOOD); R(-36, -84, 80, 11, WOOD); R(34, -73, 10, 73, WOOD); R(-26, -40, 60, 6, WOOD2, 2);
-  for (const y of [-150, -126, -104]) R(-30, y, 4, 12, WOOD2, 1.5);
+
+/* ---------- the knives ---------- */
+function knife() {                                  // a chef's knife: riveted handle, bolster, the belly of the blade out to its point
+  RR(-34, -5.5, 34, 11, 4, '#2a211c', 2.5); for (const x of [-26, -16, -6]) O(x, 0, 1.6, '#cfd6de', 1);
+  R(-1, -7, 6, 14, '#b9c2cc', 2);
+  g.beginPath(); g.moveTo(5, -8); g.lineTo(70, -8); g.quadraticCurveTo(84, -6, 92, 1); g.quadraticCurveTo(60, 8, 5, 7); g.closePath();
+  fillInk(lgr(0, -8, 0, 8, '#f4f8fc', '#c3ccd6', '#8d98a6'), 2.5);
+  shine(10, 4, 80, 2, .9, 1.6); shine(12, -5, 60, -5, .5, 1.4);
 }
-function chairHeld() { R(-4, -5, 168, 10, WOOD); R(76, 0, 11, 84, WOOD); R(76, 74, 90, 10, WOOD); R(120, 4, 6, 70, WOOD2, 2); }      // held by the top of its back
-function table() { R(-124, -102, 248, 15, WOOD); R(-114, -88, 228, 10, WOOD2, 2); R(-110, -80, 12, 80, WOOD2); R(98, -80, 12, 80, WOOD2); }
-function sofa(col = '#7d4f9e') {
-  R(-150, -134, 300, 76, col); R(-150, -64, 300, 46, col); R(-176, -104, 36, 86, col); R(140, -104, 36, 86, col);
-  g.fillStyle = 'rgba(0,0,0,.18)'; for (const x of [-50, 50]) g.fillRect(x - 1, -130, 3, 66);
-  R(-140, -20, 14, 20, '#3a2a22', 2); R(126, -20, 14, 20, '#3a2a22', 2);
+function cleaver() {                                // a meat cleaver: a slab of a blade, a hole to hang it by, a wooden handle
+  RR(-42, -6, 44, 12, 4, '#6e4422', 3); for (const x of [-32, -20]) O(x, 0, 2, '#d7dde3', 1);
+  g.beginPath(); g.moveTo(2, -16); g.lineTo(2, 12); g.lineTo(124, 14); g.quadraticCurveTo(130, -20, 124, -58); g.lineTo(22, -58); g.closePath();
+  fillInk(lgr(0, -58, 0, 14, '#eef3f8', '#aeb8c4', '#7c8794'), 3);
+  g.fillStyle = 'rgba(255,255,255,.55)'; g.beginPath(); g.moveTo(4, 7); g.lineTo(125, 9); g.lineTo(125, 13); g.lineTo(4, 11); g.fill();      // its edge
+  O(104, -42, 6, '#1b1b20', 2);
 }
-function box(w = 120, h = 90) {
-  R(-w / 2, -h, w, h, CARD); g.fillStyle = 'rgba(0,0,0,.12)'; g.fillRect(-w / 2, -h, w * .18, h);
-  R(-8, -h, 16, h * .42, TAPE, 2); R(w * .1, -h * .62, w * .3, h * .26, '#f4f1e6', 1.5);
-  g.fillStyle = 'rgba(40,30,20,.5)'; g.fillRect(w * .13, -h * .55, w * .2, 2); g.fillRect(w * .13, -h * .47, w * .14, 2);
+
+/* ---------- boxes, the crate ---------- */
+function box(w = 120, h = 90, seed = 0) {           // a cardboard box, its top and one side showing: tape over the flaps, a label, which way up it goes
+  const d = 16;
+  pts([w / 2, -h, w / 2 + d, -h - d * .6, w / 2 + d, -d * .6, w / 2, 0]); fillInk(darken(CARD, .28), 2.5);      // the side
+  pts([-w / 2, -h, -w / 2 + d, -h - d * .6, w / 2 + d, -h - d * .6, w / 2, -h]); fillInk(lighten(CARD, .18), 2.5);      // the top
+  g.beginPath(); g.rect(-w / 2, -h, w, h); fillInk(lgr(0, -h, 0, 0, lighten(CARD, .08), CARD, darken(CARD, .12)), 2.5);
+  g.fillStyle = 'rgba(234,220,174,.8)'; g.fillRect(-9, -h, 18, h * .36); pts([-9, -h, -9 + d * .5, -h - d * .6, 9 + d * .5, -h - d * .6, 9, -h]); g.fill();      // the tape
+  thin(-w / 2 + d * .5, -h - d * .3, w / 2 + d * .5, -h - d * .3, 'rgba(60,40,20,.35)', 1.2);
+  RR(w * .1, -h * .66, w * .32, h * .28, 2, '#f6f3ea', 1.5);      // the label
+  for (let i = 0; i < 3; i++) thin(w * .13, -h * .6 + i * 5, w * (.3 - i * .04), -h * .6 + i * 5, 'rgba(40,30,20,.6)', 1.4);
+  for (let i = 0; i < 9; i++) thin(w * .13 + i * 2.6, -h * .45, w * .13 + i * 2.6, -h * .4, '#222', i % 3 ? .8 : 1.6);
+  if (seed % 2 < 1) word('FRAGILE', -w * .2, -h * .42, Math.max(9, w * .1), 'rgba(200,40,40,.85)', 1);
+  else { g.save(); g.strokeStyle = 'rgba(40,30,20,.7)'; g.lineWidth = 2 * LWK; for (const x of [-w * .32, -w * .2]) { g.beginPath(); g.moveTo(x, -h * .3); g.lineTo(x, -h * .58); g.moveTo(x - 4, -h * .52); g.lineTo(x, -h * .58); g.lineTo(x + 4, -h * .52); g.stroke(); } g.restore(); }      // (this way up)
 }
 function boxes(n, seed) {                           // n of them, one on another, none of them quite square to the rest
   let y = 0;
   for (let i = 0; i < n; i++) {
     const w = 150 - (i % 3) * 16, h = 92 - (i % 2) * 10, dx = Math.sin(seed + i * 2.3) * 14;
-    g.save(); g.translate(dx, y); g.rotate(Math.sin(seed * 1.7 + i) * .05); box(w, h); g.restore();
+    g.save(); g.translate(dx, y); g.rotate(Math.sin(seed * 1.7 + i) * .05); box(w, h, Math.floor(seed) + i); g.restore();
     y -= h - 2;
   }
 }
-function crate() { R(-100, -196, 200, 196, '#8f5d2c'); for (let i = 1; i < 4; i++) R(-100, -196 + i * 49, 200, 4, '#6e4520', 1.5); Q('#a86d34', [-92, -16, -76, -16, 92, -180, 76, -180], 2); R(-100, -196, 18, 196, '#6e4520', 2); R(82, -196, 18, 196, '#6e4520', 2); }
-function scooter(col = '#e64a4f') {
-  wheel(-64, -19, 19); wheel(66, -19, 19);
-  Q(col, [-98, -32, -44, -30, -24, -42, 44, -42, 56, -30, 74, -30, 70, -52, 34, -66, -58, -70, -96, -56]);
-  R(-86, -86, 62, 14, '#2a2a30');
-  Q('#cfd6de', [50, -46, 60, -46, 84, -152, 74, -154]);
-  R(60, -164, 44, 9, '#2a2a30');
-  O(86, -122, 8, '#ffe9a0', 2);
+function crate() {                                  // a wooden crate, planks and braces and the nails in them
+  const w = 200, h = 196, d = 22, WD = '#9a6531';
+  pts([w / 2, -h, w / 2 + d, -h - d * .6, w / 2 + d, -d * .6, w / 2, 0]); fillInk(darken(WD, .35), 3);
+  pts([-w / 2, -h, -w / 2 + d, -h - d * .6, w / 2 + d, -h - d * .6, w / 2, -h]); fillInk(lighten(WD, .15), 3);
+  g.beginPath(); g.rect(-w / 2, -h, w, h); fillInk(lgr(0, -h, 0, 0, lighten(WD, .1), WD, darken(WD, .2)), 3);
+  for (let i = 1; i < 5; i++) thin(-w / 2, -h + i * h / 5, w / 2, -h + i * h / 5, 'rgba(50,28,10,.55)', 2);
+  for (let i = 0; i < 10; i++) thin(-w / 2 + 10 + i * 19, -h + (i % 5) * 39 + 10, -w / 2 + 30 + i * 19, -h + (i % 5) * 39 + 12, 'rgba(60,32,12,.3)', 1);      // (the grain)
+  Q(lighten(WD, .08), [-w / 2 + 16, -18, -w / 2 + 34, -18, w / 2 - 16, -h + 18, w / 2 - 34, -h + 18], 2.5);      // the brace
+  for (const x of [-w / 2, w / 2 - 18]) R(x, -h, 18, h, darken(WD, .15), 2.5);
+  for (const [x, y] of [[-w / 2 + 9, -h + 10], [w / 2 - 9, -h + 10], [-w / 2 + 9, -10], [w / 2 - 9, -10]]) O(x, y, 2.4, '#3a3a40', 1);
+  word('HEAVY', 0, -h * .5, 26, 'rgba(20,14,8,.7)', 1);
 }
-function car(col = CARS[0]) {                       // a saloon, 300 long
-  Q(col, [-150, -28, -150, -80, -122, -88, -58, -90, -30, -136, 52, -136, 86, -92, 140, -84, 150, -58, 150, -28]);
-  Q('#bfe3ff', [-22, -96, 0, -128, 26, -128, 26, -96], 2); Q('#bfe3ff', [34, -96, 34, -128, 50, -128, 74, -96], 2);
-  g.fillStyle = 'rgba(0,0,0,.22)'; g.fillRect(-146, -58, 292, 3);
-  g.fillStyle = '#ffe9a0'; g.fillRect(138, -78, 11, 13); g.fillStyle = '#ff5050'; g.fillRect(-149, -78, 8, 12);
-  wheel(-90, -28, 27); wheel(92, -28, 27);
+
+/* ---------- the furniture ---------- */
+function chair() {                                  // a dining chair, side on: the back leg running up into the back, a cushioned seat, a curved front leg
+  const WD = '#8a5a30';
+  g.beginPath(); g.moveTo(-44, 0); g.quadraticCurveTo(-34, -46, -36, -86); g.quadraticCurveTo(-38, -140, -48, -172); g.lineTo(-38, -176); g.quadraticCurveTo(-26, -140, -26, -86); g.quadraticCurveTo(-26, -46, -34, 0); g.closePath();
+  fillInk(lgr(-48, 0, -26, 0, lighten(WD, .25), WD, darken(WD, .3)), 3);
+  O(-43, -176, 5, lighten(WD, .1), 2);              // its finial
+  g.beginPath(); g.moveTo(30, -80); g.bezierCurveTo(48, -60, 24, -34, 38, -6); g.lineTo(48, -4); g.lineTo(48, 0); g.lineTo(30, 0); g.bezierCurveTo(16, -30, 38, -56, 22, -80); g.closePath();      // the cabriole leg
+  fillInk(lgr(20, 0, 48, 0, lighten(WD, .2), WD, darken(WD, .3)), 3);
+  R(-28, -40, 58, 6, darken(WD, .1), 2);
+  RR(-40, -90, 88, 12, 3, lgr(0, -90, 0, -78, lighten(WD, .2), darken(WD, .15)), 3);
+  RR(-38, -104, 84, 16, 7, lgr(0, -104, 0, -88, '#c4404a', '#8e1f2a'), 3);      // the cushion
+  for (const x of [-16, 8, 30]) O(x, -97, 1.6, 'rgba(60,8,12,.7)', 0);
 }
-function bus() {                                    // a city bus, 640 long
-  R(-320, -252, 640, 224, '#f2c230'); R(-320, -122, 640, 14, '#26262c', 2);
-  for (let i = 0; i < 7; i++) R(-292 + i * 78, -230, 58, 72, '#bfe3ff', 2);
-  R(256, -230, 54, 152, '#9fcbe8', 2); g.fillStyle = '#ffe9a0'; g.fillRect(308, -72, 12, 18); g.fillStyle = '#ff5050'; g.fillRect(-319, -80, 8, 18);
-  wheel(-212, -30, 33); wheel(202, -30, 33);
+function chairHeld() { g.save(); g.rotate(-Math.PI / 2); g.translate(43, 176); chair(); g.restore(); }      // held by the top of its back, the rest of it out along x
+function table() {                                  // a dining table: a thick top with its edge rounded, an apron, two turned legs
+  const WD = '#8c5a2f';
+  const leg = x => { g.beginPath(); g.moveTo(x - 6, -86); g.lineTo(x + 6, -86); g.quadraticCurveTo(x + 14, -60, x + 5, -44); g.quadraticCurveTo(x + 11, -24, x + 5, -6); g.lineTo(x + 8, 0); g.lineTo(x - 8, 0); g.lineTo(x - 5, -6); g.quadraticCurveTo(x - 11, -24, x - 5, -44); g.quadraticCurveTo(x - 14, -60, x - 6, -86); g.closePath(); fillInk(lgr(x - 12, 0, x + 12, 0, lighten(WD, .25), WD, darken(WD, .3)), 3); };
+  leg(-100); leg(100);
+  R(-112, -96, 224, 12, darken(WD, .15), 2.5);
+  RR(-128, -112, 256, 17, 7, lgr(0, -112, 0, -95, lighten(WD, .3), WD, darken(WD, .2)), 3);
+  shine(-112, -108, 100, -108, .45, 2);
 }
-function engine() {                                 // a fire engine
-  R(-262, -172, 384, 144, '#d8262c'); R(120, -214, 142, 186, '#d8262c'); R(150, -200, 98, 64, '#bfe3ff', 2);
-  R(-252, -198, 362, 12, '#cfd6de', 2); for (let i = 0; i < 9; i++) R(-246 + i * 40, -198, 4, 12, '#9aa3ad', 1);
-  R(-222, -132, 92, 72, '#cfd6de', 2); O(-176, -96, 26, '#e9e2c9', 2);
-  g.fillStyle = '#ffe9a0'; g.fillRect(256, -82, 10, 16); g.fillStyle = '#4a7ef0'; g.fillRect(140, -226, 30, 12); g.fillStyle = '#ff4a4a'; g.fillRect(200, -226, 30, 12);
-  wheel(-172, -28, 30); wheel(28, -28, 30); wheel(190, -28, 30);
+function sofa(col = '#9e1b2a') {                    // an Empire sofa in velvet: a carved frame, rolled arms with bolsters, buttons in the back
+  const WD = '#5a3418';
+  for (const x of [-150, 130]) { g.beginPath(); g.moveTo(x, -22); g.quadraticCurveTo(x - 10, -6, x - 4, 0); g.lineTo(x + 24, 0); g.quadraticCurveTo(x + 26, -10, x + 20, -22); g.closePath(); fillInk(lgr(x, -22, x, 0, lighten(WD, .2), darken(WD, .3)), 2.5); }      // the feet
+  RR(-170, -40, 340, 22, 6, lgr(0, -40, 0, -18, lighten(WD, .25), WD, darken(WD, .3)), 3);      // the frame along the bottom
+  RR(-150, -138, 300, 84, 18, lgr(0, -138, 0, -54, lighten(col, .25), col, darken(col, .35)), 3);      // the back
+  for (let r = 0; r < 2; r++) for (let i = 0; i < 5; i++) { const x = -110 + i * 55 + (r ? 27 : 0), y = -118 + r * 28; if (x > 120) continue; O(x, y, 2.6, darken(col, .5), 1); thin(x - 9, y + 6, x, y, 'rgba(0,0,0,.25)', 1.4); }
+  RR(-148, -70, 296, 32, 10, lgr(0, -70, 0, -38, lighten(col, .3), col, darken(col, .3)), 3);      // the seat
+  thin(-2, -68, -2, -40, 'rgba(0,0,0,.3)', 2);
+  for (const s of [-1, 1]) {                        // the arms, rolled over, and a bolster against each
+    const x = s * 160;
+    g.beginPath(); g.moveTo(x - s * 26, -40); g.lineTo(x - s * 26, -96); g.arc(x, -100, 26, s > 0 ? Math.PI : 0, s > 0 ? 0 : Math.PI, s < 0); g.lineTo(x + s * 22, -40); g.closePath();
+    fillInk(lgr(x - 26, 0, x + 26, 0, lighten(col, .2), col, darken(col, .35)), 3);
+    O(x, -100, 12, lighten(WD, .15), 2.5); O(x, -100, 5, darken(WD, .2), 1.5);
+    RR(x - s * 60 - 22, -92, 44, 24, 12, lgr(0, -92, 0, -68, lighten(col, .35), darken(col, .2)), 2.5);
+  }
 }
-function ext() {                                    // a fire extinguisher, along x: the bottle, the valve, the hose and its horn out the front
-  R(-10, -15, 86, 30, '#d8262c'); R(76, -9, 14, 18, '#26262c', 2); R(84, -21, 22, 6, '#cfd6de', 2);
-  g.strokeStyle = LINE; g.lineWidth = 6 * LWK; g.beginPath(); g.moveTo(90, 4); g.quadraticCurveTo(116, 30, 128, 8); g.stroke();
-  Q('#26262c', [124, 2, 152, -9, 152, 23, 128, 16], 2); g.fillStyle = '#f4f1e6'; g.fillRect(14, -8, 30, 14);
+function fridge() {
+  RR(-54, -200, 108, 200, 12, lgr(-54, 0, 54, 0, '#ffffff', '#eef1f4', '#c9d0d8'), 3);
+  thin(-54, -134, 54, -134, 'rgba(60,70,80,.6)', 2.5);
+  RR(36, -190, 7, 44, 3, lgr(0, -190, 0, -146, '#f4f6f8', '#9aa3ad'), 1.5); RR(36, -124, 7, 60, 3, lgr(0, -124, 0, -64, '#f4f6f8', '#9aa3ad'), 1.5);
+  for (const [x, y, c] of [[-30, -170, '#e2383c'], [-10, -112, '#4aa3e6'], [-34, -90, '#ffd84a']]) RR(x, y, 12, 10, 3, c, 1.5);      // what is stuck to it
+  shine(-40, -192, -40, -10, .5, 3);
 }
-function nozzle() { R(-6, -6, 46, 12, '#3a3d46', 2.5); Q('#cfd6de', [40, -9, 62, -5, 62, 5, 40, 9], 2); }
-function house() {
-  const w = 330, h = 230;
-  R(-w / 2, -h, w, h, '#efe3cd'); R(w * .24, -h - 112, 38, 84, '#8a7a6a');
-  Q('#9b3b2e', [-w / 2 - 30, -h + 4, 0, -h - 160, w / 2 + 30, -h + 4]);
-  g.strokeStyle = 'rgba(0,0,0,.2)'; g.lineWidth = 2 * LWK; for (let i = 1; i < 4; i++) { const y = -h - 160 + i * 40, hw = (w / 2 + 30) * i / 4; g.beginPath(); g.moveTo(-hw, y); g.lineTo(hw, y); g.stroke(); }
-  R(-30, -106, 60, 106, '#6b4a2e'); O(18, -52, 4, '#e2b545', 1.5);
-  for (const x of [-w * .4, w * .18]) { R(x, -h + 46, 70, 58, '#bfe3ff', 2.5); R(x + 33, -h + 46, 4, 58, '#efe3cd', 1.5); R(x, -h + 73, 70, 4, '#efe3cd', 1.5); }
-  R(-w / 2, -14, w, 14, '#a99a86', 2);
+function telly() {                                  // a set with a tube in it, in a wooden cabinet, and the aerial on top
+  thin(-10, -104, -44, -150, '#3a3d46', 2.5); thin(10, -104, 40, -154, '#3a3d46', 2.5); O(-44, -150, 3, '#3a3d46', 1); O(40, -154, 3, '#3a3d46', 1);
+  RR(-90, -106, 180, 100, 10, lgr(0, -106, 0, -6, '#8a5a30', '#5c3a1c'), 3);
+  RR(-76, -94, 118, 76, 14, '#1d1e23', 2.5);
+  g.beginPath(); g.roundRect(-70, -88, 106, 64, 12); g.fillStyle = rgr(-30, -60, 70, '#4a6a8a', '#22324a', '#11161f'); g.fill();
+  g.save(); g.globalAlpha *= .3; g.fillStyle = '#ffffff'; g.beginPath(); g.ellipse(-40, -74, 22, 8, -.4, 0, TAU); g.fill(); g.restore();
+  for (const y of [-80, -58]) O(64, y, 7, '#c9ced6', 2);
+  for (const x of [-70, 70]) R(x - 6, -6, 12, 6, '#3a2a1c', 1.5);
 }
-function mansion() {
-  const w = 880, h = 420;
-  R(-w / 2, -h, w, h, '#f2ead8'); Q('#5a5f6e', [-w / 2 - 40, -h + 4, -w / 2 + 120, -h - 170, w / 2 - 120, -h - 170, w / 2 + 40, -h + 4]);
-  for (const x of [-w * .32, w * .26]) R(x, -h - 230, 46, 90, '#8a7a6a');
-  Q('#e8dcc4', [-150, -h + 4, 0, -h - 120, 150, -h + 4], 3);      // the front gable
-  for (let r = 0; r < 2; r++) for (let i = 0; i < 6; i++) { if (r === 1 && (i === 2 || i === 3)) continue; R(-w / 2 + 50 + i * 136, -h + 50 + r * 190, 76, 96, '#bfe3ff', 2.5); }
-  for (const x of [-150, -60, 60, 150]) R(x - 12, -h + 10, 24, h - 24, '#fbf7ec', 2);
-  R(-44, -170, 88, 170, '#6b4a2e'); R(-w / 2, -18, w, 18, '#a99a86', 2);
+function lamp() { g.beginPath(); g.moveTo(-42, -176); g.lineTo(42, -176); g.lineTo(28, -122); g.lineTo(-28, -122); g.closePath(); fillInk(lgr(-42, 0, 42, 0, '#fbe9b8', '#f2d28a', '#c9a25a'), 2.5); R(-3, -122, 6, 112, lgr(-3, 0, 3, 0, '#f2d68a', '#a8823a'), 2); E2(0, -6, 30, 7, '#a8823a', 2); }
+
+/* ---------- the scooter, the cars, the bus, the fire engine ---------- */
+function scooter(col = '#e64a4f', spin = 0) {       // after a Vespa: the round body over the back wheel, the floorboard, the leg shield up to the bar, the lamp in the bar
+  ground(110);
+  wheel(-64, -20, 20, spin, '#d6dbe0'); wheel(70, -20, 20, spin, '#d6dbe0');
+  const body = lgr(0, -150, 0, -20, lighten(col, .45), col, darken(col, .3));
+  g.beginPath(); g.moveTo(-20, -34); g.bezierCurveTo(-22, -70, -48, -92, -84, -90); g.bezierCurveTo(-112, -88, -122, -64, -116, -40); g.lineTo(-100, -36); g.arc(-64, -24, 30, Math.PI + .5, -.3); g.lineTo(-20, -34); g.closePath(); fillInk(body, 3);      // the body round the engine
+  shine(-104, -60, -40, -78, .55, 3);
+  RR(-46, -36, 92, 8, 3, '#2a2a30', 2.5); for (let x = -38; x < 40; x += 10) thin(x, -35, x, -29, 'rgba(255,255,255,.18)', 1.2);      // the floorboard
+  g.beginPath(); g.moveTo(40, -32); g.quadraticCurveTo(44, -86, 56, -124); g.lineTo(68, -126); g.quadraticCurveTo(74, -74, 64, -32); g.closePath(); fillInk(body, 3);      // the leg shield
+  g.beginPath(); g.moveTo(46, -34); g.arc(70, -26, 26, Math.PI + .25, -.25); g.lineTo(90, -34); g.quadraticCurveTo(70, -48, 46, -34); g.closePath(); fillInk(body, 2.5);      // the front mudguard
+  g.beginPath(); g.moveTo(-26, -88); g.quadraticCurveTo(-60, -100, -108, -92); g.quadraticCurveTo(-112, -84, -100, -82); g.quadraticCurveTo(-60, -88, -28, -80); g.closePath(); fillInk(lgr(0, -100, 0, -80, '#3a3a42', '#16161a'), 3);      // the seat
+  R(60, -152, 10, 30, body, 2.5);
+  RR(46, -158, 54, 9, 4, '#26262c', 2.5);
+  O(90, -150, 9, '#cfd6de', 2.5); O(91, -150, 5.5, rgr(91, -150, 6, '#fffbe0', '#ffe9a0', '#c9b26a'), 1.5);      // the lamp
+  thin(54, -158, 50, -178, '#9aa3ad', 2); E2(50, -182, 6, 4, '#cfd6de', 2);      // a mirror
+  O(-114, -58, 4, '#ff4a4a', 1.5);
 }
-function fridge() { R(-52, -196, 104, 196, '#f4f6f8'); R(-52, -128, 104, 4, '#c9d0d8', 1.5); R(36, -186, 6, 40, '#9aa3ad', 1.5); R(36, -116, 6, 50, '#9aa3ad', 1.5); }
-function telly() { R(-80, -100, 160, 96, '#1d1e23'); R(-70, -92, 140, 78, '#3a4a6a', 2); R(-30, -6, 60, 6, '#1d1e23', 2); }
-function lamp() { Q('#f2d28a', [-40, -170, 40, -170, 26, -120, -26, -120], 2.5); R(-4, -120, 8, 112, '#3a3d46', 2); R(-30, -10, 60, 10, '#3a3d46', 2); }
-function pistol() { Q('#2a2c33', [-4, 2, 14, 2, 8, 30, -8, 30], 2.5); R(-8, -10, 64, 14, '#3a3d46', 2.5); R(54, -8, 8, 9, '#17171b', 2); }
-function sniper() { Q('#3b4a3c', [-44, -3, 0, -10, 0, 12, -40, 18], 2.5); R(-2, -8, 172, 13, '#2c3a2e', 2.5); R(168, -5, 92, 7, '#17171b', 2); R(30, -27, 72, 12, '#17171b', 2); O(32, -21, 7, '#4a6aa0', 2); R(84, 5, 10, 26, '#17171b', 2); }
-function katana() { R(-18, -4, 34, 8, '#3a2f4a', 2.5); R(14, -10, 5, 20, '#c9a53a', 2); Q(STEEL, [19, -4, 178, -3, 194, 1, 19, 4], 2); }
-function chainHeld() { g.lineWidth = 3 * LWK; for (let i = 0; i < 10; i++) { g.strokeStyle = LINE; g.fillStyle = '#9aa3b5'; g.beginPath(); g.ellipse(i * 15, 0, 9, i % 2 ? 3 : 6, 0, 0, TAU); g.fill(); g.stroke(); } }
-function cloudHeld() { for (let i = 0; i < 3; i++) R(-6 + i * 64, -6, 58, 12, '#ff5a6e', 2.5); g.fillStyle = '#c9a53a'; for (let i = 0; i < 2; i++) g.fillRect(52 + i * 64, -3, 6, 6); }
-function spearHeld() { R(-20, -3, 180, 6, '#c9a53a', 2); Q(GOLD, [158, -10, 214, 0, 158, 10], 2); Q(GOLD, [150, -4, 176, -22, 168, -4], 1.5); Q(GOLD, [150, 4, 176, 22, 168, 4], 1.5); }
-function ticket(col) { R(-4, -20, 74, 40, '#fbf8ee', 2); R(-4, -20, 74, 11, col, 2); g.fillStyle = 'rgba(30,24,20,.55)'; g.fillRect(6, 0, 40, 3); g.fillRect(6, 8, 28, 3); g.font = `bold 16px Anton, Impact, sans-serif`; g.fillStyle = LINE; g.fillText('%', 50, 13); }
+function car(col = CARS[0], spin = 0) {             // a saloon after a 1992 Corolla, 320 long: bonnet, windscreen, three windows, the boot, the arches
+  ground(175);
+  wheel(-100, -30, 28, spin); wheel(102, -30, 28, spin);
+  g.beginPath(); g.moveTo(-158, -30); g.lineTo(-163, -64); g.quadraticCurveTo(-162, -82, -146, -85); g.lineTo(-94, -89); g.quadraticCurveTo(-82, -92, -66, -122); g.quadraticCurveTo(-60, -131, -46, -132);
+  g.lineTo(22, -132); g.quadraticCurveTo(34, -131, 42, -122); g.lineTo(70, -94); g.quadraticCurveTo(80, -90, 92, -89); g.lineTo(144, -82); g.quadraticCurveTo(160, -78, 162, -62); g.lineTo(163, -40); g.quadraticCurveTo(162, -30, 154, -30);
+  g.lineTo(138, -30); g.arc(102, -30, 36, 0, Math.PI, true); g.lineTo(-64, -30); g.arc(-100, -30, 36, 0, Math.PI, true); g.closePath();
+  fillInk(lgr(0, -132, 0, -30, lighten(col, .42), col, darken(col, .32)), 3);
+  g.beginPath(); g.moveTo(-84, -93); g.lineTo(-60, -124); g.lineTo(-44, -126); g.lineTo(20, -126); g.lineTo(36, -118); g.lineTo(62, -94); g.closePath();      // the glass
+  fillInk(lgr(0, -126, 0, -93, '#263546', '#4f6b85', '#7d9bb5'), 2.5);
+  g.fillStyle = '#16161a'; g.fillRect(-14, -126, 7, 33); g.fillRect(-60, -122, 6, 29);      // the pillars
+  g.save(); g.globalAlpha *= .3; g.fillStyle = '#ffffff'; pts([2, -124, 14, -124, -4, -95, -16, -95]); g.fill(); pts([28, -120, 34, -116, 20, -95, 14, -95]); g.fill(); g.restore();      // a glare on it
+  thin(-88, -93, 66, -93, 'rgba(230,236,242,.8)', 2);      // the chrome along it
+  for (const x of [-78, -12, 62]) thin(x, -90, x + (x > 0 ? -2 : 0), -36, 'rgba(0,0,0,.35)', 1.6);      // the doors
+  for (const x of [-30, 36]) RR(x, -82, 14, 4, 2, darken(col, .45), 1);
+  shine(-150, -70, 148, -66, .4, 2.4);
+  Q(darken(col, .2), [56, -97, 68, -101, 70, -92, 60, -91], 2);      // the wing mirror
+  RR(140, -76, 22, 12, 4, rgr(150, -70, 12, '#ffffff', '#fff3c0', '#d9c27a'), 2);      // the lamps
+  RR(-164, -80, 12, 14, 3, lgr(0, -80, 0, -66, '#ff7070', '#c21d24'), 2);
+  RR(-164, -50, 30, 16, 5, '#2a2a30', 2); RR(134, -48, 30, 16, 5, '#2a2a30', 2);      // the bumpers
+}
+function bus(spin = 0, face = 1) {                  // a school bus after an International: the bonnet out front, eight windows, black rails, the lamps, the stop sign folded
+  const Y = '#f6b71a';
+  ground(330);
+  wheel(-206, -32, 33, spin, '#e8e8e8'); wheel(262, -32, 33, spin, '#e8e8e8');
+  g.beginPath(); g.moveTo(-332, -28); g.lineTo(-332, -238); g.quadraticCurveTo(-330, -256, -310, -258); g.lineTo(226, -258); g.quadraticCurveTo(244, -256, 246, -240); g.lineTo(250, -150);
+  g.lineTo(306, -146); g.quadraticCurveTo(330, -142, 332, -118); g.lineTo(334, -44); g.lineTo(298, -32); g.arc(262, -32, 38, 0, Math.PI, true); g.lineTo(-170, -32); g.arc(-206, -32, 38, 0, Math.PI, true); g.lineTo(-332, -28); g.closePath();
+  fillInk(lgr(0, -258, 0, -28, lighten(Y, .35), Y, darken(Y, .25)), 3);
+  for (const y of [-134, -104, -76]) R(-332, y, 582, 6, '#1a1a1e', 1);      // its rails
+  for (let i = 0; i < 8; i++) { const x = -312 + i * 62; RR(x, -236, 52, 70, 4, '#1a1a1e', 2); g.fillStyle = lgr(0, -232, 0, -170, '#2f4256', '#6f8fab'); g.fillRect(x + 4, -232, 44, 62); thin(x + 4, -212, x + 48, -212, '#1a1a1e', 3); }
+  RR(194, -236, 44, 190, 4, '#1a1a1e', 2.5); g.fillStyle = lgr(0, -230, 0, -60, '#36495e', '#7d9bb5'); g.fillRect(198, -230, 17, 170); g.fillRect(219, -230, 15, 170);      // the door
+  Q('#2c4054', [246, -238, 262, -150, 250, -150, 246, -238], 2);      // the windscreen's edge
+  R(296, -122, 38, 46, '#1a1a1e', 2); for (let y = -116; y < -80; y += 8) thin(298, y, 332, y, '#6a6a70', 2);      // the grille
+  O(322, -134, 7, rgr(322, -134, 7, '#ffffff', '#fff3c0', '#c9b26a'), 1.5);
+  RR(-60, -296, 300, 34, 4, '#1a1a1e', 2.5); RR(-56, -292, 292, 26, 3, Y, 1.5); word('SCHOOL BUS', 90, -279, 20, '#1a1a1e', face);
+  for (const x of [-320, -296, 214, 236]) O(x, -248, 6, x < 0 || x > 230 ? '#ff4040' : '#ffb000', 1.5);      // the lamps up top
+  g.save(); g.translate(150, -150); for (let i = 0; i < 8; i++) { const a = i / 8 * TAU + Math.PI / 8; i ? g.lineTo(Math.cos(a) * 16, Math.sin(a) * 16) : g.moveTo(Math.cos(a) * 16, Math.sin(a) * 16); } g.closePath(); fillInk('#d01c24', 2); word('STOP', 0, 0, 9, '#ffffff', face); g.restore();
+  RR(310, -60, 26, 16, 4, '#1a1a1e', 2); RR(-338, -56, 24, 16, 4, '#1a1a1e', 2);
+  shine(-320, -150, 240, -150, .45, 3);
+}
+function engine() {                                 // a fire engine: the cab and its lights, lockers down the side, a ladder on top, a hose reel at the back
+  const RD = '#d4232b';
+  ground(290);
+  wheel(-176, -30, 30, 0, '#d8dde2'); wheel(-104, -30, 30, 0, '#d8dde2'); wheel(196, -30, 30, 0, '#d8dde2');
+  g.beginPath(); g.rect(-274, -176, 404, 146); fillInk(lgr(0, -176, 0, -30, lighten(RD, .3), RD, darken(RD, .3)), 3);
+  g.beginPath(); g.moveTo(130, -30); g.lineTo(130, -214); g.lineTo(244, -214); g.quadraticCurveTo(262, -212, 266, -190); g.lineTo(278, -110); g.lineTo(280, -30); g.closePath(); fillInk(lgr(0, -214, 0, -30, lighten(RD, .3), RD, darken(RD, .3)), 3);
+  pts([150, -200, 236, -200, 256, -142, 150, -142]); fillInk(lgr(0, -200, 0, -142, '#2c4054', '#7d9bb5'), 2.5); thin(196, -200, 196, -142, '#1a1a1e', 4);
+  R(-274, -96, 554, 10, '#f4f1e6', 1.5); g.fillStyle = '#ffd84a'; for (let x = -270; x < 276; x += 24) g.fillRect(x, -96, 12, 10);      // the stripe
+  for (let i = 0; i < 4; i++) { const x = -262 + i * 98; RR(x, -168, 86, 64, 4, lgr(0, -168, 0, -104, lighten(RD, .15), darken(RD, .15)), 2); for (let y = -160; y < -108; y += 8) thin(x + 4, y, x + 82, y, 'rgba(0,0,0,.2)', 1.2); RR(x + 36, -112, 14, 5, 2, '#d8dde2', 1); }      // the lockers
+  for (const x of [-250, 104]) R(x, -188, 6, 14, '#9aa3ad', 1.5);
+  R(-262, -196, 360, 8, '#cfd6de', 2); R(-262, -186, 360, 8, '#cfd6de', 2); for (let x = -254; x < 94; x += 22) R(x, -194, 4, 14, '#9aa3ad', 1);      // the ladder
+  O(-232, -60, 26, '#5a5a62', 2.5); O(-232, -60, 18, '#e9d9a8', 2); g.strokeStyle = 'rgba(120,90,40,.5)'; for (let r = 6; r < 18; r += 4) { g.beginPath(); g.arc(-232, -60, r, 0, TAU); g.stroke(); }      // the reel
+  RR(140, -226, 104, 12, 4, '#1a1a1e', 2); for (let i = 0; i < 4; i++) RR(146 + i * 24, -224, 20, 8, 2, i % 2 ? '#3a6ef0' : '#ff3040', 1);      // the light bar
+  RR(270, -64, 14, 34, 3, '#d8dde2', 2); O(272, -120, 7, rgr(272, -120, 7, '#ffffff', '#fff3c0', '#c9b26a'), 1.5);
+  shine(-266, -170, 124, -170, .4, 3);
+}
+function ext() {                                    // an extinguisher across both hands: the bottle, its valve and gauge, the hose to a black horn out the front
+  RR(-12, -17, 96, 34, 14, lgr(0, -17, 0, 17, '#ff7a7a', '#d8262c', '#8e1418'), 3);
+  RR(8, -10, 34, 20, 3, '#f6f3ea', 1.5); R(8, -10, 34, 6, '#d8262c', 1); g.fillStyle = '#1a1a1e'; pts([20, 8, 25, -2, 30, 8]); g.fill();      // the label
+  RR(82, -10, 16, 20, 3, lgr(0, -10, 0, 10, '#f4f6f8', '#8f98a3'), 2);      // the valve
+  Q('#cfd6de', [88, -12, 112, -26, 116, -22, 94, -6], 2);      // its lever
+  O(92, -20, 6, '#ffffff', 1.5); thin(92, -20, 95, -23, '#d8262c', 1.4); g.strokeStyle = '#3fa34d'; g.lineWidth = 1.5 * LWK; g.beginPath(); g.arc(92, -20, 4, Math.PI, Math.PI * 1.6); g.stroke();      // the gauge
+  g.strokeStyle = LINE; g.lineWidth = 7 * LWK; g.lineCap = 'round'; g.beginPath(); g.moveTo(98, 6); g.quadraticCurveTo(124, 34, 132, 12); g.stroke();
+  g.strokeStyle = '#26262c'; g.lineWidth = 4 * LWK; g.stroke();
+  Q(lgr(0, -10, 0, 28, '#3a3a42', '#121216'), [128, 6, 160, -10, 160, 30, 130, 18], 2.5);      // the horn
+  thin(52, -18, 60, -30, '#ffd84a', 2); RR(56, -40, 12, 10, 2, '#ffd84a', 1.2);      // the pin and its tag
+  shine(-6, -10, 76, -10, .5, 2.2);
+}
+function nozzle() { RR(-8, -7, 52, 14, 4, lgr(0, -7, 0, 7, '#5a5e68', '#2a2c33'), 2.5); Q(lgr(0, -10, 0, 10, '#f2d68a', '#a8823a'), [44, -10, 70, -6, 70, 6, 44, 10], 2); for (let x = 2; x < 40; x += 8) thin(x, -6, x, 6, 'rgba(255,255,255,.18)', 1.5); }
+
+/* ---------- the house, the mansion ---------- */
+function bricks(x, y, w, h, base) {                 // a wall of them
+  g.fillStyle = lgr(0, y, 0, y + h, lighten(base, .12), base, darken(base, .12)); g.fillRect(x, y, w, h);
+  g.strokeStyle = 'rgba(70,30,22,.4)'; g.lineWidth = 1.2 * LWK; g.beginPath();
+  for (let r = 0, yy = y + 12; yy < y + h; yy += 12, r++) { g.moveTo(x, yy); g.lineTo(x + w, yy); for (let xx = x + (r % 2 ? 14 : 0); xx < x + w; xx += 28) { g.moveTo(xx, yy - 12); g.lineTo(xx, yy); } }
+  g.stroke();
+}
+function window2(x, y, w, h, shutters = '#2e5a3a') { // a window: shutters, a white frame, four panes, curtains, a sill
+  if (shutters) for (const sx of [x - 16, x + w + 2]) { RR(sx, y, 14, h, 2, shutters, 2); for (let yy = y + 6; yy < y + h - 4; yy += 7) thin(sx + 2, yy, sx + 12, yy, 'rgba(0,0,0,.25)', 1.2); }
+  R(x, y, w, h, '#ffffff', 2.5);
+  g.fillStyle = lgr(0, y, 0, y + h, '#3d5872', '#8fb0cc'); g.fillRect(x + 5, y + 5, w - 10, h - 10);
+  g.fillStyle = 'rgba(250,240,220,.85)'; pts([x + 5, y + 5, x + w * .34, y + 5, x + 9, y + h - 5, x + 5, y + h - 5]); g.fill(); pts([x + w - 5, y + 5, x + w * .66, y + 5, x + w - 9, y + h - 5, x + w - 5, y + h - 5]); g.fill();
+  thin(x + w / 2, y + 5, x + w / 2, y + h - 5, '#ffffff', 3); thin(x + 5, y + h / 2, x + w - 5, y + h / 2, '#ffffff', 3);
+  R(x - 4, y + h, w + 8, 6, '#e8e4da', 2);
+}
+function bush(x, r) { O(x, -r * .7, r, rgr(x, -r * .7, r, '#7ac36a', '#3f8a3a', '#245a26'), 2.5); O(x - r * .7, -r * .45, r * .62, rgr(x - r * .7, -r * .45, r * .62, '#7ac36a', '#3f8a3a', '#245a26'), 2.5); }
+function house() {                                  // a brick house of one floor after a ranch house: a shingled roof, a chimney, shuttered windows, a porch and a door
+  const w = 360, h = 210, RF = '#6e3a2e';
+  R(w * .2, -h - 150, 40, 110, '#9a4a34', 3); bricks(w * .2 + 2, -h - 148, 36, 106, '#a5523a'); R(w * .2 - 6, -h - 158, 52, 12, '#5a5a62', 2.5);      // the chimney
+  pts([-w / 2 - 34, -h + 6, -w * .3, -h - 136, w * .3, -h - 136, w / 2 + 34, -h + 6]); fillInk(lgr(0, -h - 136, 0, -h, lighten(RF, .2), RF, darken(RF, .3)), 3);
+  g.save(); pts([-w / 2 - 34, -h + 6, -w * .3, -h - 136, w * .3, -h - 136, w / 2 + 34, -h + 6]); g.clip();
+  for (let r = 0; r < 9; r++) { const y = -h - 136 + r * 16; g.strokeStyle = 'rgba(30,10,6,.35)'; g.lineWidth = 2 * LWK; g.beginPath(); g.moveTo(-w, y); g.lineTo(w, y); g.stroke(); for (let x = -w / 2 - 40 + (r % 2) * 12; x < w / 2 + 40; x += 24) thin(x, y, x, y + 16, 'rgba(30,10,6,.25)', 1.2); }
+  g.restore();
+  R(-w / 2 - 34, -h + 2, w + 68, 8, '#f2ede2', 2);      // the eaves
+  g.beginPath(); g.rect(-w / 2, -h + 10, w, h - 10); fillInk('#a5523a', 3); bricks(-w / 2 + 2, -h + 12, w - 4, h - 26, '#a5523a');
+  R(-w / 2, -16, w, 16, '#8f8f96', 2.5);      // the footing
+  window2(-w * .4 + 4, -h + 48, 74, 70); window2(w * .18, -h + 48, 74, 70);
+  pts([-46, -150, 0, -182, 46, -150]); fillInk('#f2ede2', 2.5); R(-40, -150, 6, 134, '#f2ede2', 2); R(34, -150, 6, 134, '#f2ede2', 2);      // the porch
+  RR(-26, -132, 52, 116, 3, lgr(0, -132, 0, -16, '#3a6a4a', '#23402c'), 3);      // the door
+  R(-18, -124, 36, 20, '#8fb0cc', 2); for (const y of [-96, -60]) RR(-18, y, 36, 26, 2, 'rgba(0,0,0,.15)', 1.5); O(16, -70, 3.5, '#e2b545', 1.5);
+  R(-34, -16, 68, 8, '#c9c9cf', 2); R(-42, -8, 84, 8, '#b4b4ba', 2);      // the steps
+  bush(-w / 2 + 36, 26); bush(w / 2 - 30, 24);
+}
+function mansion() {                                // a mansion after a Georgian house: two floors of windows, a portico on four columns, a slate roof with dormers
+  const w = 900, h = 430, SL = '#4f5566';
+  for (const x of [-w * .34, w * .3]) { R(x, -h - 240, 50, 100, '#a5523a', 3); R(x - 6, -h - 248, 62, 12, '#5a5a62', 2.5); }
+  pts([-w / 2 - 30, -h + 6, -w / 2 + 110, -h - 170, w / 2 - 110, -h - 170, w / 2 + 30, -h + 6]); fillInk(lgr(0, -h - 170, 0, -h, lighten(SL, .25), SL, darken(SL, .3)), 3);
+  for (const x of [-220, 0, 220]) { R(x - 30, -h - 110, 60, 64, '#f2ede2', 2.5); pts([x - 38, -h - 110, x, -h - 146, x + 38, -h - 110]); fillInk(SL, 2.5); R(x - 18, -h - 98, 36, 46, lgr(0, -h - 98, 0, -h - 52, '#3d5872', '#8fb0cc'), 2); }      // the dormers
+  R(-w / 2 - 30, -h - 4, w + 60, 14, '#f8f4ea', 2.5);
+  g.beginPath(); g.rect(-w / 2, -h + 10, w, h - 10); fillInk(lgr(0, -h, 0, 0, '#fbf4e2', '#efe2c2', '#d8c8a2'), 3);
+  for (let r = 0; r < 2; r++) for (let i = 0; i < 7; i++) { if (r === 1 && (i === 3)) continue; if (i >= 2 && i <= 4 && r === 1) continue; window2(-w / 2 + 64 + i * 122, -h + 48 + r * 186, 70, r ? 110 : 92, '#26262c'); }
+  pts([-170, -h + 70, 0, -h - 40, 170, -h + 70]); fillInk('#fbf8ee', 3); O(0, -h + 34, 20, lgr(0, -h + 14, 0, -h + 54, '#3d5872', '#8fb0cc'), 2.5);      // the pediment, and the round window in it
+  R(-170, -h + 70, 340, 16, '#f2ede2', 2.5);
+  for (const x of [-140, -50, 50, 140]) { R(x - 16, -h + 86, 32, 14, '#f2ede2', 2); g.beginPath(); g.rect(x - 12, -h + 100, 24, h - 140); fillInk(lgr(x - 12, 0, x + 12, 0, '#ffffff', '#ece6d6', '#c9c0aa'), 2.5); R(x - 16, -40, 32, 14, '#f2ede2', 2); }      // the columns
+  RR(-46, -200, 92, 174, 46, lgr(0, -200, 0, -26, '#3a2a1e', '#1e140c'), 3); R(-46, -200, 92, 46, 'rgba(140,176,204,.8)', 2);      // the door, a fanlight over it
+  R(-200, -26, 400, 13, '#d9d9df', 2.5); R(-220, -13, 440, 13, '#c4c4ca', 2.5);
+  bush(-w / 2 + 40, 32); bush(w / 2 - 40, 32); bush(-260, 26); bush(260, 26);
+}
+
+/* ---------- the weapons the prize buys ---------- */
+function pistol() {                                 // a polymer pistol after a Glock: a square slide with the grip cut into its back, a trigger guard, a grip that is mostly texture
+  Q(lgr(0, 0, 0, 34, '#2c2e35', '#15161a'), [-6, 2, 16, 2, 10, 34, -10, 32], 2.5);
+  for (let i = 0; i < 4; i++) for (let j = 0; j < 3; j++) O(-3 + j * 5 - i * .6, 10 + i * 6, .9, 'rgba(255,255,255,.12)', 0);
+  g.beginPath(); g.moveTo(14, 2); g.lineTo(34, 2); g.quadraticCurveTo(36, 14, 26, 16); g.lineTo(16, 16); g.closePath(); fillInk('#15161a', 2); thin(22, 3, 24, 11, '#5a5e68', 2);      // the guard and the trigger
+  RR(-10, -12, 74, 14, 2, lgr(0, -12, 0, 2, '#5a5e68', '#2f3138'), 2.5);      // the slide
+  for (let x = -6; x < 6; x += 3) thin(x, -10, x, 0, 'rgba(0,0,0,.5)', 1);
+  R(24, -10, 14, 5, '#17171b', 1); R(60, -15, 3, 3, '#17171b', 1); R(-8, -15, 4, 3, '#17171b', 1);
+}
+function sniper() {                                 // a bolt-action rifle after a K14: skeleton stock, the bolt, a scope on rings, a long barrel and its brake, the bipod folded under
+  Q(lgr(0, -10, 0, 22, '#3c4638', '#22281f'), [-60, -6, -6, -8, -2, 10, -30, 14, -38, 6, -56, 24, -62, 22], 2.5);
+  R(-64, -8, 8, 32, '#15161a', 2);
+  RR(-4, -9, 70, 18, 3, lgr(0, -9, 0, 9, '#4a5246', '#262c24'), 2.5);
+  O(20, 14, 5, '#9aa3ad', 2); thin(20, 9, 26, 6, '#9aa3ad', 3);      // the bolt
+  R(28, 9, 14, 22, '#1a1a1e', 2);      // the magazine
+  g.beginPath(); g.moveTo(64, -6); g.lineTo(252, -4.5); g.lineTo(252, 4.5); g.lineTo(64, 6); g.closePath(); fillInk(lgr(0, -6, 0, 6, '#5a5e68', '#1e2026'), 2.5);
+  RR(250, -7, 20, 14, 2, '#2a2c33', 2); for (const x of [255, 262]) thin(x, -6, x, 6, '#0c0c10', 2);      // the brake
+  for (const x of [22, 70]) R(x, -26, 8, 18, '#1a1a1e', 1.5);
+  g.beginPath(); g.moveTo(4, -34); g.lineTo(16, -30); g.lineTo(96, -30); g.lineTo(108, -38); g.lineTo(108, -12); g.lineTo(96, -20); g.lineTo(16, -20); g.lineTo(4, -16); g.closePath(); fillInk(lgr(0, -38, 0, -12, '#3a3d46', '#121418'), 2.5);      // the scope
+  R(50, -38, 10, 8, '#1a1a1e', 1.5); E2(108, -25, 3, 13, '#4a6aa0', 1.5);
+  thin(110, 8, 168, 16, '#1a1a1e', 3); thin(118, 8, 176, 12, '#1a1a1e', 3);      // the bipod
+}
+function katana() {                                 // a katana: the wrapped handle, a round guard, the collar, a curved blade and the line of its temper
+  RR(-44, -5, 44, 10, 3, '#f2ede2', 2); g.save(); g.beginPath(); g.rect(-44, -5, 44, 10); g.clip(); g.fillStyle = '#1a1a22'; for (let x = -44; x < 0; x += 9) { pts([x, -5, x + 4.5, 0, x, 5, x + 9, 5, x + 4.5, 0, x + 9, -5]); g.fill(); } g.restore(); ink(2);
+  E2(1, 0, 3.5, 12, '#c9a53a', 2); R(4, -4, 8, 8, '#e2c060', 1.5);
+  g.beginPath(); g.moveTo(12, -4); g.quadraticCurveTo(110, -10, 190, -16); g.lineTo(204, -16); g.quadraticCurveTo(196, -8, 186, -8); g.quadraticCurveTo(108, -1, 12, 4); g.closePath();
+  fillInk(lgr(0, -14, 0, 4, '#ffffff', '#d4dbe3', '#9aa5b2'), 2);
+  g.strokeStyle = 'rgba(255,255,255,.85)'; g.lineWidth = 1.4 * LWK; g.beginPath(); for (let x = 16; x < 184; x += 8) { const y = 1 - (x - 12) * .055 + Math.sin(x * .3) * 1.2; x === 16 ? g.moveTo(x, y) : g.lineTo(x, y); } g.stroke();
+}
+function chainHeld() { for (let i = 0; i < 11; i++) { const x = i * 15; if (i % 2) RR(x - 9, -2.5, 18, 5, 2.5, lgr(0, -2.5, 0, 2.5, '#d8dee6', '#6f7884'), 2); else { E2(x, 0, 9, 6, lgr(0, -6, 0, 6, '#d8dee6', '#6f7884'), 2); E2(x, 0, 4.5, 2, '#1a1a1e', 0); } } }
+function cloudHeld() { for (let i = 0; i < 3; i++) { const x = -6 + i * 66; RR(x, -7, 58, 14, 6, lgr(0, -7, 0, 7, '#ff9aa6', '#ff5a6e', '#b8243a'), 2.5); R(x - 2, -8, 6, 16, '#e2c060', 1.5); R(x + 54, -8, 6, 16, '#e2c060', 1.5); if (i < 2) { O(x + 61, 0, 2.5, '#c9ced6', 1); } } }
+function spearHeld() { RR(-20, -3.5, 182, 7, 3, lgr(0, -3.5, 0, 3.5, '#f6d77a', '#b8902e'), 2); Q(lgr(0, -10, 0, 10, '#fff2b0', '#e2b545', '#a8822a'), [158, -11, 218, 0, 158, 11, 164, 0], 2); Q('#e2b545', [148, -4, 178, -26, 172, -4], 1.5); Q('#e2b545', [148, 4, 178, 26, 172, 4], 1.5); }
+function ticket(col) {                              // a coupon: notched along one edge, its colour across the top, a big percent and a barcode
+  g.beginPath(); g.moveTo(-6, -22); g.lineTo(72, -22); g.lineTo(72, 22); g.lineTo(-6, 22);
+  for (let y = 18; y > -22; y -= 8) g.arc(-6, y - 4, 3, Math.PI / 2, -Math.PI / 2, false);      // (the notches, cut in)
+  g.closePath(); fillInk('#fbf8ee', 2);
+  g.fillStyle = col; g.fillRect(-2, -20, 72, 12); thin(-2, -8, 70, -8, 'rgba(0,0,0,.25)', 1);
+  g.save(); g.translate(30, 6); g.scale(1, 1); g.font = `bold 18px Anton, Impact, sans-serif`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillStyle = LINE; g.fillText('%', 0, 0); g.restore();
+  for (let i = 0; i < 12; i++) thin(48 + i * 1.8, 0, 48 + i * 1.8, 16, '#1a1a1e', i % 3 ? .6 : 1.3);
+}
+
+/* ---------- Build 0.28v1's own things ---------- */
+function bowlingBall(r = 26, spin = 0, col = '#5a2fb0') {      // a resin ball: a swirl in it, a shine on it, three holes that go round as it rolls
+  g.beginPath(); g.arc(0, 0, r, 0, TAU); fillInk(rgr(0, 0, r, lighten(col, .55), col, darken(col, .55)), 3);
+  g.save(); g.beginPath(); g.arc(0, 0, r, 0, TAU); g.clip(); g.rotate(spin);
+  g.fillStyle = 'rgba(80,190,255,.35)'; g.beginPath(); g.ellipse(-r * .2, r * .1, r * .9, r * .28, .6, 0, TAU); g.fill();
+  g.fillStyle = 'rgba(255,255,255,.18)'; g.beginPath(); g.ellipse(r * .3, -r * .3, r * .5, r * .14, -.9, 0, TAU); g.fill();
+  for (const [x, y, s] of [[-r * .25, -r * .45, .13], [r * .08, -r * .52, .13], [-r * .05, -r * .15, .17]]) { g.fillStyle = '#0c0c12'; g.beginPath(); g.arc(x, y, r * s, 0, TAU); g.fill(); }
+  g.restore();
+  g.save(); g.globalAlpha *= .7; g.fillStyle = '#ffffff'; g.beginPath(); g.ellipse(-r * .38, -r * .42, r * .22, r * .12, -.6, 0, TAU); g.fill(); g.restore();
+}
+function pin() {                                    // a pin: white, two red stripes at its neck
+  g.beginPath(); g.moveTo(-7, 0); g.bezierCurveTo(-16, -30, -14, -50, -6, -64); g.bezierCurveTo(-3, -72, -9, -80, -6, -88); g.arc(0, -90, 6, Math.PI, 0); g.bezierCurveTo(9, -80, 3, -72, 6, -64); g.bezierCurveTo(14, -50, 16, -30, 7, 0); g.closePath();
+  fillInk(lgr(-14, 0, 14, 0, '#ffffff', '#f2f0ea', '#c9c5bc'), 2.5);
+  R(-6.5, -72, 13, 3, '#d0353a', 0); R(-6, -66, 12, 3, '#d0353a', 0);
+}
+function cart(full = false, spin = 0) {             // a shopping trolley: a wire basket narrowing to the front, a red handle at the back, a rack under it, four castors
+  if (full) groceriesIn();
+  const M = '#c3cad2';
+  g.save(); g.strokeStyle = LINE; g.lineWidth = 6 * LWK; g.lineJoin = 'round'; g.beginPath(); g.moveTo(-96, -150); g.lineTo(96, -138); g.lineTo(84, -70); g.lineTo(-80, -64); g.closePath(); g.stroke();
+  g.strokeStyle = M; g.lineWidth = 3 * LWK; g.stroke();
+  g.lineWidth = 1.4 * LWK; g.beginPath(); for (let x = -80; x <= 84; x += 12) { g.moveTo(x, -149 + (x + 96) * .06); g.lineTo(x + (x > 70 ? -4 : 0), -65 - (x + 80) * .036); } for (let y = -132; y < -66; y += 12) { g.moveTo(-94 + (y + 150) * .17, y); g.lineTo(94 - (y + 138) * .17, y + 6); } g.stroke(); g.restore();
+  thin(-88, -60, -76, -20, LINE, 6); thin(-88, -60, -76, -20, M, 3); thin(80, -66, 74, -20, LINE, 6); thin(80, -66, 74, -20, M, 3);      // the legs
+  thin(-82, -30, 80, -30, LINE, 6); thin(-82, -30, 80, -30, M, 3);      // the rack
+  thin(-96, -150, -122, -168, LINE, 6); thin(-96, -150, -122, -168, M, 3); RR(-136, -176, 30, 14, 6, lgr(0, -176, 0, -162, '#ff6a6a', '#c21d24'), 2.5);      // the handle
+  for (const x of [-72, 70]) { thin(x, -20, x, -12, LINE, 4); wheel(x, -9, 9, spin, '#9aa3ad'); }
+}
+function groceriesIn() {                            // what is in the trolley, over the top of it
+  O(-40, -152, 26, rgr(-40, -152, 26, '#9be07a', '#3f9a3a', '#1f5a22'), 2.5); for (let a = -1; a <= 1; a++) thin(-40 + a * 9, -176, -40 + a * 12, -128, 'rgba(20,60,20,.5)', 2);      // a melon
+  RR(-6, -196, 34, 60, 4, lgr(-6, 0, 28, 0, '#ffffff', '#dfe6ee'), 2.5); Q('#4aa3e6', [-6, -196, 11, -210, 28, -196], 2); R(-6, -176, 34, 14, '#4aa3e6', 1.5);      // the milk
+  for (const x of [40, 64]) { RR(x, -176, 20, 34, 3, lgr(x, 0, x + 20, 0, '#e9eef3', '#9aa3ad'), 2); R(x, -168, 20, 16, x > 50 ? '#e2383c' : '#ffd84a', 1); }      // two tins
+  RR(-90, -168, 40, 24, 10, lgr(0, -168, 0, -144, '#e9b26a', '#b87a34'), 2.5);      // a loaf
+}
+const GROCERIES = [
+  () => { O(0, -26, 26, rgr(0, -26, 26, '#9be07a', '#3f9a3a', '#1f5a22'), 2.5); },
+  () => { RR(-17, -60, 34, 60, 4, lgr(-17, 0, 17, 0, '#ffffff', '#dfe6ee'), 2.5); Q('#4aa3e6', [-17, -60, 0, -74, 17, -60], 2); R(-17, -40, 34, 14, '#4aa3e6', 1.5); },
+  () => { RR(-10, -34, 20, 34, 3, lgr(-10, 0, 10, 0, '#e9eef3', '#9aa3ad'), 2); R(-10, -26, 20, 16, '#e2383c', 1); },
+  () => { RR(-20, -24, 40, 24, 10, lgr(0, -24, 0, 0, '#e9b26a', '#b87a34'), 2.5); },
+  () => { g.beginPath(); g.moveTo(-8, 0); g.lineTo(-8, -40); g.lineTo(-4, -50); g.lineTo(-4, -60); g.lineTo(4, -60); g.lineTo(4, -50); g.lineTo(8, -40); g.lineTo(8, 0); g.closePath(); fillInk(lgr(-8, 0, 8, 0, '#7ad0a0', '#2f8a5a'), 2); R(-8, -30, 16, 14, '#f4f1e6', 1); },
+  () => { g.save(); g.rotate(-.4); g.strokeStyle = LINE; g.lineWidth = 12 * LWK; g.lineCap = 'round'; g.beginPath(); g.arc(0, -30, 26, .3, 2.3); g.stroke(); g.strokeStyle = '#ffe14a'; g.lineWidth = 8 * LWK; g.stroke(); g.restore(); }
+];
+function rod() {                                    // a fishing rod in the hand: cork grip, a spinning reel under it, guides on the way out to its tip
+  RR(-40, -4, 44, 8, 3, lgr(0, -4, 0, 4, '#e2c08a', '#a8823a'), 2);
+  g.beginPath(); g.moveTo(4, -3); g.lineTo(220, -1); g.lineTo(220, 1); g.lineTo(4, 3); g.closePath(); fillInk('#26262c', 2);
+  for (const x of [50, 100, 150, 196]) { thin(x, 1, x, 7 - x * .02, '#9aa3ad', 1.5); O(x, 8 - x * .02, 2.2, 'rgba(0,0,0,0)', 1.2); }
+  thin(10, 3, 12, 14, '#3a3d46', 3); RR(0, 12, 24, 16, 6, lgr(0, 12, 0, 28, '#e9eef3', '#6f7884'), 2.5); RR(4, 14, 16, 12, 4, '#e2b545', 1.5); thin(24, 20, 34, 26, '#3a3d46', 2.5); O(34, 26, 3, '#26262c', 1.5);      // the reel
+}
+function swordfish() {                              // a swordfish held by the tail: the tail fin at the hand, the body, the sail, and the bill out in front
+  Q(lgr(0, -40, 0, 40, '#4f7fb5', '#22406a'), [-30, -38, 8, -4, 8, 4, -30, 38, -16, 0], 2.5);
+  g.beginPath(); g.moveTo(6, 0); g.bezierCurveTo(60, -30, 170, -42, 230, -10); g.lineTo(380, -3); g.lineTo(380, 1); g.lineTo(232, 8); g.bezierCurveTo(170, 34, 60, 22, 6, 0); g.closePath();
+  fillInk(lgr(0, -40, 0, 30, '#6fa0d0', '#3f6fa0', '#d8e4ee'), 3);
+  Q(lgr(0, -110, 0, -30, '#4f7fb5', '#22406a'), [110, -32, 140, -110, 196, -96, 210, -36], 2.5);      // the sail
+  Q('#3f6fa0', [150, 18, 170, 46, 186, 20], 2);
+  O(214, -10, 5, '#ffffff', 1.5); O(215, -10, 2.4, '#0c0c12', 0);
+  shine(40, -10, 200, -22, .45, 2.4);
+}
+function sledge() {                                 // a sledgehammer: a long ash handle, a steel head with its two faces
+  RR(-20, -5, 176, 10, 4, lgr(0, -5, 0, 5, '#f0d29a', '#c99a5a', '#8a6230'), 2.5);
+  for (let i = 0; i < 3; i++) thin(10 + i * 40, -2 + i, 70 + i * 40, -1 + i, 'rgba(90,50,20,.3)', 1);
+  g.beginPath(); g.moveTo(150, -34); g.lineTo(200, -34); g.lineTo(206, -28); g.lineTo(206, 28); g.lineTo(200, 34); g.lineTo(150, 34); g.lineTo(144, 28); g.lineTo(144, -28); g.closePath();
+  fillInk(lgr(144, 0, 206, 0, '#cfd6de', '#7c8794', '#4a525c'), 3);
+  shine(152, -26, 152, 26, .5, 2.5);
+}
+function wreckingBall() { thin(0, -50, 0, -1500, LINE, 9); thin(0, -50, 0, -1500, '#5a5e68', 5); for (let y = -60; y > -1500; y -= 22) thin(-3, y, 3, y - 8, '#2a2c33', 3); R(-10, -66, 20, 22, '#3a3d46', 2.5); O(0, 0, 58, rgr(0, 0, 58, '#7c8794', '#2f3138', '#0c0c10'), 3.5); }
+function jackhammer() {                             // a jackhammer, held point down along x: the T handle at the hand, the body, the bit
+  R(-6, -30, 12, 60, '#26262c', 2.5); RR(-14, -36, 28, 10, 4, '#1a1a1e', 2); RR(-14, 26, 28, 10, 4, '#1a1a1e', 2);
+  RR(6, -16, 96, 32, 6, lgr(0, -16, 0, 16, '#ffe14a', '#e2b000', '#9a7800'), 3);
+  for (let x = 20; x < 96; x += 14) thin(x, -14, x, 14, 'rgba(0,0,0,.25)', 2);
+  R(100, -8, 18, 16, '#3a3d46', 2.5); Q(lgr(0, -6, 0, 6, '#cfd6de', '#5a5e68'), [118, -5, 168, -3, 176, 0, 168, 3, 118, 5], 2);
+  g.strokeStyle = LINE; g.lineWidth = 6 * LWK; g.beginPath(); g.moveTo(12, 16); g.quadraticCurveTo(-10, 60, -40, 70); g.stroke(); g.strokeStyle = '#d8262c'; g.lineWidth = 3.5 * LWK; g.stroke();      // the air line
+}
 const HELD = {
-  bat: () => bat(150), ball: () => { g.translate(12, 0); ball(13); },
-  bigbat: () => { g.translate(-12, 0); g.scale(2.3, 2.3); LWK = 1 / 2.3; bat(150, GOLD); LWK = 1; },
+  bat: () => bat(160), ball: () => { g.translate(12, 0); ball(13); },
+  bigbat: () => { g.translate(-12, 0); g.scale(2.3, 2.3); LWK = 1 / 2.3; bat(160, GOLD); LWK = 1; },
   knife, cleaver, chair: chairHeld, ext, hose: nozzle, pistol, sniper, katana, chain: chainHeld, cloud: cloudHeld, spear: spearHeld,
-  ticketC: () => ticket(CPN), ticketX: () => ticket(XTR), ticketP: () => ticket(GOLD) };
+  ticketC: () => ticket(CPN), ticketX: () => ticket(XTR), ticketP: () => ticket(GOLD),
+  bowl: () => { g.translate(18, 0); bowlingBall(24, 0); }, rod, swordfish: () => { g.translate(14, 0); swordfish(); }, sledge, jack: jackhammer };
 // drawn along whichever arm holds it, out from the hand the way the arm points (as tools.js holds its tools)
 function inHand(p, front, fn) {
   const ps = p.pose, an = front ? ps[2] : ps[3], w = E.hand(p, front), a = F(w[0], w[1]), b = F(w[0] + Math.sin(an) * p.face * 100, w[1] - Math.cos(an) * 100), k = a[2];
   g.save(); g.translate(a[0], a[1]); g.rotate(Math.atan2(b[1] - a[1], b[0] - a[0])); g.scale(k, k * p.face); fn(); g.restore();
 }
+// where the end of what is in his hand is, out along the arm (the rod's tip, for its line)
+function handOut(p, front, L) { const an = front ? p.pose[2] : p.pose[3], w = E.hand(p, front); return [w[0] + Math.sin(an) * p.face * L, w[1] - Math.cos(an) * L]; }
 
 /* ================= the things out in the world ================= */
 const props = [];                                   // { x, y, vx, vy, rot, face, t, life, draw(e), upd(e, dt, o), back (drawn behind the fighters), a, s }
@@ -249,7 +567,7 @@ function dropping(e, dt, o) {
 }
 
 /* ================= the deck ================= */
-const CARD_IDS = ['home', 'hitrun', 'kitchen', 'express', 'road', 'furn', 'ext', 'final', 'coupon', 'extra'];
+const CARD_IDS = ['home', 'hitrun', 'kitchen', 'express', 'road', 'furn', 'ext', 'final', 'bowl', 'shop', 'fish', 'reno', 'coupon', 'extra'];      // (fourteen from 0.28v1)
 const deck = { hand: {}, line: [], armed: null, used: {}, ammo: {} };      // the four on the keys; the rest in line (line[0] is NEXT); a coupon waiting for a move; each key's last wait; a weapon's bullets
 function deal() {
   const all = CARD_IDS.slice();
@@ -282,7 +600,7 @@ const RP = {
 /* ================= 1 — HOME RUN ================= */
 function batHit(p, o, col, hard, word = 'カキーン') {      // what a bat sounds like when it is a good one
   const x = o.x - p.face * 20, y = mid(o);
-  sfx.snap(); sfx.hit(true); shake(hard ? 34 : 20);
+  play('home-rg-bat', hard ? 1 : .85, () => { sfx.snap(); sfx.hit(true); }, hard ? .85 : 1); shake(hard ? 34 : 20);
   V.sparks(x, y, 'white', hard ? 18 : 10); V.ring(x, y, hard ? 320 : 200, '#ffffff', .28);
   if (Z) Z.flare(x, y, WHITE, hard ? 520 : 300, .2);
   if (word) ono(word, x, o.y + 430 * hs(o), col, hard ? 1.3 : 1, .9);
@@ -316,7 +634,7 @@ function pitch(p, o) {                              // a fastball, at their midd
     if (Z && Math.random() < .8) Z.emit(1, e.x, e.y, -e.vx * .05, -e.vy * .05, 4, .12, WHITE);      // (the air off it)
     if (touch(e.x, e.y, 16, 16, o)) {
       e.gone = 1; hit(o, dir, 50, { kb: 120, stun: 1.2, stop: .12, heavy: 1, col: '#ffffff' });
-      sfx.ball(1.6); sfx.hit(true); shake(14); V.sparks(e.x, e.y, 'white', 10); V.ring(e.x, e.y, 150, '#ffffff', .2); ono('バシッ', e.x, e.y + 200, CPN, 1, .6);
+      play('home-rg-mitt', .95, () => { sfx.ball(1.6); sfx.hit(true); }); shake(14); V.sparks(e.x, e.y, 'white', 10); V.ring(e.x, e.y, 150, '#ffffff', .2); ono('バシッ', e.x, e.y + 200, CPN, 1, .6);
     } else if (e.y < 0 || Math.abs(e.x) > 2000) e.gone = 1;
   } });
 }
@@ -357,9 +675,10 @@ const HOME_X = card('home', 'x', { name: 'Home Run: Grand Slam', cd: 14, dur: 1.
 /* ================= 2 — HIT AND RUN ================= */
 const RIDE_Y = 54, SCOOT = 1.2;
 let riding = false;                                 // he is sat on it this frame (and up off the floor for the seat)
-function vroom(o, col, word = 'ドンッ') { sfx.blast(); sfx.hit(true); shake(22); V.sparks(o.x, mid(o), 'white', 10); ono(word, o.x, o.y + 420 * hs(o), col, 1, .7); }
+function vroom(o, col, word = 'ドンッ') { play('home-rg-crash', .5, () => sfx.blast(), 1.5); sfx.hit(true); shake(22); V.sparks(o.x, mid(o), 'white', 10); ono(word, o.x, o.y + 420 * hs(o), col, 1, .7); }
 function scooting(p, m, dt, max = 1900) {          // on it and going: false once there is no more floor ahead of him
   riding = true; m.prop = 'scooter'; p.target = RP.scoot; p.y = RIDE_Y; p.vy = 0; p.ground = true;
+  if (!m.rev) { m.rev = 1; play('home-rg-engine', .6, () => sfx.roar(.6), 1.6); }
   m.v = Math.min(max, (m.v || 0) + 7500 * dt);
   const room = Math.abs(p.x + p.face * 100) < bound() - 5;
   p.vx = room ? p.face * m.v : 0;
@@ -369,7 +688,7 @@ function scooting(p, m, dt, max = 1900) {          // on it and going: false onc
 function hopOff(p, m) {                             // off it; it goes on without him, and is gone
   const f = p.face, v = Math.max(700, (m.v || 0) * .6);
   p.ground = false; p.vy = 560; p.vx = -f * 160; m.prop = null; m.tilt = 0;
-  prop({ x: p.x + f * 58, y: 0, face: f, s: SCOOT, life: .8, draw: () => scooter(), upd(e, dt) { e.x += f * v * Math.exp(-e.t * 3) * dt; if (e.t > .62 && !e.f) { e.f = 1; receipt(e.x, 90, 8); e.a = 0; } } });
+  prop({ x: p.x + f * 58, y: 0, face: f, s: SCOOT, life: .8, draw: e => scooter(undefined, e.x * f / 20), upd(e, dt) { e.x += f * v * Math.exp(-e.t * 3) * dt; if (e.t > .62 && !e.f) { e.f = 1; receipt(e.x, 90, 8); e.a = 0; } } });
 }
 const ended = (p, m, t, t0) => { p.target = POSE.idle; if ((p.ground && t > t0 + .3) || t > t0 + .8) E.endMove(p); };
 const HIT_RUN = card('hitrun', 'o', { name: 'Hit and Run', cd: 10, dur: 2.4, run(p, m, t) {
@@ -408,8 +727,8 @@ const HIT_RUN_C = card('hitrun', 'c', { name: 'Hit and Run: Hit Again', cd: 14, 
 } });
 function rider(p, i, last) {                        // a scooter with nobody on it, out of a receipt behind him and straight through where they are
   const f = p.face, x0 = clamp(p.x - f * 760, -1500, 1500), col = ['#ffb347', '#e64a4f', '#4fa3e6'][i % 3];
-  receipt(clamp(p.x - f * 380, -bound(), bound()), 120, 6, XRGB);
-  prop({ x: x0, y: 0, face: f, s: SCOOT, life: 1.6, draw: () => scooter(col), upd(e, dt, o) {
+  receipt(clamp(p.x - f * 380, -bound(), bound()), 120, 6, XRGB); play('home-rg-engine', .45, () => {}, 1.7 + i * .1);
+  prop({ x: x0, y: 0, face: f, s: SCOOT, life: 1.6, draw: e => scooter(col, e.x * f / 20), upd(e, dt, o) {
     e.x += f * 2700 * dt;
     if (Z && Math.random() < .6) Z.emit(2, e.x - f * 120, 26, -f * 100, 30, 22, .5, '190,190,196', { s1: 2, a: .45, dr: 2 });
     if (!e.hit && touch(e.x + f * 70, 70, 90, 80, o)) {
@@ -442,7 +761,7 @@ function slashes(p, m, t, n, dmg, col, fin) {
     m.n = (m.n || 0) + 1;
     const last = fin && m.n === all, y = p.y + 150 + rnd(-30, 60), a = (p.face > 0 ? 0 : Math.PI) + (m.n % 2 ? -.5 : .5) * p.face;
     p.target = last ? RP.knX : m.n % 2 ? RP.knA : RP.knB;
-    if (m.n % 2) sfx.cut(1.1); else sfx.snip(1.1);
+    play('home-rg-slash', .55, () => (m.n % 2 ? sfx.cut(1.1) : sfx.snip(1.1)), 1 + (m.n % 3) * .12);
     V.slash(p.x + p.face * 150, y, a, last ? 420 : 300, '#ffffff', last ? 14 : 8);
     if (last) V.slash(p.x + p.face * 150, y, a + (m.n % 2 ? 1 : -1), 420, '#ffffff', 14);
     if (reach(p, 205, last ? fin.dmg : dmg, last ? fin.more : { kb: 30, stun: .45, stop: .025, col })) { V.sparks(o.x - p.face * 20, mid(o), 'white', last ? 10 : 3); if (last) { sfx.hit(true); shake(16); } }
@@ -474,7 +793,7 @@ const KITCHEN_C = card('kitchen', 'c', { name: 'Kitchen Nightmare: Meat Cleaver'
     m.chop = 1; p.target = RP.clv; sfx.whoosh();
     const ok = live(o) && Math.abs(o.x - p.x) < 260 && (o.x - p.x) * p.face > -40 && hit(o, p.face, 90, { kb: 200, stun: 1.4, stop: .22, heavy: 1, col: CPN });
     V.slash(p.x + p.face * 140, p.y + 200, p.face > 0 ? 1.3 : Math.PI - 1.3, 460, '#ffffff', 18);
-    if (ok) { down(o, 1.4); sfx.hit(true); sfx.snap(); shake(30); big(p, o, 'ドスッ', CPN, 'neg'); } else shake(10);
+    if (ok) { down(o, 1.4); play('home-rg-stab', 1, () => sfx.snap(), .7); sfx.hit(true); shake(30); big(p, o, 'ドスッ', CPN, 'neg'); } else shake(10);
   }
   p.target = u < .6 ? RP.clv : POSE.idle;
   if (u > .72) { gone(p); E.endMove(p); }
@@ -486,7 +805,7 @@ function knives(p, i) {                             // four, thrown at once, one
     const y = p.y + [90, 150, 210, 270][j] + rnd(-10, 10);
     prop({ x: h[0], y: h[1], face: f, life: 1, vy: (y - h[1]) * 7, draw: () => knife(), upd(e, dt, o) {
       e.x += f * 2300 * dt; e.y += e.vy * dt; e.vy *= Math.exp(-dt * 12); e.rot = -Math.atan2(e.vy, 2300) * .6;
-      if (touch(e.x + f * 40, e.y, 30, 14, o)) { e.gone = 1; hit(o, f, 11, { kb: 50, stun: .45, stop: .03, col: XTR }); V.sparks(e.x, e.y, 'white', 4); sfx.snip(1.3); }
+      if (touch(e.x + f * 40, e.y, 30, 14, o)) { e.gone = 1; hit(o, f, 11, { kb: 50, stun: .45, stop: .03, col: XTR }); V.sparks(e.x, e.y, 'white', 4); play('home-rg-stab', .45, () => sfx.snip(1.3), 1.25); }
       else if (Math.abs(e.x) > 1800) e.gone = 1;
     } });
   }
@@ -511,10 +830,10 @@ function trapTick(dt) {
   if (o !== E.P2 || !live(o) || (s.t += dt) >= s.life || s.e.gone) { if (!s.e.gone) { unbox(s.e); s.e.gone = 1; } trap = null; return; }
   if (holdable(o)) { Object.assign(o, { x: s.x, vx: 0, state: o.state === 'down' ? 'down' : 'hurt', stun: Math.max(o.stun || 0, .3), act: null, tele: 0 }); if (o.ai) o.ai.t = Math.max(o.ai.t || 0, .3); }
 }
-function unbox(e) { bits(e.x, 120, 16, CRD, 520, 13); receipt(e.x, 150, 6); sfx.rough(.6); }      // and out of it they come, through the side of it
+function unbox(e) { bits(e.x, 120, 16, CRD, 520, 13); receipt(e.x, 150, 6); play('home-rg-box', .75, () => sfx.rough(.6), 1.15); }      // and out of it they come, through the side of it
 function stack(o, n, more) {                        // n boxes, one on another, coming down on them
   return drop(o, Object.assign({ n, seed: rnd(0, 100), shadow: 120, hw: 110, from: 1250, draw: e => boxes(e.n, e.seed),
-    landed(e) { thud(e.x, false); bits(e.x, 40, 6, CRD, 300, 9); },
+    landed(e) { thud(e.x, false, true); play('home-rg-box', .95, () => sfx.land()); bits(e.x, 40, 6, CRD, 300, 9); },
     rest(e) { if (!(trap && trap.e === e) && e.t > e.t0 + .5) { unbox(e); e.gone = 1; } } }, more));
 }
 const EXPRESS = card('express', 'o', { name: 'Express Delivery', cd: 12, dur: .8, run(p, m, t) {
@@ -532,7 +851,7 @@ const EXPRESS_C = card('express', 'c', { name: 'Express Delivery: Heavy Freight'
       hit(o, side(p.x, o), 30, { kb: 0, stun: 2.8, stop: .12, heavy: 1, col: CPN }); shut(e, o, 2.8); sfx.hit(true);
       later(.55, () => drop(o, { from: 1500, wait: 0, track: .2, shadow: 130, hw: 120, keep: .3, draw: () => crate(),
         hitThem(c, o) { hit(o, side(c.x, o), 100, { kb: 0, stun: 1.4, stop: .22, heavy: 1, col: CPN }); down(o, 1.4); if (trap) { unbox(trap.e); trap.e.gone = 1; } big(p, o, 'ドゴォ', CPN, 'neg'); },
-        landed(c) { thud(c.x, true); bits(c.x, 80, 14, '143,93,44', 600, 14); },
+        landed(c) { thud(c.x, true); play('home-rg-smash', .8, () => {}, .8); bits(c.x, 80, 14, '143,93,44', 600, 14); },
         broke(c) { bits(c.x, 100, 18, '143,93,44', 520, 14); receipt(c.x, 140, 10); } }));
     } });
   }
@@ -546,9 +865,9 @@ const EXPRESS_X = card('express', 'x', { name: 'Express Delivery: Bulk Order', c
   const due = Math.min(10, Math.floor(t / .12) + 1);
   while (m.n < due) {
     const i = m.n++;
-    drop(o, { from: 1100 + i * 30, wait: 0, track: .16, shadow: 80, hw: 90, gr: 5200, draw: e => box(e.w, e.h), w: rnd(110, 140), h: rnd(78, 96), keep: .15, rot: rnd(-.2, .2),
+    drop(o, { from: 1100 + i * 30, wait: 0, track: .16, shadow: 80, hw: 90, gr: 5200, draw: e => box(e.w, e.h, e.w | 0), w: rnd(110, 140), h: rnd(78, 96), keep: .15, rot: rnd(-.2, .2),
       hitThem(e, o) {
-        hit(o, side(p.x, o), 13, { kb: 0, stun: 1, stop: .04, col: XTR }); sfx.land(); sfx.hit(false);
+        hit(o, side(p.x, o), 13, { kb: 0, stun: 1, stop: .04, col: XTR }); play('home-rg-box', .7, () => sfx.land(), 1 + rnd(0, .3)); sfx.hit(false);
         if (!m.heap) { m.heap = prop({ x: o.x, y: 0, life: 9, n: 0, seed: rnd(0, 100), draw: q => boxes(Math.min(5, q.n), q.seed), upd(q) { if (!(trap && trap.e === q)) { if (q.n) unbox(q); q.gone = 1; } } }); shut(m.heap, o, 3); }
         m.heap.n++;
       },
@@ -562,7 +881,7 @@ const EXPRESS_X = card('express', 'x', { name: 'Express Delivery: Bulk Order', c
 function drive(p, opt) {                            // out of a receipt behind him, and flat out at them
   const f = p.face, len = opt.len || 300;
   receipt(clamp(p.x - f * 300, -bound(), bound()), 160, 8);
-  sfx.roar(opt.len > 400 ? 1.3 : .9);
+  play('home-rg-engine', .85, () => sfx.roar(opt.len > 400 ? 1.3 : .9), opt.len > 400 ? .7 : 1);
   return prop(Object.assign({ x: clamp(p.x - f * (800 + len), -2000, 2000), y: 0, face: f, life: 3.2, speed: 3000, len, upd: driving }, opt));
 }
 function driving(e, dt, o) {
@@ -581,7 +900,7 @@ function driving(e, dt, o) {
 }
 function crash(e, o, dmg, more, col, word = 'ドガッ') {      // (word null: something else says it)
   hit(o, e.face, dmg, more);
-  sfx.blast(); sfx.snap(); sfx.rough(.8); shake(30); E.zoomIn(.25);
+  play('home-rg-crash', .95, () => { sfx.blast(); sfx.snap(); sfx.rough(.8); }); shake(30); E.zoomIn(.25);
   const x = e.x + e.face * e.len * .45;
   bits(x, 120, 10, GLASS, 500, 6); V.sparks(x, 120, 'white', 12); if (Z) Z.flare(x, 120, WHITE, 360, .18);
   if (word) ono(word, o.x, o.y + 430 * hs(o), col, 1.2, .8);
@@ -592,7 +911,7 @@ function hopOver(p, m, e, near, vy) {               // up, and it goes under him
 }
 const ROAD = card('road', 'o', { name: 'Road Rage', cd: 14, dur: 2, run(p, m, t) {
   const o = E.P2;
-  if (!m.s) { m.s = 1; facing(p, o); buy(p, 'ROAD RAGE'); const col = pick(CARS); m.car = drive(p, { draw: () => car(col), crash: (e, o) => crash(e, o, 40, { kb: 1600, lift: 640, stun: 1, stop: .18, heavy: 1, col: RED, flung: 1 }, PAPER) }); }
+  if (!m.s) { m.s = 1; facing(p, o); buy(p, 'ROAD RAGE'); const col = pick(CARS); m.car = drive(p, { draw: e => car(col, e.x * e.face / 28), crash: (e, o) => crash(e, o, 40, { kb: 1600, lift: 640, stun: 1, stop: .18, heavy: 1, col: RED, flung: 1 }, PAPER) }); }
   hopOver(p, m, m.car, 520, 1150);
   if ((m.hop && p.ground && t > .45) || t > 1.9) E.endMove(p);
 } });
@@ -602,12 +921,12 @@ const ROAD_C = card('road', 'c', { name: 'Road Rage: Full Tank', cd: 17, dur: 2,
   if (!m.s) {
     m.s = 1; facing(p, o); buy(p, 'ROAD RAGE: FULL TANK', CPN);
     const col = pick(CARS);
-    m.car = drive(p, { draw: () => car(col), stay: .6, crash: (e, o) => crash(e, o, 50, { kb: 700, lift: 300, stun: 1.2, stop: .16, heavy: 1, col: CPN }, CPN),
+    m.car = drive(p, { draw: e => car(col, e.x * e.face / 28), stay: .6, crash: (e, o) => crash(e, o, 50, { kb: 700, lift: 300, stun: 1.2, stop: .16, heavy: 1, col: CPN }, CPN),
       after(e, u, o) {
         if (u < .34 || e.boomed) return;
         e.boomed = 1; const x = e.x;
         if (Z) { Z.boom(x, 90, 160, '255,140,60', { n: 24 }); Z.flash('255,170,90', .3, .3); }
-        sfx.blast(); sfx.rough(1.2); shake(40); E.zoomIn(.35);
+        play('home-rg-boom', 1, () => { sfx.blast(); sfx.rough(1.2); }); shake(40); E.zoomIn(.35);
         bits(x, 100, 16, '40,40,44', 700, 14); bits(x, 100, 8, GLASS, 600, 6);
         if (Z) for (let i = 0; i < 2; i++) Z.emit(3, x, 60, rnd(-600, 600), rnd(700, 1100), 24, 1.6, '23,23,27', { g: 2000, vr: rnd(-12, 12), rot: rnd(0, TAU), edge: 'rgba(143,152,163,.8)' });      // (its wheels)
         if (can(o) && Math.abs(o.x - x) < 340 + 40 * hs(o)) { hit(o, side(x, o), 80, { kb: 1000, lift: 760, stun: 1, stop: .2, heavy: 1, col: '#ffa040', flung: 1 }); big(E.P1, o, 'ドカーン', CPN, 'neg'); }
@@ -620,14 +939,14 @@ const ROAD_C = card('road', 'c', { name: 'Road Rage: Full Tank', cd: 17, dur: 2,
 // extra: the bus (140)
 const ROAD_X = card('road', 'x', { name: 'Road Rage: Bus', cd: 18, dur: 2.4, run(p, m, t) {
   const o = E.P2;
-  if (!m.s) { m.s = 1; facing(p, o); buy(p, 'ROAD RAGE: BUS', XTR); m.car = drive(p, { len: 640, speed: 2700, draw: () => bus(), crash: (e, o) => { crash(e, o, 140, { kb: 2400, lift: 950, stun: 1.2, stop: .26, heavy: 1, col: XTR, flung: 1 }, XTR, null); big(E.P1, o, 'ドカーン', XTR, 'neg'); } }); }
+  if (!m.s) { m.s = 1; facing(p, o); buy(p, 'ROAD RAGE: BUS', XTR); m.car = drive(p, { len: 640, speed: 2700, draw: e => bus(e.x * e.face / 33, e.face), crash: (e, o) => { crash(e, o, 140, { kb: 2400, lift: 950, stun: 1.2, stop: .26, heavy: 1, col: XTR, flung: 1 }, XTR, null); big(E.P1, o, 'ドカーン', XTR, 'neg'); } }); }
   hopOver(p, m, m.car, 900, 1500);
   if ((m.hop && p.ground && t > .5) || t > 2.3) E.endMove(p);
 } });
 
 /* ================= 6 — FURNITURE FRENZY ================= */
 function chairBreak(p, onThem, x, y) {              // over their head, and in pieces
-  sfx.snap(); sfx.rough(.7); shake(onThem ? 22 : 10);
+  play('home-rg-wood', .9, () => { sfx.snap(); sfx.rough(.7); }); shake(onThem ? 22 : 10);
   bits(x, y, 14, WRGB, 420, 12);
   if (Z) for (let i = 0; i < 3; i++) Z.emit(3, x, y, rnd(-500, 500), rnd(300, 800), rnd(26, 40), rnd(.9, 1.4), WRGB, { g: 1800, vr: rnd(-16, 16), rot: rnd(0, TAU), w: .14, edge: 'rgba(30,20,12,.6)' });      // (its legs)
   if (onThem) ono('バキッ', x, y + 140, PAPER, 1.1, .7);
@@ -670,7 +989,7 @@ function flip(p, o, after) {
     const u = Math.min(1, e.t / .42);
     e.x = lerp(x0, live(o) ? o.x : x1, u); e.y = 4 * 260 * u * (1 - u); e.rot = Math.PI * u;
     if (u >= 1 && !e.down) {
-      e.down = 1; thud(e.x, false); sfx.rough(.7); bits(e.x, 60, 10, WRGB, 380, 12);
+      e.down = 1; thud(e.x, false, true); play('home-rg-smash', .85, () => sfx.rough(.7)); bits(e.x, 60, 10, WRGB, 380, 12);
       if (can(o) && Math.abs(o.x - e.x) < 160) { hit(o, f, 60, { kb: 0, stun: 1.4, stop: .16, heavy: 1, col: CPN }); down(o, 1.4); ono('ガシャン', o.x, o.y + 360, CPN, 1.1, .8); }
       if (after) after();
     }
@@ -692,7 +1011,7 @@ const FURN_X = card('furn', 'x', { name: 'Furniture Frenzy: Sofa Slam', cd: 15, 
     m.s = 1; facing(p, o); buy(p, 'FURNITURE FRENZY: SOFA SLAM', XTR);
     m.sofa = drop(o, { from: 1200, shadow: 170, hw: 160, keep: 1.4, draw: () => sofa(),
       hitThem(e, o) { hit(o, side(p.x, o), 90, { kb: 0, stun: 1.8, stop: .2, heavy: 1, col: XTR }); down(o, 1.8); big(p, o, 'ドスン', XTR, 'neg'); },
-      landed(e) { thud(e.x, true); }, broke(e) { bits(e.x, 80, 16, '125,79,158', 500, 14); receipt(e.x, 120, 8); } });
+      landed(e) { thud(e.x, true); play('home-rg-smash', .8, () => {}, .8); }, broke(e) { play('home-rg-wood', .8, () => {}); bits(e.x, 80, 16, '158,27,42', 500, 14); receipt(e.x, 120, 8); } });
   }
   const s = m.sofa;
   if (t < .62 || !s || s.phase === 'fall') { p.vx = 0; p.target = t < .5 ? RP.point : POSE.idle; return; }
@@ -711,7 +1030,7 @@ const FURN_X = card('furn', 'x', { name: 'Furniture Frenzy: Sofa Slam', cd: 15, 
 function spray(p, m, t, t0, t1, dmg) {              // the extinguisher let go at them: a cloud of it, and they cannot see a thing
   if (t < t0 || t >= t1) return;
   const o = E.P2, h = E.hand(p, true), f = p.face, nx = h[0] + f * 150, ny = h[1] + 10;
-  if (!m.hiss) { m.hiss = 1; sfx.steam(); }
+  if (!m.hiss) { m.hiss = 1; play('home-rg-spray', .8, () => sfx.steam()); }
   if (Z) for (let i = 0; i < 3; i++) Z.emit(2, nx, ny, f * rnd(700, 1100), rnd(-120, 160), rnd(30, 50), rnd(.5, .9), '236,240,244', { s1: 3, a: .7, dr: 2.6 });
   const n = Math.floor((t - t0) / .1) + 1;
   if (n > (m.sp || 0)) {                            // (a mouthful of it, every tenth of a second)
@@ -728,7 +1047,7 @@ const EXT = card('ext', 'o', { name: 'Fire Extinguisher', cd: 11, dur: 1.4, run(
   if (m.at === undefined) { p.target = RP.extW; if (runIn(p, o, t, .95, 170, 2000)) return; m.at = t; p.vx = 0; }
   const u = t - m.at;
   if (u < .1) { p.target = RP.extW; return; }
-  if (!m.bonk) { m.bonk = 1; sfx.whoosh(); if (reach(p, 220, 20, { kb: 700, lift: 260, stun: .9, stop: .14, heavy: 1, col: RED })) { sfx.hit(true); sfx.snap(); shake(18); ono('ゴンッ', o.x, o.y + 420 * hs(o), PAPER, 1, .7); } }
+  if (!m.bonk) { m.bonk = 1; sfx.whoosh(); if (reach(p, 220, 20, { kb: 700, lift: 260, stun: .9, stop: .14, heavy: 1, col: RED })) { play('home-rg-hammer', .7, () => { sfx.hit(true); sfx.snap(); }, 1.3); shake(18); ono('ゴンッ', o.x, o.y + 420 * hs(o), PAPER, 1, .7); } }
   p.target = u < .36 ? RP.extSw : POSE.idle;
   if (u > .48) { gone(p); E.endMove(p); }
 } });
@@ -740,13 +1059,13 @@ const EXT_C = card('ext', 'c', { name: 'Fire Extinguisher: Blast Off', cd: 14, d
   if (t < .62) { p.vx = 0; p.target = RP.spray; m.prop = 'ext'; spray(p, m, t, .14, .62, 2); return; }
   if (!m.go) {
     m.go = 1; m.prop = null;
-    const h = E.hand(p, true), f = p.face; sfx.steam(); sfx.whoosh();
+    const h = E.hand(p, true), f = p.face; play('home-rg-spray', .9, () => sfx.steam(), .8); sfx.whoosh();
     prop({ x: h[0] + f * 40, y: h[1], face: f, life: 2, v: 900, draw: () => { g.translate(-60, 0); ext(); }, upd(e, dt, o) {
       e.v = Math.min(2800, e.v + 5200 * dt); e.x += f * e.v * dt; e.y += (live(o) ? mid(o) - e.y : 0) * Math.min(1, dt * 6); e.rot = Math.sin(e.t * 40) * .06;
       if (Z) Z.emit(2, e.x - f * 70, e.y, -f * rnd(300, 600), rnd(-60, 60), rnd(24, 40), rnd(.4, .7), '236,240,244', { s1: 2.6, a: .7, dr: 2.4 });
       const wall = Math.abs(e.x) > bound() + 60;
       if (touch(e.x + f * 60, e.y, 50, 30, o) || wall) {
-        e.gone = 1; puffs(e.x, e.y, 14, '240,242,246', 90, 420, 300); bits(e.x, e.y, 12, '216,38,44', 600, 10); sfx.blast(); sfx.steam(); shake(34);
+        e.gone = 1; puffs(e.x, e.y, 14, '240,242,246', 90, 420, 300); bits(e.x, e.y, 12, '216,38,44', 600, 10); play('home-rg-boom', .85, () => sfx.blast(), 1.3); play('home-rg-spray', .6, () => sfx.steam(), 1.2); shake(34);
         if (!wall) { hit(o, f, 120, { kb: 1400, lift: 640, stun: 1, stop: .24, heavy: 1, col: CPN, flung: 1 }); big(E.P1, o, 'ボンッ', CPN, 'neg'); }
       }
     } });
@@ -763,19 +1082,19 @@ const EXT_X = card('ext', 'x', { name: 'Fire Extinguisher: Fire Department', cd:
     m.s = 1; facing(p, o); buy(p, 'FIRE EXTINGUISHER: FIRE DEPARTMENT', XTR);
     const x = clamp(p.x - p.face * 330, -bound() - 200, bound() + 200), fc = p.face;
     m.truck = prop({ x, y: 0, face: fc, back: true, life: 3.2, draw: () => engine(), upd(e) { if (e.t > 2.9 && !e.f) { e.f = 1; receipt(e.x, 180, 14); e.a = 0; } } });
-    receipt(x, 200, 10); sfx.roar(.8);
+    receipt(x, 200, 10); play('home-rg-engine', .75, () => sfx.roar(.8), .6);
   }
   if (t < .35) { p.vx = 0; p.target = RP.point; return; }
   m.prop = 'hose'; p.vx = 0; p.target = RP.aim2;
   const k = t - .35;
   if (k < JET_T) {
-    if (!m.hiss) { m.hiss = 1; sfx.steam(); sfx.roar(JET_T); }
+    if (!m.hiss) { m.hiss = 1; play('home-rg-hose', .9, () => { sfx.steam(); sfx.roar(JET_T); }); }
     const h = E.hand(p, true), there = live(o) && (o.x - p.x) * f > -40 && Math.abs(o.x - p.x) < 1500 && Math.abs(o.y - p.y) < 320;
     if (there && holdable(o)) o.x = clamp(o.x + f * 640 * dt, -bound(), bound());      // (the water driving them back, all the way)
     m.jet = { x0: h[0] + f * 64, y: h[1], x1: there ? o.x : p.x + f * 1500 };
     if (Z) for (let i = 0; i < 2; i++) Z.emit(4, m.jet.x1 - f * rnd(0, 60), h[1] + rnd(-30, 30), -f * rnd(100, 400), rnd(100, 500), rnd(3, 6), 1, '170,220,255', { g: 1600 });
     const n = Math.min(JET_N, Math.floor(k / (JET_T / JET_N)) + 1);
-    while ((m.n || 0) < n) { m.n = (m.n || 0) + 1; if (there && hit(o, f, 8.5, { kb: 380, stun: .35, stop: .01, col: '#aee0ff' }) && m.n % 4 === 1) { sfx.splat(); V.sparks(o.x, mid(o), 'blue', 4); } }      // (and on them every tenth of a second, driving them back)
+    while ((m.n || 0) < n) { m.n = (m.n || 0) + 1; if (there && hit(o, f, 8.5, { kb: 380, stun: .35, stop: .01, col: '#aee0ff' }) && m.n % 4 === 1) { play('home-rg-splash', .55, () => sfx.splat(), 1 + rnd(0, .2)); V.sparks(o.x, mid(o), 'blue', 4); } }      // (and on them every tenth of a second, driving them back)
     return;
   }
   m.jet = null; m.prop = null;
@@ -798,11 +1117,11 @@ function jetDraw(j) {                               // the water, as thick as an
 /* ================= 8 — FINAL PURCHASE ================= */
 function crushed(o, col, word = 'ドシャアン') { ono(word, o.x, o.y + 470, col, 1.4, 1); if (Z) Z.flash(WHITE, .22, .18); }
 function houseDown(e, hard) {                       // and all of it on the floor at once
-  thud(e.x, true); E.zoomIn(.4);
+  thud(e.x, true); play('home-rg-collapse', 1, () => {}, hard ? .8 : 1); E.zoomIn(.4);
   if (Z) { Z.boom(e.x, 80, hard ? 240 : 160, '230,210,180', { n: 20, clean: 1 }); Z.dust(e.x, 20); }
   puffs(e.x, 60, hard ? 26 : 14, '200,190,175', 90, hard ? 900 : 500, 200);
 }
-function houseBreak(e, hard) { bits(e.x, 160, hard ? 36 : 22, '155,59,46', hard ? 900 : 600, 16); bits(e.x, 120, hard ? 30 : 18, '239,227,205', hard ? 900 : 600, 16); bits(e.x, 100, 12, GLASS, 600, 7); receipt(e.x, 200, hard ? 24 : 14); sfx.rough(1.2); }
+function houseBreak(e, hard) { bits(e.x, 160, hard ? 36 : 22, '155,59,46', hard ? 900 : 600, 16); bits(e.x, 120, hard ? 30 : 18, '239,227,205', hard ? 900 : 600, 16); bits(e.x, 100, 12, GLASS, 600, 7); receipt(e.x, 200, hard ? 24 : 14); play('home-rg-smash', .7, () => sfx.rough(1.2), .9); }
 const FINAL = card('final', 'o', { name: 'Final Purchase', cd: 22, dur: 1, run(p, m, t) {
   const o = E.P2;
   if (!m.s) {
@@ -827,7 +1146,7 @@ const FINAL_C = card('final', 'c', { name: 'Final Purchase: Fully Furnished', cd
         houseBreak(e, false);
         STUFF.forEach((draw, i) => drop(E.P2, { x: e.x + rnd(-40, 40), from: 900 + i * 40, wait: .14 * i, track: .1 + .14 * i, shadow: 80, hw: 100, keep: .25, gr: 5200, draw, rot: rnd(-.3, .3),
           hitThem(q, o) { hit(o, side(q.x, o), 15, { kb: 0, stun: .8, stop: .05, heavy: 1, col: CPN }); down(o, .8); sfx.hit(true); },
-          landed(q) { sfx.land(); shake(8); bits(q.x, 40, 4, WRGB, 260, 9); }, broke(q) { bits(q.x, 60, 6, PRGB, 300, 9); receipt(q.x, 80, 3); } }));
+          landed(q) { play('home-rg-box', .6, () => sfx.land(), .9); shake(8); bits(q.x, 40, 4, WRGB, 260, 9); }, broke(q) { bits(q.x, 60, 6, PRGB, 300, 9); receipt(q.x, 80, 3); } }));
       } });
   }
   p.vx = 0; p.target = t < .7 ? RP.sum : POSE.idle;
@@ -846,10 +1165,316 @@ const FINAL_X = card('final', 'x', { name: 'Final Purchase: Mansion', cd: 28, du
   if (t > .9) E.endMove(p);
 } });
 
+/* ================= Build 0.28v1's four more: Bowling Strike, Shopping Spree, Fishing Trip, Renovation ================= */
+Object.assign(RP, {
+  bowlW: [-.1, -.05, .6, -1.3, .45, -.2, 0], bowl: [.55, .15, .4, 1.25, 1.05, -.75, 0],      // the ball back low behind him, and let go along the floor in a lunge
+  cart: [.42, .05, 1.55, 1.45, .7, -.6, 0],                                                    // leant into the trolley
+  castW: [-.2, -.12, 3.0, 2.9, .38, -.4, 0], cast: [.24, 0, 1.75, 1.6, .55, -.5, 0], reel: [-.08, 0, 2.2, 1.6, .5, -.45, 0],      // the rod back over his head, out, and up reeling in
+  hamW: [-.2, -.14, 3.1, 3.05, .36, -.4, 0], ham: [.62, .24, .9, .85, .76, -.58, 0], jack: [.32, .2, .55, .5, .62, -.55, 0]
+});
+
+/* ---------- 9 — BOWLING STRIKE ---------- */
+function pins(x, f, n = 4) {                        // the pins they were, going everywhere
+  for (let i = 0; i < n; i++) prop({ x: x + rnd(-30, 30), y: rnd(0, 40), face: f, vx: f * rnd(200, 700), vy: rnd(500, 1000), vr: rnd(-14, 14), life: 1.3, draw: () => pin(), upd(e, dt) {
+    e.vy -= 2400 * dt; e.x += e.vx * dt; e.y = Math.max(0, e.y + e.vy * dt); e.rot += e.vr * dt;
+    if (e.y === 0) { e.vy = Math.abs(e.vy) * .3; e.vx *= .6; e.vr *= .5; }
+    if (e.t > 1) e.a = Math.max(0, 1 - (e.t - 1) * 4);
+  } });
+}
+function bowled(o, f, dmg, more, col, hard, quiet) {      // it knocks them over, the way it would a pin (quiet: something else says what it was)
+  hit(o, f, dmg, Object.assign({ kb: 300, stun: 1.3, stop: .12, heavy: 1, col }, more));
+  if (!(more && more.flung)) down(o, 1.3);
+  play('home-rg-bowl', hard ? 1 : .8, () => sfx.blast()); shake(hard ? 30 : 18); pins(o.x, f, hard ? 7 : 4);
+  if (!quiet) ono(hard ? 'ストライク' : 'ガラガラ', o.x, o.y + 400, col, hard ? 1.2 : 1, .8);
+}
+function roll(p, opt) {                             // a ball let go along the floor at them
+  const f = p.face, r = opt.r || 24;
+  sfx.rough(.5);
+  return prop(Object.assign({ x: p.x + f * 90, y: r, face: f, life: 2.6, r, v: 1800, draw: e => bowlingBall(e.r, e.x * f / e.r, opt.col), upd(e, dt, o) {
+    e.x += f * e.v * dt;
+    if (Z && Math.random() < .3) Z.dust(e.x, 1, -f);
+    if (!e.hit && touch(e.x + f * e.r * .5, e.r, e.r, e.r, o)) { e.hit = e.t; e.onHit(e, o); e.v *= .4; }
+    if (Math.abs(e.x) > 1700 || (e.hit && e.t > e.hit + .6)) { if (!e.f) { e.f = 1; receipt(e.x, e.r, 5); } e.gone = 1; }
+  } }, opt));
+}
+const BOWL = card('bowl', 'o', { name: 'Bowling Strike', cd: 10, dur: 1, run(p, m, t) {
+  p.rate = 40;
+  if (!m.s) { m.s = 1; facing(p, E.P2); buy(p, 'BOWLING STRIKE'); }
+  if (t < .3) { p.vx = 0; p.target = RP.bowlW; m.prop2 = 'bowl'; return; }
+  if (!m.go) { m.go = 1; m.prop2 = null; roll(p, { onHit: (e, o) => bowled(o, e.face, 28, null, PAPER) }); }
+  p.vx = t < .4 && roomAhead(p) ? p.face * 300 : 0; p.target = t < .7 ? RP.bowl : POSE.idle;
+  if (t > .8) E.endMove(p);
+} });
+function lob(p, o, col) {                           // the second one up, and down on them where they lie
+  const f = p.face, x0 = p.x + f * 80, tx = live(o) ? o.x : p.x + f * 500, T = .42;
+  sfx.whoosh();
+  prop({ x: x0, y: 60, face: f, life: 2, r: 24, draw: e => bowlingBall(e.r, e.t * 12), upd(e, dt, o) {
+    const u = Math.min(1, e.t / T);
+    e.x = lerp(x0, live(o) ? o.x : tx, u); e.y = 60 + 4 * 320 * u * (1 - u) - 36 * u;
+    if (u >= 1 && !e.hit) {
+      e.hit = 1;
+      if (can(o) && Math.abs(o.x - e.x) < 120 + 40 * hs(o)) { hit(o, f, 100, { kb: 0, stun: 1.4, stop: .2, heavy: 1, col }); down(o, 1.4); play('home-rg-bowl', 1, () => sfx.blast()); shake(32); big(E.P1, o, 'ストライク', col, 'neg'); pins(o.x, f, 7); }
+      else thud(e.x, false);
+    }
+    if (e.hit && e.t > T + .5) { if (!e.f) { e.f = 1; receipt(e.x, 40, 5); } e.gone = 1; }
+  } });
+}
+// coupon: a spare. The first one knocks them over (30), the second comes down on them (100)
+const BOWL_C = card('bowl', 'c', { name: 'Bowling Strike: Spare', cd: 13, dur: 1.9, run(p, m, t) {
+  p.rate = 40;
+  if (!m.s) { m.s = 1; facing(p, E.P2); buy(p, 'BOWLING STRIKE: SPARE', CPN); }
+  if (t < .3 || (t >= .62 && t < .82)) { p.vx = 0; p.target = RP.bowlW; m.prop2 = 'bowl'; return; }      // (the second wound up while they are still on the floor)
+  m.prop2 = null; p.vx = 0; p.target = RP.bowl;
+  if (!m.b1) { m.b1 = 1; roll(p, { onHit: (e, o) => bowled(o, e.face, 30, null, CPN) }); }
+  if (t >= .82 && !m.b2) { m.b2 = 1; lob(p, E.P2, CPN); }
+  if (t > 1.4) E.endMove(p);
+} });
+// extra: a turkey, three in a row, and the third the size of a boulder (35, 35, 80)
+const BOWL_X = card('bowl', 'x', { name: 'Bowling Strike: Turkey', cd: 15, dur: 2, run(p, m, t) {
+  p.rate = 44;
+  if (!m.s) { m.s = 1; facing(p, E.P2); buy(p, 'BOWLING STRIKE: TURKEY', XTR); m.n = 0; }
+  const due = t < .25 ? 0 : Math.min(3, Math.floor((t - .25) / .38) + 1);
+  while (m.n < due) {
+    const last = m.n++ === 2;
+    roll(p, { r: last ? 70 : 24, v: last ? 1300 : 1900, col: last ? '#c21d24' : '#5a2fb0',
+      onHit: (e, o) => { bowled(o, e.face, last ? 80 : 35, last ? { kb: 1300, lift: 760, stun: 1.2, flung: 1 } : null, XTR, last, last); if (last) big(E.P1, o, 'ターキー', XTR, 'neg'); } });
+  }
+  const ph = (t - .25) % .38;
+  p.vx = 0; p.target = t < .25 || (m.n < 3 && ph > .2) ? RP.bowlW : RP.bowl; m.prop2 = m.n < 3 && (t < .25 || ph > .2) ? 'bowl' : null;
+  if (t > 1.6) E.endMove(p);
+} });
+
+/* ---------- 10 — SHOPPING SPREE ---------- */
+const CART_AT = 215;                                // (how far in front of him the trolley's middle is: its handle in his hands)
+function trolley(p, m, dt, scoop, col) {            // in at them behind it; it scoops them up and goes on with them in it: false once there is wall ahead
+  const o = E.P2, f = p.face, cx = p.x + f * CART_AT;
+  m.prop = 'cart'; p.target = RP.cart;
+  m.v = Math.min(1700, (m.v || 0) + 6000 * dt);
+  const room = Math.abs(cx + f * 100) < bound() + 40;
+  p.vx = room ? f * m.v : 0;
+  if (Z && Math.random() < .4) Z.dust(cx, 1, -f);
+  if (!m.got && touch(cx + f * 60, 90, 80, 90, o)) { m.got = 1; hit(o, f, scoop, { kb: 0, stun: 1.5, stop: .08, heavy: 1, col }); play('home-rg-box', .7, () => sfx.land(), 1.3); label(o.x, o.y + 400, 'IN THE TROLLEY', col, .8); }
+  if (m.got && holdable(o)) Object.assign(o, { x: cx + f * 10, y: 70, vx: 0, vy: 0, ground: true, state: 'hurt', stun: .5, act: null, tele: 0 });      // (in it, legs over the side)
+  return room;
+}
+function trolleyEnd(p, m, wall, col, more, after) {  // into the wall, and out of it they come
+  const o = E.P2, f = p.face, x = p.x + f * (CART_AT + 100);
+  play('home-rg-crash', .85, () => sfx.blast(), 1.25); shake(30); V.sparks(x, 100, 'white', 12); bits(x, 100, 10, '195,202,210', 400, 8); receipt(x, 120, 8);
+  m.prop = null;
+  if (!(m.got && live(o))) return;
+  if (holdable(o)) Object.assign(o, { y: 80, ground: false, state: 'air' });
+  hit(o, -f, wall, Object.assign({ kb: 700, lift: 820, stun: 1, stop: .16, heavy: 1, col, flung: 1 }, more));
+  ono('ガシャーン', o.x, o.y + 420, col, 1.2, .8);
+  if (after) after(o);
+}
+function spree(p, m, t, scoop, wall, col, more, after) {
+  const dt = dtOf(m, t);
+  p.rate = 40;
+  if (t < .16) { p.vx = 0; p.target = RP.sum; return; }
+  if (m.over === undefined) { if (!trolley(p, m, dt, scoop, col) || t > 2.2 || (!m.got && t > 1.3)) { m.over = t; p.vx = 0; trolleyEnd(p, m, wall, col, more, after); } return; }
+  p.vx = 0; p.target = POSE.idle;
+  if (t > m.over + .35) E.endMove(p);
+}
+const SHOP = card('shop', 'o', { name: 'Shopping Spree', cd: 11, dur: 2.8, run(p, m, t) {
+  if (!m.s) { m.s = 1; facing(p, E.P2); buy(p, 'SHOPPING SPREE'); }
+  spree(p, m, t, 10, 22, PAPER);
+} });
+// coupon: clearance. A trolley that was full: it scoops them (40), it hits the wall (30), and everything in it comes down on them (6 x 10)
+function groceryRain(o, col) {
+  GROCERIES.forEach((draw, i) => drop(o, { x: o.x + rnd(-50, 50), from: 820 + i * 50, wait: .18 + i * .11, track: .3 + i * .11, shadow: 40, hw: 80, gr: 5000, keep: .2, draw, rot: rnd(-.5, .5),
+    hitThem(q, o) { hit(o, side(q.x, o), 10, { kb: 0, stun: .7, stop: .04, heavy: 1, col }); down(o, .7); play('home-rg-box', .5, () => sfx.land(), 1.4); },
+    landed() { sfx.land(); }, broke(q) { receipt(q.x, 40, 3); } }));
+}
+const SHOP_C = card('shop', 'c', { name: 'Shopping Spree: Clearance', cd: 15, dur: 3.2, run(p, m, t) {
+  if (!m.s) { m.s = 1; facing(p, E.P2); buy(p, 'SHOPPING SPREE: CLEARANCE', CPN); m.full = 1; }
+  spree(p, m, t, 40, 30, CPN, { kb: 0, lift: 0, flung: 0, stun: 1.8 }, o => { down(o, 1.8); groceryRain(o, CPN); });
+} });
+function runaway(p, i, last) {                      // a trolley nobody is pushing, out of a receipt behind him and through where they are
+  const f = p.face;
+  receipt(clamp(p.x - f * 380, -bound(), bound()), 120, 4, XRGB);
+  prop({ x: clamp(p.x - f * 760, -1500, 1500), y: 0, face: f, life: 1.8, draw: e => cart(i % 2 === 0, e.x * f / 9), upd(e, dt, o) {
+    e.x += f * 2300 * dt;
+    if (!e.hit && touch(e.x + f * 80, 80, 90, 80, o)) {
+      e.hit = 1;
+      hit(o, f, 28, last ? { kb: 1200, lift: 700, stun: 1, stop: .14, heavy: 1, col: XTR, flung: 1 } : { kb: 260, stun: 1.4, stop: .08, heavy: 1, col: XTR });
+      if (!last) down(o, 1.4);
+      play('home-rg-crash', .55, () => sfx.land(), 1.5); V.sparks(o.x, mid(o), 'white', 6);
+    }
+    if (Math.abs(e.x) > 1700) e.gone = 1;
+  } });
+}
+// extra: black friday. Five of them, one after another, and him up out of their way (28 each)
+const SHOP_X = card('shop', 'x', { name: 'Shopping Spree: Black Friday', cd: 15, dur: 2.2, run(p, m, t) {
+  p.rate = 40;
+  if (!m.s) { m.s = 1; facing(p, E.P2); buy(p, 'SHOPPING SPREE: BLACK FRIDAY', XTR); m.n = 0; }
+  const due = t < .12 ? 0 : Math.min(5, Math.floor((t - .12) / .14) + 1);
+  while (m.n < due) { runaway(p, m.n, m.n === 4); m.n++; }
+  if (!m.hop && t > .18) { m.hop = 1; p.ground = false; p.vy = 1300; p.vx = 0; }
+  p.target = !p.ground ? POSE.jump : t < .2 ? RP.point : POSE.idle;
+  if ((m.hop && p.ground && t > .5) || t > 2) E.endMove(p);
+} });
+
+/* ---------- 11 — FISHING TRIP ---------- */
+const LINE_OUT = .3, LINE_R = 820;
+function castLine(p, m, t, t0, dmg, col) {          // the line out at them: true once it has them, false once it has gone all the way out for nothing
+  const o = E.P2, f = p.face, tip = handOut(p, true, 220), u = Math.min(1, (t - t0) / LINE_OUT);
+  m.hook = [tip[0] + f * LINE_R * u, tip[1] + (live(o) ? (mid(o) - tip[1]) * u : -tip[1] * .6 * u)];
+  if (touch(m.hook[0], m.hook[1], 28, 28, o)) {
+    m.caught = t; m.cx = o.x; m.cy = o.y;
+    hit(o, f, dmg, { kb: 0, stun: 1.4, stop: .1, col }); play('home-rg-stab', .6, () => sfx.snip(1.3), 1.3); label(o.x, o.y + 400, 'HOOKED', col, .8);
+    return true;
+  }
+  if (u >= 1) { m.hook = null; m.missed = t; }
+  return false;
+}
+function fishing(p, m, t, dmg, col) {               // cast, and the line out: false while that is still going (or it missed)
+  p.rate = 44; m.prop = 'rod';
+  if (t < .26) { p.vx = 0; p.target = RP.castW; return false; }
+  if (!m.cast) { m.cast = 1; sfx.swish(.9); }
+  if (m.caught === undefined) {
+    p.vx = 0; p.target = RP.cast;
+    if (m.missed !== undefined) { if (t > m.missed + .3) E.endMove(p); return false; }
+    castLine(p, m, t, .26, dmg, col);
+    return false;
+  }
+  return true;
+}
+const FISH = card('fish', 'o', { name: 'Fishing Trip', cd: 11, dur: 2.4, run(p, m, t) {
+  const o = E.P2, f = p.face;
+  if (!m.s) { m.s = 1; facing(p, o); buy(p, 'FISHING TRIP'); }
+  if (!fishing(p, m, t, 10, PAPER)) return;
+  const k = t - m.caught;
+  if (k < .5) {                                     // reeled in
+    p.target = RP.reel; if (!m.reel) { m.reel = 1; play('home-rg-reel', .8, () => sfx.rough(.4)); }
+    if (holdable(o)) Object.assign(o, { x: lerp(m.cx, p.x + f * 150, ease(k / .5)), vx: 0, state: 'hurt', stun: .6, act: null, tele: 0 });
+    m.hook = live(o) ? [o.x, mid(o)] : null;
+    return;
+  }
+  m.hook = null;
+  if (!m.up) { m.up = 1; sfx.whoosh(); if (live(o) && Math.abs(o.x - p.x) < 280 && hit(o, f, 18, { kb: 200, lift: 1100, stun: 1, stop: .14, heavy: 1, col: PAPER })) { play('home-rg-bat', .7, () => sfx.hit(true), 1.3); shake(18); ono('ビシッ', o.x, o.y + 400, PAPER, 1, .7); } }
+  p.target = k < .8 ? RP.castW : POSE.idle;
+  if (k > .9) { gone(p); E.endMove(p); }
+} });
+// coupon: the big catch. Hooked (40), up out of the water over his head, and down on the boards behind him (90)
+const FISH_C = card('fish', 'c', { name: 'Fishing Trip: Big Catch', cd: 15, dur: 2.8, run(p, m, t) {
+  const o = E.P2, f = p.face;
+  if (!m.s) { m.s = 1; facing(p, o); buy(p, 'FISHING TRIP: BIG CATCH', CPN); }
+  if (!fishing(p, m, t, 40, CPN)) return;
+  const k = t - m.caught;
+  if (k < .55) {
+    p.target = RP.reel; if (!m.reel) { m.reel = 1; play('home-rg-reel', .9, () => sfx.rough(.4)); }
+    const u = ease(k / .55), bx = clamp(p.x - f * 170, -bound(), bound());
+    if (holdable(o)) Object.assign(o, { x: lerp(m.cx, bx, u), y: Math.max(0, lerp(m.cy, 0, u) + 4 * 380 * u * (1 - u)), vx: 0, vy: 0, ground: false, state: 'air', stun: .6, act: null, tele: 0 });
+    m.hook = live(o) ? [o.x, mid(o)] : null;
+    return;
+  }
+  m.hook = null;
+  if (!m.slam) {
+    m.slam = 1; thud(o.x, true);
+    if (live(o)) { if (holdable(o)) Object.assign(o, { y: 0, ground: true }); hit(o, -f, 90, { kb: 0, stun: 1.6, stop: .22, heavy: 1, col: CPN }); down(o, 1.6); big(p, o, 'ドッシーン', CPN, 'neg'); }
+  }
+  p.target = k < .9 ? RP.castW : POSE.idle;
+  if (k > 1) { gone(p); E.endMove(p); }
+} });
+// extra: a swordfish, out of the receipt by the tail, and swung (40, 40, and the bill through them: 70)
+const SWINGS = [[0, 'ham', 40], [.32, 'batUp', 40], [.64, 'batSw', 70]];
+const FISH_X = card('fish', 'x', { name: 'Fishing Trip: Swordfish', cd: 15, dur: 2.2, run(p, m, t) {
+  const o = E.P2;
+  p.rate = 40; m.prop = 'swordfish';
+  if (!m.s) { m.s = 1; facing(p, o); buy(p, 'FISHING TRIP: SWORDFISH', XTR); }
+  if (t < .25) { p.vx = 0; p.target = RP.hamW; return; }
+  if (m.at === undefined) { p.target = RP.hamW; if (runIn(p, o, t, .7, 260, 2000)) return; m.at = t; p.vx = 0; }
+  const u = t - m.at;
+  SWINGS.forEach(([at, pose, dmg], i) => {
+    if (u < at || m['h' + i]) return;
+    m['h' + i] = 1; p.target = RP[pose]; sfx.whoosh();
+    const last = i === 2;
+    if (live(o) && Math.abs(o.x - p.x) < 420 && (o.x - p.x) * p.face > -60 && hit(o, p.face, dmg, last ? { kb: 1500, lift: 700, stun: 1.2, stop: .2, heavy: 1, col: XTR, flung: 1 } : { kb: 160, stun: 1, stop: .12, heavy: 1, col: XTR })) {
+      play('home-rg-smash', .7, () => sfx.hit(true), 1.2); shake(last ? 30 : 18); ono(last ? 'グサッ' : 'ベチッ', o.x, o.y + 420, XTR, last ? 1.2 : 1, .7);
+      if (last) big(p, o, 'カジキ', XTR, 'neg');
+    }
+  });
+  if (u > .9) { p.target = POSE.idle; if (u > 1.05) { gone(p); E.endMove(p); } }
+} });
+
+/* ---------- 12 — RENOVATION ---------- */
+function hammerDown(p, o, dmg, col, hard) {         // the sledgehammer down through them and into the floor
+  const x = p.x + p.face * 190, ok = can(o) && Math.abs(o.x - x) < 170 + 40 * hs(o) && Math.abs(o.y - p.y) < 220;
+  play('home-rg-hammer', .9, () => sfx.hit(true), .75); thud(x, hard, true); sfx.blast();
+  if (Z) Z.shock(x, 400, '235,225,205', .35, 10);
+  if (ok) { hit(o, p.face, dmg, { kb: 120, stun: 1.4, stop: .2, heavy: 1, col }); down(o, 1.4); ono('ドゴッ', o.x, o.y + 400, col, 1.1, .7); }
+  return ok;
+}
+function sledging(p, m, t, dmg, col, after) {       // up over his head, in at them, and down: true once it is over
+  const o = E.P2;
+  p.rate = 40; m.prop = 'sledge';
+  if (t < .32) { p.vx = 0; p.target = RP.hamW; return false; }
+  if (m.at === undefined) { p.target = RP.hamW; if (runIn(p, o, t, .7, 200, 1900)) return false; m.at = t; p.vx = 0; }
+  const u = t - m.at;
+  if (u < .08) { p.target = RP.hamW; return false; }
+  if (!m.down) { m.down = 1; sfx.whoosh(); hammerDown(p, o, dmg, col, !!after); if (after) after(); }
+  p.vx = 0; p.target = u < .5 ? RP.ham : POSE.idle;
+  return u > .6;
+}
+const RENO = card('reno', 'o', { name: 'Renovation', cd: 10, dur: 1.6, run(p, m, t) {
+  if (!m.s) { m.s = 1; facing(p, E.P2); buy(p, 'RENOVATION'); }
+  if (sledging(p, m, t, 32, PAPER)) { gone(p); E.endMove(p); }
+} });
+function wreck(o, col) {                            // a wrecking ball on its chain, swung in from up out of sight
+  const p = E.P1, f = p.face, px = live(o) ? o.x : p.x + f * 300, PIV = 1400, L = 1320;
+  sfx.rise(.4);
+  prop({ x: px - f * 900, y: 700, face: f, life: 2, draw: () => wreckingBall(), upd(e, dt, o) {
+    const u = Math.min(1, e.t / .5), a = lerp(-1.1, .4, u);
+    e.x = px + f * Math.sin(a) * L; e.y = PIV - Math.cos(a) * L; e.rot = -a;
+    if (!e.hit && touch(e.x, e.y, 58, 58, o)) {
+      e.hit = 1; hit(o, f, 90, { kb: 1600, lift: 700, stun: 1.2, stop: .26, heavy: 1, col, flung: 1 });
+      play('home-rg-crash', 1, () => sfx.blast(), .7); play('home-rg-collapse', .5, () => {}); shake(40); E.zoomIn(.35); big(E.P1, o, 'ドガーン', col, 'neg'); bits(e.x, e.y, 14, '160,160,168', 600, 12);
+    }
+    if (e.t > .9) { if (!e.f) { e.f = 1; receipt(e.x, e.y, 8); } e.gone = 1; }
+  } });
+}
+// coupon: demolition. The hammer (40), and then the wrecking ball (90)
+const RENO_C = card('reno', 'c', { name: 'Renovation: Demolition', cd: 15, dur: 2, run(p, m, t) {
+  if (!m.s) { m.s = 1; facing(p, E.P2); buy(p, 'RENOVATION: DEMOLITION', CPN); }
+  if (sledging(p, m, t, 40, CPN, () => later(.15, () => wreck(E.P2, CPN)))) { gone(p); E.endMove(p); }
+} });
+// extra: the jackhammer, on them and through them, fourteen times (10 each), and the last one throws them off it
+const RENO_X = card('reno', 'x', { name: 'Renovation: Jackhammer', cd: 15, dur: 2.6, run(p, m, t) {
+  const o = E.P2;
+  p.rate = 50; m.prop = 'jack';
+  if (!m.s) { m.s = 1; facing(p, o); buy(p, 'RENOVATION: JACKHAMMER', XTR); }
+  if (t < .2) { p.vx = 0; p.target = RP.jack; return; }
+  if (m.at === undefined) { p.target = RP.jack; if (runIn(p, o, t, .7, 150, 2000)) return; m.at = t; p.vx = 0; play('home-rg-jack', .9, () => sfx.rough(1)); }
+  const u = t - m.at, n = Math.min(14, Math.floor(u / .09) + 1);
+  p.vx = 0; p.target = RP.jack;
+  if (u < 1.3) { riding = true; p.ground = true; p.y = Math.abs(Math.sin(u * 60)) * 5; } else p.y = 0;      // (shaken by it)
+  while ((m.n || 0) < n) {
+    m.n = (m.n || 0) + 1;
+    const last = m.n === 14, x = p.x + p.face * 140;
+    V.rocks(x, 0, 2); if (Z) Z.dust(x, 1);
+    if (can(o) && Math.abs(o.x - x) < 130 + 40 * hs(o) && hit(o, p.face, 10, last ? { kb: 900, lift: 900, stun: 1, stop: .16, heavy: 1, col: XTR, flung: 1 } : { kb: 0, stun: .5, stop: .02, col: XTR })) {
+      if (!last) down(o, .6);
+      shake(last ? 26 : 6); if (last) big(p, o, 'ガガガガ', XTR, 'neg');
+    }
+  }
+  if (u > 1.5) { p.y = 0; gone(p); E.endMove(p); }
+} });
+
+
+function hookDraw(p, hk) {                          // the line from the end of the rod to the hook, sagging, and the float on it
+  const tip = handOut(p, true, 220), a = F(tip[0], tip[1]), b = F(hk[0], hk[1]), k = a[2], mx = (a[0] + b[0]) / 2, my = Math.max(a[1], b[1]) + 40 * k;
+  g.strokeStyle = 'rgba(245,245,245,.9)'; g.lineWidth = 1.6; g.beginPath(); g.moveTo(a[0], a[1]); g.quadraticCurveTo(mx, my, b[0], b[1]); g.stroke();
+  const bx = lerp(lerp(a[0], mx, .85), lerp(mx, b[0], .85), .85), by = lerp(lerp(a[1], my, .85), lerp(my, b[1], .85), .85);
+  g.save(); g.translate(bx, by); g.scale(k, k);
+  g.beginPath(); g.arc(0, 0, 7, 0, Math.PI); g.fillStyle = '#ffffff'; g.fill(); g.beginPath(); g.arc(0, 0, 7, Math.PI, TAU); g.fillStyle = '#e2383c'; g.fill();
+  g.beginPath(); g.arc(0, 0, 7, 0, TAU); g.lineWidth = 2; g.strokeStyle = LINE; g.stroke(); g.restore();
+  g.strokeStyle = '#cfd6de'; g.lineWidth = 2.6 * k; g.beginPath(); g.arc(b[0], b[1] + 7 * k, 7 * k, -Math.PI / 2, Math.PI * .9); g.stroke();
+}
+
 /* ================= COUPON, EXTRA COUPON, and the prize ================= */
 function refuse(p, m, why) { label(p.x, p.y + 440, why, PAPER, 1.1); sfx.back(); if (m.key) E.cd[m.key] = 0; E.endMove(p); }
 const busy = () => (deck.armed === 'prize' ? 'THE PRIZE IS WAITING · USE A MOVE' : 'A COUPON IS ALREADY WAITING · USE A MOVE');
-function stamp(p, col, rgb, what) { const h = E.hand(p, true); receipt(h[0], h[1], 8, rgb); sfx.rip(); sfx.snip(.8); label(p.x, p.y + 500, what, col, 1.1); label(p.x, p.y + 440, 'USE A MOVE', col, 1.4); }
+function stamp(p, col, rgb, what) { const h = E.hand(p, true); receipt(h[0], h[1], 8, rgb); play('home-rg-tear', .8, () => sfx.rip()); play('home-rg-stamp', .9, () => sfx.snip(.8)); label(p.x, p.y + 500, what, col, 1.1); label(p.x, p.y + 440, 'USE A MOVE', col, 1.4); }
 const COUPON = { name: 'Coupon', cd: .8, dur: .6, reg: 1, card: 'coupon', run(p, m, t) {
   if (!m.s) {
     m.s = 1;
@@ -864,7 +1489,7 @@ const EXTRA = { name: 'Extra Coupon', cd: .8, dur: .6, reg: 1, card: 'extra', ru
     m.s = 1;
     if (deck.armed === 'coupon') {                  // the coupon on the extra coupon: a prize
       deck.armed = 'prize'; dealt(m.key, 'k');
-      const h = E.hand(p, true); receipt(h[0], h[1], 16, GRGB); sfx.rip(); sfx.charge();
+      const h = E.hand(p, true); receipt(h[0], h[1], 16, GRGB); play('home-rg-tear', .8, () => sfx.rip()); play('home-rg-stamp', 1, () => {}, .8); sfx.charge();
       if (Z) { Z.flash(GRGB, .2, .25); Z.flare(h[0], h[1], GRGB, 420, .3); }
       label(p.x, p.y + 540, 'COUPON ON THE EXTRA COUPON', GOLD, 1.4); label(p.x, p.y + 480, 'A PRIZE · USE A MOVE', GOLD, 1.6);
     } else if (deck.armed) { refuse(p, m, busy()); return; }
@@ -897,7 +1522,7 @@ const PRIZE = { name: 'Prize', cd: .6, dur: 1.1, reg: 1, run(p, m, t) {
     m.s = 1; deck.armed = null;
     const id = m.id = rollPrize(), w = WEAPON[id];
     if (m.key) { deck.used[m.key] = E.CD[m.key]; give(m.key, id); }
-    const h = E.hand(p, true); receipt(h[0], h[1], 18, GRGB); sfx.rip(); sfx.charge();
+    const h = E.hand(p, true); receipt(h[0], h[1], 18, GRGB); play('home-rg-tear', .9, () => sfx.rip()); sfx.charge();
     if (Z) { Z.flash(GRGB, .22, .3); Z.pillar(p.x, 60, 700, GRGB, .5); }
     label(p.x, p.y + 560, w.full.toUpperCase(), w.tool ? w.col : GOLD, 1.8); label(p.x, p.y + 500, ammoText(id, w.ammo), PAPER, 1.8);
   }
@@ -911,7 +1536,7 @@ function shoot(p, o, dmg, rifle) {
   const w = E.hand(p, true), f = p.face, mz = [w[0] + f * (rifle ? 262 : 64), w[1] + 2];
   const there = live(o) && (o.x - p.x) * f > -30 && Math.abs(o.x - p.x) < (rifle ? 2600 : 1700) && Math.abs(o.y - p.y) < 240 && !(o.inv > 0) && o.state !== 'up' && o.state !== 'down';
   const end = there ? [o.x - f * 20, mid(o)] : [p.x + f * 2300, mz[1]];
-  if (rifle) sfx.cannon(1); else { sfx.snap(); sfx.blast(); }
+  if (rifle) play('home-rg-sniper', 1, () => sfx.cannon(1)); else play('home-rg-pistol', .9, () => { sfx.snap(); sfx.blast(); });
   V.bolt(mz[0], mz[1], end[0], end[1], rifle ? '#ffe9a0' : '#fff2b0', rifle ? .2 : .1, rifle ? 6 : 3);
   if (Z) { Z.flare(mz[0], mz[1], '255,220,140', rifle ? 360 : 200, .1); Z.emit(3, mz[0] - f * (rifle ? 200 : 50), mz[1] + 10, -f * rnd(100, 200), rnd(200, 400), 4, .8, '226,181,69', { g: 1600, vr: rnd(-20, 20), w: .5 }); }      // (and the shell out of the side of it)
   shake(rifle ? 26 : 10);
@@ -929,7 +1554,7 @@ const PISTOL = arm('pistol', { name: 'Pistol', cd: .7, dur: .55, run(p, m, t) {
 const AIM_T = .55;
 const SNIPER = arm('sniper', { name: 'Sniper Rifle', cd: .5, dur: 1.1, run(p, m, t) {
   p.rate = 40; p.vx = 0; m.prop = 'sniper'; p.target = RP.aim2;
-  if (!m.s) { m.s = 1; facing(p, E.P2); sfx.click(); }
+  if (!m.s) { m.s = 1; facing(p, E.P2); play('home-rg-bolt', .9, () => sfx.click()); }
   if (t >= AIM_T && !m.shot) { m.shot = 1; shoot(p, E.P2, 150, true); }
   if (t > AIM_T + .4) E.endMove(p);
 } });
@@ -937,7 +1562,7 @@ const KATANA = arm('katana', { name: 'Katana Slash', cd: 1.2, dur: .6, run(p, m,
   p.rate = 46; m.prop = 'katana';
   p.vx = t > .1 && t < .2 && roomAhead(p) ? p.face * 520 : 0; p.target = t < .12 ? POSE.hookWind : t < .36 ? POSE.hook : POSE.idle;
   if (t < .12 || m.cut) { if (t > .5) E.endMove(p); return; }
-  m.cut = 1; sfx.whoosh(); V.slash(p.x + p.face * 150, p.y + 170, p.face > 0 ? -.35 : Math.PI + .35, 460, STEEL, 16);
+  m.cut = 1; play('home-rg-slash', .8, () => sfx.whoosh(), .85); V.slash(p.x + p.face * 150, p.y + 170, p.face > 0 ? -.35 : Math.PI + .35, 460, STEEL, 16);
   if (reach(p, 280, 70, { kb: 640, lift: 320, stun: .8, stop: .14, heavy: 1, col: STEEL })) { sfx.hit(true); shake(18); }
 } });
 const LASSO_OUT = .32, LASSO_R = 760;
@@ -945,19 +1570,19 @@ const CHAIN = arm('chain', { name: 'Lasso', cd: 2, dur: 1.8, run(p, m, t) {
   const o = E.P2, f = p.face;
   p.rate = 44; m.prop = 'chain'; p.vx = 0;
   if (!m.s) { m.s = 1; facing(p, o); }
-  if (t < .3) { p.target = RP.sum; if (!m.whirl) { m.whirl = 1; sfx.swish(.8); } return; }      // round over his head
+  if (t < .3) { p.target = RP.sum; if (!m.whirl) { m.whirl = 1; play('home-coatm-swing', .8, () => sfx.swish(.8)); } return; }      // round over his head
   const h = E.hand(p, true);
   if (!m.caught) {
     const u = Math.min(1, (t - .3) / LASSO_OUT), x = h[0] + f * LASSO_R * u, y = h[1] + (live(o) ? (mid(o) - h[1]) * u : 0);
     m.end = [x, y]; p.target = RP.aim;
-    if (touch(x, y, 30, 30, o)) { m.caught = t; m.cx = o.x; hit(o, f, 60, { kb: 0, stun: 1.2, stop: .12, heavy: 1, col: '#9aa3b5' }); sfx.snap(); }
+    if (touch(x, y, 30, 30, o)) { m.caught = t; m.cx = o.x; hit(o, f, 60, { kb: 0, stun: 1.2, stop: .12, heavy: 1, col: '#9aa3b5' }); play('home-coatm-hit', .8, () => sfx.snap()); }
     else if (u >= 1) { m.end = null; if (t > .3 + LASSO_OUT + .2) E.endMove(p); }
     return;
   }
   const k = t - m.caught, u = Math.min(1, k / .34), tx = p.x + f * 130;
   if (live(o) && holdable(o)) Object.assign(o, { x: lerp(m.cx, tx, u * u), vx: 0, state: 'hurt', stun: .5, act: null, tele: 0 });
   m.end = live(o) ? [o.x, mid(o)] : null; p.target = RP.chairDn;
-  if (u >= 1 && !m.done) { m.done = 1; m.end = null; if (live(o)) { hit(o, f, 40, { kb: 600, lift: 400, stun: .9, stop: .16, heavy: 1, col: '#9aa3b5' }); sfx.hit(true); shake(20); } }
+  if (u >= 1 && !m.done) { m.done = 1; m.end = null; if (live(o)) { hit(o, f, 40, { kb: 600, lift: 400, stun: .9, stop: .16, heavy: 1, col: '#9aa3b5' }); play('home-coatm-whip', .7, () => sfx.hit(true)); shake(20); } }
   if (k > .6) E.endMove(p);
 } });
 const CLOUD = arm('cloud', { name: 'Cloud Barrage', cd: 1.2, dur: .9, run(p, m, t) {
@@ -966,14 +1591,14 @@ const CLOUD = arm('cloud', { name: 'Cloud Barrage', cd: 1.2, dur: .9, run(p, m, 
   if (!m.s) { m.s = 1; facing(p, o); }
   const n = Math.min(6, Math.floor(t / .1) + 1);
   p.vx = gap(p, o) > 170 && roomAhead(p) ? p.face * 300 : 0;
-  while ((m.n || 0) < n) { m.n = (m.n || 0) + 1; p.target = m.n % 2 ? POSE.hook : POSE.crush; sfx.swish(1.1); if (reach(p, 240, 7, m.n === 6 ? { kb: 520, lift: 320, stun: .7, stop: .08, heavy: 1, col: '#ff5a6e' } : { kb: 40, stun: .3, stop: .02, col: '#ff5a6e' })) V.sparks(o.x - p.face * 20, mid(o), 'red', 3); }
+  while ((m.n || 0) < n) { m.n = (m.n || 0) + 1; p.target = m.n % 2 ? POSE.hook : POSE.crush; sfx.swish(1.1); if (reach(p, 275, 7, m.n === 6 ? { kb: 520, lift: 320, stun: .7, stop: .08, heavy: 1, col: '#ff5a6e' } : { kb: 40, stun: .3, stop: .02, col: '#ff5a6e' })) { V.sparks(o.x - p.face * 20, mid(o), 'red', 3); play('home-rg-bat', .4, () => {}, 1.5); } }
   if (t > .75) E.endMove(p);
 } });
 const SPEAR = arm('spear', { name: 'Inversion Stab', cd: .5, dur: .75, run(p, m, t) {
   p.rate = 46; m.prop = 'spear';
   if (t < .2) { p.target = POSE.divWind; p.vx = 0; return; }
   p.target = t < .45 ? POSE.jab : POSE.idle; p.vx = t < .32 && roomAhead(p) ? p.face * 1300 : 0;
-  if (!m.done && t <= .34 && reach(p, 250, 450, { kb: 900, lift: 420, stun: 1, stop: .3, heavy: 1, col: GOLD })) { m.done = 1; shake(34); sfx.bf(); V.impact(.2, E.P2.x, E.P2.y + 150); }
+  if (!m.done && t <= .34 && reach(p, 250, 450, { kb: 900, lift: 420, stun: 1, stop: .3, heavy: 1, col: GOLD })) { m.done = 1; shake(34); play('home-isoh-4', 1, () => sfx.bf()); V.impact(.2, E.P2.x, E.P2.y + 150); }
   if (t > .65) E.endMove(p);
 } });
 const ARMS = { pistol: PISTOL, sniper: SNIPER, katana: KATANA, chain: CHAIN, cloud: CLOUD, spear: SPEAR };
@@ -981,7 +1606,8 @@ const ARMS = { pistol: PISTOL, sniper: SNIPER, katana: KATANA, chain: CHAIN, clo
 /* ================= what is on each key ================= */
 const CARDS = {
   home: [HOME, HOME_C, HOME_X], hitrun: [HIT_RUN, HIT_RUN_C, HIT_RUN_X], kitchen: [KITCHEN, KITCHEN_C, KITCHEN_X], express: [EXPRESS, EXPRESS_C, EXPRESS_X],
-  road: [ROAD, ROAD_C, ROAD_X], furn: [FURN, FURN_C, FURN_X], ext: [EXT, EXT_C, EXT_X], final: [FINAL, FINAL_C, FINAL_X] };
+  road: [ROAD, ROAD_C, ROAD_X], furn: [FURN, FURN_C, FURN_X], ext: [EXT, EXT_C, EXT_X], final: [FINAL, FINAL_C, FINAL_X],
+  bowl: [BOWL, BOWL_C, BOWL_X], shop: [SHOP, SHOP_C, SHOP_X], fish: [FISH, FISH_C, FISH_X], reno: [RENO, RENO_C, RENO_X] };
 const nameOf = id => (WEAPON[id] ? WEAPON[id].name : id === 'coupon' ? 'Coupon' : id === 'extra' ? 'Extra Coupon' : CARDS[id] ? CARDS[id][0].name : '—');
 const colOf = id => (WEAPON[id] ? GOLD : id === 'coupon' ? CPN : id === 'extra' ? XTR : PAPER);
 function defFor(k) {
@@ -1058,7 +1684,7 @@ H.under = dt => {
   const p = E.P1, m = p.move;
   if (m && m.def.reg && m.prop === 'scooter' && p.skin === SKIN && !p.dead) {      // the scooter he is sat on, under him
     const c = F(p.x + p.face * 58, p.y - RIDE_Y), k = c[2] * SCOOT;
-    g.save(); g.translate(c[0], c[1]); g.scale(k * p.face, k); if (m.tilt) g.rotate(m.tilt); LWK = 1 / SCOOT; scooter(); LWK = 1; g.restore();
+    g.save(); g.translate(c[0], c[1]); g.scale(k * p.face, k); if (m.tilt) g.rotate(m.tilt); LWK = 1 / SCOOT; scooter(undefined, p.x * p.face / 20); LWK = 1; g.restore();
   }
 };
 H.fx = dt => {
@@ -1070,6 +1696,8 @@ H.fx = dt => {
   if (m && m.def.reg) {
     if (m.prop && HELD[m.prop]) inHand(p, true, HELD[m.prop]);
     if (m.prop2 && HELD[m.prop2]) inHand(p, false, HELD[m.prop2]);
+    if (m.prop === 'cart') { const c = F(p.x + p.face * CART_AT, 0), k = c[2]; g.save(); g.translate(c[0], c[1]); g.scale(k * p.face, k); cart(!!m.full, p.x * p.face / 9); g.restore(); }      // the trolley, out in front of him
+    if (m.hook) hookDraw(p, m.hook);
     if (m.jet) jetDraw(m.jet);
     if (m.end) {                                    // the chain out to wherever its end is
       const h = E.hand(p, true), a = F(h[0], h[1]), b = F(m.end[0], m.end[1]);

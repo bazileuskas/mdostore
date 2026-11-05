@@ -27,6 +27,10 @@
      goes down and after 20 seconds he dies. and if he kills the enemy in those 20 seconds he survives". THE LAST STAND: the first time in a
      fight he would die (not in a duel, whose loss is final), he does not. Beast Mode, and his health all back, and then running out of him a
      tick at a time for twenty seconds; nothing else can take it meanwhile (foes.js: H.doomed). Kill them first and he lives, with what is left.
+   Build 0.28v1, the user's: "for kashimos beast mode make the m1 and other move range hitbox WAYYYYYYYYYYYYYY bigger". In Beast Mode every
+     hit of his reaches three times as far (the technique's aim, which tryHit asks), and the strikes and the slams find them higher up and a
+     little behind him as well (wide); the dash of Lightning Output: BEAST MODE catches them from three times as far, and Thunder God's
+     Wrath's stomp goes twice as wide. A bolt off the end of each strike shows how far it goes.
    The look is the Thunder God's (cast6.js, KASHIMO), the staff in his hand and not on his back */
 (() => {
 'use strict';
@@ -62,6 +66,19 @@ function chip(o, n, col) {
   else { o.hp -= d; o.lastHit = 0; o.flash = .06; }
   return d;
 }
+
+/* ================= Beast Mode's reach: three times as far, higher, and a little behind him ================= */
+const BEAST_REACH = 3, BEAST_TALL = 460, BEAST_BACK = 150;
+// (the technique's aim, below, makes every tryHit of his this long in Beast Mode; this catches what tryHit cannot: too high, or just behind)
+function wide(p, h) {
+  const o = E.P2;
+  if (!live(o) || o.state === 'down' || o.state === 'up' || o.inv > 0) return false;
+  const dx = (o.x - p.x) * p.face;
+  if (dx < -BEAST_BACK || dx > (h.reach || 150) * BEAST_REACH || Math.abs(o.y - p.y) > BEAST_TALL) return false;
+  E.applyHit(o, o.x >= p.x ? 1 : -1, h);
+  return true;
+}
+const beastHit = (p, h) => E.tryHit(p, h) || (mt.beast > 0 && wide(p, h));
 
 /* ================= THE LIGHTNING METER (E) ================= */
 const BARS = 5, HOLD = 20, CD_PER = 4, COST = 33, BEAST_T = 30;
@@ -280,6 +297,7 @@ function strike(d) {                                // the moment it goes: the s
   if (Z) {
     Z.lightning(tip[0], tip[1], tip[0] + f * rnd(160, 260), tip[1] + rnd(-70, 70), P.rgb, .16, heavy ? 6 : 3, heavy ? 3 : 1);
     if (heavy) { Z.lightning(tip[0], tip[1], tip[0] + f * 520, tip[1] + rnd(-40, 40), P.rgb, .26, d.c === 'orange' ? 12 : 9, 4); Z.flash(WHITE, .16, .12); Z.flare(tip[0], tip[1], P.rgb, 380, .18); }
+    if (d.c === 'orange' && d.hit) { const L = d.hit.reach * BEAST_REACH; for (let i = 0; i < 2; i++) Z.lightning(tip[0], tip[1], p.x + f * L, tip[1] + rnd(-120, 120), P.rgb, .2, i ? 4 : 8, 3); V.bolt(tip[0], tip[1], p.x + f * L, tip[1], P.col, .14, 6); }      // (Beast Mode: as far as it reaches)
   }
   V.sparks(tip[0], tip[1], P.spark, heavy ? 14 : 5);
 }
@@ -292,6 +310,8 @@ function strikeDef(i, L) {
     const d = Object.assign({}, M.m1[base], { pre, pose, n: 3, kick: 0, lb: i, last, c, rate, sw: `rgba(${P.rgb},.95)`, lunge: 320,
       hit: { reach: reach + 15, dmg, kb: last ? 1000 : 300, lift: last ? 650 : 0, stun: last ? 1 : .55, stop: last ? .18 : .09, heavy: 1, col: P.col, mute: 1, lb: i, last, c } });
     d.whoosh = () => strike(d); d.swingAt = [a0, a1, ext];
+    const run0 = d.run;      // (the engine's own strike, and then the wider test if tryHit missed them)
+    d.run = (p, m, t) => { run0(p, m, t); if (!m.done && m.sw && t >= d.strike && t < d.strike + .09 && wide(p, d.hit)) m.done = 1; };
     return d;
   }
   const last = i === L - 1, s = last ? SW[6] : SW[i % 6], [pre, pose, base, a0, a1, reach, ext] = s;
@@ -311,7 +331,7 @@ const B_DOWN = { m1: 1, n: 3, lb: 2, last: true, c: 'orange', rate: .62, dur: 1.
   if (t < .12) { p.target = POSE.crushWind; p.vy = Math.max(p.vy, 80); p.vx *= .88; return; }
   if (!m.aim) { m.aim = 1; facing(p, o); strike(m.def); m.vx = clamp((o.x - p.face * 70 - p.x) / Math.max(.1, p.y / 1900), -1600, 1600); }
   p.target = POSE.crush; p.vy = -1900; p.vx = m.vx;
-  if (!m.done && E.tryHit(p, { reach: 230, dmg: BEAST_DMG[2], kb: 160, stun: 1, stop: .14, heavy: 1, col: P.col, mute: 1, lb: 2, last: 1, c: 'orange' })) {
+  if (!m.done && beastHit(p, { reach: 230, dmg: BEAST_DMG[2], kb: 160, stun: 1, stop: .14, heavy: 1, col: P.col, mute: 1, lb: 2, last: 1, c: 'orange' })) {
     m.done = 1;
     if (holdable(o) && !o.poise) Object.assign(o, { ground: false, state: 'air', y: Math.max(o.y, 26), vy: -2100, vx: p.face * 120, bounced: false });
   }
@@ -323,7 +343,7 @@ const B_UP = { m1: 1, n: 3, lb: 2, last: true, c: 'orange', rate: .62, dur: .66,
   if (t < .13) { p.target = POSE.crushWind; if (p.ground) p.vx = p.face * 160; return; }
   p.target = t < .44 ? UPPER : POSE.idle; if (p.ground) p.vx = t < .2 ? p.face * 260 : 0;
   if (!m.sw) { m.sw = 1; strike(m.def); }
-  if (!m.done && t < .3 && E.tryHit(p, { reach: 230, dmg: BEAST_DMG[2], kb: 80, lift: 1500, stun: 1, stop: .14, heavy: 1, col: P.col, mute: 1, lb: 2, last: 1, c: 'orange' })) { m.done = 1; sky(E.P2.x, mid(E.P2), P.rgb, 8); }
+  if (!m.done && t < .3 && beastHit(p, { reach: 230, dmg: BEAST_DMG[2], kb: 80, lift: 1500, stun: 1, stop: .14, heavy: 1, col: P.col, mute: 1, lb: 2, last: 1, c: 'orange' })) { m.done = 1; sky(E.P2.x, mid(E.P2), P.rgb, 8); }
 } };
 function dent(x, hard, P) {                         // where something comes down hard
   sfx.blast(); shake(hard ? 30 : 14);
@@ -424,7 +444,7 @@ const B_BARRAGE = { name: 'Beast: Lightning Barrage', cd: 14, dur: 1.5, glow: 'f
   if (t < .42) { p.target = POSE.crushWind; st.lock = false; return; }
   if (!m.slam) {                                    // the staff, down through them and into the floor
     m.slam = 1;
-    const hit = E.tryHit(p, { reach: 240, dmg: 80, kb: 40, stun: 1.6, stop: .26, heavy: 1, col: P.col, mute: 1 });
+    const hit = beastHit(p, { reach: 240, dmg: 80, kb: 40, stun: 1.6, stop: .26, heavy: 1, col: P.col, mute: 1 });
     const x = hit ? o.x : p.x + p.face * 160;
     if (hit && holdable(o) && !o.poise) Object.assign(o, { y: 0, vy: 0, vx: 0, ground: true, state: 'down', stun: 1.6 });
     play('home-lb-crack', .9, () => sfx.thunder()); dent(x, true, P); E.zoomIn(.4);
@@ -657,7 +677,7 @@ const B_OUTPUT = { name: 'Lightning Output: BEAST MODE', cd: 20, dur: 6, glow: '
     p.target = POSE.dash; p.vx = Math.abs(p.x + p.face * 60) < eb ? p.face * 2700 : 0;
     if (Z && Math.random() < .9) { Z.lightning(p.x - p.face * 30, p.y + rnd(60, 260), p.x - p.face * rnd(160, 320), p.y + rnd(40, 280), P.rgb, .12, 3, 1); }
     const gap = live(o) ? (o.x - p.x) * p.face : 999;
-    if (gap > -40 && gap < 150 && Math.abs(o.y - p.y) < 260 && o.state !== 'down' && !(o.inv > 0)) {
+    if (gap > -40 && gap < 150 * BEAST_REACH && Math.abs(o.y - p.y) < BEAST_TALL && o.state !== 'down' && !(o.inv > 0)) {
       m.hit = t; p.vx = 0;
       E.applyHit(o, p.face, { dmg: BO_HIT, kb: 2600, lift: 760, stun: 2.2, stop: .2, heavy: 1, col: P.col, mute: 1 });      // the length of the arena
       play('home-lb-crack', .7, () => sfx.thunder()); sfx.hit(true); shake(30); big(p, o, 'ドンッ', P.col);
@@ -749,7 +769,7 @@ function guard(face, a) {                           // hit in the stance: it nev
 }
 
 /* ================= 4 — THUNDER GOD'S WRATH ================= */
-const W_STOMP = 5, W_PUNCH = 11, W_KICK = 14, STOMP_AT = .26, STOMP_R = 340, STUN_T = 1.1, RUSH_T = .42, SKY_AT = .5;      // 30 in all; 25 if the stomp does not catch them
+const W_STOMP = 5, W_PUNCH = 11, W_KICK = 14, STOMP_AT = .26, STOMP_R0 = 340, STUN_T = 1.1, RUSH_T = .42, SKY_AT = .5;      // 30 in all; 25 if the stomp does not catch them
 const STOMP_UP = [-.12, -.12, 1.85, 1.45, 1.05, -.3, 0], STOMP = [.22, .18, .45, .35, .12, -.55, 0], PUNCH_W = [-.14, 0, 1.1, -1.25, .35, -.4, 0], PUNCH_P = [.5, .06, .4, 1.75, .62, -.58, 0];
 // the end of his front leg, as the rig draws it (game.js: the hip, and the leg swung from it)
 const foot = p => { const ps = p.pose, a = ps[4], hip = Math.max(Math.cos(ps[4]), Math.cos(ps[5]), .3) * 76; return [p.x + (8 + Math.sin(a) * 76) * p.face * E.K, p.y + (hip - Math.cos(a) * 76) * E.K]; };
@@ -795,7 +815,7 @@ const WRATH = { name: "Thunder God's Wrath", cd: 22, dur: 2.6, get glow() { retu
   if (u > 1) E.endMove(p);
 } };
 function stomp(p, m, P) {                           // the foot down, and the floor goes off round him: whatever is near enough stands there stunned
-  const x = p.x + p.face * 30, o = E.P2;
+  const x = p.x + p.face * 30, o = E.P2, STOMP_R = STOMP_R0 * (beastOn() ? 2 : 1);
   play('home-lb-crack', .7, () => sfx.thunder()); sfx.blast(); shake(22); E.stop(.05);
   V.crack(x, 260); V.rocks(x, 0, 8); E.addRing(x, P.rgb, STOMP_R + 100); V.ring(x, 30, STOMP_R, P.col, .3); V.sparks(x, 20, P.spark, 12);
   if (Z) {
@@ -912,7 +932,7 @@ const SKIN = Object.assign({}, JU.cast6.KASHIMO, {
     g.restore();
   } });
 JU.tech.add('beast', { name: 'Lightning Beast', jp: '雷獣', mark: '雷', who: 'Lightning', odds: 0, col: BOLT, glow: 'blue', moves: MOVES,
-  early: true, skin: SKIN, as: ['Lightning Beast', '雷獣'], m1, guard, awaken, awkName: 'Beast', awkKeep: true, get awkHits() { return !beastOn(); },      // (Beast Mode does not fill its own bar)
+  early: true, skin: SKIN, as: ['Lightning Beast', '雷獣'], m1, guard, awaken, aim: (p, h) => (beastOn() ? Object.assign({}, h, { reach: (h.reach || 150) * BEAST_REACH }) : h), awkName: 'Beast', awkKeep: true, get awkHits() { return !beastOn(); },      // (Beast Mode does not fill its own bar)
   hint: '<b>E</b> Lightning meter · <b>1</b> Thunderclap Barrage · <b>2</b> Lightning Discharge · <b>3</b> Electric Reversal · <b>4</b> Thunder God\'s Wrath' });
 const DEF = T.TECH.beast;
 
