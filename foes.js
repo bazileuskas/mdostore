@@ -83,6 +83,7 @@ function start(cfg, wave = 0) {
 
 function lose() {
   const p = E.P1;
+  if (H.lastStand && H.lastStand()) return;         // a technique can take the dying instead, for a while (the Lightning Beast's last stand: beast.js)
   if (fight.cfg && fight.cfg.onLose) { p.dead = true; p.ps = p.ground ? 'down' : 'air'; p.stun = 99; E.slow(.8); fight.cfg.onLose(); return; }   // a duel: losing is the end of it, not a second go (pvp.js)
   if (H.death && H.death()) return;                 // a clan can have other plans for dying
   p.dead = true; p.ps = p.ground ? 'down' : 'air'; p.stun = 99;
@@ -90,6 +91,11 @@ function lose() {
   const cfg = fight.cfg;
   later(2800, () => { if (fight.cfg === cfg) start(cfg, 0); });   // straight back in
 }
+
+// a last stand (the Lightning Beast's, beast.js): while H.doomed says so, nothing takes his health but the stand's own clock, and when that
+// runs out it is die() that ends him
+const doomed = () => !!(H.doomed && H.doomed());
+function die() { const p = E.P1; if (p.dead) return; p.hp = 0; lose(); }
 
 // fire: whatever reaches him while this is up is fire (the fire bosses' sets and Fuga put it up in boss.js, a burning domain in clash.js;
 // a hit can also say so itself, a.fire). A clan proof against it answers H.fireproof (Mythical Warrior, kashimo.js): it touches him and does nothing
@@ -105,14 +111,14 @@ function hurt(face, a, mul = 1) {
   if (proof(a)) return true;                        // it reached him, and it does not burn
   const firm = !!(H.noStun && H.noStun(p, a));      // it hurts, but it stops nothing: not his move, not him (a private server's No stun: ps.js)
   if (p.move && !firm) E.endMove(p);
-  const raw = a.dmg * mul * (H.foePower ? H.foePower(a) : 1), dmg = a.exact ? raw : Math.round(raw);     // something may have weakened it, or put more behind its hits (exact: a duel's blows are counted to the fraction)
+  const raw = a.dmg * mul * (H.foePower ? H.foePower(a) : 1), dmg = doomed() ? 0 : a.exact ? raw : Math.round(raw);     // something may have weakened it, or put more behind its hits (exact: a duel's blows are counted to the fraction)
   p.hp = Math.max(fight.floor, p.hp - dmg); p.flash = .1;
   if (!firm) {
     p.face = -face; p.vx = face * a.kb;
     if (a.lift) { p.vy = a.lift; p.ground = false; p.y = Math.max(p.y, 1); p.ps = 'air'; } else { p.ps = 'hurt'; p.stun = a.stun || .4; }
   }
   E.stop(.08); cam.shake = Math.max(cam.shake, a.lift ? 20 : 11); cam.kick -= face * .04;
-  E.addSpark(p.x + face * 20, p.y + 150, '#ff5a6e', a.lift ? 130 : 80); E.addNum(p.x, p.y + 270, a.exact ? +(a.shown || dmg).toFixed(1) : dmg, '#ff5a6e');
+  E.addSpark(p.x + face * 20, p.y + 150, '#ff5a6e', a.lift ? 130 : 80); if (dmg > 0) E.addNum(p.x, p.y + 270, a.exact ? +(a.shown || dmg).toFixed(1) : dmg, '#ff5a6e');
   V.ring(p.x, p.y + 150, a.lift ? 170 : 90, '#ff2440'); if (a.lift) V.rocks(p.x, 0, 6);
   sfx.hit(!!a.lift);
   if (H.struck) H.struck(p, face, a, dmg);          // what the blow throws off him, in the colours of whoever landed it (bossfx.js)
@@ -125,7 +131,7 @@ function hurt(face, a, mul = 1) {
 function chip(dmg, col, shown) {
   const p = E.P1;
   if (p.dead || fight.paused || !(dmg > 0)) return;
-  if (proof()) return;                              // (a burn, when he cannot be burned)
+  if (proof() || doomed()) return;                  // (a burn, when he cannot be burned; anything at all, in a last stand)
   p.hp = Math.max(fight.floor, p.hp - dmg); p.flash = .06;
   E.addNum(p.x, p.y + 270, +(shown || dmg).toFixed(1), col || '#ff5a6e');
   if (fight.low && !fight.lowDone && p.hp <= p.max * fight.low.at) { fight.lowDone = true; fight.low.fn(); }
@@ -248,5 +254,5 @@ H.reset = () => {
   nm.p2.textContent = 'Training Curse'; nm.p2j.textContent = '呪霊'; nm.p1.textContent = 'The Vessel'; nm.p1j.textContent = '器'; nm.vs.textContent = 'Training';
 };
 
-JU.fights = { start, hurt, chip, make, DEFS, fight, later, nm, burning, hot: () => heat > 0 };
+JU.fights = { start, hurt, chip, make, DEFS, fight, later, nm, burning, hot: () => heat > 0, die };
 })();

@@ -20,6 +20,10 @@
      and an uppercut with jump held; BEAST: LIGHTNING BARRAGE (slammed into the floor, 80, and orange lightning out of his hands, 40) and
      LIGHTNING OUTPUT: BEAST MODE (a long dash, and if it meets them they go the length of the arena, and he is on them with the staff: 16, and
      seventy strikes of orange lightning, 110 in all). G with the Beast bar full and the meter resting is all three charges at once.
+   Build 0.27v1, the user's: "make it so when youre about to die he summons beast mode as a last attempt to defeat them every tick his health
+     goes down and after 20 seconds he dies. and if he kills the enemy in those 20 seconds he survives". THE LAST STAND: the first time in a
+     fight he would die (not in a duel, whose loss is final), he does not. Beast Mode, and his health all back, and then running out of him a
+     tick at a time for twenty seconds; nothing else can take it meanwhile (foes.js: H.doomed). Kill them first and he lives, with what is left.
    The look is the Thunder God's (cast6.js, KASHIMO), the staff in his hand and not on his back */
 (() => {
 'use strict';
@@ -89,8 +93,9 @@ const ROARING = { name: 'Beast Mode', dur: 1.05, glow: 'fire', staff: 2.5, run(p
     m.s = 1; p.inv = Math.max(p.inv || 0, 1.1); E.slow(.5);
     play('home-lb-crack', .9, () => sfx.thunder()); sfx.blast(); shake(30); E.zoomIn(.5);
     if (Z) { Z.flash(P.rgb, .45, .3); Z.pillar(p.x, 80, 1000, P.rgb, .6); Z.shock(p.x, 900, P.rgb, .5, 14); Z.dim(.5, .8); }
-    label(p.x, p.y + 560, 'BEAST MODE', P.col, 1.6); ono('獣', p.x, p.y + 660, P.col, 1.2, 1.2);
-    if (JU.manga) JU.manga.think(p, 'BEAST MODE.', { life: 1.4 });
+    label(p.x, p.y + 560, m.last ? 'LAST STAND' : 'BEAST MODE', m.last ? '#ff5a6e' : P.col, 1.6); ono('獣', p.x, p.y + 660, P.col, 1.2, 1.2);
+    if (JU.manga) JU.manga.think(p, m.last ? 'NOT YET.' : 'BEAST MODE.', { life: 1.4 });
+    if (m.last && Z) { Z.flash(DOOM, .4, .35); Z.shock(p.x, 1000, DOOM, .55, 16); }
   }
   if (Math.random() < .7) { zapAt(p.x + rnd(-60, 60), p.y + rnd(40, 320), 1, 220, 3, P.rgb); }
   if (t > .2 && t < .8 && Math.random() < .25) sky(p.x + rnd(-200, 200), 0, P.rgb, 5);
@@ -100,6 +105,62 @@ function beastStart(p) {
   if (p.move && p.move.def.m1) E.endMove(p);
   if (!p.move && !p.ps && !p.dead) p.move = { def: ROARING, t: 0 };
   else { label(p.x, p.y + 560, 'BEAST MODE', PAL.orange.col, 1.6); play('home-lb-crack', .9, () => sfx.thunder()); }
+}
+/* ================= THE LAST STAND: Beast Mode instead of dying, and twenty seconds to win in ================= */
+const LAST_T = 20, REFILL = .5, DOOM = '255,80,60';
+const ls = { on: false, used: false, t: 0, tick: 1 };      // in it; had it already this fight; how long it has gone; the next second to tick on
+function lastStand() {                              // foes.js asks this the moment he would die
+  const p = E.P1;
+  if (ls.on) return true;                           // (in it already: nothing kills him but the clock)
+  if (!on() || ls.used || duel() || p.skin !== SKIN || E.root.dataset.mode !== 'fight') return false;
+  ls.on = true; ls.used = true; ls.t = 0; ls.tick = 1;
+  if (imp) impEnd();
+  held = null; st.charge = 0;
+  if (p.move) E.endMove(p);
+  Object.assign(p, { hp: 1, ps: null, stun: 0, vx: 0, dead: false });
+  mt.beast = LAST_T + REFILL + 1; mt.bars = 0; mt.ult = 0; mt.hold = 0;
+  p.move = { def: ROARING, t: 0, last: 1 };
+  E.slow(.9);
+  return true;
+}
+function lastTick(dt) {
+  const p = E.P1, o = E.P2;
+  if (p.dead) { ls.on = false; return; }
+  if (Fi.fight.paused) return;
+  ls.t += dt;
+  const left = LAST_T + REFILL - ls.t;
+  mt.beast = Math.max(mt.beast, left);              // (Beast Mode lasts as long as he does)
+  if (o && o.ko) { lastWon(p); return; }            // he got them first
+  p.hp = ls.t < REFILL ? Math.max(1, p.max * ls.t / REFILL) : Math.max(0, p.max * left / LAST_T);      // all of it back, and then going
+  const sec = Math.floor(ls.t - REFILL);
+  if (sec >= ls.tick && left > 0) {                 // a tick of it, every second, and it shows
+    ls.tick = sec + 1;
+    E.addNum(p.x, p.y + 270, Math.round(p.max / LAST_T), '#ff5a6e'); p.flash = .12;
+    zapAt(p.x, p.y + 170, 3, 170, 3, DOOM); V.sparks(p.x, p.y + 170, 'red', 6); sfx.zap(.55);
+    if (left <= 5.5) label(p.x, p.y + 540, String(Math.ceil(left)), '#ff5a6e', .7);
+  }
+  if (left <= 0) lastLost(p);
+}
+function lastWon(p) {                               // they went down first: he lives, with what is left of him
+  ls.on = false; mt.beast = 0; p.hp = Math.max(1, Math.round(p.hp));
+  label(p.x, p.y + 560, 'SURVIVED', PAL.orange.col, 1.8);
+  if (JU.manga) JU.manga.think(p, '...STILL STANDING.', { life: 1.8 });
+}
+function lastLost(p) {                              // twenty seconds, and there is nothing left of him
+  ls.on = false; mt.beast = 0;
+  if (JU.manga) JU.manga.think(p, '...THAT WAS A GOOD FIGHT.', { life: 2 });
+  zapAt(p.x, p.y + 170, 10, 360, 4, DOOM); V.sparks(p.x, p.y + 170, 'red', 16); shake(20);
+  if (Z) Z.flash(DOOM, .3, .4);
+  Fi.die();
+}
+function vignette() {                               // red at the edges of everything, beating once a second
+  const cv = g.canvas, W = cv.width, Hh = cv.height, u = Math.max(0, ls.t - REFILL) % 1, beat = Math.exp(-u * 5);
+  const left = LAST_T + REFILL - ls.t, a = .22 + .25 * beat + .25 * (1 - Math.max(0, left) / LAST_T);
+  g.save(); g.setTransform(1, 0, 0, 1, 0, 0);
+  const gr = g.createRadialGradient(W / 2, Hh / 2, Math.min(W, Hh) * .3, W / 2, Hh / 2, Math.max(W, Hh) * .75);
+  gr.addColorStop(0, 'rgba(120,0,0,0)'); gr.addColorStop(1, `rgba(150,8,8,${Math.min(.75, a)})`);
+  g.fillStyle = gr; g.fillRect(0, 0, W, Hh);
+  g.restore();
 }
 function esPress(p) {
   if (p.dead) return true;
@@ -141,14 +202,15 @@ function paintMeter() {
   meter.classList.toggle('on', show);
   if (!show) { shownM = ''; return; }
   const resting = mt.cd > 0 && !beastOn(), cdn = resting ? Math.ceil(mt.cd / (mt.cdMax || 1) * BARS) : 0;
-  const key = [mt.bars, cdn, mt.ult, Math.ceil(mt.beast), Math.ceil(mt.cd), mt.bars && mt.hold < 4 ? 1 : 0].join();
+  const key = [mt.bars, cdn, mt.ult, Math.ceil(mt.beast), Math.ceil(mt.cd), mt.bars && mt.hold < 4 ? 1 : 0, ls.on ? 1 : 0].join();
   if (key === shownM) return;
   shownM = key;
   meter.classList.toggle('max', full()); meter.classList.toggle('beast', beastOn()); meter.classList.toggle('cd', resting); meter.classList.toggle('fade', mt.bars > 0 && mt.hold < 4);
   pips.forEach((el, i) => { el.className = beastOn() ? 'f' : resting ? (i < cdn ? 'c' : '') : i < mt.bars ? 'f' : ''; });
   dots.forEach((el, i) => { el.className = i < mt.ult ? 'f' : ''; });
   mdots.hidden = !resting;
-  mtxt.textContent = beastOn() ? 'BEAST MODE · ' + Math.ceil(mt.beast) + 's' : resting ? 'RESTING · ' + Math.ceil(mt.cd) + 's' : full() ? 'MAX' : 'LIGHTNING ' + mt.bars + '/5';
+  meter.classList.toggle('last', ls.on);
+  mtxt.textContent = ls.on ? 'LAST STAND · ' + Math.max(0, Math.ceil(LAST_T + REFILL - ls.t)) + 's' : beastOn() ? 'BEAST MODE · ' + Math.ceil(mt.beast) + 's' : resting ? 'RESTING · ' + Math.ceil(mt.cd) + 's' : full() ? 'MAX' : 'LIGHTNING ' + mt.bars + '/5';
 }
 function meterTick(dt) {
   if (mt.beast > 0 && (mt.beast -= dt) <= 0) { mt.beast = 0; const p = E.P1; label(p.x, p.y + 470, 'BEAST MODE OVER', PAL.orange.col, 1.2); }
@@ -712,7 +774,10 @@ JU.tech.add('beast', { name: 'Lightning Beast', jp: '雷獣', mark: '雷', who: 
 const DEF = T.TECH.beast;
 
 /* ---------- wiring ---------- */
-const press0 = H.press, tick0 = H.tick, fx0 = H.fx, hit0 = H.hit, reset0 = H.reset, start0 = H.fightStart, under0 = H.under;
+const press0 = H.press, tick0 = H.tick, fx0 = H.fx, hit0 = H.hit, reset0 = H.reset, start0 = H.fightStart, under0 = H.under, post0 = H.post, stand0 = H.lastStand, doomed0 = H.doomed;
+H.lastStand = () => !!(stand0 && stand0()) || lastStand();
+H.doomed = () => !!(doomed0 && doomed0()) || (ls.on && on());
+H.post = dt => { if (post0) post0(dt); if (ls.on && on() && E.root.dataset.mode === 'fight') vignette(); };
 H.press = (a, inScene) => {
   if (!inScene && on() && E.root.dataset.mode === 'fight') {
     if (imp) {                                      // on the staff: 1 throws them off it after the fifth slam; nothing else does anything
@@ -732,6 +797,7 @@ H.tick = dt => {
   if (held && !(p.move && (p.move.def === DISCHARGE || p.move.def === OUTPUT_MAX))) held = null;
   if (st.charge && !(p.move && (p.move.def === STANCE || p.move.def === CHARGE))) st.charge = 0;
   if (E.root.dataset.mode === 'fight') meterTick(dt);
+  if (ls.on) lastTick(dt);
   if (imp) impTick(dt);
   staffTick(p, dt);
   relabel(); paintMeter();
@@ -741,6 +807,7 @@ H.under = dt => {
   if (!on() || !beastOn()) return;
   const p = E.P1, c = F(p.x, p.y + 30);            // Beast Mode: orange, pooling at his feet and off him
   lit(() => E.glow(E.GLOW.fire, c[0], c[1], 380 * c[2], .32 + .1 * Math.sin(E.T * 14)));
+  if (ls.on) lit(() => E.glow(E.GLOW.red, c[0], c[1], 460 * c[2], .3 + .15 * Math.sin(E.T * 6)));      // (and red under it: what is left of him, going)
 };
 H.fx = dt => {
   fx0(dt);
@@ -753,8 +820,10 @@ H.fx = dt => {
   const P = pal();
   if (st.charge || full() || beastOn()) { const c = F(p.x, p.y + 160); lit(() => E.glow(E.GLOW[P.glow], c[0], c[1], (beastOn() ? 360 : 300) * c[2], (full() || beastOn() ? .3 : .4) + .15 * Math.sin(E.T * 30))); }
   if (beastOn() && Math.random() < .3) zapAt(p.x + rnd(-50, 50), p.y + rnd(60, 300), 1, 140, 2, P.rgb);
+  if (ls.on && Math.random() < .45) zapAt(p.x + rnd(-40, 40), p.y + rnd(40, 320), 1, 120, 2, DOOM);      // (his body giving way, in red)
 };
 const clear = () => {
+  ls.on = false; ls.used = false;
   held = null; imp = null; Object.assign(st, { charge: 0, swing: null, a: 1.75, ext: 0, lock: false, planted: null });
   Object.assign(mt, { bars: 0, hold: 0, cd: 0, cdMax: 0, ult: 0, beast: 0 }); shownL = ''; shownM = '';
 };
@@ -762,5 +831,6 @@ H.reset = () => { reset0(); clear(); };
 H.fightStart = (cfg, wave) => { start0(cfg, wave); if (!wave) clear(); };
 
 JU.beast = { MOVES, BARRAGE, MAX_BARRAGE, B_BARRAGE, DISCHARGE, OUTPUT_MAX, B_OUTPUT, STANCE, REVERSE, SKIN, st, mt, esp: ESP,      // (esp: E, especial.js)
+  get last() { return { on: ls.on, used: ls.used, t: +ls.t.toFixed(2) }; },
   get state() { return { bars: mt.bars, cd: +mt.cd.toFixed(1), ult: mt.ult, beast: +mt.beast.toFixed(1), chain: chainLen(), imp: imp && { phase: imp.phase, slams: imp.slams, t: +imp.t.toFixed(2) }, planted: !!st.planted }; } };
 })();

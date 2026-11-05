@@ -5,6 +5,10 @@
 // Newest first. v = the build, jp = the seal stamped beside it, pic = notes/<pic>.jpg, cap = what the picture shows.
 // A new update goes at the top of this list.
 const NOTES = [
+  { v: '0.27v1', name: 'Last Stand', jp: '最期', date: '5 Nov 2026', pic: 'laststand', cap: 'The Lightning Beast, about to die: Beast Mode, and twenty seconds', items: [
+    'The first time in a fight the Lightning Beast would die, he does not: he goes into Beast Mode as a last attempt, and all his health comes back',
+    'Then it runs out of him, a tick every second, for twenty seconds. Nothing else can take it meanwhile: they can still knock him about, but the twenty seconds are the twenty seconds',
+    'Kill them before it runs out and he survives, with whatever is left. If not, at twenty seconds, he dies. (Not in a duel: a duel lost is lost)'] },
   { v: '0.27', name: 'Beast Mode', jp: '獣', date: '5 Nov 2026', pic: 'beastmode', cap: 'Lightning Output: MAX, Beast Mode, and Love Reaper\'s ult', items: [
     'The Lightning Beast is an Early Access technique now, not a limited one. Anybody who rolled it while it was limited keeps it',
     'E is its LIGHTNING METER: five bars, one a press, and every bar is one more strike in the chain (seven, up to twelve). With all five the strikes go purple and land half as hard again, and 1 and 2 become their MAX moves. Using one of those spends the meter, and so does leaving it for twenty seconds; then it rests, four seconds for every bar that was in it',
