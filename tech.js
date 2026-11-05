@@ -138,6 +138,7 @@ function stamp() { document.querySelectorAll('.tcard.lim:not(.ea):not(.tease)').
 function roll() {
   for (const id of ORDER) { const t = TECH[id]; if (t.limited && live(t) && !(JU.shop && JU.shop.holds('tech', id)) && Math.random() * 100 < t.odds) return id; }      // (a limited one he holds already is not rolled twice)
   const pool = ORDER.filter(id => !TECH[id].limited), total = pool.reduce((n, id) => n + TECH[id].odds, 0);      // (out of what they all come to. 105 from 0.17v1, when Miracle Dork joined at 5%;
+  // 137 from 0.25v1: the user wanted Ten Shadows 20, Transfiguration and Disaster Plants 17 with Slit Mouth at 30, and said a total over 100 was fine.
   // 100 again from 0.19, when the Cursed Speaker (15%) and Ratio Man (4%) came out of Early Access: Ten Shadows 31 -> 19, Transfiguration and
   // Disaster Plants 20 -> 14 each, so that every card's number is its real chance)
   let r = Math.random() * total;

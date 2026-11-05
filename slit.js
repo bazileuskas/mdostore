@@ -706,7 +706,7 @@ function unmLabels() {
 
 /* ================= the technique ================= */
 const MOVES = { get strikes() { return unmOn() ? ULT.strikes : RAIN; }, get crush() { return unmOn() ? ULT.crush : CUT; }, get div() { return unmOn() ? ULT.div : BIND; }, get manji() { return unmOn() ? ULT.manji : SNIPS; } };
-JU.tech.add('slit', { name: 'Slit Mouth', jp: '口裂け', mark: '裂', who: 'Am I pretty?', odds: 30, col: RED, glow: 'red', moves: MOVES,      // (out of Early Access in 0.25, at 30%: the user's number from 0.20. Ten Shadows 19 -> 7, Transfiguration and Disaster Plants 14 -> 5, so the talisman still comes to 100)
+JU.tech.add('slit', { name: 'Slit Mouth', jp: '口裂け', mark: '裂', who: 'Am I pretty?', odds: 30, col: RED, glow: 'red', moves: MOVES,      // (out of Early Access in 0.25, at 30%: the user's number from 0.20. For a day the others were cut to keep the talisman at 100; in 0.25v1 the user put them back up and let it come to more)
   gore: true, skin: SLIT, as: ['Slit Mouth', '口裂け'], awaken, awkName: 'Unmasked', awkKeep: true,
   get awkHits() { return !unm; },                   // (unmasked, the bar is the time left: hits do not fill it)
   hint: '<b>1</b> Scissor Rain · <b>2</b> Slit · <b>3</b> Bandage Bind · <b>4</b> Snip Snip · <b>E</b> Am I Pretty? · <b>G</b> Unmasked' });

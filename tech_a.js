@@ -109,9 +109,9 @@ const PLANTS = {
   } }
 };
 
-JU.tech.add('ten', { name: 'Ten Shadows', jp: '十種影法術', mark: '影', who: 'Shadow Summoner', odds: 7, col: INDIGO, glow: 'indigo', moves: TEN });      // (34 until 0.12v1: Cursed Cannon's 3% came out of it; 31 until 0.19, see tech.js roll(); 19 until 0.25, when Slit Mouth came out of Early Access at 30%)
-JU.tech.add('trans', { name: 'Transfiguration', jp: '無為転変', mark: '魂', who: 'Soul Shaper', odds: 5, col: TEAL, glow: 'teal', moves: TRANS });
-JU.tech.add('plants', { name: 'Disaster Plants', jp: '呪いの花', mark: '花', who: 'Disaster Bloom', odds: 5, col: GREEN, glow: 'green', moves: PLANTS,
+JU.tech.add('ten', { name: 'Ten Shadows', jp: '十種影法術', mark: '影', who: 'Shadow Summoner', odds: 20, col: INDIGO, glow: 'indigo', moves: TEN });      // (34 until 0.12v1: Cursed Cannon's 3% came out of it; 31 until 0.19, see tech.js roll(); 19 until 0.25, when Slit Mouth came out of Early Access at 30%: 7 for a day; 20 from 0.25v1, the user's number)
+JU.tech.add('trans', { name: 'Transfiguration', jp: '無為転変', mark: '魂', who: 'Soul Shaper', odds: 17, col: TEAL, glow: 'teal', moves: TRANS });      // (17 from 0.25v1, the user's number)
+JU.tech.add('plants', { name: 'Disaster Plants', jp: '呪いの花', mark: '花', who: 'Disaster Bloom', odds: 17, col: GREEN, glow: 'green', moves: PLANTS,      // (17 from 0.25v1, the user's number)
   // one basic attack a second, but each lands twice as hard
   m1() { if (E.T - lastM1 < 1) return false; lastM1 = E.T; return true; },
   aim(p, h) { return p.move && p.move.def.m1 ? Object.assign({}, h, { dmg: h.dmg * 2, kb: h.kb * 1.4, heavy: 1, col: GREEN }) : h; }

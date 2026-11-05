@@ -5,6 +5,9 @@
 // Newest first. v = the build, jp = the seal stamped beside it, pic = notes/<pic>.jpg, cap = what the picture shows.
 // A new update goes at the top of this list.
 const NOTES = [
+  { v: '0.25v1', name: 'Rarities Restored', jp: '戻', date: '5 Nov 2026', pic: 'rarities', cap: 'Ten Shadows 20%, Transfiguration and Disaster Plants 17%', items: [
+    'Ten Shadows, Transfiguration and Disaster Plants are back up: Ten Shadows 20%, Transfiguration and Disaster Plants 17% each. They had been cut to make room for Slit Mouth, which stays at 30%',
+    'The talisman now comes to more than 100% (137). A roll still lands on one of them every time, each in proportion to its number'] },
   { v: '0.25', name: 'Slit Mouth: Full Release', jp: '口裂け', date: '3 Nov 2026', pic: 'slitrelease', cap: 'Shear Storm, Can\'t Outrun Her, Scissor Execution and Bound Slit', items: [
     'Slit Mouth is out of Early Access: roll it from the talisman, 30%. To keep the odds adding up to 100, Ten Shadows is now 7% (was 19) and Transfiguration and Disaster Plants are 5% (were 14). Anybody who had it in Early Access keeps its free slot',
     'Unmasked (G) has her own four now. 1 Shear Storm: twelve pairs of shears round her, then at them one after another. 2 Ear to Ear: their mouth cut to match hers (35 and a bleed), and their own moves gone for four seconds. 3 Can\'t Outrun Her: she is behind them before they know it, and the big shears shut (55). 4 Scissor Execution: shears the height of the room open over them, and shut (90)',
