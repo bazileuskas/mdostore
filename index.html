@@ -1260,7 +1260,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
   </div>
 
   <div class="side" aria-hidden="true" lang="ja">領域展開</div>
-  <div class="hud tl"><b lang="ja">呪</b>Fan project · Build 0.28v2 · Every Mode</div>
+  <div class="hud tl"><b lang="ja">呪</b>Fan project · Build 0.29 · King of Jujutsu</div>
   <div class="hud bl">↑ ↓ Select &nbsp;·&nbsp; Enter Confirm</div>
   <div class="hud br">Title screen</div>
   <div class="acct" id="acct">
@@ -1523,7 +1523,11 @@ const sfx = (() => {
     'home-rg-bowl': [MI + 'bowling-pins-strike-sound.mp3', .30, 1.4],                               // "bowling pins strike sound"
     'home-rg-reel': [MI + 'short-fishing-reel-cast-sound.mp3', .15, 1.4],                           // "Short Fishing Reel Cast Sound"
     'home-rg-hammer': [MI + 'sledgehammer-hit.mp3', .14, .70],                                      // "Sledgehammer hit"
-    'home-rg-jack': [MI + 'uploads-2f1572391833777-5fiy6c23.mp3', .30, 1.8] };                        // "Rust - Jackhammer stone wall go bang"
+    'home-rg-jack': [MI + 'uploads-2f1572391833777-5fiy6c23.mp3', .30, 1.8],                         // "Rust - Jackhammer stone wall go bang"
+    // Build 0.29: the King of Jujutsu (heian.js): his Furnace's "Fuga", Dismantle's "Kai", and "Know your place"
+    'home-kj-fuga': [MI + 'ryomen-sukuna-fuga.mp3', .22, 1.11],                                     // "RYOMEN SUKUNA - FUGA"
+    'home-kj-kai': [MI + 'sukuna-kai.mp3', .32, 1.2],                                               // "Sukuna Kai"
+    'home-kj-place': [MI + 'know-your-place-fool-sukuna.mp3', .3, 1.75] };                          // "Know Your Place Fool - Sukuna"
   // the built loops (tune): Overtime's four bars in D minor, and Fight Alongside's in E minor (Build 0.23). bass: [sixteenth, above the root,
   // how long]; lead: [sixteenth of the whole loop, note, how long]
   const TUNES = {
@@ -2624,7 +2628,7 @@ window.JU = { sfx, flash, bolts: blackFlash, reduceMotion, startGame, exitGame, 
 // Load every game script fresh on each page load. The dev server sends no cache headers, so without this a reload
 // could run a mix of old and new files (new menu, old moves) while the game is being worked on.
 ['account.js', 'announce.js', 'game.js', 'fx2.js', 'chars.js', 'street.js', 'walk.js', 'foes.js', 'cuts.js', 'sukuna.js', 'school.js', 'story.js', 'story2.js', 'tech.js', 'tech_a.js',
-  'tech_b.js', 'sets.js', 'story3.js', 'cast2.js', 'script.js', 'naoya.js', 'ch45.js', 'ch67.js', 'clan.js', 'clan_a.js', 'clan_b.js', 'boss.js', 'bossfx.js', 'boss_a.js', 'boss_b.js', 'boss_c.js', 'training.js', 'choso.js', 'domain.js', 'domain2.js', 'mahito.js', 'combo.js', 'combat.js', 'cast3.js', 'ch810.js', 'ch1112.js', 'cast4.js', 'ch1316.js', 'cast5.js', 'ch1721.js', 'combat2.js', 'judge.js', 'awaken.js', 'alimit.js', 'ats.js', 'switcher.js', 'tools.js', 'kashimo.js', 'smark.js', 'cast6.js', 'ch2230.js', 'plants.js', 'clash.js', 'block.js', 'cannon.js', 'tced.js', 'shibuya.js', 'kyoto.js', 'evasive.js', 'kokusen.js', 'mp.js', 'pvp.js', 'vengeful.js', 'manga.js', 'haruta.js', 'ratio.js', 'reaper.js', 'inumaki.js', 'kirara.js', 'soul.js', 'slit.js', 'gambler.js', 'uro.js', 'beast.js', 'regis.js', 'especial.js', 'yen.js', 'subtech.js', 'metro.js', 'jjh.js', 'shinjuku.js', 'notes.js', 'shop.js', 'ps.js', 'raid.js', 'touch.js', 'idg.js', 'modeset.js', 'dced.js', 'tdced.js', 'tdced2.js', 'lovereap.js', 'brother.js', 'climax.js'].forEach(src => {
+  'tech_b.js', 'sets.js', 'story3.js', 'cast2.js', 'script.js', 'naoya.js', 'ch45.js', 'ch67.js', 'clan.js', 'clan_a.js', 'clan_b.js', 'boss.js', 'bossfx.js', 'boss_a.js', 'boss_b.js', 'boss_c.js', 'training.js', 'choso.js', 'domain.js', 'domain2.js', 'mahito.js', 'combo.js', 'combat.js', 'cast3.js', 'ch810.js', 'ch1112.js', 'cast4.js', 'ch1316.js', 'cast5.js', 'ch1721.js', 'combat2.js', 'judge.js', 'awaken.js', 'alimit.js', 'ats.js', 'switcher.js', 'tools.js', 'kashimo.js', 'smark.js', 'cast6.js', 'ch2230.js', 'plants.js', 'clash.js', 'block.js', 'cannon.js', 'tced.js', 'shibuya.js', 'kyoto.js', 'evasive.js', 'kokusen.js', 'mp.js', 'pvp.js', 'vengeful.js', 'manga.js', 'haruta.js', 'ratio.js', 'reaper.js', 'inumaki.js', 'kirara.js', 'soul.js', 'slit.js', 'gambler.js', 'uro.js', 'beast.js', 'regis.js', 'especial.js', 'heian.js', 'yen.js', 'subtech.js', 'metro.js', 'jjh.js', 'shinjuku.js', 'notes.js', 'shop.js', 'ps.js', 'raid.js', 'touch.js', 'idg.js', 'modeset.js', 'dced.js', 'tdced.js', 'tdced2.js', 'lovereap.js', 'brother.js', 'climax.js'].forEach(src => {
   const s = document.createElement('script');
   s.src = src + '?v=' + Date.now(); s.async = false;      // async = false keeps them running in this order
   document.body.appendChild(s);

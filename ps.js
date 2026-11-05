@@ -64,7 +64,7 @@ const DUMMIES = [['psDummy', 'dummy', 'Dummy', 'Stands there and takes it'], ['p
   ['psImmortal', 'immortal', 'Immortal dummy', 'Never goes down'], ['psAttack', 'attack', 'Attacking dummy', 'Hits back'],
   ['psBlock', 'block', 'Blocking dummy', 'Guards from the front: a heavy blow breaks it'], ['psEvade', 'evade', 'Evasive dummy', 'Gets out of uppercuts and slams']];
 const SIZED = new Set(['dummy', 'attack', 'block', 'evade']);      // the ones the dummies' health is for
-const FOES = ['grunt', 'brute', 'finger', 'jogo', 'mahito', 'hanami', 'todo', 'eso', 'kechizu', 'maki', 'choso', 'toji', 'geto', 'naoya', 'kenjaku', 'sukuna'];
+const FOES = ['grunt', 'brute', 'finger', 'jogo', 'mahito', 'hanami', 'todo', 'eso', 'kechizu', 'maki', 'choso', 'toji', 'geto', 'naoya', 'kenjaku', 'sukuna', 'heian'];
 const foes = () => FOES.filter(id => Fi.DEFS[id]);
 const EV_DUMMY = 3;                                 // how often the evasive dummy can get out of something
 // a fight from the menu: out on the street it starts where he stands and he comes back to the same spot; in a fight it takes that one's place

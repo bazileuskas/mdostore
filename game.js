@@ -367,6 +367,7 @@ function limb(px, py, ang, w, h, c) {
     g.fillStyle = c[2]; g.fillRect(-w / 2, h - th, w, th);
     g.fillStyle = c[3]; g.fillRect(w * (.5 - strip), h - th, w * strip, th);
   }
+  if (c[5]) c[5](w, h);                         // marks drawn on it (the King of Jujutsu's tattoos: heian.js)
   g.fillStyle = SHADE; g.fillRect(-w / 2, -5, w, h + 5);
   g.restore();
   g.lineWidth = 3; g.strokeStyle = LINE; g.stroke();
@@ -386,7 +387,9 @@ function drawFighter(f, alpha) {
   g.rotate(ps[6]);
   if (alpha !== undefined) g.globalAlpha = alpha;
   g.lineJoin = 'round';
-  g.save(); g.rotate(lean); limb(-9, -TOR + 13, ps[3] + lean, 27, ARM, sk.armB); g.restore();
+  const four = sk.four || f.four;              // a second pair of arms under the first, following them (the King of Jujutsu's true form: heian.js).
+  const low = f.low;                           // (or held where a move of his puts them: [front, back])
+  g.save(); g.rotate(lean); if (four) limb(-15, -TOR + 40, (low ? low[1] : ps[3] * .55 + .45) + lean, 23, ARM * .9, sk.armB2 || sk.armB); limb(-9, -TOR + 13, ps[3] + lean, 27, ARM, sk.armB); g.restore();
   limb(-8, 0, ps[5], 33, LEG, sk.legB);
   limb(8, 0, ps[4], 33, LEG, sk.legF);
   g.rotate(lean);
@@ -399,6 +402,7 @@ function drawFighter(f, alpha) {
   g.lineWidth = 3; g.strokeStyle = LINE; g.stroke();
   if (sk.back) sk.back();
   g.save(); g.translate(3, -TOR - 19); g.rotate(ps[1]); sk.head(); g.restore();
+  if (four) limb(1, -TOR + 40, (low ? low[0] : ps[2] * .6 - .2) + lean, 23, ARM * .9, sk.armF2 || sk.armF);
   limb(7, -TOR + 13, ps[2] + lean, 27, ARM, sk.armF);
   g.restore();
 }
@@ -816,7 +820,7 @@ function flat(side, front = side) {
     legF: [side, front, side, front, .18], legB: [side, side, side, side, .18], chest() {}, head() { headBase(side, front); } });
 }
 // the same fighter, standing as he is, in another skin
-const over = (f, skin) => ({ skin, x: f.x, y: f.y, z: f.z, face: f.face, spin: f.spin === undefined ? 1 : f.spin, scale: f.scale, pose: f.pose });
+const over = (f, skin) => ({ skin, x: f.x, y: f.y, z: f.z, face: f.face, spin: f.spin === undefined ? 1 : f.spin, scale: f.scale, pose: f.pose, four: f.four || (f.skin && f.skin.four), low: f.low });
 const FLASH = flat('#e6e2ee', '#ffffff'), FRAMES = flat('#1e56c8', '#4fa2ff');      // a hit's flash; the blue frames a dash can leave
 function drawBody(f) {
   const rim = hooks.rim ? hooks.rim(f) : null;      // a technique may light the edge of him ({ col, blur }) or wash all of him one colour ({ wash, a })

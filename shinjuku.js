@@ -275,7 +275,9 @@ Object.assign(SH.SECRETS, {
   nchoso: { w: 'n', name: 'Blood Brother', foe: 'sb_choso', at: [7065, 1830], pay: 120, first: { cl: 2 }, show: () => true, say: 'At the back of the smallest bar in Golden Gai a man with a mark across his nose is drinking nothing. He says he is somebody’s big brother.' },
   nhiguruma: { w: 'n', name: 'The Judge', foe: 'sb_higuruma', at: [8100, 1290], pay: 150, first: { ct: 2, tl: 1 }, show: () => (M.nwins || 0) >= 3, say: 'On the department store’s steps a man in a suit has set up a court. He says the defendant is you.' },
   nishigori: { w: 'n', name: 'Granite Cannon', foe: 'sb_ishigori', at: [2585, 1850], pay: 140, first: { ct: 2 }, show: () => !!M.raids.nparade, say: 'Down Omoide Yokocho, a man with a pompadour is eating every skewer on the grill. He is still hungry. For a fight, he says.' },
-  nnaoya: { w: 'n', name: 'Frame Runner', foe: 'sb_naoya3', at: [11390, 2000], pay: 160, first: { cl: 3 }, show: () => !!M.raids.colony, say: 'In the snow under the garden’s trees something is moving at twenty-four frames a second. It used to be a man.' }
+  nnaoya: { w: 'n', name: 'Frame Runner', foe: 'sb_naoya3', at: [11390, 2000], pay: 160, first: { cl: 3 }, show: () => !!M.raids.colony, say: 'In the snow under the garden’s trees something is moving at twenty-four frames a second. It used to be a man.' },
+  // Build 0.29: the King of Jujutsu (heian.js), at the bottom of the crater. Always there: he is the hardest thing in the game, and he knows it
+  nheian: { w: 'n', name: 'King of Jujutsu', foe: 'heian', at: [13600, 2390], pay: 600, first: { ct: 8, cl: 4, tl: 3 }, show: () => true, say: 'At the bottom of the crater a man in a white court robe is sitting on what is left of a building. He has four arms, and two faces, and both of them are smiling. The King of Curses, as he was a thousand years ago. He will not be the one who is hurried.' }
 });
 Object.assign(JU.story.WHO, { shinjuku: JU.story.WHO.shinjuku || ['Shinjuku', '新宿', '#8fd6ff'] });
 const LINES = {
@@ -307,7 +309,7 @@ const world = { name: 'shinjuku', label: 'Shinjuku', LEN, Z0, Z1, BZ, gy, free, 
     [8600, 1290, ['grunt', 'brute']], [9600, 660, 'ruin'], [10800, 1290, 'brute'], [11950, 660, 'ruin'], [12800, 1290, 'finger'], [14100, 660, 'special']],
   stage(x0) { const sh = fn => () => { cam.x += x0; fn(); cam.x -= x0; }; return { sky: sh(sky), floor: sh(ground), back: sh(() => { alley(); buildings(); for (const p of props) if (p.z > 1000) p.draw(); }), front: sh(front) }; },
   won() { M.nwins = (M.nwins || 0) + 1; SH.save(); },
-  status(st, set) { const a = areaAt(S.me.x); set(`${a[1]} <span lang="ja">${a[2]}</span>`, `Shinjuku · December 24th · E talk or use · exorcised here ${M.nwins || 0} · raids ${K.tally(M.raids, 'n')}/3 · secret bosses ${K.tally(M.secrets, 'n')}/5`); },
+  status(st, set) { const a = areaAt(S.me.x); set(`${a[1]} <span lang="ja">${a[2]}</span>`, `Shinjuku · December 24th · E talk or use · exorcised here ${M.nwins || 0} · raids ${K.tally(M.raids, 'n')}/3 · secret bosses ${K.tally(M.secrets, 'n')}/6`); },
   tick(dt, real, p, st) {
     if (!M.nbeen) { M.nbeen = 1; SH.save(); S.talk([['shinjuku', 'Shinjuku, Christmas Eve. Snow, and lights in every window, and the busiest station in the world under it all.'], ['shinjuku', 'West: the towers, the eye, the lane of grills. East: the cat, Kabukicho, Golden Gai, the shrine, the Christmas street, the garden. And past the garden, what the Showdown left.']]); }
     const a = areaAt(p.x);
