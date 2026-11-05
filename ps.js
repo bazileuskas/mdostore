@@ -364,7 +364,7 @@ H.hit = (o, face, h) => { hit0(o, face, h); if (o === E.P2 && o.psKind === 'immo
 // the blocking dummy's guard: anything ordinary from in front of it is stopped; something heavy (into the air, 16 or more, a block breaker) breaks it
 H.shield = (o, face, h) => {
   if (shield0 && shield0(o, face, h)) return true;
-  if (o !== E.P2 || o.psKind !== 'block' || o.ko || o.gb > 0 || o.face !== -face || o.state === 'air' || o.state === 'down' || o.state === 'up') return false;
+  if (h.grab || o !== E.P2 || o.psKind !== 'block' || o.ko || o.gb > 0 || o.face !== -face || o.state === 'air' || o.state === 'down' || o.state === 'up') return false;
   const x = o.x - face * 40, y = o.y + 200 * (o.scale || 1);
   if (h.lift || h.brk || h.dmg * (o.dr || 1) >= 16) {
     o.gb = 2; sfx.guardBreak(); E.stop(.08); cam.shake = Math.max(cam.shake, 14);

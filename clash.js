@@ -58,7 +58,7 @@ const each = (d, dt, every, fn) => { if ((d.acc = (d.acc || 0) + dt) >= every) {
 const embers = dt => { if (Math.random() < dt * 40) V.puff('fire', cam.x + rnd(-800, 800), rnd(0, 80), 0, rnd(160, 360), rnd(20, 44), .8); };
 const drift = dt => { if (Math.random() < dt * 26) V.puff('green', cam.x + rnd(-800, 800), rnd(0, 340), rnd(-40, 40), rnd(30, 110), rnd(14, 28), 1.1); };
 D.kind('coffin', { rim: '255,120,40', tint: '130,34,0', tone: 'red', inside: coffin, tick: embers,
-  foe(dt, p, d) { embers(dt); each(d, dt, 1, () => { Fi.chip(3, FLAME); V.fire(p.x, 10, 6); }); } });          // simply being in there burns
+  foe(dt, p, d) { embers(dt); each(d, dt, 1, () => { Fi.burning(1, () => Fi.chip(3, FLAME)); V.fire(p.x, 10, 6); }); } });          // simply being in there burns
 D.kind('sea', { rim: '170,255,190', tint: '24,90,48', tone: 'green', bare: true, inside: sea, tick: drift,
   foe(dt, p, d) {                                   // roots round his ankles, and what they take goes to her
     const o = E.P2;

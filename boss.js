@@ -18,7 +18,8 @@ function say(o, text, col) {
 }
 const fist = (o, front) => { const h = E.hand(o, front), s = o.scale || 1; return [o.x + (h[0] - o.x) * s, o.y + (h[1] - o.y) * s]; };
 // like E.after, but forgotten if the fight is interrupted or restaged before it comes due
-const later = (t, fn) => { const ep = epoch; REAL.after(t, () => { if (ep === epoch) fn(); }); };
+// (and fire, if it was fire that set it going: Fi.burning, foes.js)
+const later = (t, fn) => { const ep = epoch, hot = Fi.hot(); REAL.after(t, () => { if (ep === epoch) Fi.burning(hot, fn); }); };
 // the player's technique slots are shut for a while
 const seal = t => { for (const k of JU.tech.SLOTS) E.cd[k] = Math.max(E.cd[k], t); };
 
@@ -33,7 +34,7 @@ function burst(x, w, a, high = 150, face) {       // standing inside an area of 
 }
 
 /* ---------- things a boss leaves in the arena: shots, shockwaves, marks on the floor ---------- */
-function add(h) { h.t = 0; haz.push(h); return h; }
+function add(h) { h.t = 0; h.heat = Fi.hot(); haz.push(h); return h; }      // (heat: left by a fire move, it burns as well)
 function clear() { for (const h of haz) h.gone = 1; haz.length = 0; epoch++; }
 function fly(s, dt) {
   const p = E.P1;
@@ -88,7 +89,7 @@ function engage(c) {
   Object.defineProperty(E, 'P2', { get: () => E.P1, configurable: true });
 }
 function release() { E.tryHit = REAL.tryHit; E.applyHit = REAL.applyHit; E.after = REAL.after; Object.defineProperty(E, 'P2', REAL.P2); }
-function mirror(c, fn) { engage(c); try { fn(); } finally { release(); } }
+function mirror(c, fn) { engage(c); try { Fi.burning(c.hot, fn); } finally { release(); } }
 // the hit itself is dealt with the engine put back the way it was: a guard may want to answer the real boss
 function strike(c, face, h) {
   release();
@@ -107,7 +108,7 @@ function land(c, h) {
   return strike(c, o.face, h);
 }
 function turned(o, p, A, t) {
-  const m = A.a, c = A.K || (A.K = { o, A, mv: m, kit: o.ai.d.kit, ep: epoch, took: 0, spot: m.spot ? m.spot[0](o, p) : 0 });
+  const m = A.a, c = A.K || (A.K = { o, A, mv: m, kit: o.ai.d.kit, ep: epoch, took: 0, spot: m.spot ? m.spot[0](o, p) : 0, hot: !!(m.of.fire || o.ai.d.kit.fire) });
   mirror(c, () => m.of.run(o, A, t));
   if (m.then && !c.th && t >= (m.at || 0)) { c.th = 1; m.then(o, p, c); }
 }
@@ -119,6 +120,7 @@ function turned(o, p, A, t) {
       or { of: one of the player's technique moves, cd, min, max, below, wind, pre, scale, spot: [where(o, p), radius], at, then(o, p, c) } */
 function kit(id, k) {
   const d = Fi.DEFS[id];
+  if (k.fire === undefined) k.fire = k.glow === 'fire';      // a set of fire (Disaster Flames, Blazing Courage): everything in it burns
   k.moves = k.moves.map(m => (m.of ? Object.assign({ name: m.of.name, dur: m.of.dur, run: turned }, m) : m));
   d.kit = k;
   if (!k.shots) d.atk = d.atk.filter(a => !a.shot);   // what it throws from range is its technique now
@@ -157,14 +159,14 @@ H.foeIdle = (o, p, dt) => {
 H.foeAct = (o, p, dt) => {
   const A = o.act, m = A.a;
   if (!m.run) return act0(o, p, dt);
-  const w = m.wind || .5, d = o.ai.d;
+  const w = m.wind || .5, d = o.ai.d, hot = !!(d.kit && (d.kit.fire || (m.of && m.of.fire)));
   A.t += dt; o.rate = 30; o.vx *= Math.exp(-dt * 10); o.tele = 0;
   if (A.t < w) {                                  // the warning: it squares up to him and holds the pose
     o.face = p.x >= o.x ? 1 : -1; o.target = typeof m.pre === 'string' ? POSE[m.pre] : m.pre || POSE.hookWind;
-    if (m.charge) m.charge(o, p, A, A.t / w);
+    if (m.charge) Fi.burning(hot, () => m.charge(o, p, A, A.t / w));
     return;
   }
-  m.run(o, p, A, A.t - w, dt);
+  Fi.burning(hot, () => m.run(o, p, A, A.t - w, dt));
   if (o.act === A && o.state === 'act' && A.t - w >= m.dur) {
     const ev = d.kit.every || EVERY;
     o.state = 'idle'; o.act = null; o.ai.kt = m === BACK ? 0 : rnd(ev[0], ev[1]); o.ai.t = rnd(d.gap[0], d.gap[1]);
@@ -205,8 +207,7 @@ H.tick = dt => {
     const h = haz[i];
     h.t += dt;
     const out = h.t >= h.life;
-    if (out && h.end) h.end(h);
-    if (out || (h.upd && h.upd(h, dt) === false)) { h.gone = 1; haz.splice(i, 1); }
+    if (Fi.burning(h.heat, () => { if (out && h.end) h.end(h); return out || (h.upd && h.upd(h, dt) === false); })) { h.gone = 1; haz.splice(i, 1); }
   }
   sync();
 };

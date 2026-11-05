@@ -8,7 +8,7 @@ const st = { host: null };                       // host: a body that is not his
 let equipped = null, active = null, rolling = false, asking = false, back = 0;
 try { equipped = localStorage.getItem('ju.clan'); } catch (e) {}
 
-// hp / ce / dmg / crit / m1s / tool are fractions: .1 = +10%. "Cursed energy" scales technique damage.
+// hp / ce / dmg / crit / m1s / tool / fixed are fractions: .1 = +10%. "Cursed energy" scales technique damage; fixed, the exact-number hits.
 const add = (id, def) => { def.id = id; CLAN[id] = def; ORDER.push(id); };
 add('kugisaki', { name: 'Straw Doll', jp: '藁', odds: 40, col: '#ff9a4d', hp: -.1, ce: .1, lines: ['+10% cursed energy', '-10% health'] });
 add('fushiguro', { name: 'Shadow', jp: '影', odds: 40, col: '#8f9bff', hp: -.05, ce: .03, dmg: .05, lines: ['+3% cursed energy', '+5% damage', '-5% health'] });
@@ -27,7 +27,8 @@ const shrine = () => !!active && active.id === 'sukuna' && JU.tech.equipped === 
 
 /* ---------- what a clan does to the numbers ---------- */
 H.power = (h, o) => {                            // multiplier on every hit the player lands
-  if (!active || h.fixed) return 1;
+  if (!active) return 1;
+  if (h.fixed) return 1 + (active.fixed || 0);   // an exact number stays exact, unless the clan's bonus is on all of it (Mythical Warrior: kashimo.js)
   const m = E.P1.move, m1 = !!(m && m.def.m1), hs = st.host;
   let k = 1 + (active.dmg || 0);
   if (m1) k *= 1 + (active.tool || 0) + (shrine() ? .6 : 0) + (hs ? hs.m1 : 0);

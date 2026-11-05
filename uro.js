@@ -10,10 +10,13 @@
      Click again while they are still falling and the General is down after them and drives them into the floor: 30.
    2 SKY DISTORTION: the sky round them warps (the picture of it, pulled about), and throws them up: 50.
    3 FALLING SKY (ours): a sheet of the sky pulled down onto them: 40, and pinned under it for a moment.
-   4 Coming soon (the user gave three).
+   4 SKY TURNOVER (ours, Build 0.26: the user asked for "uro's 4th move" and left it to us): she takes the sky by its edge and turns it over like a
+     sheet. The picture goes upside down, they fall up into it (25) and are held up there, and when the sky is turned back they come down out of it (45).
    E SKY MIRROR (ours; the Sendai fight has the sky turned against a blast): a pane of sky in front for 0.8 s, and whatever hits it goes back: 40.
    VARIANTS (ours, two for now): DISTORTION SPIKE (2 in the air: the sky over them folds down and spikes them into the floor, 45) and SKY WALL CRASH
-   (carry them into the new border during Direct Flight: 25, and they drop). The look is the Sendai boss's (cast6.js, URO) */
+   (carry them into the new border during Direct Flight: 25, and they drop). Build 0.26 (the user: "2 more variants"): SHATTERED SKY (3 in the air:
+   the sky over them breaks and comes down in five pieces, 9 each) and CAPSIZED (4 while they are pinned under Falling Sky: the pane goes over with
+   them, 30 and then 50). The look is the Sendai boss's (cast6.js, URO) */
 (() => {
 'use strict';
 
@@ -260,7 +263,8 @@ const SPIKE = { name: 'Sky Distortion', dur: .9, glow: 'purple', run(p, m, t) {
 } };
 
 /* ================= 3 — FALLING SKY (ours): a sheet of the sky, pulled down onto them ================= */
-const panes = [];                                   // { x, y, vy, t, hit, w, h, down }
+const panes = [];                                   // { x, y, vy, t, hit, w, h, down, wait (before it shows), dmg, small (a piece: no pin), track + off (who it keeps over, and how far to the side) }
+let pinned = null;                                  // { o, until }: under a pane just now (4 then is CAPSIZED)
 const FALLSKY = { name: 'Falling Sky', cd: 11, dur: 1.1, glow: 'purple', run(p, m, t) {
   const o = E.P2;
   p.vx = 0; p.rate = 30; p.target = t < .32 ? RAISE : t < .8 ? PULL : POSE.idle;
@@ -276,24 +280,34 @@ function paneTick(dt) {
   for (let i = panes.length - 1; i >= 0; i--) {
     const s = panes[i];
     s.t += dt;
+    const t = s.t - (s.wait || 0);
+    if (t < 0) continue;
     if (s.down) { if (s.t > s.down + .45) panes.splice(i, 1); continue; }
-    if (s.t < .38) { s.y = lerp(640, 420, ease(s.t / .38)); continue; }      // (lowered into sight, then the General pulls)
-    s.vy -= 6000 * dt; s.y += s.vy * dt;
-    if (!s.hit && live(o) && Math.abs(o.x - s.x) < s.w / 2 && s.y < o.y + 300 * (o.scale || 1) && !(o.inv > 0)) {
+    if (t < .38) { s.y = lerp(640, 420, ease(t / .38)); if (s.track && live(s.track)) s.x = lerp(s.x, s.track.x + s.off, 1 - Math.exp(-dt * 10)); continue; }      // (lowered into sight, then the General pulls. A piece keeps over them meanwhile)
+    s.vy -= (s.small ? 7000 : 6000) * dt; s.y += s.vy * dt;
+    if (!s.hit && live(o) && Math.abs(o.x - s.x) < s.w / 2 + (s.small ? 30 : 0) && s.y < o.y + 300 * (o.scale || 1) && !(o.inv > 0)) {
       s.hit = true;
-      E.applyHit(o, o.x >= E.P1.x ? 1 : -1, { dmg: 40, kb: 0, stun: 1.4, stop: .2, heavy: 1, col: SKY });
-      if (holdable(o) && !o.poise) Object.assign(o, o.ground !== false && o.y < 2 ? { state: 'down', stun: 1.4, vx: 0 } : { ground: false, state: 'air', vy: -2200, bounced: false });
-      big(E.P1, o, 'ズン');
+      if (s.small) {                                // a piece of it: it knocks them about, it does not hold them
+        E.applyHit(o, o.x >= s.x ? 1 : -1, { dmg: s.dmg, kb: 30, stun: .5, stop: .05, col: SKY });
+        if (holdable(o) && !o.poise && !o.ground) o.vy = Math.min(o.vy, -500);
+      } else {
+        E.applyHit(o, o.x >= E.P1.x ? 1 : -1, { dmg: s.dmg || 40, kb: 0, stun: 1.4, stop: .2, heavy: 1, col: SKY });
+        if (holdable(o) && !o.poise) Object.assign(o, o.ground !== false && o.y < 2 ? { state: 'down', stun: 1.4, vx: 0 } : { ground: false, state: 'air', vy: -2200, bounced: false });
+        pinned = { o, until: E.T + 1.8 };
+      }
+      big(E.P1, o, s.small ? 'ガッ' : 'ズン');
     }
     if (s.y <= 0) {
       s.y = 0; s.down = s.t;
-      sfx.skyCrack(); sfx.blast(); shake(30); shards(s.x, 60, 24, 1100); V.crack(s.x, 320); E.addRing(s.x, PRGB, 480); ripples(s.x, 20, 4, .5, 520);
-      if (Z) Z.dust(s.x, 10);
+      if (s.small) { sfx.skyCrack(); shake(12); shards(s.x, 40, 10, 800); E.addRing(s.x, PRGB, 220); }
+      else { sfx.skyCrack(); sfx.blast(); shake(30); shards(s.x, 60, 24, 1100); V.crack(s.x, 320); E.addRing(s.x, PRGB, 480); ripples(s.x, 20, 4, .5, 520); }
+      if (Z) Z.dust(s.x, s.small ? 4 : 10);
     }
   }
 }
 function drawPane(s) {                              // a sheet of night sky: deep at the top, paler down, stars in it, its edge alight
-  const a = s.down ? Math.max(0, 1 - (s.t - s.down) / .45) : Math.min(1, s.t / .2), T0 = E.T;
+  if (s.t < (s.wait || 0)) return;
+  const a = s.down ? Math.max(0, 1 - (s.t - s.down) / .45) : Math.min(1, (s.t - (s.wait || 0)) / .2), T0 = E.T;
   const x0 = s.x - s.w / 2, x1 = s.x + s.w / 2, y0 = s.y, y1 = s.y + s.h * (s.down ? Math.max(0, 1 - (s.t - s.down) * 3) : 1);
   const tl = F(x0, y1), tr = F(x1, y1), br = F(x1, y0), bl = F(x0, y0), k = bl[2];
   g.save(); g.globalAlpha = a;
@@ -308,6 +322,87 @@ function drawPane(s) {                              // a sheet of night sky: dee
   lit(() => { g.strokeStyle = `rgba(${PRGB},.9)`; g.lineWidth = 3 * k; g.stroke(); E.glow(E.GLOW.purple, (bl[0] + br[0]) / 2, bl[1], 420 * k, .5); });
   g.restore();
 }
+
+// 3 in the air — SHATTERED SKY: the sky over them breaks, and comes down on them in five pieces
+const SHATTER = { name: 'Falling Sky', dur: .9, glow: 'purple', run(p, m, t) {
+  const o = E.P2;
+  p.rate = 32; p.target = t < .25 ? RAISE : PULL;
+  if (t < .5) { p.vy = Math.max(p.vy, 30); p.vx *= .85; }
+  if (!m.s) { m.s = 1; facing(p, o); m.x = live(o) && Math.abs(o.x - p.x) < 1000 ? o.x : p.x + p.face * 420; sfx.skyWarp(); ono('砕天', m.x, 720, .8, 1); }
+  if (t >= .22 && !m.go) {
+    m.go = 1; seam(m.x, .5); sfx.skyCrack(); shake(10);
+    const tr = live(o) && Math.abs(o.x - p.x) < 1000 ? o : null;
+    for (let i = 0; i < 5; i++) { const off = (i - 2) * 45 + rnd(-8, 8); panes.push({ x: m.x + off, off, track: tr, y: 640, vy: 0, t: 0, wait: i * .09, hit: false, w: 150, h: 110, down: false, dmg: 9, small: true }); }
+    label(m.x, 780, 'SHATTERED SKY', PALE, 1.1);
+  }
+} };
+
+/* ================= 4 — SKY TURNOVER (ours, Build 0.26): the sky turned over like a sheet, with them in it =================
+   The picture goes upside down (drawn over in H.post: what is on the screen, flipped about a line across the middle), they fall up into the sky
+   (25), and are held there until it turns back, and then they come down out of it (45). Under a pane of Falling Sky: CAPSIZED, 30 and 50 */
+const TURN_UP = 25, TURN_DOWN = 45, CAP_UP = 30, CAP_DOWN = 50;
+let flip = null;                                    // { t, o (held up there), cap, down (on their way back), done, q (whoever it caught) }
+let fcv = null, fctx = null;
+function turnover(p, cap) {
+  const o = E.P2, q = live(o) && Math.abs(o.x - p.x) < 1100 && !(o.inv > 0) ? o : null;
+  flip = { t: 0, o: null, cap, down: null, q };
+  sfx.skyCrack(); sfx.skyWarp(); shake(22); if (Z) Z.flash(PRGB, .25, .25);
+  label(p.x, p.y + 560, cap ? 'CAPSIZED' : 'SKY TURNOVER', PALE, 1.3);
+  if (!q) return;
+  E.applyHit(q, q.x >= p.x ? 1 : -1, { dmg: cap ? CAP_UP : TURN_UP, kb: 0, lift: 1800, stun: 1.6, stop: .12, heavy: 1, col: SKY });
+  ripples(q.x, mid(q), 5, .7, 420); shards(q.x, mid(q), 12, 900); big(p, q, '返');
+  if (holdable(q) && !q.poise) flip.o = q;          // (one that is not ours to hold just takes the two hits)
+  if (cap) panes.push({ x: q.x, y: 640, vy: 0, t: -.75, hit: true, w: 520, h: 200, down: false });      // (and the pane they were under goes over with them, and comes down after: it does nothing more)
+}
+function flipTick(dt) {
+  const f = flip, p = E.P1, o = f.o;
+  f.t += dt;
+  if (o && !f.down) {
+    if (!live(o) || o !== E.P2) f.o = null;
+    else if (f.t < 1) Object.assign(o, { x: o.x + (clamp(o.x, -900, 900) - o.x) * .1, y: lerp(o.y, 320, 1 - Math.exp(-dt * 9)), vx: 0, vy: 0, ground: false, state: 'hurt', stun: .5, act: null, tele: 0 });      // up in the sky, which is underneath now
+    else { f.down = o; Object.assign(o, { state: 'air', vy: -3200, vx: 0, bounced: false }); sfx.whoosh(); }
+  }
+  if (!f.o && !f.down && !f.done && f.q && f.t >= 1) { f.done = 1; if (live(f.q)) slam(p, f.q, f.cap); }      // (not held: the second comes as the sky turns back)
+  if (f.down && !f.done && (f.down.y <= 1.5 || f.t > 2.2)) { f.done = 1; if (live(f.down)) slam(p, f.down, f.cap); }
+  if (f.t > 1.3 && (f.done || !f.q)) flip = null;
+}
+function slam(p, o, cap) {                          // down out of the sky, onto the floor it turned back into
+  E.applyHit(o, o.x >= p.x ? 1 : -1, { dmg: cap ? CAP_DOWN : TURN_DOWN, kb: 60, stun: 1.2, stop: .22, heavy: 1, col: SKY });
+  if (holdable(o) && !o.poise && o.state !== 'air') Object.assign(o, { state: 'down', stun: 1.2, vx: 0 });
+  sfx.blast(); sfx.skyCrack(); shake(36); E.zoomIn(.3);
+  V.crack(o.x, 380); V.rocks(o.x, 0, 14); E.addRing(o.x, PRGB, 520); E.addBlast(o.x, 60, SRGB, 420); shards(o.x, 60, 22, 1100); ripples(o.x, 20, 5, .6, 560);
+  if (Z) { Z.shock(o.x, 760, SRGB, .45, 12); Z.dust(o.x, 12); }
+  ono('ドォン', o.x, o.y + 380, 1); big(p, o, '天', 'neg');
+}
+const flipY = t => (t < .35 ? Math.cos(Math.PI * t / .35) : t < .95 ? -1 : t < 1.25 ? -Math.cos(Math.PI * (t - .95) / .3) : 1);
+function drawFlip() {                               // the whole picture, turned over about a line across its middle
+  const sy = flipY(flip.t);
+  if (sy >= .999 || JU.reduceMotion) return;
+  const cv = g.canvas;
+  if (!fcv) { fcv = document.createElement('canvas'); fctx = fcv.getContext('2d'); }
+  if (fcv.width !== cv.width || fcv.height !== cv.height) { fcv.width = cv.width; fcv.height = cv.height; }
+  fctx.globalCompositeOperation = 'copy'; fctx.drawImage(cv, 0, 0);
+  const cy = cv.height * .52;
+  g.save(); g.setTransform(1, 0, 0, 1, 0, 0);
+  g.fillStyle = DEEP; g.fillRect(0, 0, cv.width, cv.height);
+  g.translate(0, cy); g.scale(1, Math.abs(sy) < .001 ? .001 : sy); g.drawImage(fcv, 0, -cy);
+  g.setTransform(1, 0, 0, 1, 0, 0);
+  if (Math.abs(sy) < .5) {                          // its edge, going over
+    const a = 1 - Math.abs(sy) * 2;
+    g.globalCompositeOperation = 'lighter'; g.fillStyle = `rgba(${PRGB},${.8 * a})`; g.fillRect(0, cy - 3, cv.width, 6);
+    g.fillStyle = `rgba(${SRGB},${.35 * a})`; g.fillRect(0, cy - 24, cv.width, 48); g.globalCompositeOperation = 'source-over';
+  }
+  g.restore();
+}
+const TURNOVER = { name: 'Sky Turnover', cd: 16, dur: 1.5, glow: 'purple', run(p, m, t) {
+  const o = E.P2;
+  p.vx = 0; p.rate = 30; p.target = t < .3 ? RAISE : t < 1.2 ? PULL : POSE.idle;
+  if (!m.s) {
+    m.s = 1; facing(p, o); m.cap = !!(pinned && E.T < pinned.until && pinned.o === o && live(o)); pinned = null;
+    sfx.skyWarp(); ono('天返し', p.x + p.face * 60, p.y + 520, .8, 1); seam(p.x + p.face * 200, .4);
+  }
+  if (t >= .3 && !m.go) { m.go = 1; turnover(p, m.cap); }
+} };
 
 /* ================= E — SKY MIRROR (ours) ================= */
 let mirror = null;                                  // { t }
@@ -325,11 +420,10 @@ function drawMirror() {
 }
 
 /* ================= the moves ================= */
-const COMING = { name: 'Coming soon', cd: 0, dur: .01, run(p) { E.endMove(p); } };
-const MOVES = { strikes: FLIGHT, crush: DISTORT, div: FALLSKY, manji: COMING };
+const MOVES = { strikes: FLIGHT, crush: DISTORT, div: FALLSKY, manji: TURNOVER };
 JU.tech.add('uro', { name: 'General of the Sky', jp: '天空操術', mark: '空', who: 'Sky Manipulation', odds: 2.5, col: SKY, glow: 'purple', moves: MOVES,
   limited: ENDS, skin: JU.cast6.URO, as: ['General of the Sky', '空'],
-  hint: '<b>1</b> Direct Flight: <b>W A S D</b> to fly, click to let go · <b>2</b> Sky Distortion · <b>3</b> Falling Sky · <b>E</b> Sky Mirror' });
+  hint: '<b>1</b> Direct Flight: <b>W A S D</b> to fly, click to let go · <b>2</b> Sky Distortion · <b>3</b> Falling Sky · <b>4</b> Sky Turnover · <b>E</b> Sky Mirror' });
 const DEF = T.TECH.uro;
 
 /* ---------- wiring ---------- */
@@ -345,7 +439,7 @@ H.press = (a, inScene) => {
       const o = dive.o; dive = null; if (p.move) E.endMove(p);
       p.move = { def: SKYDIVE, t: 0, o }; return true;
     }
-    if (a === 'manji') return true;                 // (4 is still to come)
+    if (a === 'div' && !p.ground && free(p) && !(E.cd.div > 0)) { E.cd.div = E.CD.div; p.move = { def: SHATTER, key: 'div', t: 0 }; E.hud.mv.div.classList.add('act'); return true; }      // 3 in the air
     if (a === 'crush' && !p.ground && free(p) && !(E.cd.crush > 0)) { E.cd.crush = E.CD.crush; p.move = { def: SPIKE, key: 'crush', t: 0 }; E.hud.mv.crush.classList.add('act'); return true; }      // 2 in the air
   }
   return press0 ? press0(a, inScene) : false;
@@ -363,7 +457,7 @@ H.guard = (face, a, mul) => {                       // the mirror: what hits it 
 H.tick = dt => {
   tick0(dt);
   if (ext.w !== ext.to) ext.w = ext.to > ext.w ? Math.min(ext.to, ext.w + 1700 * dt) : Math.max(ext.to, ext.w - 3000 * dt);      // the walls going back
-  if (!on()) { if (carry || fall || dive || mirror || panes.length) clear(); return; }
+  if (!on()) { if (carry || fall || dive || mirror || panes.length || flip || pinned) clear(); return; }
   const p = E.P1;
   if (carry) {
     if (!(p.move && p.move.def === FLIGHT) || p.dead) release(p, 'let');
@@ -377,6 +471,8 @@ H.tick = dt => {
   if (dive && (E.T > dive.until || !live(dive.o) || dive.o.y <= 30)) dive = null;
   if (mirror && (mirror.t -= dt) <= 0) mirror = null;
   if (panes.length) paneTick(dt);
+  if (flip) flipTick(dt);
+  if (pinned && (E.T > pinned.until || !live(pinned.o))) pinned = null;
 };
 H.under = dt => { under0(dt); if (ext.w > 20) drawBorder(); };
 H.fx = dt => {
@@ -389,11 +485,12 @@ H.fx = dt => {
     lit(() => E.glow(E.GLOW.purple, c[0], c[1], 260 * c[2], .45));
   }
 };
-H.post = dt => { drawWarps(dt); if (post0) post0(dt); };
-const clear = () => { carry = fall = dive = mirror = null; panes.length = warps.length = 0; if (wind.s) { wind.s.stop(); wind.s = null; } };
+H.post = dt => { drawWarps(dt); if (flip && on()) drawFlip(); if (post0) post0(dt); };
+const clear = () => { carry = fall = dive = mirror = flip = pinned = null; panes.length = warps.length = 0; if (wind.s) { wind.s.stop(); wind.s = null; } };
 H.reset = () => { reset0(); clear(); ext.w = ext.to = 0; };
 H.fightStart = (cfg, wave) => { start0(cfg, wave); clear(); if (!wave) ext.w = ext.to = 0; };      // (a new fight: the arena as it was)
 
-JU.uro = { MOVES, FLIGHT, SKYDIVE, DISTORT, SPIKE, FALLSKY, ENDS, esp: MIRROR,      // (esp: E, especial.js)
-  get state() { return { ext: Math.round(ext.w), to: ext.to, carry: carry && { t: +carry.t.toFixed(2), y: Math.round(carry.o.y) }, fall: fall && { armed: fall.armed }, dive: !!dive, mirror: !!mirror, panes: panes.length, warps: warps.length }; } };
+JU.uro = { MOVES, FLIGHT, SKYDIVE, DISTORT, SPIKE, FALLSKY, SHATTER, TURNOVER, ENDS, esp: MIRROR,      // (esp: E, especial.js)
+  get state() { return { ext: Math.round(ext.w), to: ext.to, carry: carry && { t: +carry.t.toFixed(2), y: Math.round(carry.o.y) }, fall: fall && { armed: fall.armed }, dive: !!dive, mirror: !!mirror, panes: panes.length, warps: warps.length,
+    flip: flip && { t: +flip.t.toFixed(2), held: !!flip.o, cap: flip.cap, done: !!flip.done }, pinned: !!pinned }; } };
 })();

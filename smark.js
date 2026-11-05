@@ -51,7 +51,7 @@ const MOVES = {
     raise({ rise: .5, dur: 6, n: 25, per: 20, x: clamp(p.x - p.face * 260, -700, 700), sc: .72, open: false });
   } },
   // 3 — Fuga at five times the heat: an arrow of fire. What it lands on is thrown the length of the arena
-  div: { name: '500% Fuga', cd: 25, dur: 1.5, glow: 'fire', run(p, m, t) {
+  div: { name: '500% Fuga', cd: 25, dur: 1.5, glow: 'fire', fire: 1, run(p, m, t) {
     const hx = p.x + p.face * 110, hy = p.y + 200;
     p.vx = 0; p.rate = 24;
     if (t < .85) {

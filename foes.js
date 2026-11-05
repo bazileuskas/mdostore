@@ -91,11 +91,18 @@ function lose() {
   later(2800, () => { if (fight.cfg === cfg) start(cfg, 0); });   // straight back in
 }
 
+// fire: whatever reaches him while this is up is fire (the fire bosses' sets and Fuga put it up in boss.js, a burning domain in clash.js;
+// a hit can also say so itself, a.fire). A clan proof against it answers H.fireproof (Mythical Warrior, kashimo.js): it touches him and does nothing
+let heat = 0;
+function burning(on, fn) { if (!on) return fn(); heat++; try { return fn(); } finally { heat--; } }
+const proof = a => (heat > 0 || !!(a && a.fire)) && !!H.fireproof && H.fireproof(E.P1, a);
+
 // the player takes a hit. Dashing through it dodges.
 function hurt(face, a, mul = 1) {
   const p = E.P1;
   if (H.guard && H.guard(face, a, mul)) return false;
   if (p.dashT > 0 || p.inv > 0 || p.dead || p.ps === 'down' || p.ps === 'up' || fight.paused) return false;
+  if (proof(a)) return true;                        // it reached him, and it does not burn
   const firm = !!(H.noStun && H.noStun(p, a));      // it hurts, but it stops nothing: not his move, not him (a private server's No stun: ps.js)
   if (p.move && !firm) E.endMove(p);
   const raw = a.dmg * mul * (H.foePower ? H.foePower(a) : 1), dmg = a.exact ? raw : Math.round(raw);     // something may have weakened it, or put more behind its hits (exact: a duel's blows are counted to the fraction)
@@ -118,6 +125,7 @@ function hurt(face, a, mul = 1) {
 function chip(dmg, col, shown) {
   const p = E.P1;
   if (p.dead || fight.paused || !(dmg > 0)) return;
+  if (proof()) return;                              // (a burn, when he cannot be burned)
   p.hp = Math.max(fight.floor, p.hp - dmg); p.flash = .06;
   E.addNum(p.x, p.y + 270, +(shown || dmg).toFixed(1), col || '#ff5a6e');
   if (fight.low && !fight.lowDone && p.hp <= p.max * fight.low.at) { fight.lowDone = true; fight.low.fn(); }
@@ -240,5 +248,5 @@ H.reset = () => {
   nm.p2.textContent = 'Training Curse'; nm.p2j.textContent = '呪霊'; nm.p1.textContent = 'The Vessel'; nm.p1j.textContent = '器'; nm.vs.textContent = 'Training';
 };
 
-JU.fights = { start, hurt, chip, make, DEFS, fight, later, nm };
+JU.fights = { start, hurt, chip, make, DEFS, fight, later, nm, burning, hot: () => heat > 0 };
 })();

@@ -71,7 +71,7 @@ const SM = {
   } },
   // 3 — fire drawn out into an arrow and loosed. It is a tenth of a second crossing the arena, and where it lands there is a fire
   // standing on a floor cracked and glowing
-  div: { name: 'Fuga', cd: 9, dur: 1.15, glow: 'fire', run(p, m, t) {
+  div: { name: 'Fuga', cd: 9, dur: 1.15, glow: 'fire', fire: 1, run(p, m, t) {
     const f = p.face, y = p.y + 170;
     p.vx = 0; p.rate = 30;
     if (t < .6) {

@@ -1227,7 +1227,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
   </div>
 
   <div class="side" aria-hidden="true" lang="ja">領域展開</div>
-  <div class="hud tl"><b lang="ja">呪</b>Fan project · Build 0.25v1 · Rarities Restored</div>
+  <div class="hud tl"><b lang="ja">呪</b>Fan project · Build 0.26 · Lightning Beast</div>
   <div class="hud bl">↑ ↓ Select &nbsp;·&nbsp; Enter Confirm</div>
   <div class="hud br">Title screen</div>
   <div class="acct" id="acct">
@@ -1459,7 +1459,11 @@ const sfx = (() => {
     'home-lr-stab': [MI + 'katana-3-stab.mp3', 1.5, 2],                                            // "Katana 3 Stab"
     'home-lr-parry': [MI + 'katana-2-deflect.mp3', .06, .9],                                       // "Katana 2 Deflect"
     'home-lr-draw': [MI + 'katana-sound-gmod-source.mp3', .04, .7],                                // "Katana Draw Effect"
-    'home-lr-slash': [MI + 'slash-sword.mp3', .08, .7] };                                          // "slash sword."
+    'home-lr-slash': [MI + 'slash-sword.mp3', .08, .7],                                            // "slash sword."
+    // Build 0.26: the Lightning Beast's (beast.js). Its strikes are the first crackle of this one, each of the seven played lower than the last
+    'home-lb-m1': [MI + 'kashimo-black-flash.mp3', .05, .34],                                      // "kashimo black flash"
+    'home-lb-crack': [MI + 'thunder-crack.mp3', .15, 1.8],                                         // "Thunder Crack"
+    'home-lb-shock': [MI + 'electric-shock.mp3', 0, 1.15] };                                       // "Electric Shock"
   // the built loops (tune): Overtime's four bars in D minor, and Fight Alongside's in E minor (Build 0.23). bass: [sixteenth, above the root,
   // how long]; lead: [sixteenth of the whole loop, note, how long]
   const TUNES = {
@@ -1483,16 +1487,17 @@ const sfx = (() => {
     } catch (e) {}
     return c;
   };
-  const clip = (name, vol = .85) => {
+  const clip = (name, vol = .85, rate = 1) => {      // (rate: slower and lower, or quicker and higher. The Lightning Beast's strikes go down one at a time)
     const c = load(name);
     if (!c.ok || !on) return false;
     try {
       const n = c.el.cloneNode(); n.volume = Math.min(1, vol);
+      if (rate !== 1) { n.preservesPitch = n.mozPreservesPitch = n.webkitPreservesPitch = false; n.playbackRate = rate; }
       if (c.at) n.currentTime = c.at;
       if (c.end) {                                  // (where the copy at home's ends: timeupdate comes only four times a second, so a short one is watched closer)
         n.addEventListener('timeupdate', () => { if (n.currentTime >= c.end) n.pause(); });
         const stop = () => { if (n.paused) return; if (n.currentTime >= c.end - .02) n.pause(); else setTimeout(stop, Math.max(10, (c.end - n.currentTime) * 1000)); };
-        setTimeout(stop, (c.end - (c.at || 0)) * 1000);
+        setTimeout(stop, (c.end - (c.at || 0)) * 1000 / rate);
       }
       const pl = n.play(); if (pl && pl.catch) pl.catch(() => {});
     } catch (e) {}
@@ -1757,6 +1762,18 @@ const sfx = (() => {
       voice({ type: 'noise', dur: secs, vol: .07, attack: .4, filt: ['highpass', 2500, 1800], out: bus });
       return { stop() { const t = a.currentTime; bus.gain.cancelScheduledValues(t); bus.gain.setValueAtTime(bus.gain.value, t); bus.gain.linearRampToValueAtTime(0, t + .3); setTimeout(() => bus.disconnect(), 600); } };
     },
+    // Build 0.26, the Lightning Beast (beast.js), wherever its clips cannot be had: a strike's crackle (r: lower for each of the seven)
+    zap(r = 1) {
+      voice({ type: 'noise', dur: .16, vol: .34, filt: ['bandpass', 3800 * r, 1200 * r], q: 1.4 });
+      voice({ f: [200 * r, 60 * r], dur: .15, vol: .16, type: 'square', filt: ['lowpass', 1400 * r] });
+      for (let i = 0; i < 4; i++) voice({ type: 'noise', at: Math.random() * .12, dur: .012, vol: .18, filt: ['highpass', 4500 * r] });
+    },
+    // a bolt through somebody: the crack, and the thunder after it
+    thunder() {
+      voice({ type: 'noise', dur: .06, vol: .6, filt: ['highpass', 3000] });
+      voice({ type: 'noise', dur: 1.2, vol: .4, attack: .01, filt: ['lowpass', 900, 120], wet: .5 });
+      voice({ f: [90, 30], dur: .8, vol: .5, wet: .4 });
+    },
     // a drop of it landing on somebody: small and wet
     drop() { voice({ type: 'noise', dur: .035, vol: .1, filt: ['lowpass', 2200, 500] }); voice({ f: [300, 120], dur: .04, vol: .05 }); },
     // Wing King: the wings opening, one great beat of them
@@ -1792,7 +1809,7 @@ const sfx = (() => {
       voice({ f: [80, 30], dur: .9, vol: .5, wet: .5 });
     },
     // a sound file of the player's own, by name: false when there is none (vengeful.js plays the Final Chapter's whole track this way)
-    file(name, vol) { return clip(name, vol); },
+    file(name, vol, rate) { return clip(name, vol, rate); },
     // the Final Chapter, built (when the clip its track was cut from is not here): 0 the counter's clang, 1 the ink thrown off him, 2 the page
     // turning grey, 3 the glint in his eye, 4 the last blow
     ult(i) {
@@ -2547,7 +2564,7 @@ window.JU = { sfx, flash, bolts: blackFlash, reduceMotion, startGame, exitGame, 
 // Load every game script fresh on each page load. The dev server sends no cache headers, so without this a reload
 // could run a mix of old and new files (new menu, old moves) while the game is being worked on.
 ['account.js', 'announce.js', 'game.js', 'fx2.js', 'chars.js', 'street.js', 'walk.js', 'foes.js', 'cuts.js', 'sukuna.js', 'school.js', 'story.js', 'story2.js', 'tech.js', 'tech_a.js',
-  'tech_b.js', 'sets.js', 'story3.js', 'cast2.js', 'script.js', 'naoya.js', 'ch45.js', 'ch67.js', 'clan.js', 'clan_a.js', 'clan_b.js', 'boss.js', 'bossfx.js', 'boss_a.js', 'boss_b.js', 'boss_c.js', 'training.js', 'choso.js', 'domain.js', 'domain2.js', 'mahito.js', 'combo.js', 'combat.js', 'cast3.js', 'ch810.js', 'ch1112.js', 'cast4.js', 'ch1316.js', 'cast5.js', 'ch1721.js', 'combat2.js', 'judge.js', 'awaken.js', 'alimit.js', 'ats.js', 'switcher.js', 'tools.js', 'smark.js', 'cast6.js', 'ch2230.js', 'plants.js', 'clash.js', 'block.js', 'cannon.js', 'tced.js', 'shibuya.js', 'kyoto.js', 'evasive.js', 'kokusen.js', 'mp.js', 'pvp.js', 'vengeful.js', 'manga.js', 'haruta.js', 'ratio.js', 'reaper.js', 'inumaki.js', 'kirara.js', 'soul.js', 'slit.js', 'gambler.js', 'uro.js', 'especial.js', 'yen.js', 'subtech.js', 'metro.js', 'jjh.js', 'shinjuku.js', 'notes.js', 'shop.js', 'ps.js', 'raid.js', 'touch.js', 'idg.js', 'modeset.js', 'dced.js', 'tdced.js', 'tdced2.js', 'lovereap.js', 'brother.js', 'climax.js'].forEach(src => {
+  'tech_b.js', 'sets.js', 'story3.js', 'cast2.js', 'script.js', 'naoya.js', 'ch45.js', 'ch67.js', 'clan.js', 'clan_a.js', 'clan_b.js', 'boss.js', 'bossfx.js', 'boss_a.js', 'boss_b.js', 'boss_c.js', 'training.js', 'choso.js', 'domain.js', 'domain2.js', 'mahito.js', 'combo.js', 'combat.js', 'cast3.js', 'ch810.js', 'ch1112.js', 'cast4.js', 'ch1316.js', 'cast5.js', 'ch1721.js', 'combat2.js', 'judge.js', 'awaken.js', 'alimit.js', 'ats.js', 'switcher.js', 'tools.js', 'kashimo.js', 'smark.js', 'cast6.js', 'ch2230.js', 'plants.js', 'clash.js', 'block.js', 'cannon.js', 'tced.js', 'shibuya.js', 'kyoto.js', 'evasive.js', 'kokusen.js', 'mp.js', 'pvp.js', 'vengeful.js', 'manga.js', 'haruta.js', 'ratio.js', 'reaper.js', 'inumaki.js', 'kirara.js', 'soul.js', 'slit.js', 'gambler.js', 'uro.js', 'beast.js', 'especial.js', 'yen.js', 'subtech.js', 'metro.js', 'jjh.js', 'shinjuku.js', 'notes.js', 'shop.js', 'ps.js', 'raid.js', 'touch.js', 'idg.js', 'modeset.js', 'dced.js', 'tdced.js', 'tdced2.js', 'lovereap.js', 'brother.js', 'climax.js'].forEach(src => {
   const s = document.createElement('script');
   s.src = src + '?v=' + Date.now(); s.async = false;      // async = false keeps them running in this order
   document.body.appendChild(s);
