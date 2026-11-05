@@ -446,6 +446,14 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 .lbm.max b{color:#d9b8ff}
 .lbm.beast b,.lbm.cd b{color:#ffb060}
 .lbm.last b{color:#ff5a6e;animation:lbmBlink .5s steps(2) infinite}
+/* the Lightning Beast's combos (Build 0.29v1, beast.js): two keys together; ??? until found */
+.lbc{display:none;flex-wrap:wrap;gap:.18em .7em;margin-top:.22em;padding-left:.3em;font:600 .34em/1.25 var(--f-ui);letter-spacing:.12em;color:#9fe8ff;max-width:42em}
+.lbc.on{display:flex}
+.lbc i{font-style:normal;white-space:nowrap}
+.lbc kbd{font:inherit;color:#fff;background:rgba(159,232,255,.16);border:1px solid rgba(159,232,255,.45);padding:0 .32em;margin-right:.4em;border-radius:.2em}
+.lbc i.q span{opacity:.6;letter-spacing:.3em}
+.lbc.max{color:#d9b8ff}.lbc.max kbd{background:rgba(197,140,255,.16);border-color:rgba(197,140,255,.5)}
+.lbc.beast{color:#ffb060}.lbc.beast kbd{background:rgba(255,160,64,.16);border-color:rgba(255,160,64,.5)}
 /* Build 0.22v1: True Direct Cursed Energy Discharge's four modes, on his health bar (tdced.js) */
 .tdm,.lrm,.bbm{display:none;gap:.3em;margin-top:.15em;padding-left:.3em;font:600 clamp(8px,min(.75vw,1.35vh),14px)/1 var(--f-ui);letter-spacing:.1em}
 .game.tdmon[data-mode="fight"] .tdm,.game.lrmon[data-mode="fight"] .lrm,.game.bbmon[data-mode="fight"] .bbm{display:flex}
@@ -1260,7 +1268,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
   </div>
 
   <div class="side" aria-hidden="true" lang="ja">領域展開</div>
-  <div class="hud tl"><b lang="ja">呪</b>Fan project · Build 0.29 · King of Jujutsu</div>
+  <div class="hud tl"><b lang="ja">呪</b>Fan project · Build 0.29v1 · Lightning Combos</div>
   <div class="hud bl">↑ ↓ Select &nbsp;·&nbsp; Enter Confirm</div>
   <div class="hud br">Title screen</div>
   <div class="acct" id="acct">

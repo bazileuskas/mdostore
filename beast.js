@@ -37,6 +37,10 @@
      round him, 15), BEAST: ELECTRIC REVERSAL (an explosion all round him that throws them up, him up after them and down with them, 30 and 70),
      THUNDER GOD'S WRATH: MAX (a wider stomp, a heavier fist and kick, three bolts after them, 80) and THUNDER GOD'S WRATH: BEAST MODE (a stomp
      the whole floor feels, six fists, the kick, and a bolt the size of a tower, 144).
+   Build 0.29v1, the user's: "add variants for Kashimo like 1+2 to get ??? and more of those. add 4 for each mode for now and make at least 2
+     overall start with a counter". COMBOS, two keys pressed together (within 0.09 s: a lone press waits that long first): 1+2 THUNDER LANCE,
+     2+3 a COUNTER (Ground Current / Reversal Cage / Thunder Trap), 3+4 THUNDERFALL, 1+4 RAILGUN, each its own in blue, MAX and Beast Mode.
+     Both keys must be ready and both go on their cooldowns; ??? under the meter until found (localStorage ju.lbcombo).
    The look is the Thunder God's (cast6.js, KASHIMO), the staff in his hand and not on his back */
 (() => {
 'use strict';
@@ -728,10 +732,10 @@ const B_OUTPUT = { name: 'Lightning Output: BEAST MODE', cd: 20, dur: 6, glow: '
 const STANCE_T = 1;
 // a counter stance: hit in it, and its counter (v.counter) goes instead. MAX's spends the meter, and lets its charge go if nothing comes at him
 function stanceOf(v) {
-  return { name: v.name, cd: 18, dur: v.T + .1, stance: 1, v, get glow() { return (v.pal ? PAL[v.pal] : pal()).glow; }, staff: .12, run(p, m, t) {
+  return { name: v.name, cd: 18, dur: v.T + .1, stance: 1, v, get glow() { return (v.pal ? PAL[v.pal] : pal()).glow; }, staff: v.staff === undefined ? .12 : v.staff, run(p, m, t) {
     if (!m.P) { m.P = v.pal ? PAL[v.pal] : pal(); if (v.spend) spend(); }
     const P = m.P;
-    p.vx = 0; p.rate = 30; p.target = GUARD;
+    p.vx = 0; p.rate = 30; p.target = v.pose || GUARD;
     if (!m.s) { m.s = 1; sfx.zap(.8); label(p.x, p.y + 440, v.label, P.col, .9); }
     st.charge = 1;
     if (Math.random() < (v.pal ? .8 : .5)) zapAt(p.x + rnd(-60, 60), p.y + rnd(60, 280), 1, 130, 2, P.rgb);
@@ -1025,6 +1029,351 @@ function finTick(dt) {
   fin = null;
 }
 
+/* ================= Build 0.29v1: COMBOS. Two of the four pressed together, and a move of their own ================= */
+// The user: "add variants for Kashimo like 1+2 to get ??? and more of those. add 4 for each mode for now and make at least 2 overall start
+// with a counter". 1+2, 2+3, 3+4 and 1+4, in each mode: blue, MAX (purple; it spends the meter, as the MAX moves do) and Beast Mode (orange,
+// the Last Stand's too). 2+3 starts with a counter in all three. A combo needs both its keys ready and puts both on their cooldowns. Under
+// the meter each shows ??? until it has been found once (localStorage ju.lbcombo)
+const LOW = [-.1, .06, .95, .75, .78, -.68, 0], RAIL = [.1, 0, 1.5, 1.42, .72, -.6, 0];
+const LANCE_V = 3000;
+const comboPal = v => (v.pal ? PAL[v.pal] : pal());
+function opening(p, m, v) {                         // the first frame of one: its colour fixed, the meter spent if it is a MAX one, its name called
+  if (m.P) return false;
+  m.P = comboPal(v); if (v.spend) spend();
+  facing(p, E.P2); m.f = p.face; sfx.zap(.85); label(p.x, p.y + 480, v.label, m.P.col, 1.1);
+  return true;
+}
+// 1+2 THUNDER LANCE: the staff thrown the length of the arena, through them and on with them to the wall; then he is there along a line of
+// lightning and rips it out of them. MAX: lightning run down the shaft into them first. Beast Mode: a lance the size of a pillar, and the wall goes up
+function lanceOf(v) {
+  const def = { name: v.name, combo: 1, lance: 1, dur: 3.2, v, get glow() { return comboPal(v).glow; },
+    get staff() { const m = E.P1.move; return m && m.def === def && m.t < .3 ? 2.8 : .3; },
+    run(p, m, t) {
+      const o = E.P2;
+      opening(p, m, v);
+      const P = m.P, f = m.f, eb = bound();
+      p.vx = 0; p.rate = 40;
+      if (t < .3) {                                   // drawn back over his shoulder, the lightning running up it
+        p.target = PUNCH_W;
+        if (Math.random() < .7) { const q = tipOf(p); zapAt(q[0], q[1], 1, 150, 2, P.rgb); }
+        return;
+      }
+      if (m.x0 === undefined) {                       // and thrown
+        m.x0 = p.x + f * 80; m.y = p.y + 190;
+        sfx.whoosh(); play('home-lb-shock', .6, () => sfx.zap(1)); shake(10);
+        if (Z) Z.flare(m.x0, m.y, P.rgb, 320, .16);
+      }
+      const end = m.end !== undefined ? m.end : f > 0 ? eb - 30 : -eb + 30, u = Math.min(1, (t - .3) * LANCE_V / Math.max(1, Math.abs(end - m.x0)));
+      m.sx = lerp(m.x0, end, u);
+      if (m.blink === undefined) st.flying = { x: m.sx, y: m.y, f, s: v.s || 1, P };
+      p.target = t < .55 ? PUNCH_P : POSE.idle;
+      if (!m.pin && live(o) && !(o.inv > 0) && o.state !== 'down' && o.state !== 'up' && (o.x - m.sx) * f < 50 && (o.x - m.x0) * f > -60 && Math.abs(mid(o) - m.y) < 230) {
+        m.pin = 1; m.carry = holdable(o) && !o.poise;   // through them (and if they cannot be carried, it stops in them where they stand)
+        if (!m.carry) m.end = m.sx;
+        E.applyHit(o, f, { dmg: v.pierce, kb: 0, stun: 2.6, stop: .1, heavy: 1, col: P.col, mute: 1, brk: 1 });
+        sfx.hit(true); V.sparks(o.x, mid(o), P.spark, 12); zapAt(o.x, mid(o), 4, 220, 3, P.rgb); big(p, o, 'ズドッ', P.col);
+      }
+      if (m.pin && m.carry && live(o) && m.blink === undefined) Object.assign(o, { x: clamp(m.sx + f * 20, -eb, eb), vx: 0, vy: 0, state: o.ground ? 'hurt' : 'air', stun: 1.5, act: null, tele: 0, face: -f });      // carried on it
+      if (u < 1) return;
+      if (m.wall === undefined) {                     // into the wall at the end of the arena
+        m.wall = t; m.nb = 0; shake(26); sfx.blast(); V.rocks(m.sx, m.y, 12); V.sparks(m.sx, m.y, P.spark, 16); zapAt(m.sx, m.y, 7, 300, 4, P.rgb);
+        if (Z) { Z.flash(P.rgb, .22, .15); Z.shock(m.sx, 300, P.rgb, .35, 10); }
+        if (v.wall && m.pin && live(o)) {              // (Beast Mode: and the wall goes up, with them on it)
+          m.carry = false;
+          E.applyHit(o, -f, { dmg: v.wall, kb: 520, lift: 720, stun: 1.2, stop: .2, heavy: 1, col: P.col, mute: 1 });
+          play('home-lb-crack', 1, () => sfx.thunder(), .85); E.zoomIn(.4); E.addBlast(m.sx, m.y, P.rgb, 560); ono('ドガァン', m.sx, m.y + 260, P.col, 1.2);
+          if (Z) { Z.boom(m.sx, m.y, 240, P.rgb, { n: 30, hot: WHITE }); Z.pillar(m.sx, 140, 1200, P.rgb, .6); }
+        }
+      }
+      const k = t - m.wall;
+      if (v.bolts && m.pin) {                          // MAX: lightning run down the shaft into them, one after another
+        const n = Math.min(v.bolts[0], Math.floor(k / .09) + 1), w = E.hand(p, true);
+        while (m.nb < n) {
+          m.nb++;
+          if (live(o)) { E.applyHit(o, f, { dmg: v.bolts[1], kb: 0, stun: 1.2, stop: .03, col: P.col, mute: 1 }); V.sparks(o.x, mid(o), P.spark, 5); }
+          if (Z) Z.lightning(w[0], w[1], m.sx, m.y + rnd(-40, 40), P.rgb, .14, 5, 2);
+          sky(m.sx, m.y, P.rgb, 5); sfx.zap(1 - m.nb * .04);
+        }
+        if (k < v.bolts[0] * .09 + .1) { p.target = PALM; return; }
+      }
+      if (m.blink === undefined) {                    // and he is there, along a line of lightning, with his hand on it
+        m.blink = t;
+        const x0 = p.x, y0 = p.y;
+        p.x = clamp(m.sx - f * 100, -eb, eb); p.y = 0; p.face = f; st.flying = null;
+        if (Z) { Z.lightning(x0, y0 + 170, p.x, 170, P.rgb, .22, 6, 2); zapAt(x0, y0 + 170, 4, 200, 3, P.rgb); }
+        sfx.zap(1.1); sfx.whoosh();
+      }
+      const b = t - m.blink;
+      if (b < .14) { p.target = GRAB; return; }
+      if (!m.rip) {                                   // and rips it out of them, back the way it came
+        m.rip = 1;
+        if (v.rip && m.pin && live(o) && Math.abs(o.x - m.sx) < 280) { E.applyHit(o, -f, { dmg: v.rip, kb: 760, lift: 620, stun: 1, stop: .16, heavy: 1, col: P.col, mute: 1 }); big(p, o, 'バチィッ', P.col); }
+        play('home-lb-crack', .8, () => sfx.thunder()); shake(24); zapAt(m.sx, m.y, 8, 320, 4, P.rgb);
+        if (Z) { Z.flash(WHITE, .25, .14); if (v.bolts) Z.pillar(m.sx, 90, 1000, P.rgb, .45); }
+      }
+      p.target = b < .5 ? UPPER : POSE.idle;
+      if (b > .8) E.endMove(p);
+    } };
+  return def;
+}
+// 3+4 THUNDERFALL: up with the staff over his head and down on them with it; the sky after it (v.bolts: [how many, each, between]); in Beast
+// Mode a leap that follows them, and the whole floor round where it lands (v.ring)
+function fallOf(v) {
+  return { name: v.name, combo: 1, dur: 3.4, v, get glow() { return comboPal(v).glow; }, staff: 2.75, run(p, m, t) {
+    const o = E.P2;
+    opening(p, m, v);
+    const P = m.P, f = m.f, eb = bound(), H = v.H || 260;
+    p.rate = 40;
+    if (t < .2) { p.vx = 0; p.target = POSE.crushWind; if (Math.random() < .7) zapAt(p.x, 30, 1, 160, 2, P.rgb); return; }
+    if (m.x0 === undefined) {
+      m.x0 = p.x; m.tx = clamp(live(o) ? o.x - f * 50 : p.x + f * 380, -eb, eb);
+      sfx.whoosh(); V.rocks(p.x, 0, 6); shake(10); if (Z) Z.dust(p.x, 8);
+    }
+    if (t < .6) {                                     // up, and over to them
+      const u = (t - .2) / .4;
+      if (v.track && live(o)) m.tx = clamp(lerp(m.tx, o.x - f * 50, .12), -eb, eb);
+      p.x = lerp(m.x0, m.tx, u); p.y = H * Math.sin(u * Math.PI / 2); p.vy = 0; p.vx = 0; p.ground = false;
+      p.target = UPPER;
+      if (Math.random() < .8) zapAt(p.x, p.y + 220, 1, 170, 2, P.rgb);
+      return;
+    }
+    if (t < .72) {                                    // and down with it
+      const u = (t - .6) / .12;
+      p.x = m.tx; p.y = H * (1 - u * u); p.vy = 0; p.vx = 0; p.target = POSE.crush;
+      if (Z && Math.random() < .9) Z.lightning(p.x, p.y + 300, p.x + rnd(-30, 30), p.y + 760, P.rgb, .08, 3, 0);
+      return;
+    }
+    if (m.slam === undefined) {
+      m.slam = t; p.y = 0; p.vy = 0; p.ground = true;
+      const x = m.lx = clamp(p.x + f * 70, -eb, eb);
+      dent(x, true, P); E.zoomIn(.35); play('home-lb-crack', .9, () => sfx.thunder(), v.pal === 'orange' ? .8 : 1);
+      if (Z) { Z.pillar(x, 90, 1000, P.rgb, .45); Z.flash(WHITE, .25, .16); Z.decal('crater', x, 220, P.rgb, 9, 0); }
+      if (live(o) && Math.abs(o.x - x) < v.r && o.y < 380 && !(o.inv > 0) && o.state !== 'down' && o.state !== 'up') {
+        E.applyHit(o, f, { dmg: v.slam, kb: 200, stun: 1.4, stop: .2, heavy: 1, col: P.col, mute: 1 });
+        if (live(o) && holdable(o) && !o.poise) Object.assign(o, { y: 0, vy: 0, ground: true, state: 'down', stun: 1.4, vx: 0 });
+        big(p, o, 'ドゴォン', P.col, 'neg');
+      }
+      if (v.ring) {                                   // (Beast Mode: and the floor round it goes up, all of it)
+        if (Z) { Z.shock(x, 1300, P.rgb, .6, 18); Z.flash(P.rgb, .3, .3); for (let i = 0; i < 16; i++) { const d = i % 2 ? 1 : -1; Z.lightning(x, 6, x + d * rnd(300, 900), rnd(0, 90), P.rgb, rnd(.2, .35), 4, 2); } }
+        E.addRing(x, P.rgb, 1100); V.crack(x, 520);
+        if (live(o) && Math.abs(o.x - x) < 720 && !(o.inv > 0)) E.applyHit(o, o.x >= x ? 1 : -1, { dmg: v.ring, kb: 700, lift: 620, stun: 1, stop: .14, heavy: 1, col: P.col, mute: 1 });
+      }
+    }
+    const k = t - m.slam;
+    if (v.bolts) {                                    // and the sky comes down after it
+      const n = Math.min(v.bolts[0], Math.floor(k / v.bolts[2]) + 1);
+      while ((m.nb || 0) < n) {
+        m.nb = (m.nb || 0) + 1;
+        const bx = live(o) && Math.abs(o.x - m.lx) < 520 ? o.x + rnd(-50, 50) : m.lx + rnd(-300, 300);
+        sky(bx, 0, P.rgb, 7); V.crack(bx, 120); if (Z) Z.shock(bx, 200, P.rgb, .3, 8);
+        if (m.nb % 2) play('home-lb-crack', .45, () => sfx.thunder(), 1.1 + rnd(0, .2)); else sfx.zap(.9);
+        if (live(o) && Math.abs(o.x - bx) < 160 && !(o.inv > 0)) { chip(o, v.bolts[1], P.col); V.sparks(o.x, mid(o), P.spark, 6); }
+      }
+    }
+    p.target = k < .3 ? POSE.crush : POSE.idle;
+    if (k > .45 + (v.bolts ? v.bolts[0] * v.bolts[2] : 0)) E.endMove(p);
+  } };
+}
+// 1+4 RAILGUN: the staff held level, the charge run up it, and let go out of the end: straight through them to the wall (v.ticks: [how many, each])
+function railOf(v) {
+  return { name: v.name, combo: 1, dur: v.T + v.hold + .55, v, get glow() { return comboPal(v).glow; }, staff: .02, run(p, m, t) {
+    const o = E.P2;
+    if (opening(p, m, v)) { sfx.charge(); sfx.rise(v.T); }
+    const P = m.P, f = m.f, eb = bound();
+    p.vx = 0; p.rate = 36; p.face = f; p.target = RAIL;
+    const tip = tipOf(p, .02), y = tip[1];
+    if (t < v.T) {                                    // the charge gathering at the end of it
+      const u = t / v.T;
+      st.charge = 1;
+      if (Z && Math.random() < .9) { const a = rnd(0, TAU), r = rnd(80, 220) * (1 - u * .6); Z.emit(1, tip[0] + Math.cos(a) * r, tip[1] + Math.sin(a) * r, -Math.cos(a) * r * 4, -Math.sin(a) * r * 4, rnd(2, 4), .2, P.rgb); }
+      if (Math.random() < .6) zapAt(tip[0], tip[1], 1, 120 + 140 * u, 2, P.rgb);
+      return;
+    }
+    const k = t - v.T, x1 = f > 0 ? eb + 200 : -eb - 200;
+    if (!m.fire) {
+      m.fire = 1; st.charge = 0;
+      play('home-lb-crack', 1, () => sfx.thunder(), v.pal === 'orange' ? .75 : .95); play('home-lb-shock', .8, () => sfx.zap(.8)); sfx.blast(); shake(v.w > 60 ? 40 : 28); E.zoomIn(.3);
+      if (Z) { Z.beam(tip[0], x1, y, v.w, P.rgb, v.hold + .25); Z.flash(WHITE, .35, .2); Z.flare(tip[0], y, P.rgb, 600, .25); Z.shock(p.x + f * 200, 600, P.rgb, .4, 12); }
+      V.bolt(tip[0], y, x1, y, P.col, .3, 14);
+    }
+    const n = Math.min(v.ticks[0], Math.floor(k / (v.hold / v.ticks[0])) + 1);
+    while ((m.n || 0) < n) {                         // what it goes through
+      m.n = (m.n || 0) + 1;
+      const dx = live(o) ? (o.x - p.x) * f : -1, last = m.n === v.ticks[0];
+      if (live(o) && dx > -40 && Math.abs(mid(o) - y) < v.w * 2.2 + 120 * (o.scale || 1) && !(o.inv > 0) && o.state !== 'down' && o.state !== 'up') {
+        E.applyHit(o, f, last ? { dmg: v.ticks[1] + (v.final || 0), kb: 1100, lift: 380, stun: 1, stop: .2, heavy: 1, col: P.col, mute: 1, brk: 1 } : { dmg: v.ticks[1], kb: 30, stun: .6, stop: .02, col: P.col, mute: 1 });
+        V.sparks(o.x, mid(o), P.spark, last ? 16 : 5);
+        if (last) { E.addBlast(o.x, mid(o), P.rgb, 420); big(p, o, 'ズギャン', P.col); }
+      }
+      if (m.n > 1 && m.n % 3 === 0) sfx.zap(.95);
+    }
+    p.target = k < v.hold + .2 ? RAIL : POSE.idle;
+  } };
+}
+// 2+3, a counter in every mode. Blue: the staff into the floor and a column of lightning under them, and the staff round into them as they come down
+const GROUND = { name: 'Counter: Ground Current', combo: 1, dur: 1.2, glow: 'blue', staff: -1.25, run(p, m, t) {
+  const o = m.o, P = PAL.blue;
+  p.rate = 46; p.vx = 0;
+  if (!m.s) { m.s = 1; st.charge = 0; p.inv = Math.max(p.inv || 0, 1.1); facing(p, o); sfx.zap(1.2); st.swing = { def: GROUND, a0: -1.25, a1: 2.3, ext: 30, t0: .62, t1: .76 }; }
+  if (t < .14) { p.target = POSE.crushWind; return; }
+  if (!m.up) {
+    m.up = 1;
+    const x = live(o) ? o.x : p.x + p.face * 220;
+    play('home-lb-crack', .8, () => sfx.thunder()); sfx.blast(); shake(26); E.zoomIn(.25);
+    V.crack(x, 260); V.rocks(x, 0, 10); zapAt(x, 20, 8, 360, 4, P.rgb); E.addRing(x, P.rgb, 380);
+    if (Z) { Z.pillar(x, 90, 1000, P.rgb, .45); Z.flash(WHITE, .25, .14); Z.decal('scorch', x, 150, P.rgb, 7, 0); }
+    if (live(o) && Math.abs(o.x - x) < 200) E.applyHit(o, p.face, { dmg: 16, kb: 40, lift: 1150, stun: 1, stop: .12, heavy: 1, col: P.col, mute: 1 });
+    label(x, 560, 'COUNTER!', P.col, 1);
+  }
+  if (t < .62) { p.target = t < .3 ? POSE.crush : POSE.crushWind; return; }
+  p.target = t < .9 ? POSE.hook : POSE.idle;
+  if (!m.sw) {
+    m.sw = 1; facing(p, o); sfx.whoosh();
+    const dx = live(o) ? (o.x - p.x) * p.face : 999, q = tipOf(p, 1);
+    if (Z) Z.lightning(q[0], q[1], q[0] + p.face * 420, q[1] + rnd(-60, 60), P.rgb, .2, 7, 3);
+    if (live(o) && dx > -60 && dx < 340 && Math.abs(o.y - p.y) < 480 && !(o.inv > 0)) {
+      E.applyHit(o, p.face, { dmg: 26, kb: 1150, lift: 420, stun: 1, stop: .16, heavy: 1, col: P.col, mute: 1 });
+      big(p, o, 'バリィッ', P.col); zapAt(o.x, mid(o), 6, 260, 4, P.rgb); play('home-lb-m1', .8, () => sfx.hit(true), .8);
+    }
+  }
+} };
+// MAX: behind them, bars of purple lightning closing round them, eight times through them, and the uppercut out of it, and the sky after
+const CAGE = { name: 'Counter: Reversal Cage', combo: 1, dur: 1.75, glow: 'purple', staff: 2.3, run(p, m, t) {
+  const o = m.o, P = PAL.purple;
+  p.rate = 50; p.vx = 0;
+  if (!m.s) { m.s = 1; p.inv = Math.max(p.inv || 0, 1.7); blinkBehind(p, o, P); m.cx = live(o) ? o.x : p.x + p.face * 115; play('home-lb-shock', .7, () => sfx.zap(.9)); label(m.cx, 600, 'COUNTER!', P.col, 1.1); }
+  if (t < .96) {
+    p.target = PALM;
+    if (live(o) && holdable(o) && !o.poise) Object.assign(o, { x: m.cx, vx: 0, vy: Math.min(o.vy, 0), state: o.ground ? 'hurt' : 'air', stun: .6, act: null, tele: 0 });
+    const r = lerp(150, 60, t / .96);
+    if (Z) for (let i = 0; i < 2; i++) { const s = Math.random() < .5 ? -1 : 1, x = m.cx + s * r * rnd(.7, 1); Z.lightning(x + rnd(-10, 10), 520, x + rnd(-10, 10), 0, P.rgb, .07, 3, 0); }
+    const n = Math.min(8, Math.floor(t / .12) + 1);
+    while ((m.n || 0) < n) { m.n = (m.n || 0) + 1; if (live(o)) { E.applyHit(o, p.face, { dmg: 4, kb: 0, stun: 1, stop: .025, col: P.col, mute: 1 }); V.sparks(o.x, mid(o), P.spark, 5); } sfx.zap(1.15 - m.n * .03); }
+    return;
+  }
+  if (!m.up) { m.up = 1; facing(p, o); if (upper(p, o, 40, P, 'REVERSAL CAGE') && live(o)) E.after(.4, () => { if (live(o)) skyBolt(o, P, 20, false); }); }
+  p.target = t < 1.3 ? UPPER : POSE.idle;
+} };
+// Beast Mode: caught by the arm that hit him, six fists of orange, up over his head and down behind him into the floor
+const TRAP = { name: 'Counter: Thunder Trap', combo: 1, dur: 2.1, glow: 'fire', staff: 2.3, run(p, m, t) {
+  const o = m.o, P = PAL.orange, eb = bound(), hold = live(o) && holdable(o) && !o.poise;
+  p.rate = 52; p.vx = 0;
+  if (!m.s) { m.s = 1; st.charge = 0; p.inv = Math.max(p.inv || 0, 2); facing(p, o); sfx.hit(true); shake(14); E.stop(.06); play('home-lb-shock', .8, () => sfx.zap(.9)); label(p.x, p.y + 520, 'COUNTER!', P.col, 1.1); }
+  if (t < .66) {
+    if (hold) Object.assign(o, { x: clamp(p.x + p.face * 115, -eb, eb), y: 0, vx: 0, vy: 0, ground: true, state: 'hurt', stun: .6, act: null, tele: 0, face: -p.face });
+    const n = Math.min(6, Math.floor(t / .1) + 1);
+    p.target = n % 2 ? PUNCH_P : POSE.jab;
+    while ((m.n || 0) < n) {
+      m.n = (m.n || 0) + 1;
+      if (live(o)) { E.applyHit(o, p.face, { dmg: 9, kb: 0, stun: 1, stop: .04, col: P.col, mute: 1 }); play('home-lb-m1', .6, () => sfx.hit(false), 1.2 - m.n * .05); V.sparks(o.x, mid(o), P.spark, 7); zapAt(o.x, mid(o), 2, 180, 3, P.rgb); }
+    }
+    return;
+  }
+  if (t < 1.05) {                                     // up over his head
+    const u = (t - .66) / .39;
+    p.target = ROAR;
+    if (hold) Object.assign(o, { x: clamp(p.x + p.face * lerp(115, -10, u), -eb, eb), y: 320 * Math.sin(u * Math.PI / 2), vx: 0, vy: 0, ground: false, state: 'air', stun: .6, act: null, tele: 0 });
+    if (Math.random() < .8) zapAt(p.x, p.y + 360, 1, 200, 3, P.rgb);
+    return;
+  }
+  if (t < 1.25) {                                     // and over, down behind him
+    const u = (t - 1.05) / .2;
+    p.target = POSE.crush;
+    if (hold) Object.assign(o, { x: clamp(p.x - p.face * lerp(10, 120, u), -eb, eb), y: 320 * (1 - u * u), vx: 0, vy: 0, ground: false, state: 'air', act: null, tele: 0 });
+    return;
+  }
+  if (!m.slam) {
+    m.slam = 1;
+    const x = hold ? clamp(p.x - p.face * 120, -eb, eb) : live(o) ? o.x : p.x + p.face * 120;
+    dent(x, true, P); E.zoomIn(.45); play('home-lb-crack', 1, () => sfx.thunder(), .8);
+    if (Z) { Z.pillar(x, 130, 1100, P.rgb, .6); Z.flash(WHITE, .35, .22); Z.decal('crater', x, 260, P.rgb, 10, 0); Z.boom(x, 60, 200, P.rgb, { n: 24, hot: WHITE }); }
+    if (live(o)) {
+      E.applyHit(o, hold ? -p.face : p.face, { dmg: 70, kb: 60, stun: 1.6, stop: .26, heavy: 1, col: P.col, mute: 1 });
+      if (live(o) && hold) Object.assign(o, { x, y: 0, vy: 0, vx: 0, ground: true, state: 'down', stun: 1.6 });
+      big(p, o, 'ドゴォン', P.col, 'neg');
+    }
+  }
+  p.target = t < 1.6 ? POSE.crush : POSE.idle;
+  if (t > 1.8) E.endMove(p);
+} };
+const counterOf = v => Object.assign(stanceOf(v), { combo: 1 });
+const LANCE = lanceOf({ name: 'Thunder Lance', label: 'THUNDER LANCE', pierce: 22, rip: 18 });
+const MAX_LANCE = lanceOf({ name: 'Thunder Lance: MAX', label: 'THUNDER LANCE: MAX', pal: 'purple', spend: 1, pierce: 20, bolts: [6, 6], rip: 30 });
+const B_LANCE = lanceOf({ name: 'Beast: Thunder Lance', label: 'BEAST: THUNDER LANCE', pal: 'orange', s: 1.5, pierce: 60, wall: 50 });
+const GROUND_STANCE = counterOf({ name: 'Counter: Ground Current', label: 'COUNTER: GROUND CURRENT', T: 1.1, pose: LOW, staff: -1.2, counter: () => GROUND });
+const CAGE_STANCE = counterOf({ name: 'Counter: Reversal Cage', label: 'COUNTER: REVERSAL CAGE', T: 1.4, pal: 'purple', spend: 1, pose: LOW, staff: -1.2, counter: () => CAGE, expire: discharge });
+const TRAP_STANCE = counterOf({ name: 'Counter: Thunder Trap', label: 'COUNTER: THUNDER TRAP', T: 1.2, pal: 'orange', pose: GRAB, counter: () => TRAP });
+const FALL = fallOf({ name: 'Thunderfall', label: 'THUNDERFALL', slam: 24, r: 240, bolts: [4, 5, .12] });
+const MAX_FALL = fallOf({ name: 'Thunderfall: MAX', label: 'THUNDERFALL: MAX', pal: 'purple', spend: 1, slam: 30, r: 270, bolts: [10, 5, .09], H: 300 });
+const B_FALL = fallOf({ name: 'Beast: Thunderfall', label: 'BEAST: THUNDERFALL', pal: 'orange', slam: 90, r: 460, ring: 30, H: 320, track: 1 });
+const RAILGUN = railOf({ name: 'Railgun', label: 'RAILGUN', T: .55, hold: .2, w: 26, ticks: [1, 42] });
+const MAX_RAILGUN = railOf({ name: 'Railgun: MAX', label: 'RAILGUN: MAX', pal: 'purple', spend: 1, T: .6, hold: 1.2, w: 38, ticks: [14, 4], final: 30 });
+const B_RAILGUN = railOf({ name: 'Beast: Railgun', label: 'BEAST: RAILGUN', pal: 'orange', T: .7, hold: .35, w: 90, ticks: [1, 130] });
+const COMBOS = {
+  blue: { 12: LANCE, 23: GROUND_STANCE, 34: FALL, 14: RAILGUN },
+  purple: { 12: MAX_LANCE, 23: CAGE_STANCE, 34: MAX_FALL, 14: MAX_RAILGUN },
+  orange: { 12: B_LANCE, 23: TRAP_STANCE, 34: B_FALL, 14: B_RAILGUN } };
+const PAIRS = ['12', '23', '34', '14'], KEYS = ['strikes', 'crush', 'div', 'manji'], CHORD_T = .09;
+const SHORT = { 12: 'Thunder Lance', 23: { blue: 'Counter: Ground Current', purple: 'Counter: Reversal Cage', orange: 'Counter: Thunder Trap' }, 34: 'Thunderfall', 14: 'Railgun' };
+const modeOf = () => (beastOn() ? 'orange' : full() ? 'purple' : 'blue');
+const keyOf = n => KEYS[n - 1];
+// which of them have been found, kept between visits
+let foundSet = new Set();
+try { foundSet = new Set(JSON.parse(localStorage.getItem('ju.lbcombo') || '[]')); } catch (e) {}
+function found(name) {
+  if (foundSet.has(name)) return;
+  foundSet.add(name);
+  try { localStorage.setItem('ju.lbcombo', JSON.stringify([...foundSet])); } catch (e) {}
+  const p = E.P1; label(p.x, p.y + 640, 'NEW COMBO', '#ffffff', 1.4); shownC = '';
+}
+// the keys: one of the four is held back a moment to see whether its partner follows. Together, a combo; alone, it goes as it was pressed
+let pend = null, chord = null, passing = false, actK = null;
+function letGo(a) { passing = true; try { JU.game.press(a); } finally { passing = false; } }
+function chordPress(a) {                            // true: held back, or made into a combo
+  const now = E.T;
+  if (pend && pend.a !== a && now - pend.t <= CHORD_T) {
+    const pair = [KEYS.indexOf(pend.a) + 1, KEYS.indexOf(a) + 1].sort().join(''), first = pend.a;
+    pend = null;
+    if (PAIRS.includes(pair) && E.cd[keyOf(+pair[0])] <= 0 && E.cd[keyOf(+pair[1])] <= 0) { chord = { pair, t: now }; return true; }
+    letGo(first); return false;                     // (not a pair that makes anything, or one of them is not ready: both go as they are)
+  }
+  if (pend) letGo(pend.a);                          // (too late, or the same key again: the first goes as it was)
+  pend = { a, t: now };
+  return true;
+}
+function comboStart(pair) {
+  const p = E.P1, def = COMBOS[modeOf()][pair], k1 = keyOf(+pair[0]), k2 = keyOf(+pair[1]);
+  if (!def || p.move || p.ps || p.dashT > 0 || !p.ground || p.dead || imp) return false;
+  E.cd[k1] = E.CD[k1]; E.cd[k2] = E.CD[k2];
+  p.move = { def, key: k1, t: 0, combo: pair };
+  E.hud.mv[k1].classList.add('act'); E.hud.mv[k2].classList.add('act'); actK = [k1, k2];
+  found(def.name);
+  return true;
+}
+function chordTick() {
+  if (pend && E.T - pend.t > CHORD_T) { const a = pend.a; pend = null; letGo(a); }
+  if (chord) { if (E.T - chord.t > .2) chord = null; else if (comboStart(chord.pair)) chord = null; }      // (busy for longer than a press waits: gone)
+  const m = E.P1.move;
+  if (actK && !(m && m.def.combo)) { for (const k of actK) E.hud.mv[k].classList.remove('act'); actK = null; }
+  if (st.flying && !(m && m.def.lance)) st.flying = null;
+}
+// under the meter: the four of this mode, ??? until found
+const combosEl = document.createElement('div');
+combosEl.className = 'lbc'; combosEl.setAttribute('aria-hidden', 'true');
+E.root.querySelector('.fb.p1').appendChild(combosEl);
+let shownC = '';
+function paintCombos() {
+  const show = on() && E.root.dataset.mode === 'fight';
+  combosEl.classList.toggle('on', show);
+  if (!show) { shownC = ''; return; }
+  const mode = modeOf(), key = mode + [...foundSet].length;
+  if (key === shownC) return;
+  shownC = key;
+  combosEl.classList.toggle('max', mode === 'purple'); combosEl.classList.toggle('beast', mode === 'orange');
+  combosEl.innerHTML = PAIRS.map(pr => { const d = COMBOS[mode][pr], s = SHORT[pr], nm = typeof s === 'string' ? s : s[mode], has = foundSet.has(d.name);
+    return `<i class="${has ? '' : 'q'}"><kbd>${pr[0]}+${pr[1]}</kbd><span>${has ? nm : '???'}</span></i>`; }).join('');
+}
+
 /* ================= the moves ================= */
 const MOVES = {
   get strikes() { return beastOn() ? B_BARRAGE : full() ? MAX_BARRAGE : BARRAGE; },
@@ -1064,23 +1413,25 @@ H.press = (a, inScene) => {
       else if (a === 'strikes' && imp.phase === 'slam') imp.qThrow = 1;      // (pressed during the fifth: as soon as it is down)
       if (['m1', 'strikes', 'crush', 'div', 'manji', 'jump', 'dash', 'alt', 'awk'].includes(a)) return true;
     }
+    if (!passing && KEYS.includes(a) && chordPress(a)) return true;      // (one of the four: held back a moment, in case it is half of a combo)
   }
   return press0 ? press0(a, inScene) : false;
 };
 H.hit = (o, face, h) => { hit0(o, face, h); if (on() && h.lb !== undefined) landed(o, face, h); };
 H.tick = dt => {
   tick0(dt);
-  if (!on()) { if (imp) impEnd(); held = null; st.charge = 0; fin = trail = null; paintMeter(); return; }
+  if (!on()) { if (imp) impEnd(); held = null; st.charge = 0; fin = trail = null; pend = chord = null; st.flying = null; paintMeter(); paintCombos(); return; }
+  chordTick();
   const p = E.P1;
   if (held && !(p.move && (p.move.def === DISCHARGE || p.move.def === OUTPUT_MAX))) held = null;
-  if (st.charge && !(p.move && (p.move.def.stance || p.move.def === CHARGE || p.move.def.wrath))) st.charge = 0;
+  if (st.charge && !(p.move && (p.move.def.stance || p.move.def === CHARGE || p.move.def.wrath || p.move.def.combo))) st.charge = 0;
   if (E.root.dataset.mode === 'fight') meterTick(dt);
   if (ls.on) lastTick(dt);
   if (imp) impTick(dt);
   if (fin) finTick(dt);
   if (trail) trailTick(dt);
   staffTick(p, dt);
-  relabel(); paintMeter();
+  relabel(); paintMeter(); paintCombos();
 };
 H.under = dt => {
   under0(dt);
@@ -1093,7 +1444,12 @@ H.fx = dt => {
   fx0(dt);
   const p = E.P1;
   if (!on() || p.dead || p.alpha < .05 || p.skin !== SKIN) return;
-  if (st.planted) {                                 // stood in the floor, crackling, waiting for them
+  if (st.flying) {                                  // thrown (Thunder Lance): out of his hand, the length of the arena, the lightning streaming off it
+    const q = st.flying, c = F(q.x + q.f * 40 * q.s, q.y);
+    drawPole([q.x, q.y], [q.f, 0], q.s, -260, 40);
+    lit(() => E.glow(E.GLOW[q.P.glow], c[0], c[1], 260 * c[2] * q.s, .6));
+    if (Z && Math.random() < .8) Z.lightning(q.x - q.f * 200 * q.s, q.y + rnd(-20, 20), q.x - q.f * rnd(380, 620), q.y + rnd(-60, 60), q.P.rgb, .1, 3, 1);
+  } else if (st.planted) {                          // stood in the floor, crackling, waiting for them
     drawPole([st.planted.x, -12], [0, 1], 1, 0, PLANT_TOP + 12);
     if (Math.random() < .7 && Z) Z.lightning(st.planted.x + rnd(-10, 10), rnd(0, PLANT_TOP), st.planted.x + rnd(-90, 90), rnd(0, PLANT_TOP + 60), PAL.purple.rgb, .08, 2, 0);
   } else drawStaff(p);
@@ -1104,13 +1460,14 @@ H.fx = dt => {
 };
 const clear = () => {
   ls.on = false; ls.used = false; fin = trail = null;
-  held = null; imp = null; Object.assign(st, { charge: 0, swing: null, a: 1.75, ext: 0, lock: false, planted: null });
+  held = null; imp = null; pend = chord = null; actK = null; Object.assign(st, { charge: 0, swing: null, a: 1.75, ext: 0, lock: false, planted: null, flying: null });
   Object.assign(mt, { bars: 0, hold: 0, cd: 0, cdMax: 0, ult: 0, beast: 0 }); shownL = ''; shownM = '';
 };
 H.reset = () => { reset0(); clear(); };
 H.fightStart = (cfg, wave) => { start0(cfg, wave); if (!wave) clear(); };
 
 JU.beast = { MOVES, BARRAGE, MAX_BARRAGE, B_BARRAGE, DISCHARGE, OUTPUT_MAX, B_OUTPUT, STANCE, REVERSE, WRATH, MAX_STANCE, MAX_REVERSE, B_STANCE, B_REVERSE, MAX_WRATH, B_WRATH, SKIN, st, mt, esp: ESP,      // (esp: E, especial.js)
+  COMBOS, GROUND, CAGE, TRAP, get chord() { return { pend: pend && pend.a, chord: chord && chord.pair }; }, get found() { return [...foundSet]; },
   get last() { return { on: ls.on, used: ls.used, t: +ls.t.toFixed(2) }; },
   get fin() { return fin && { t: +fin.t.toFixed(2), hit: !!fin.hit }; },
   get state() { return { bars: mt.bars, cd: +mt.cd.toFixed(1), ult: mt.ult, beast: +mt.beast.toFixed(1), chain: chainLen(), imp: imp && { phase: imp.phase, slams: imp.slams, t: +imp.t.toFixed(2) }, planted: !!st.planted }; } };
