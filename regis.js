@@ -578,9 +578,12 @@ function deal() {
 function cycle(k) { const used = deck.hand[k]; deck.hand[k] = deck.line.shift(); if (used && !WEAPON[used]) deck.line.push(used); }      // to the back with it, and NEXT in its place
 // the first moment of a card's move: spent (a variant spends the coupon that made it)
 function dealt(k, v) { if (v === 'c' || v === 'x') deck.armed = null; if (!k) return; deck.used[k] = E.CD[k]; cycle(k); deck.spent++; }
+// Build 0.29v3, the user's: "reduce the cooldowns for register". Every card's wait and every combo's is CD_K of what it was written as (the
+// numbers below are the old ones); the coupons, the prize and the weapons were under two seconds already and are left as they were
+const CD_K = .5, quick = n => Math.max(.5, Math.round(n * CD_K * 2) / 2);
 function card(id, v, def) {
   const run = def.run;
-  return Object.assign(def, { reg: 1, card: id, v, run(p, m, t) { if (!m.dealt) { m.dealt = 1; dealt(m.key, v); } run(p, m, t); } });
+  return Object.assign(def, { reg: 1, card: id, v, cd: quick(def.cd), run(p, m, t) { if (!m.dealt) { m.dealt = 1; dealt(m.key, v); } run(p, m, t); } });
 }
 
 /* ================= poses: [lean, head, armF, armB, legF, legB, rot] ================= */
@@ -1648,7 +1651,7 @@ const RC = [PAPER, CPN, XTR];                       // the plain one's colour, t
 // 1+2 BULK ORDER: everything on one receipt, all of it brought down on them, one thing after another (v.last: and something big to finish)
 const BULK_STUFF = [() => boxes(3, 1), fridge, () => sofa('#2f5d8a'), telly, () => crate(), () => chair(), () => table(), lamp, () => boxes(2, 4), () => sofa('#9e1b2a')];
 function bulkOf(v) {
-  return { name: v.name, reg: 1, combo: 1, cd: v.cd, dur: 1, run(p, m, t) {
+  return { name: v.name, reg: 1, combo: 1, cd: quick(v.cd), dur: 1, run(p, m, t) {
     const o = E.P2;
     if (!m.s) {
       m.s = 1; facing(p, o); buy(p, v.label, v.col); sfx.rise(.6);
@@ -1688,7 +1691,7 @@ function refundOf(v) {
     }
     if (t > .9) E.endMove(p);
   } };
-  return { name: v.name, reg: 1, combo: 1, refund: 1, T: 1.2, counter, cd: v.cd, dur: 1.3, run(p, m, t) {
+  return { name: v.name, reg: 1, combo: 1, refund: 1, T: 1.2, counter, cd: quick(v.cd), dur: 1.3, run(p, m, t) {
     p.vx = 0; p.rate = 30; p.target = RP.ticket; m.prop = v.held;
     if (!m.s) { m.s = 1; facing(p, E.P2); label(p.x, p.y + 480, v.label, v.col, 1.1); play('home-rg-rip', .6, () => sfx.rip()); }
     if (Z && Math.random() < .25) { const h = E.hand(p, true); Z.emit(0, h[0], h[1], 0, 40, 60, .3, v.rgb, { s1: .4 }); }
@@ -1711,7 +1714,7 @@ const VEH = {
   bus: { len: 640, speed: 2700, draw: e => bus(e.x * e.face / 33, e.face) },
   engine: { len: 600, speed: 2800, draw: e => engine() } };
 function jamOf(v) {
-  return { name: v.name, reg: 1, combo: 1, cd: v.cd, dur: .6 + v.cars.length * v.gap + 1.3, run(p, m, t) {
+  return { name: v.name, reg: 1, combo: 1, cd: quick(v.cd), dur: .6 + v.cars.length * v.gap + 1.3, run(p, m, t) {
     const o = E.P2;
     if (!m.s) { m.s = 1; facing(p, o); buy(p, v.label, v.col); m.n = 0; m.cars = []; }
     const due = Math.min(v.cars.length, Math.floor(t / v.gap) + 1);
@@ -1741,7 +1744,7 @@ const JAM_C = jamOf({ name: 'Traffic Jam: Rush Hour', label: 'TRAFFIC JAM: RUSH 
 const JAM_X = jamOf({ name: 'Traffic Jam: Pile-Up', label: 'TRAFFIC JAM: PILE-UP', col: XTR, cd: 23, gap: .24, cars: [['car', 30], ['car', 30], ['bus', 30], ['engine', 30]], pile: 120 });
 // 1+4 CHECKOUT: the till rings up everything he has bought this fight, the receipt runs out round them, and the total is what it does to them
 function checkoutOf(v) {
-  return { name: v.name, reg: 1, combo: 1, cd: v.cd, dur: 2, run(p, m, t) {
+  return { name: v.name, reg: 1, combo: 1, cd: quick(v.cd), dur: 2, run(p, m, t) {
     const o = E.P2, f = p.face, tx = p.x + f * 120;
     p.vx = 0; p.rate = 36;
     if (!m.s) {

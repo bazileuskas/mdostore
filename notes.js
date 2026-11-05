@@ -5,6 +5,9 @@
 // Newest first. v = the build, jp = the seal stamped beside it, pic = notes/<pic>.jpg, cap = what the picture shows.
 // A new update goes at the top of this list.
 const NOTES = [
+  { v: '0.29v3', name: 'Express Checkout', jp: '時短', date: '5 Nov 2026', pic: 'registration', cap: 'Registration, faster', items: [
+    'Every Registration card waits half as long as it did. The moves are 4.5 to 7 seconds now (they were 9 to 14), Final Purchase 11 (22); their Coupon and Extra Coupon versions 6 to 9 (12 to 18), and Final Purchase\'s 13 and 14 (26 and 28)',
+    'The combos wait half as long too: Bulk Order and Refund 7, 9 and 11; Traffic Jam and Checkout 7.5, 9.5 and 11.5. The Coupons, the Prize and what a prize buys were quick already, and are as they were'] },
   { v: '0.29v2', name: 'Bundle Deals', jp: '抱合せ', date: '5 Nov 2026', pic: 'bundledeals', cap: 'Bulk Order: Warehouse, the pile-up, and Checkout', items: [
     'Registration has combos too: press two of your cards together and both are spent on one bigger purchase. Both have to be moves (not a coupon, nor something a prize bought) and both ready; NEXT and the card after it take the two keys, which both wait. A Coupon or an Extra Coupon waiting turns a combo into its version, as it does any move: twelve in all. Under your health each shows ??? until you have found it',
     '1+2 BULK ORDER: everything on one receipt, brought down on them one thing after another (72). Wholesale: more of it and a crate to finish (180). Warehouse: and a whole shipping container (240)',
