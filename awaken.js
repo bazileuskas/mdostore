@@ -394,7 +394,7 @@ function card(a) {
     : `<div class="acard soon" style="--c:${a.col}"><b lang="ja">${a.mark}</b><h4>${a.name}</h4><small>Coming soon</small></div>`;
 }
 function mount(body) {
-  const main = LIST.filter(a => !a.secret), secret = LIST.filter(a => a.secret);
+  const shown = LIST.filter(a => !(a.hide && a.hide())), main = shown.filter(a => !a.secret), secret = shown.filter(a => a.secret);      // (hide: a card only some may see, aheian.js's for admins)
   body.innerHTML = `<div class="awkhd"><button class="sback" id="awkback" aria-label="Back to the cursed techniques">‹ Cursed Techniques</button><b>Awakened CT</b><span lang="ja">覚醒術式</span></div>
     <div class="acards a${main.length}">${main.map(card).join('')}</div>
     ${secret.length ? `<div class="awkhd sec"><b>Secret CT</b><span lang="ja">秘伝術式</span></div><div class="acards a${secret.length} sec">${secret.map(card).join('')}</div>` : ''}

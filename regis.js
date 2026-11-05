@@ -568,16 +568,16 @@ function dropping(e, dt, o) {
 
 /* ================= the deck ================= */
 const CARD_IDS = ['home', 'hitrun', 'kitchen', 'express', 'road', 'furn', 'ext', 'final', 'bowl', 'shop', 'fish', 'reno', 'coupon', 'extra'];      // (fourteen from 0.28v1)
-const deck = { hand: {}, line: [], armed: null, used: {}, ammo: {} };      // the four on the keys; the rest in line (line[0] is NEXT); a coupon waiting for a move; each key's last wait; a weapon's bullets
+const deck = { hand: {}, line: [], armed: null, used: {}, ammo: {}, spent: 0 };      // the four on the keys; the rest in line (line[0] is NEXT); a coupon waiting for a move; each key's last wait; a weapon's bullets; cards used this fight (Checkout counts them)
 function deal() {
   const all = CARD_IDS.slice();
   for (let i = all.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [all[i], all[j]] = [all[j], all[i]]; }
   SLOTS.forEach((k, i) => { deck.hand[k] = all[i]; });
-  deck.line = all.slice(4); deck.armed = null; deck.used = {}; deck.ammo = {};
+  deck.line = all.slice(4); deck.armed = null; deck.used = {}; deck.ammo = {}; deck.spent = 0;
 }
 function cycle(k) { const used = deck.hand[k]; deck.hand[k] = deck.line.shift(); if (used && !WEAPON[used]) deck.line.push(used); }      // to the back with it, and NEXT in its place
 // the first moment of a card's move: spent (a variant spends the coupon that made it)
-function dealt(k, v) { if (v === 'c' || v === 'x') deck.armed = null; if (!k) return; deck.used[k] = E.CD[k]; cycle(k); }
+function dealt(k, v) { if (v === 'c' || v === 'x') deck.armed = null; if (!k) return; deck.used[k] = E.CD[k]; cycle(k); deck.spent++; }
 function card(id, v, def) {
   const run = def.run;
   return Object.assign(def, { reg: 1, card: id, v, run(p, m, t) { if (!m.dealt) { m.dealt = 1; dealt(m.key, v); } run(p, m, t); } });
@@ -1621,6 +1621,226 @@ function defFor(k) {
 }
 const MOVES = { get strikes() { return defFor('strikes'); }, get crush() { return defFor('crush'); }, get div() { return defFor('div'); }, get manji() { return defFor('manji'); } };
 
+/* ================= Build 0.29v2: COMBOS. Two cards pressed together, and both spent on one bigger purchase ================= */
+// The user: "Add more combos for registration too" (after the Lightning Beast's). 1+2 BULK ORDER, 2+3 REFUND (a counter), 3+4 TRAFFIC JAM,
+// 1+4 CHECKOUT. A Coupon or an Extra Coupon waiting makes it that one's version, as it does any move: twelve in all. Both keys have to hold
+// one of the twelve moves (not a coupon, nor what a prize bought) and both be ready. Both cards are spent: to the back with them, and NEXT
+// and the one after it take the keys, which both wait the combo's time. Under the health bar each shows ??? until it has been found
+function container() {                              // a shipping container: corrugated steel, doors at one end with their bars, the company's name
+  const W = 300, Hh = 260;
+  R(-W, -Hh, W * 2, Hh, lgr(0, -Hh, 0, 0, '#c94a32', '#a8392a', '#7a2a1f'), 3.5);
+  for (let x = -W + 16; x < W - 76; x += 18) thin(x, -Hh + 14, x, -14, 'rgba(0,0,0,.25)', 4);
+  R(W - 70, -Hh + 8, 62, Hh - 16, '#a8392a', 2.5); for (const x of [W - 56, W - 38, W - 20]) thin(x, -Hh + 16, x, -16, '#3a3d46', 3.5);
+  R(-W, -Hh, W * 2, 14, '#8a3022', 2.5); R(-W, -14, W * 2, 14, '#8a3022', 2.5);
+  word('RECEIPT CO.', -40, -Hh / 2, 54, 'rgba(255,240,220,.85)');
+}
+function till(open = 0) {                           // a cash register: the drawer (open as far as `open`), the keys, the display up on its stalk
+  R(-70, -40, 140, 40, lgr(0, -40, 0, 0, '#3a3d46', '#22242a'), 3);
+  if (open > 0) { R(-60, -26 + 0, 120 * open, 22, '#1d1f24', 2.5); for (let i = 0; i < 4; i++) R(-54 + i * 26 * open, -22, 20 * open, 14, i % 2 ? '#7dbf6a' : '#c9b26a', 1); }
+  Q(lgr(0, -100, 0, -40, '#e4e0d4', '#b9b4a6'), [-64, -40, 64, -40, 46, -100, -56, -100], 3);
+  for (let r = 0; r < 3; r++) for (let c = 0; c < 5; c++) R(-48 + c * 18 + r * 3, -88 + r * 15, 12, 10, '#6a6e78', 1.5);
+  R(-6, -150, 12, 50, '#2a2c33', 2.5); R(-40, -186, 80, 40, '#16171b', 3);
+  word('¥¥¥', 0, -166, 24, '#ff5a3c');
+}
+HELD.receipt = () => ticket(PAPER);
+const MOVE_CARD = id => !!CARDS[id];
+const RC = [PAPER, CPN, XTR];                       // the plain one's colour, the coupon's, the extra's
+// 1+2 BULK ORDER: everything on one receipt, all of it brought down on them, one thing after another (v.last: and something big to finish)
+const BULK_STUFF = [() => boxes(3, 1), fridge, () => sofa('#2f5d8a'), telly, () => crate(), () => chair(), () => table(), lamp, () => boxes(2, 4), () => sofa('#9e1b2a')];
+function bulkOf(v) {
+  return { name: v.name, reg: 1, combo: 1, cd: v.cd, dur: 1, run(p, m, t) {
+    const o = E.P2;
+    if (!m.s) {
+      m.s = 1; facing(p, o); buy(p, v.label, v.col); sfx.rise(.6);
+      for (let i = 0; i < v.n + (v.last ? 1 : 0); i++) {
+        const big = !!v.last && i === v.n, at = .22 + i * v.gap;
+        drop(o, { from: big ? 1500 : 1000 + (i % 3) * 60, wait: at, track: at - .05, shadow: big ? 320 : 100, hw: big ? 300 : 105, keep: big ? .6 : .25, gr: big ? 3000 : 5000, rot: big ? 0 : rnd(-.3, .3),
+          draw: big ? v.big : BULK_STUFF[i % BULK_STUFF.length],
+          hitThem(q, o) { hit(o, side(q.x, o), big ? v.last : v.each, { kb: 0, stun: big ? 1.8 : 1, stop: big ? .22 : .05, heavy: 1, col: v.col }); down(o, big ? 1.8 : 1); if (big) crushed(o, v.col, 'ドドォン'); else sfx.hit(true); },
+          landed(q) { if (big) { thud(q.x, true); E.zoomIn(.35); bits(q.x, 60, 16, '160,60,40', 700, 14); } else { play('home-rg-box', .6, () => sfx.land(), .8 + rnd(0, .3)); shake(8); bits(q.x, 40, 4, WRGB, 260, 9); } },
+          broke(q) { bits(q.x, 60, 6, PRGB, 300, 9); receipt(q.x, 80, big ? 14 : 3); } });
+      }
+    }
+    p.vx = 0; p.target = t < .7 ? RP.sum : POSE.idle;
+    if (t > .9) E.endMove(p);
+  } };
+}
+const BULK = bulkOf({ name: 'Bulk Order', label: 'BULK ORDER', col: PAPER, cd: 14, n: 6, each: 12, gap: .14 });
+const BULK_C = bulkOf({ name: 'Bulk Order: Wholesale', label: 'BULK ORDER: WHOLESALE', col: CPN, cd: 18, n: 10, each: 12, gap: .11, last: 60, big: () => crate() });
+const BULK_X = bulkOf({ name: 'Bulk Order: Warehouse', label: 'BULK ORDER: WAREHOUSE', col: XTR, cd: 22, n: 10, each: 12, gap: .1, last: 120, big: container });
+// 2+3 REFUND, a counter: a receipt held up. Hit him while it is, and the blow is taken back: none of it reaches him, and what it was worth
+// goes back into them, and more (coupon: and some of his health back; extra: and every key ready again)
+function refundOf(v) {
+  const counter = { name: v.name, reg: 1, combo: 1, dur: 1.1, run(p, m, t) {
+    const o = m.o || E.P2;
+    p.vx = 0; p.rate = 44; m.prop = v.held;
+    if (!m.s) { m.s = 1; p.inv = Math.max(p.inv || 0, 1); facing(p, o); E.stop(.06); play('home-rg-stamp', 1, () => sfx.snip(.8)); label(p.x, p.y + 520, v.word, v.col, 1.3); }
+    if (t < .2) { p.target = RP.ticket; return; }
+    p.target = t < .55 ? RP.point : POSE.idle; m.prop = null;
+    if (!m.go) {
+      m.go = 1;
+      const h = E.hand(p, true);
+      play('home-rg-tear', 1, () => sfx.rip()); shake(26);
+      if (Z) for (let i = 0; i < 30; i++) Z.emit(3, h[0], h[1], p.face * rnd(500, 1500), rnd(-200, 500), rnd(7, 12), rnd(.5, .9), i % 3 ? PRGB : v.rgb, Object.assign({ vr: rnd(-14, 14), rot: rnd(0, TAU) }, SLIP));      // the receipts, back at them
+      if (live(o)) { hit(o, p.face, v.dmg, { kb: 1300, lift: 620, stun: 1, stop: .2, heavy: 1, col: v.col, flung: 1 }); big(p, o, '返金', v.col, 'neg'); receipt(o.x, mid(o), 16, v.rgb); }
+      if (v.heal) { p.hp = Math.min(p.max, p.hp + v.heal); E.addNum(p.x, p.y + 300, '+' + v.heal, v.col); }
+      if (v.reset) { for (const k of SLOTS) E.cd[k] = 0; label(p.x, p.y + 580, 'EVERY KEY READY', v.col, 1.2); }
+    }
+    if (t > .9) E.endMove(p);
+  } };
+  return { name: v.name, reg: 1, combo: 1, refund: 1, T: 1.2, counter, cd: v.cd, dur: 1.3, run(p, m, t) {
+    p.vx = 0; p.rate = 30; p.target = RP.ticket; m.prop = v.held;
+    if (!m.s) { m.s = 1; facing(p, E.P2); label(p.x, p.y + 480, v.label, v.col, 1.1); play('home-rg-rip', .6, () => sfx.rip()); }
+    if (Z && Math.random() < .25) { const h = E.hand(p, true); Z.emit(0, h[0], h[1], 0, 40, 60, .3, v.rgb, { s1: .4 }); }
+    if (t > 1.2) { label(p.x, p.y + 440, 'NOTHING TO REFUND', PAPER, .9); E.endMove(p); }
+  } };
+}
+const REFUND = refundOf({ name: 'Refund', label: 'REFUND', word: 'REFUNDED', col: PAPER, rgb: PRGB, held: 'receipt', cd: 14, dmg: 60 });
+const REFUND_C = refundOf({ name: 'Refund: Store Credit', label: 'REFUND: STORE CREDIT', word: 'STORE CREDIT', col: CPN, rgb: CRGB, held: 'ticketC', cd: 18, dmg: 150, heal: 30 });
+const REFUND_X = refundOf({ name: 'Refund: Money Back', label: 'REFUND: MONEY BACK', word: 'MONEY BACK', col: XTR, rgb: XRGB, held: 'ticketX', cd: 22, dmg: 200, reset: 1 });
+function guard(face, a) {                           // hit while a refund is held up: it never lands, and the refund goes instead
+  const p = E.P1, m = p.move, o = E.P2;
+  if (!on() || !(m && m.def.refund && m.t <= m.def.T) || p.dead || !live(o)) return false;
+  p.move = { def: m.def.counter, t: 0, o, combo: m.combo };
+  return true;
+}
+// 3+4 TRAFFIC JAM: one after another from behind him, into them and into each other (v.pile: and the whole pile goes up)
+const VEH = {
+  scooter: { len: 260, speed: 3200, draw: e => scooter(undefined, e.x * e.face / 20) },
+  car: { len: 300, speed: 3000, draw: e => car(pick(CARS), e.x * e.face / 28) },
+  bus: { len: 640, speed: 2700, draw: e => bus(e.x * e.face / 33, e.face) },
+  engine: { len: 600, speed: 2800, draw: e => engine() } };
+function jamOf(v) {
+  return { name: v.name, reg: 1, combo: 1, cd: v.cd, dur: .6 + v.cars.length * v.gap + 1.3, run(p, m, t) {
+    const o = E.P2;
+    if (!m.s) { m.s = 1; facing(p, o); buy(p, v.label, v.col); m.n = 0; m.cars = []; }
+    const due = Math.min(v.cars.length, Math.floor(t / v.gap) + 1);
+    while (m.n < due) {
+      const [kind, dmg] = v.cars[m.n], q = VEH[kind], last = m.n === v.cars.length - 1, col = pick(CARS);
+      m.n++;
+      m.cars.push(drive(p, { len: q.len, speed: q.speed, stay: v.pile ? 1.6 - m.n * .2 : .7, draw: kind === 'car' ? e => car(col, e.x * e.face / 28) : q.draw,
+        crash: (e, o) => crash(e, o, dmg, last && !v.pile ? { kb: 1600, lift: 700, stun: 1, stop: .18, heavy: 1, col: v.col, flung: 1 } : { kb: 120, stun: 1.2, stop: .1, heavy: 1, col: v.col }, v.col, last ? 'ドガァン' : 'ドンッ') }));
+    }
+    hopOver(p, m, m.cars[0], 700, 1450);
+    if (v.pile && m.n === v.cars.length && !m.boom) {      // all of them in, against each other and against them: and up it goes
+      const tail = m.cars[m.cars.length - 1];
+      if (tail.crashed !== undefined && tail.t - tail.crashed > .3) {
+        m.boom = 1; const x = tail.x + tail.face * tail.len * .4;
+        if (Z) { Z.boom(x, 120, 260, '255,140,60', { n: 34, life: .8 }); Z.flash('255,170,90', .4, .3); Z.pillar(x, 160, 1000, '255,140,60', .6); }
+        play('home-rg-boom', 1, () => { sfx.blast(); sfx.rough(1.2); }); shake(46); E.zoomIn(.45);
+        bits(x, 120, 24, '40,40,44', 900, 16); bits(x, 100, 14, GLASS, 700, 7); receipt(x, 200, 20);
+        if (can(o) && Math.abs(o.x - x) < 420 + 40 * hs(o)) { hit(o, side(x, o), v.pile, { kb: 1200, lift: 900, stun: 1.2, stop: .26, heavy: 1, col: '#ffa040', flung: 1 }); big(p, o, 'ドカーン', v.col, 'neg'); }
+        for (const c of m.cars) c.a = 0;
+      }
+    }
+    if (t > .6 + v.cars.length * v.gap + (v.pile ? 1.1 : .5) && p.ground) E.endMove(p);
+  } };
+}
+const JAM = jamOf({ name: 'Traffic Jam', label: 'TRAFFIC JAM', col: PAPER, cd: 15, gap: .32, cars: [['car', 35], ['bus', 40]] });
+const JAM_C = jamOf({ name: 'Traffic Jam: Rush Hour', label: 'TRAFFIC JAM: RUSH HOUR', col: CPN, cd: 19, gap: .28, cars: [['scooter', 20], ['car', 40], ['bus', 50], ['engine', 70]] });
+const JAM_X = jamOf({ name: 'Traffic Jam: Pile-Up', label: 'TRAFFIC JAM: PILE-UP', col: XTR, cd: 23, gap: .24, cars: [['car', 30], ['car', 30], ['bus', 30], ['engine', 30]], pile: 120 });
+// 1+4 CHECKOUT: the till rings up everything he has bought this fight, the receipt runs out round them, and the total is what it does to them
+function checkoutOf(v) {
+  return { name: v.name, reg: 1, combo: 1, cd: v.cd, dur: 2, run(p, m, t) {
+    const o = E.P2, f = p.face, tx = p.x + f * 120;
+    p.vx = 0; p.rate = 36;
+    if (!m.s) {
+      m.s = 1; facing(p, o); buy(p, v.label, v.col);
+      m.total = Math.min(v.cap, v.base + v.per * deck.spent);
+      m.till = prop({ x: tx, y: 0, face: f, life: 1.9, draw: e => till(clamp((e.t - 1.1) * 5, 0, 1)) });
+    }
+    p.target = t < 1.2 ? RP.point : t < 1.5 ? RP.elbow : POSE.idle;
+    const n = Math.min(6, Math.floor(t / .14));      // rung up, item by item
+    if (n > (m.n || 0)) { m.n = n; sfx.click(); }
+    if (t > .5 && !m.wrap && live(o)) {             // the receipt out of it and round them
+      m.wrap = 1; hold(o, 1.2); play('home-rg-tear', .8, () => sfx.rip());
+      V.custom(.9, u => {
+        if (!live(o)) return;
+        for (let i = 0; i < 5; i++) {
+          const a = E.T * 9 + i * 1.26, c = F(o.x + Math.cos(a) * 70 * hs(o), o.y + (60 + i * 40 + 30 * Math.sin(a)) * hs(o)), k = c[2];
+          g.fillStyle = 'rgba(244,240,228,.95)'; g.strokeStyle = 'rgba(40,30,24,.6)'; g.lineWidth = 1.5;
+          g.save(); g.translate(c[0], c[1]); g.rotate(Math.sin(a) * .6); g.fillRect(-26 * k, -7 * k, 52 * k, 14 * k); g.strokeRect(-26 * k, -7 * k, 52 * k, 14 * k); g.restore();
+        }
+        const a = F(tx, 120), b = F(o.x, mid(o));
+        g.strokeStyle = 'rgba(244,240,228,.9)'; g.lineWidth = 10 * a[2]; g.beginPath(); g.moveTo(a[0], a[1]); g.quadraticCurveTo((a[0] + b[0]) / 2, a[1] - 80 * a[2], b[0], b[1]); g.stroke();
+      });
+    }
+    if (t > 1.15 && !m.go) {                        // the total
+      m.go = 1; play('home-rg-stamp', 1, () => sfx.snip(.8)); sfx.ball(.9); shake(30); E.zoomIn(.3);
+      if (live(o)) {
+        label(o.x, o.y + 520 * hs(o), 'TOTAL · ¥' + (m.total * 1000).toLocaleString('en-US'), v.col, 1.6);
+        hit(o, f, m.total, { kb: 1200, lift: 620, stun: 1, stop: .24, heavy: 1, col: v.col, flung: 1 }); big(p, o, 'お会計', v.col, 'neg'); receipt(o.x, mid(o), 24, v.rgb);
+      }
+    }
+    if (t > 1.8) E.endMove(p);
+  } };
+}
+const CHECKOUT = checkoutOf({ name: 'Checkout', label: 'CHECKOUT', col: PAPER, rgb: PRGB, cd: 15, base: 30, per: 4, cap: 110 });
+const CHECKOUT_C = checkoutOf({ name: 'Checkout: Points Card', label: 'CHECKOUT: POINTS CARD', col: CPN, rgb: CRGB, cd: 19, base: 60, per: 8, cap: 200 });
+const CHECKOUT_X = checkoutOf({ name: 'Checkout: Grand Total', label: 'CHECKOUT: GRAND TOTAL', col: XTR, rgb: XRGB, cd: 23, base: 90, per: 12, cap: 300 });
+const RCOMBOS = { 12: [BULK, BULK_C, BULK_X], 23: [REFUND, REFUND_C, REFUND_X], 34: [JAM, JAM_C, JAM_X], 14: [CHECKOUT, CHECKOUT_C, CHECKOUT_X] };
+const RPAIRS = ['12', '23', '34', '14'], RSHORT = { 12: 'Bulk Order', 23: 'Refund', 34: 'Traffic Jam', 14: 'Checkout' }, CHORD_T = .09;
+const keyOf = n => SLOTS[n - 1];
+const comboReady = pair => { const k1 = keyOf(+pair[0]), k2 = keyOf(+pair[1]); return MOVE_CARD(deck.hand[k1]) && MOVE_CARD(deck.hand[k2]) && !(E.cd[k1] > 0) && !(E.cd[k2] > 0) && deck.armed !== 'prize'; };
+let foundR = new Set();
+try { foundR = new Set(JSON.parse(localStorage.getItem('ju.rgcombo') || '[]')); } catch (e) {}
+function foundOne(name) {
+  if (foundR.has(name)) return;
+  foundR.add(name);
+  try { localStorage.setItem('ju.rgcombo', JSON.stringify([...foundR])); } catch (e) {}
+  const p = E.P1; label(p.x, p.y + 640, 'NEW COMBO', '#ffffff', 1.4); shownC = '';
+}
+// the keys: one of the four held back a moment to see whether its partner follows. Together, a combo; alone, it goes as it was pressed
+let pend = null, chord = null, passing = false, actK = null;
+function letGo(a) { passing = true; try { JU.game.press(a); } finally { passing = false; } }
+function chordPress(a) {
+  const now = E.T;
+  if (pend && pend.a !== a && now - pend.t <= CHORD_T) {
+    const pair = [SLOTS.indexOf(pend.a) + 1, SLOTS.indexOf(a) + 1].sort().join(''), first = pend.a;
+    pend = null;
+    if (RPAIRS.includes(pair) && comboReady(pair)) { chord = { pair, t: now }; return true; }
+    letGo(first); return false;                     // (not a pair that makes anything, or not two of the twelve moves, or a key not ready)
+  }
+  if (pend) letGo(pend.a);
+  pend = { a, t: now };
+  return true;
+}
+function comboStart(pair) {
+  const p = E.P1, k1 = keyOf(+pair[0]), k2 = keyOf(+pair[1]);
+  if (p.move || p.ps || p.dashT > 0 || !p.ground || p.dead) return false;
+  if (!comboReady(pair)) return true;               // (the cards changed under it meanwhile: it is dropped)
+  const v = deck.armed === 'coupon' ? 1 : deck.armed === 'extra' ? 2 : 0, def = RCOMBOS[pair][v];
+  if (v) deck.armed = null;                         // (a coupon's version spends the coupon)
+  E.cd[k1] = E.cd[k2] = def.cd; deck.used[k1] = deck.used[k2] = def.cd;
+  cycle(k1); cycle(k2); deck.spent += 2;
+  p.move = { def, key: k1, t: 0, combo: pair };
+  E.hud.mv[k1].classList.add('act'); E.hud.mv[k2].classList.add('act'); actK = [k1, k2];
+  foundOne(def.name);
+  return true;
+}
+function chordTick() {
+  if (pend && E.T - pend.t > CHORD_T) { const a = pend.a; pend = null; letGo(a); }
+  if (chord) { if (E.T - chord.t > .2) chord = null; else if (comboStart(chord.pair)) chord = null; }
+  const m = E.P1.move;
+  if (actK && !(m && m.def.combo)) { for (const k of actK) E.hud.mv[k].classList.remove('act'); actK = null; }
+}
+// under the health bar: the four, ??? until found; the colour of a coupon while one waits
+const combosEl = document.createElement('div');
+combosEl.className = 'lbc rg'; combosEl.setAttribute('aria-hidden', 'true');
+E.root.querySelector('.fb.p1').appendChild(combosEl);
+let shownC = '';
+function paintCombos() {
+  const show = on() && fight();
+  combosEl.classList.toggle('on', show);
+  if (!show) { shownC = ''; return; }
+  const v = deck.armed === 'coupon' ? 1 : deck.armed === 'extra' ? 2 : 0, key = v + '|' + foundR.size;
+  if (key === shownC) return;
+  shownC = key;
+  combosEl.classList.toggle('cpn', v === 1); combosEl.classList.toggle('xtr', v === 2);
+  combosEl.innerHTML = RPAIRS.map(pr => { const d = RCOMBOS[pr][v], has = foundR.has(d.name);
+    return `<i class="${has ? '' : 'q'}"><kbd>${pr[0]}+${pr[1]}</kbd><span>${has ? d.name : '???'}</span></i>`; }).join('');
+}
+
 /* ---------- the hotbar: each key's card, a coupon's colour on the eight while one waits, and NEXT where E would be ---------- */
 const subs = {}, shownK = {};
 let dressed = false;
@@ -1658,24 +1878,29 @@ const ESP = { jp: '次', get col() { return colOf(deck.line[0]); }, name: () => 
   press(p) { const id = deck.line[0]; if (id && !p.dead) label(p.x, p.y + 430, 'NEXT · ' + nameOf(id).toUpperCase(), colOf(id), .8); return true; } };
 
 JU.tech.add('regis', { name: 'Registration', jp: '再契象', mark: '券', who: 'Receipts, and whatever is on them', odds: 0, col: PAPER, glow: 'gold', moves: MOVES,
-  early: true, skin: SKIN, as: ['Registration', '再契象'],
+  early: true, skin: SKIN, as: ['Registration', '再契象'], guard,
   hint: '<b>1–4</b> the cards in your hand · <b>NEXT</b> takes the key of the one you use · a <b>Coupon</b> or an <b>Extra Coupon</b>, then a move' });
 const DEF = T.TECH.regis;
 
 /* ---------- wiring ---------- */
-const tick0 = H.tick, fx0 = H.fx, under0 = H.under, reset0 = H.reset, start0 = H.fightStart;
+const tick0 = H.tick, fx0 = H.fx, under0 = H.under, reset0 = H.reset, start0 = H.fightStart, press0 = H.press;
 let wasRiding = false;
+H.press = (a, inScene) => {
+  if (!inScene && on() && fight() && !passing && SLOTS.includes(a) && chordPress(a)) return true;      // (one of the four: held back a moment, in case it is half of a combo)
+  return press0 ? press0(a, inScene) : false;
+};
 H.tick = dt => {
   tick0(dt);
-  if (!on()) { if (dressed) undress(); nextSlot(false); if (props.length || trap) clear(); return; }
+  if (!on()) { if (dressed) undress(); nextSlot(false); if (props.length || trap) clear(); pend = chord = null; paintCombos(); return; }
   const p = E.P1;
   if (!deck.hand.strikes) deal();
+  chordTick();
   if (wasRiding && !riding && p.ground && !p.plat && p.y > 1) p.ground = false;      // (knocked off it mid-ride: down to the floor, not left sat on the air)
   wasRiding = riding; riding = false;
   if (trap) trapTick(dt);
   propsTick(dt);
   if (fight()) relabel(); else if (dressed) undress();
-  nextSlot(fight());
+  nextSlot(fight()); paintCombos();
 };
 H.under = dt => {
   under0(dt);
@@ -1713,10 +1938,10 @@ H.fx = dt => {
   }
   for (const k of SLOTS) if (WEAPON[deck.hand[k]]) { inHand(p, false, HELD[deck.hand[k]]); break; }      // a weapon he has bought, in his other hand while it is not in use
 };
-const clear = () => { props.length = 0; trap = null; riding = wasRiding = false; };
+const clear = () => { props.length = 0; trap = null; riding = wasRiding = false; pend = chord = null; actK = null; };
 H.reset = () => { reset0(); clear(); deck.hand = {}; };
 H.fightStart = (cfg, wave) => { start0(cfg, wave); if (!wave) { clear(); deal(); undress(); } };
 
-JU.regis = { MOVES, CARDS, WEAPON, ARMS, COUPON, EXTRA, PRIZE, deck, esp: ESP, deal, rollPrize, SKIN,
+JU.regis = { MOVES, CARDS, WEAPON, ARMS, COUPON, EXTRA, PRIZE, deck, esp: ESP, deal, rollPrize, SKIN, RCOMBOS, get found() { return [...foundR]; }, get chord() { return { pend: pend && pend.a, chord: chord && chord.pair }; },
   get state() { return { hand: Object.assign({}, deck.hand), next: deck.line[0], line: deck.line.slice(), armed: deck.armed, ammo: Object.assign({}, deck.ammo), props: props.length, trap: trap && { t: +trap.t.toFixed(2), life: trap.life } }; } };
 })();

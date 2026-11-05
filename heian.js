@@ -29,7 +29,7 @@ const none = () => {};
 
 /* ================= what he looks like ================= */
 const SKIN = '#d6a283', SKIN2 = '#e9b996', INK = '#140a10', ROBE = '#e4ded0', ROBE2 = '#f6f2e7', HAKAMA = '#2b2731', HAKAMA2 = '#3b3644';
-let gape = 0;                                         // how far the mouth across his belly is open: it says the words of his fire, and of the chant
+let gape = 0, pOpen = 0;                              // how far the mouth across his belly is open: it says the words of his fire, and of the chant (pOpen: the player's, aheian.js)
 const bands = (w, h) => { g.fillStyle = INK; g.fillRect(-w / 2, h * .66, w, 3.2); g.fillRect(-w / 2, h * .79, w, 3.2); };      // the black bands round his forearms
 const KING = {
   four: true,                                         // (game.js draws the second pair under the first)
@@ -125,9 +125,8 @@ function cutter(o, y, a, q = {}) {
   C.slice(o.x + dir * 620, y, (dir > 0 ? 0 : Math.PI) + tilt * .3, q.len || 1150, { shift: q.big ? 13 : 8, w: q.big ? 1.4 : .9, delay: .05 });
   C.gash(o.x + dir * 160, rnd(-70, 70), o.x + dir * 1150, rnd(-70, 70), q.big ? 9 : 6, 2.4);
 }
-// a bolt of Kamutoke's: out of the sky onto the mark
-function bolt(x, w, a, big, loud) {
-  const p = E.P1;
+// a bolt of Kamutoke's: out of the sky onto the mark (boltFx: the look of it, which the King's technique shares: aheian.js)
+function boltFx(x, w, big, loud) {
   X.lightning(x + rnd(-60, 60), 1500, x, 0, BOLT, big ? .42 : .26, big ? 9 : 5, 3);
   X.lightning(x + rnd(-140, 140), 1500, x + rnd(-20, 20), 0, BOLT, .2, 3, 2);
   X.flash('215,235,255', big ? .42 : .2, big ? .3 : .16);
@@ -135,10 +134,13 @@ function bolt(x, w, a, big, loud) {
   X.shock(x, w * 2.4, BOLT, .45, 9); V.crack(x, big ? 320 : 150); X.decal('scorch', x, w, BOLT, 6);
   if (big) X.pillar(x, 130, 1500, BOLT, .55);
   if (loud) play('home-lb-crack', big ? .9 : .5, () => sfx.thunder()); else sfx.skyCrack();
-  if (big || p.ps !== 'air') B.burst(x, w, a, 560);      // (one that has thrown him is not hit again by the next in line: only the last one)
 }
-// Furnace, where it lands: most of the arena goes up, and then the floor stays on fire
-function furnace(x, f) {
+function bolt(x, w, a, big, loud) {
+  boltFx(x, w, big, loud);
+  if (big || E.P1.ps !== 'air') B.burst(x, w, a, 560);      // (one that has thrown him is not hit again by the next in line: only the last one)
+}
+// Furnace, where it lands: most of the arena goes up, and then the floor stays on fire (furnaceFx and burning: the look, shared with aheian.js)
+function furnaceFx(x) {
   sfx.fuga(); play('home-tdc-boom', .9, () => sfx.blast());
   X.boom(x, 120, 260, FIRE, { n: 40, shake: 44, flash: .45, life: .8 });
   C.blaze(x, 560, 680, 1.7, 21); C.web(x, 460, 3.6); C.cubes(x, 40, 14, 1.4);
@@ -146,22 +148,30 @@ function furnace(x, f) {
   X.pillar(x, 170, 1300, FIRE, 1.1); X.decal('crater', x, 360, FIRE, 10, 0);
   for (let i = 1; i <= 3; i++) for (const s of [-1, 1]) B.later(i * .09, () => { X.pillar(x + s * i * 175, 70, 760, FIRE, .8); X.boom(x + s * i * 175, 40, 90, FIRE, { n: 8, flash: 0, shake: 0, clean: true }); });
   E.zoomIn(.55);
-  B.burst(x, 520, { dmg: 42, kb: 960, lift: 780, fire: 1 }, 800, f);
-  B.add({ life: 2.6, upd(h, dt) {
-    const p = E.P1;
-    if ((h.tick = (h.tick || 0) - dt) <= 0 && Math.abs(p.x - x) < 420 && p.y < 70) { h.tick = .3; Fi.chip(2.5 * B.mul(), '#ff8c50'); }
+}
+function burning(x, life, hurt) {                     // the floor on fire round x; hurt(h, dt) each moment, for whoever it is meant for
+  B.add({ life, upd(h, dt) {
+    hurt(h, dt);
     if (Math.random() < dt * 40) X.emit(0, x + rnd(-420, 420), rnd(0, 40), rnd(-20, 20), rnd(100, 300), rnd(40, 90), rnd(.3, .6), FIRE, { s1: .3 });
   }, under(h) {
     const u = 1 - h.t / h.life;
     for (let i = 0; i < 7; i++) C.tongue(x + (i - 3) * 120 + Math.sin(i * 7.3) * 30, 0, (60 + 40 * Math.sin(E.T * 3 + i)) * u, 46, i * 1.7, Math.min(1, u * 2));
   } });
 }
-// the two meteors coming down on the mark, and where they meet
-function meteors(tx) {
+function furnace(x, f) {
+  furnaceFx(x);
+  B.burst(x, 520, { dmg: 42, kb: 960, lift: 780, fire: 1 }, 800, f);
+  burning(x, 2.6, (h, dt) => { const p = E.P1; if ((h.tick = (h.tick || 0) - dt) <= 0 && Math.abs(p.x - x) < 420 && p.y < 70) { h.tick = .3; Fi.chip(2.5 * B.mul(), '#ff8c50'); } });
+}
+// the two meteors coming down on the mark, and where they meet (meteorsFx: the look, shared with aheian.js)
+function meteorsFx(tx) {
   sfx.bf(); sfx.cut(2.4); play('home-tdc-boom', .8, () => sfx.blast());
   C.slice(tx - 423, 500, -.87, 2600, { shift: 22, w: 2.4, life: .8 }); C.slice(tx + 423, 500, .87, 2600, { shift: 22, w: 2.4, life: .8, delay: .03 });
   X.boom(tx, 80, 230, RO, { n: 36, shake: 42, flash: .4, life: .7 }); C.cubes(tx, 60, 18, 1.5); C.grid(tx, 640, 260, 4, 7, 3.8);
   V.crack(tx, 520); V.rocks(tx, 0, 28); X.decal('crater', tx, 330, RO, 10, 0); C.frame(.2, tx, 200); E.zoomIn(.5);
+}
+function meteors(tx) {
+  meteorsFx(tx);
   B.burst(tx, 300, { dmg: 32, kb: 1000, lift: 820 }, 800);
   for (const s of [-1, 1]) B.wave(tx + s * 140, s, 1500, 1300, { dmg: 10, kb: 420, lift: 520 }, RED);      // and the floor torn open both ways from it: jump those
 }
@@ -204,13 +214,16 @@ function oneTap(face) {
   const g0 = H.guard; H.guard = null;
   try { return Fi.hurt(face, { dmg: p.hp + 1e4, kb: 1300, lift: 900, exact: 1, shown: p.hp }, 1); } finally { H.guard = g0; }
 }
-function worldCut(o, G) {
+function worldCutFx(G) {
   sfx.bf(); sfx.cut(2.8); shake(44); X.flash(WHITE, .7, .45); X.flash(RO, .35, .8);
   G.xs.forEach((x, i) => C.slice(x, 560, Math.PI / 2, 1700, { shift: 18, w: 1.8, life: .8, delay: i * .012 }));
   G.ys.forEach((y, i) => C.slice(G.cx, y, 0, 3000, { shift: 18, w: 1.8, life: .8, delay: .05 + i * .012 }));
   if (!JU.reduceMotion) gf = { G, t: 0, dur: .32 };
   for (const x of G.xs) C.gash(x, -200, x + rnd(-40, 40), 260, 9, 4);
   E.banner('世界を断つ斬撃', 'WORLD CUTTING SLASH', 'sm');
+}
+function worldCut(o, G) {
+  worldCutFx(G);
   const p = E.P1;
   if (oneTap(o.face)) { C.dice(p, 9, 420, true); C.stamp('断', p.x, p.y + 340, 260); }
   else B.say(p, 'DODGED', '#ffffff');
@@ -383,7 +396,12 @@ const METEORS = { name: 'Twin Meteors', cd: 1e9, below: .55, ok: o => st(o).chan
     E.banner('番いの流星', 'TWIN METEORS', 'sm'); sfx.charge(); sfx.rise(.75); X.dim(.6, 1.4);
     const tx = edge(p.x);
     B.mark(tx, 300, .75, RED);
-    V.custom(.75, u => {                               // two of them out of the sky, one from either side, meeting on him
+    meteorFall(tx);
+    B.later(.75, () => meteors(tx));
+    B.later(1, () => B.say(o, 'DISMANTLE EMPOWERED', RED));
+  } };
+function meteorFall(tx) {
+    V.custom(.75, u => {                               // two of them out of the sky, one from either side, meeting on the mark
       const v = u * u;
       for (const s of [-1, 1]) {
         const rot = Math.atan2(1350, -s * 1150);
@@ -395,9 +413,7 @@ const METEORS = { name: 'Twin Meteors', cd: 1e9, below: .55, ok: o => st(o).chan
         if (Math.random() < .9) X.emit(5, lerp(tx + s * 1150, tx, v) + rnd(-40, 40), lerp(1350, 0, v) + rnd(-40, 40), s * rnd(100, 400), rnd(100, 500), rnd(3, 6), rnd(.3, .6), Math.random() < .5 ? RO : '255,190,120');
       }
     });
-    B.later(.75, () => meteors(tx));
-    B.later(1, () => B.say(o, 'DISMANTLE EMPOWERED', RED));
-  } };
+}
 const RECOIL = { name: 'Recoil', cd: 24, below: .35, ok: o => st(o).chant >= 2, wind: 2.6, pre: CHANT_POSE, dur: 1.4,
   charge(o, p, A, u) {
     if (!A.c) {
@@ -453,13 +469,13 @@ H.tick = dt => {
   tick0(dt);
   const p = E.P1, o = E.P2;
   if (p.dashT > 0) lastDash = E.T;
-  if (!king(o) || o.ko) { gape += (0 - gape) * (1 - Math.exp(-dt * 10)); return; }
+  if (!king(o) || o.ko) { gape += (pOpen - gape) * (1 - Math.exp(-dt * 10)); return; }
   const S = st(o), A = o.state === 'act' && o.act, m = A && A.a;
   o.poise = !!(m && m.run);                           // nothing stops him in the middle of something of his own
   const off = o.state === 'hurt' || o.state === 'air' || o.state === 'down' || o.state === 'up';
   S.lock = off ? S.lock + dt : Math.max(0, S.lock - dt * 2);
   if (S.lock > 3 && o.state === 'hurt' && !Fi.fight.paused && !p.dead) { S.lock = 0; o.state = 'act'; o.act = { a: THROW, t: 0 }; o.tele = 0; o.vx = 0; }
-  const open = m && (m === OPEN || m === FURNACE || CHANTS.includes(m)) ? 1 : 0;
+  const open = Math.max(pOpen, m && (m === OPEN || m === FURNACE || CHANTS.includes(m)) ? 1 : 0);
   gape += (open - gape) * (1 - Math.exp(-dt * 10));
   // the second pair of arms: following the first, unless the move puts them somewhere (game.js draws them where o.low says)
   const want = m && LOW.get(m), k = 1 - Math.exp(-dt * 14), ps = o.pose, dflt = [ps[2] * .6 - .2, ps[3] * .55 + .45];
@@ -480,5 +496,6 @@ H.fightStart = (cfg, wave) => {
 };
 H.reset = () => { reset0(); gape = 0; gf = null; };
 
-JU.heian = { KING, KIT, st, oneTap, get gape() { return gape; } };
+JU.heian = { KING, KIT, st, oneTap, get gape() { return gape; }, set mouth(v) { pOpen = v; },
+  boltFx, furnaceFx, burning, meteorFall, meteorsFx, lines, drawGrid, worldCutFx, staff, CHANT_POSE, RAISE, BOW, LV, TILT, RED, RO, FIRE, BOLT };
 })();
