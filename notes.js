@@ -5,6 +5,13 @@
 // Newest first. v = the build, jp = the seal stamped beside it, pic = notes/<pic>.jpg, cap = what the picture shows.
 // A new update goes at the top of this list.
 const NOTES = [
+  { v: '0.28', name: 'Registration', jp: '再契象', date: '5 Nov 2026', pic: 'registration', cap: 'Registration: the golden bat, three scooters, a house, and the fire department', items: [
+    'A new technique, in Early Access: REGISTRATION, the Receipt Man\'s. Whatever a receipt says he bought, he has again. He has no E of his own: where E would be is the card that comes in NEXT, smaller',
+    'Ten cards, shuffled at the start of a fight: eight moves, a Coupon and an Extra Coupon. Four of them are on 1 to 4. Use one and it goes to the back, and NEXT takes its key',
+    'The eight: Home Run (a bat, 26), Hit and Run (a scooter, 24, and they are down), Kitchen Nightmare (two knives, 30), Express Delivery (a stack of boxes on them, 20, and shut in under it), Road Rage (a car, 40), Furniture Frenzy (a chair over the head and a kick, 30), Fire Extinguisher (the spray, and then the bottle, 30) and Final Purchase (a house, 65)',
+    'A Coupon: the next of the eight you use is its coupon version, and until then they all say USE A MOVE. Home Run: Pitch throws a baseball first (50) and then the bat (100). The other seven have something thrown in as well, 130 each, and Final Purchase 170 (the house, and then everything that was in it)',
+    'An Extra Coupon: the extra version, bigger or more of it. A golden bat three times the size, three scooters, the whole knife block, a bulk order of boxes, the bus, a sofa, the fire department and a mansion: 130 to 220',
+    'Use the Coupon on the Extra Coupon (the Coupon, then the Extra Coupon) and it is a prize: the next of the eight is not done at all, and its receipt buys a pistol with two bullets (40 each), a sniper rifle with one (150) or a cursed tool at the Cursed Tools reel\'s odds (the katana three times, the chain twice, Playful Cloud three times, the Inverted Spear once). It stays on that key until it is used up'] },
   { v: '0.27v2', name: 'Thunder God\'s Wrath', jp: '雷神', date: '5 Nov 2026', pic: 'wrath', cap: 'The Lightning Beast\'s 4: the stomp, the punch, the kick, and what comes down when it kills', items: [
     'The Lightning Beast has its 4: Thunder God\'s Wrath (22 s). He stomps, and the floor goes off round him in lightning (5): whoever is near enough is stunned where they stand',
     'Then he is in at them: a punch with all of it in it (11), and a kick with the lightning in it that no guard holds and that sends them flying, end over end (14). 30 in all, or 25 if the stomp did not catch them',

@@ -766,6 +766,7 @@ if (JU.slit && JU.slit.esp) add('slit', JU.slit.esp);
 if (JU.gambler && JU.gambler.esp) add('gambler', JU.gambler.esp);
 if (JU.uro && JU.uro.esp) add('uro', JU.uro.esp);                // (Build 0.24: Sky Mirror)
 if (JU.beast && JU.beast.esp) add('beast', JU.beast.esp);        // (Build 0.27: the Lightning Beast's meter)
+if (JU.regis && JU.regis.esp) add('regis', JU.regis.esp);        // (Build 0.28: Registration has no E of its own; the slot shows its NEXT card)
 const RATIO = { name: 'Ratio', show: true };         // (Ratio Man's E is the Ratio, ratio.js: shown here, not done here)
 
 /* ================= E ================= */
