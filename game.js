@@ -551,7 +551,7 @@ function applyHit(o, face, h) {
   addNum(o.x, o.y + 270 * hs, +dmg.toFixed(1), h.heavy ? '#ffd27a' : '#fff');
   if (h.ring) addRing(o.x, '255,150,90', 300);
   if (!h.mute) sfx.hit(!!h.heavy);         // (mute: the technique that landed it plays a sound of its own)
-  if (hooks.hit) hooks.hit(o, face, h);
+  if (hooks.hit) hooks.hit(o, face, h, dmg);   // (dmg: what it took. Build 0.31v1: the harder the blow that threw them, the longer they lie there, ragdoll.js)
   if (dead && !o.ko) {
     o.ko = true;
     if (hooks.ko && hooks.ko(o)) return;      // a staged fight decides what winning means

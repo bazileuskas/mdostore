@@ -194,7 +194,7 @@ function struck(m) {
     if (m.brk) a.brk = 1;                            // (it breaks a guard, whatever it weighs)
     if (m.dn) a.lying = 1;                           // (his game saw it land on me lying there: it was made to reach somebody on the floor. foes.js lets it through)
     landed = Fi.hurt(face, a, 1) || (!!JU.block && JU.block.state.broken > gb);      // (a guard it broke on the way in counts as landing)
-    if (landed && JU.ragdoll && (m.rag === 'up' || m.rag === 'slam')) JU.ragdoll.me(m.rag);      // (his uppercut or down slam: on the floor, and for longer. Build 0.30v3, ragdoll.js)
+    if (landed && JU.ragdoll) JU.ragdoll.me(m.rag, Math.min(m.dmg, HP * CAP));      // (his uppercut or down slam: on the floor, and for longer, Build 0.30v3; and any blow that throws me, for longer the harder it was, Build 0.31v1: ragdoll.js)
   }
   else Fi.chip(dmg, '#ff5a6e');                      // nothing behind it: rot, bleeding, a domain's sure-hit
   mute = false;
