@@ -5,6 +5,10 @@
 // Newest first. v = the build, jp = the seal stamped beside it, pic = notes/<pic>.jpg, cap = what the picture shows.
 // A new update goes at the top of this list.
 const NOTES = [
+  { v: '0.30v1', name: 'Overcharge', jp: '過充電', date: '6 Nov 2026', pic: 'overcharge', cap: 'Ultra Cannon held: charging, let go, on a body on the floor; and Puppet Breaker catching one in the air', items: [
+    'Mechamaster is the regular Yuji now, in his own look, not a puppet\'s (the giant still has him in its cockpit). Every move is orange: the punches, the cannon, the thrusters, the cable and the giant\'s moves. Super Charge\'s aura is still blue, and its puppet looks as it did',
+    'Ultra Cannon can be held. Tap 2 and it is as it was (45). Hold it and it goes on charging, for up to 1.3 seconds; let go, or reach 1.3, and it is a beam that stays on, longer and wider, out to the wall: 4 to 8 hits of 5 and a burst of 25 to 40 where it ends, 45 to 80 by how long it was held. Fully charged, the burst sends them flying',
+    'Ultra Cannon and Puppet Breaker reach them ragdolled, flat on the floor or flung into the air: both aim at where they are, and Puppet Breaker drags a body on the floor in along the floor before the punch. The puppet\'s Ultra Cannon and Puppet Breaker do the same'] },
   { v: '0.30', name: 'Mechamaster', jp: '傀儡操術', date: '6 Nov 2026', pic: 'mechamaster', cap: 'Super Charge\'s puppet, the giant coming up, the Absolute Cannon and Seventeen Years', items: [
     'A new technique, in Early Access: MECHAMASTER. He is a puppet himself, worked from somewhere else, and he has more of them. Gunmetal all over, a core in his chest, yellow eyes behind a faceplate, and thrusters on his back',
     'Mechanical Barrage: both arms out on their pistons, eight punches and a piston uppercut (40). Ultra Cannon: energy gathered in his palm, then a beam that bursts where it lands (45). Steel Propulsion: thrusters, across at them, hold of them, up, and down into the floor (35). Puppet Breaker: his arm fired out on its cable, them pulled back in on it, and one punch (40)',

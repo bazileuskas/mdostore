@@ -18,6 +18,9 @@
                             E EMERGENCY THRUSTERS (10) full burn forward through whatever is in the way (40)
                             Its armour takes half of every blow, and nothing staggers it. Empty (or after 45 seconds), it powers down and
                             he climbs out
+   Build 0.30v1, the user's: he looks like the regular Yuji now (no puppet's body of his own; the giant still has him in its cockpit),
+   every move is orange (blue is left to Super Charge's aura, as their list had it), Ultra Cannon and Puppet Breaker reach them ragdolled
+   (on the floor or flung), and Ultra Cannon held charges for up to 1.3 s into a longer, wider beam (45 to 80 by the charge; a tap is 45)
    The game calls him what the technique is called, Mechamaster; the character's own name is left to the series */
 (() => {
 'use strict';
@@ -25,12 +28,14 @@
 const E = JU.eng, g = E.g, F = E.F, cam = E.cam, H = E.hooks, POSE = E.POSE, LINE = E.LINE, TOR = E.TOR, V = JU.vfx, sfx = JU.sfx, Fi = JU.fights, T = JU.tech, X = JU.bossfx, C = JU.cast;
 const { rnd, lerp, clamp, ease } = E, TAU = Math.PI * 2, SLOTS = T.SLOTS;
 const CYAN = '#7fd8ff', CRGB = '127,216,255', GOLD = '#ffc94a', GRGB = '255,201,74', FIRE = '255,140,60', WHITE = '255,255,255';
+const ORANGE = '#ff8a2a', ORGB = '255,138,42';      // (every move's colour since 0.30v1, the user's. Blue is Super Charge's aura; gold, the giant's own)
 const play = (name, vol, alt, rate = 1) => { if (!sfx.file(name, vol, rate)) alt(); };      // the clip (at home ours, online from where it is posted), or a built sound
 sfx.preload(['home-tdc-beam', 'home-tdc-charge', 'home-tdc-shoot', 'home-tdc-boom', 'home-tdc-sweep']);
 const shake = v => { cam.shake = Math.max(cam.shake, v); };
 const duel = () => !!(Fi.fight.cfg && Fi.fight.cfg.pvp);
 const live = o => !!o && !o.ko && !(o.alpha < 1);
 const can = o => live(o) && !(o.inv > 0) && o.state !== 'down' && o.state !== 'up';
+const canR = o => live(o) && !(o.inv > 0) && o.state !== 'up';      // (and ragdolled too: flat on the floor, or flung. Ultra Cannon's and Puppet Breaker's, the user's)
 const holdable = o => live(o) && !duel() && !o.net && !o.poise;
 const exact = (o, n) => n / (o.dr || 1);
 const hs = o => o.scale || 1;
@@ -39,13 +44,13 @@ const bound = () => (H.bound ? H.bound() : 965);
 const facing = (f, o) => { if (live(o)) f.face = o.x >= f.x ? 1 : -1; };
 const gapOf = (f, o) => (live(o) ? (o.x - f.x) * f.face : 9999);
 const label = (x, y, text, col = CYAN, life = 1.1) => E.fx.push({ k: 2, x, y, n: text, col, t: 0, life });
-const big = (p, o, word, col = CYAN, kind = 'bw') => { if (JU.ms) JU.ms.bigHit(p, o, word, col, kind); };
+const big = (p, o, word, col = ORANGE, kind = 'bw') => { if (JU.ms) JU.ms.bigHit(p, o, word, col, kind); };
 const lit = fn => { g.globalCompositeOperation = 'lighter'; fn(); g.globalCompositeOperation = 'source-over'; };
 // where a hand is, for whoever is that size (E.hand counts the rig at its own size)
 const fist = (f, front) => { const h = E.hand(f, front), s = hs(f); return [f.x + (h[0] - f.x) * s, f.y + (h[1] - f.y) * s]; };
 // a blow of his (or his puppet's) on them wherever they are, worth exactly what it says; and one in front, in reach, the engine's own way
-function hit(o, face, dmg, more) { if (!can(o)) return false; E.applyHit(o, face, Object.assign({ dmg: exact(o, dmg), kb: 200, stun: .6, stop: .06, col: CYAN, fixed: 1 }, more)); return true; }
-const reach = (f, r, dmg, more) => { const o = E.P2; return live(o) && E.tryHit(f, Object.assign({ reach: r, dmg: exact(o, dmg), kb: 200, stun: .6, stop: .06, col: CYAN, fixed: 1 }, more)); };
+function hit(o, face, dmg, more, any) { if (!(any ? canR : can)(o)) return false; E.applyHit(o, face, Object.assign({ dmg: exact(o, dmg), kb: 200, stun: .6, stop: .06, col: ORANGE, fixed: 1 }, more)); return true; }
+const reach = (f, r, dmg, more) => { const o = E.P2; return live(o) && E.tryHit(f, Object.assign({ reach: r, dmg: exact(o, dmg), kb: 200, stun: .6, stop: .06, col: ORANGE, fixed: 1 }, more)); };
 // the end of a move, whoever was doing it: the engine's for him, the puppet's own for it
 const done = (f, m) => { if (f === E.P1) E.endMove(f); else m.end = 1; };
 
@@ -104,12 +109,13 @@ const ABSOLUTE = {
   legF: ['#2c3039', '#383d48', '#16181d', '#1f2228', .2], legB: ['#1e2128', '#282c34', '#101114', '#16181c', .2],
   chest() {
     g.strokeStyle = GOLD; g.lineWidth = 3; g.beginPath(); g.moveTo(-4, -TOR + 4); g.lineTo(13, -30); g.lineTo(30, -TOR + 4); g.stroke();      // a V of gold down the front
-    g.fillStyle = '#0d1a22'; g.beginPath(); g.roundRect(-27, -64, 22, 22, 7); g.fill();                                                         // the cockpit, in the side of it (the arm would hide it on the front)
-    g.fillStyle = 'rgba(127,216,255,.38)'; g.beginPath(); g.roundRect(-25.5, -62.5, 19, 19, 6); g.fill();
-    g.fillStyle = '#e9e4d8'; g.beginPath(); g.arc(-16, -55, 3.6, 0, TAU); g.fill();                                                              // him, bandaged, at the controls
-    g.fillStyle = '#2a2e38'; g.fillRect(-19.5, -51.5, 7, 7);
-    g.strokeStyle = 'rgba(255,255,255,.6)'; g.lineWidth = 1.5; g.beginPath(); g.moveTo(-23, -60); g.lineTo(-19, -60); g.stroke();
-    g.lineWidth = 1.8; g.strokeStyle = GOLD; g.beginPath(); g.roundRect(-27, -64, 22, 22, 7); g.stroke();
+    g.fillStyle = '#0d1a22'; g.beginPath(); g.roundRect(-27, -60, 22, 22, 7); g.fill();                                                         // the cockpit, in the side of it (the arm would hide it on the front)
+    g.fillStyle = 'rgba(127,216,255,.38)'; g.beginPath(); g.roundRect(-25.5, -58.5, 19, 19, 6); g.fill();
+    g.fillStyle = '#1b2033'; g.fillRect(-21, -45, 10, 5.5); g.fillStyle = '#c4142c'; g.fillRect(-21, -45, 10, 2);                              // him at the controls: the jacket and its red hood,
+    g.fillStyle = '#e8b992'; g.beginPath(); g.arc(-16, -48.6, 3.6, 0, TAU); g.fill();                                                              // his face,
+    g.fillStyle = '#f08ea6'; g.beginPath(); g.moveTo(-19.8, -49.4); g.lineTo(-19, -54); g.lineTo(-17.5, -51.8); g.lineTo(-16, -55.6); g.lineTo(-14.5, -51.8); g.lineTo(-13, -53.6); g.lineTo(-12.4, -49.4); g.closePath(); g.fill();      // and the pink of his hair
+    g.strokeStyle = 'rgba(255,255,255,.55)'; g.lineWidth = 1.5; g.beginPath(); g.moveTo(-24, -44); g.lineTo(-22, -46.5); g.stroke();             // (the glass, catching the light)
+    g.lineWidth = 1.8; g.strokeStyle = GOLD; g.beginPath(); g.roundRect(-27, -60, 22, 22, 7); g.stroke();
     g.fillStyle = 'rgba(0,0,0,.35)'; for (let i = 0; i < 3; i++) g.fillRect(-26, -34 + i * 7, 18, 3);                                           // vents
     g.fillStyle = GOLD; for (const [x, y] of [[-24, -TOR + 8], [27, -TOR + 8], [-24, -14], [27, -14]]) { g.beginPath(); g.arc(x, y, 1.8, 0, TAU); g.fill(); }
   },
@@ -144,64 +150,167 @@ function jets(f, hard) {
 
 /* ================= 1 — MECHANICAL BARRAGE ================= */
 const PUNCH_EVERY = .065, BARR_N = 8, ARM_REACH = 360;
-const BARRAGE = { name: 'Mechanical Barrage', cd: 9, dur: 1.05, glow: 'blue', run(f, m, t) {
+const BARRAGE = { name: 'Mechanical Barrage', cd: 9, dur: 1.05, glow: 'fire', run(f, m, t) {
   const o = E.P2;
   f.rate = 46; f.vx = 0;
-  if (!m.s) { m.s = 1; facing(f, o); sfx.steam(); }
+  if (!m.s) { m.s = 1; facing(f, o); sfx.whoosh(); }
   if (t < .12) { f.target = OUT; return; }
   if (t < .12 + BARR_N * PUNCH_EVERY) {               // both arms out on their pistons, one after the other
     const n = Math.min(BARR_N, Math.floor((t - .12) / PUNCH_EVERY) + 1);
     f.target = n % 2 ? POSE.jab : POSE.cross; m.ext = t;
-    while ((m.n || 0) < n) { m.n = (m.n || 0) + 1; m.pt = t; sfx.hit(false); if (reach(f, ARM_REACH * hs(f), 3, { kb: 30, stun: .5, stop: .02 })) V.sparks(o.x - f.face * 20, mid(o), 'white', 4); }
+    while ((m.n || 0) < n) { m.n = (m.n || 0) + 1; m.pt = t; sfx.hit(false); if (reach(f, ARM_REACH * hs(f), 3, { kb: 30, stun: .5, stop: .02 })) V.sparks(o.x - f.face * 20, mid(o), 'fire', 4); }
     return;
   }
   m.ext = 0;
   f.target = t < .72 ? POSE.crushWind : t < .95 ? UPPER : POSE.idle;
   if (t < .72) { if (gapOf(f, o) > 190 * hs(f) && Math.abs(f.x + f.face * 80) < bound()) { f.vx = f.face * 1900; jets(f); } return; }      // (the piston drives him in for it)
   if (t >= .72 && !m.up) {                            // and the piston behind the last one, straight up
-    m.up = 1; sfx.steam(); sfx.blast(); shake(16);
+    m.up = 1; sfx.blast(); sfx.whoosh(); shake(16);
     const h = fist(f, true);
-    if (X) for (let i = 0; i < 6; i++) X.emit(2, h[0], h[1] - 40, rnd(-120, 120), rnd(40, 200), rnd(30, 55), rnd(.4, .7), '235,238,242', { s1: 2, a: .6, dr: 2 });
-    if (reach(f, 250 * hs(f), 16, { kb: 100, lift: 1150, stun: 1, stop: .12, heavy: 1 })) big(f, o, 'ガシャン', CYAN);
+    if (X) for (let i = 0; i < 10; i++) X.emit(1, h[0], h[1] - 20, rnd(-220, 220), rnd(200, 700), rnd(3, 6), rnd(.25, .45), ORGB);
+    if (reach(f, 250 * hs(f), 16, { kb: 100, lift: 1150, stun: 1, stop: .12, heavy: 1 })) big(f, o, 'ガシャン', ORANGE);
   }
 } };
-// the arms as they go out and come back on the pistons (drawn in H.fx)
+// the arms as they go out and come back (drawn in H.fx): his reach drawn out in orange cursed energy, to a fist of it
 function armsOut(f, m) {
   const u = clamp((m.ext - m.pt) / PUNCH_EVERY, 0, 1), front = (m.n || 0) % 2 === 1, s = hs(f), d = Math.sin(u * Math.PI) * ARM_REACH * .85 * s;
   for (const fr of [front, !front]) {
     const h = fist(f, fr), L = fr === front ? d : d * .25, end = [h[0] + f.face * L, h[1]], a = F(h[0], h[1]), b = F(end[0], end[1]), k = a[2] * s;
-    g.strokeStyle = LINE; g.lineWidth = 9 * k; g.lineCap = 'round'; g.beginPath(); g.moveTo(a[0], a[1]); g.lineTo(b[0], b[1]); g.stroke();
-    g.strokeStyle = '#a3acb8'; g.lineWidth = 5 * k; g.stroke(); g.strokeStyle = '#e4e8ee'; g.lineWidth = 1.6 * k; g.stroke(); g.lineCap = 'butt';
-    g.fillStyle = '#2c3038'; g.beginPath(); g.roundRect(b[0] - 12 * k, b[1] - 12 * k, 24 * k, 24 * k, 5 * k); g.fill(); g.lineWidth = 2.5 * k; g.strokeStyle = LINE; g.stroke();
+    if (L > 4) ray(a, b, 7 * k, ORGB, .85);
+    energyFist(b, k);
   }
+}
+// a fist of orange cursed energy, at a point on the screen
+function energyFist(b, k, r = 1) {
+  const q = k * r;
+  lit(() => E.glow(E.GLOW.fire, b[0], b[1], 64 * q, .85));
+  g.fillStyle = '#ff9a3c'; g.beginPath(); g.roundRect(b[0] - 12 * q, b[1] - 11 * q, 24 * q, 22 * q, 6 * q); g.fill();
+  g.lineWidth = 2.4 * k; g.strokeStyle = '#6a2604'; g.stroke();
+  g.fillStyle = '#ffe9cf'; g.beginPath(); g.roundRect(b[0] - 6 * q, b[1] - 5 * q, 12 * q, 10 * q, 3 * q); g.fill();
 }
 
 /* ================= 2 — ULTRA CANNON ================= */
-const CANNON = { name: 'Ultra Cannon', cd: 11, dur: 1.2, glow: 'blue', run(f, m, t) {
+// Tapped: gathered in the palm and let go (30, and 15 round where it lands). Held (Build 0.30v1, the user's: "make ultra cannon be holdable
+// and if held will become a more powerful longer beam and make it chargeable for 1.3 seconds for the held mode"): still held when a tap
+// would fire, it goes on gathering until it is let go or 1.3 s is up, and then it is a beam that stays on: longer, wider, out to the wall,
+// 4 to 8 x 5 on them and 25 to 40 where it ends (45 to 80, by how long it was held). Either way it finds them where they are, ragdolled
+// too: flat on the floor, or flung
+const C_TAP = .55, C_FULL = 1.3;
+const cannonHeld = () => E.keys.has('2') || E.keys.has('hold:crush');      // (the key, or its button on a touch screen)
+const bodyY = o => (o.state === 'down' ? o.y + 40 * hs(o) : mid(o));
+// which way a shot from (hx, hy) goes: at them if they are in front, wherever they are (as far up or down as maxA), level if not
+function aimAt(f, hx, hy, o, maxA = .95) {
+  if (!canR(o) || (o.x - f.x) * f.face < -40) return [f.face, 0];
+  const a = clamp(Math.atan2(bodyY(o) - hy, Math.max(1, (o.x - hx) * f.face)), -maxA, maxA);
+  return [f.face * Math.cos(a), Math.sin(a)];
+}
+// how far it goes along (ux, uy): as far as max, or to the wall, or to the floor
+function beamEnd(hx, hy, ux, uy, max) {
+  const eb = bound();
+  let d = max;
+  if (Math.abs(ux) > .01) d = Math.min(d, ((ux > 0 ? eb : -eb) - hx) / ux);
+  if (uy < -.01) d = Math.min(d, -hy / uy);
+  d = Math.max(0, d);
+  return [hx + ux * d, hy + uy * d, d];
+}
+// whether any of them is within w of it (lying down, there is less of them to hit)
+function onBeam(o, hx, hy, ux, uy, d, w) {
+  if (!canR(o)) return false;
+  const top = o.y + (o.state === 'down' ? 90 : 300) * hs(o), r = w + 40 * hs(o);
+  for (const by of [o.y + 20, (o.y + top) / 2, top - 20]) {
+    const t = clamp((o.x - hx) * ux + (by - hy) * uy, 0, d);
+    if (Math.hypot(hx + ux * t - o.x, hy + uy * t - by) < r) return true;
+  }
+  return false;
+}
+// a shot's look: the boss beam when it is level, a ray of it when it is not
+function shotFx(x0, y0, x1, y1, w, life) {
+  if (!X) return;
+  if (Math.abs(y1 - y0) < 30) { X.beam(x0, x1, y0, w, ORGB, life); return; }
+  V.custom(life, u => { const a = F(x0, y0), b = F(x1, y1), q = 1 - u * u; ray(a, b, w * 1.2 * a[2] * q, ORGB, q); });
+  X.flash(ORGB, .16, .2);
+}
+const CANNON = { name: 'Ultra Cannon', cd: 11, dur: 3.2, glow: 'fire', run(f, m, t) {
   const o = E.P2;
   f.rate = 36; f.vx = 0;
   if (!m.s) { m.s = 1; facing(f, o); play('home-tdc-charge', .6, () => { sfx.charge(); sfx.rise(.5); }); }
   const h = fist(f, true);
-  if (t < .55) {                                      // gathered in the palm
+  if (m.fire === undefined) {                         // gathered in the palm
     f.target = PALM;
-    if (X && Math.random() < .9) { const a = rnd(0, TAU), r = rnd(60, 170); X.emit(1, h[0] + Math.cos(a) * r, h[1] + Math.sin(a) * r, -Math.cos(a) * r * 5, -Math.sin(a) * r * 5, rnd(2, 4), .18, CRGB); }
+    const c = m.held ? clamp((t - C_TAP) / (C_FULL - C_TAP), 0, 1) : 0;
+    if (X && Math.random() < .9) { const a = rnd(0, TAU), r = rnd(60, 170) * (1 + c); X.emit(1, h[0] + Math.cos(a) * r, h[1] + Math.sin(a) * r, -Math.cos(a) * r * 5, -Math.sin(a) * r * 5, rnd(2, 4) * (1 + c * .8), .18, ORGB); }
+    if (t < C_TAP) return;
+    if (m.held === undefined) {                       // still held when a tap would go: it goes on gathering
+      m.held = cannonHeld();
+      if (m.held) { label(f.x, f.y + 540 * hs(f), 'CHARGING', ORANGE, .8); V.ring(h[0], h[1], 130, ORANGE, .24); sfx.rise(.9); }
+    }
+    if (m.held && t < C_FULL && cannonHeld()) { facing(f, o); if (Math.random() < .2 + c * .4) shake(3 + c * 6); return; }
+    m.fire = t;
+    if (m.held) heldShot(f, m, h, clamp((t - C_TAP) / (C_FULL - C_TAP), 0, 1)); else tapShot(f, h);
     return;
   }
-  f.target = t < .9 ? PALM : POSE.idle;
-  if (m.fire) return;
-  m.fire = 1;
-  const far = live(o) ? (o.x - f.x) * f.face : -1, on = can(o) && far > -40 && far < 1400 && Math.abs(mid(o) - h[1]) < 180 + 60 * hs(o), x1 = on ? o.x : f.x + f.face * 1300, y1 = on ? mid(o) : h[1];
-  play('home-tdc-shoot', .8, () => sfx.cannon()); shake(18);
-  if (X) { X.beam(h[0], x1, h[1], 22 * hs(f), CRGB, .35); X.flash(WHITE, .18, .14); }
-  if (on) hit(o, f.face, 30, { kb: 650, lift: 380, stun: 1, stop: .14, heavy: 1 });
-  E.after(.08, () => {                                // and it bursts where it lands
-    if (X) X.boom(x1, y1, 110, CRGB, { n: 18, hot: WHITE }); E.addBlast(x1, y1, CRGB, 300); sfx.blast();
-    const q = E.P2; if (can(q) && Math.abs(q.x - x1) < 200 + 40 * hs(q)) hit(q, q.x >= x1 ? 1 : -1, 15, { kb: 500, lift: 300, stun: .8, stop: .08 });
-  });
+  const k = t - m.fire, b = m.beam;
+  if (!b) { f.target = k < .35 ? PALM : POSE.idle; if (k > .65) done(f, m); return; }      // (the tapped one: and back)
+  f.target = PALM;
+  if (k < b.life) {                                   // the held one, on: it follows them a little, and wears them down
+    const hh = fist(f, true), [ux, uy] = aimAt(f, hh[0], hh[1], o);
+    b.ux = lerp(b.ux, ux, .1); b.uy = lerp(b.uy, uy, .1);
+    const n = Math.hypot(b.ux, b.uy) || 1; b.ux /= n; b.uy /= n;
+    const e = beamEnd(hh[0], hh[1], b.ux, b.uy, 2600); b.ex = e[0]; b.ey = e[1]; b.d = e[2]; b.hx = hh[0]; b.hy = hh[1];
+    if (Math.random() < .5) shake(5 + 6 * b.c);
+    if (X && Math.random() < .8) X.emit(1, b.ex, b.ey, rnd(-500, 500), rnd(100, 700), rnd(3, 6), .3, ORGB);
+    const due = Math.min(b.n, Math.floor(k / (b.life / b.n)) + 1);
+    while (b.i < due) { b.i++; if (onBeam(o, hh[0], hh[1], b.ux, b.uy, b.d, b.w) && hit(o, f.face, 5, { kb: 160, lift: 240, stun: .6, stop: .02, mute: b.i % 2 === 0 ? 1 : 0 }, true)) b.hits++; }
+    return;
+  }
+  if (!b.done) {                                      // and where it ends, it bursts
+    b.done = 1;
+    const on = onBeam(o, b.hx, b.hy, b.ux, b.uy, b.d, b.w + 40), ex = on ? o.x : b.ex, ey = on ? bodyY(o) : b.ey;
+    if (X) { X.boom(ex, ey, lerp(150, 230, b.c), ORGB, { n: 26, hot: WHITE, flash: .25 }); X.shock(ex, 700, ORGB, .5, 12); }
+    E.addBlast(ex, ey, ORGB, 520); V.crack(ex, 260); sfx.blast(); sfx.rough(.9); shake(30);
+    if ((on || (canR(o) && Math.abs(o.x - ex) < 220 + 40 * hs(o) && Math.abs(bodyY(o) - ey) < 360)) && hit(o, o.x >= f.x ? 1 : -1, b.burst, { kb: lerp(700, 1100, b.c), lift: lerp(500, 760, b.c), stun: 1.1, stop: .18, heavy: 1, flung: b.c >= 1 ? 1 : 0 }, true)) big(f, o, 'ドォン', ORANGE, 'neg');
+  }
+  f.target = k < b.life + .3 ? PALM : POSE.idle;
+  if (k > b.life + .45) done(f, m);
 } };
+// tapped: the beam, and where it lands it bursts (30, and 15 round it)
+function tapShot(f, h) {
+  const o = E.P2, [ux, uy] = aimAt(f, h[0], h[1], o), [x1, y1, d] = beamEnd(h[0], h[1], ux, uy, 1400), on = onBeam(o, h[0], h[1], ux, uy, d, 22 * hs(f));
+  const ex = on ? o.x : x1, ey = on ? bodyY(o) : y1;
+  play('home-tdc-shoot', .8, () => sfx.cannon()); shake(18);
+  shotFx(h[0], h[1], ex, ey, 22 * hs(f), .35); if (X) X.flash(WHITE, .18, .14);
+  if (on) hit(o, f.face, 30, { kb: 650, lift: 380, stun: 1, stop: .14, heavy: 1 }, true);
+  E.after(.08, () => {
+    if (X) X.boom(ex, ey, 110, ORGB, { n: 18, hot: WHITE }); E.addBlast(ex, ey, ORGB, 300); sfx.blast();
+    const q = E.P2; if (canR(q) && Math.abs(q.x - ex) < 200 + 40 * hs(q) && Math.abs(bodyY(q) - ey) < 400) hit(q, q.x >= ex ? 1 : -1, 15, { kb: 500, lift: 300, stun: .8, stop: .08 }, true);
+  });
+}
+// held: the long one, as strong as it was charged (c, 0 to 1)
+function heldShot(f, m, h, c) {
+  const o = E.P2, [ux, uy] = aimAt(f, h[0], h[1], o);
+  m.beam = { c, ux, uy, hx: h[0], hy: h[1], ex: h[0], ey: h[1], d: 0, life: lerp(.45, .9, c), w: lerp(28, 46, c) * hs(f), n: Math.round(lerp(4, 8, c)), burst: Math.round(lerp(25, 40, c)), i: 0, hits: 0 };
+  play('home-tdc-beam', .9, () => sfx.cannon()); sfx.blast(); shake(26); E.zoomIn(.2);
+  label(f.x, f.y + 560 * hs(f), c >= 1 ? 'ULTRA CANNON · FULL' : 'ULTRA CANNON', ORANGE, .9);
+  if (X) { X.flash(WHITE, .2, .18); X.flash(ORGB, .22, .3); }
+}
+// the palm while it gathers, and the held beam while it is on (drawn in H.fx)
+function cannonFx(f, m) {
+  const h = fist(f, true), c = F(h[0], h[1]), k = c[2] * hs(f);
+  if (m.fire === undefined) {
+    const ch = m.held ? clamp((m.t - C_TAP) / (C_FULL - C_TAP), 0, 1) : clamp(m.t / C_TAP, 0, 1) * .35;
+    lit(() => E.glow(E.GLOW.fire, c[0], c[1], (50 + 150 * ch) * k, .65 + .25 * Math.sin(E.T * 34)));
+    g.fillStyle = '#fff1dc'; g.beginPath(); g.arc(c[0], c[1], (4 + 9 * ch) * k, 0, TAU); g.fill();
+    return;
+  }
+  const b = m.beam;
+  if (!b || b.done || !(b.d > 0)) return;
+  const a = F(b.hx, b.hy), e = F(b.ex, b.ey), fl = 1 + .12 * Math.sin(E.T * 60);
+  ray(a, e, b.w * a[2] * fl, ORGB, 1);
+  lit(() => { E.glow(E.GLOW.fire, a[0], a[1], b.w * 4 * a[2], .9); E.glow(E.GLOW.fire, e[0], e[1], b.w * 5 * e[2], .8); });
+}
 
 /* ================= 3 — STEEL PROPULSION ================= */
-const PROPULSION = { name: 'Steel Propulsion', cd: 12, dur: 1.6, glow: 'blue', run(f, m, t) {
+const PROPULSION = { name: 'Steel Propulsion', cd: 12, dur: 1.6, glow: 'fire', run(f, m, t) {
   const o = E.P2, eb = bound();
   f.rate = 44;
   if (!m.s) { m.s = 1; facing(f, o); sfx.roar(.55); }
@@ -222,52 +331,65 @@ const PROPULSION = { name: 'Steel Propulsion', cd: 12, dur: 1.6, glow: 'blue', r
   if (!m.slam) {                                      // and into the floor with them
     m.slam = 1; f.y = 0; f.vy = 0; f.ground = true;
     const x = clamp(f.x + f.face * 100, -eb, eb);
-    sfx.blast(); shake(30); E.zoomIn(.25); V.crack(x, 300); V.rocks(x, 0, 12); E.addRing(x, CRGB, 360);
-    if (X) { X.boom(x, 40, 120, CRGB, { n: 16, hot: WHITE }); X.dust(x, 10); X.decal('crater', x, 200, CRGB, 7, 0); }
-    if (live(o)) { E.applyHit(o, f.face, { dmg: exact(o, 35), kb: 80, stun: 1.4, stop: .2, heavy: 1, col: CYAN, fixed: 1 }); if (m.hold && live(o)) Object.assign(o, { x, y: 0, vy: 0, vx: 0, ground: true, state: 'down', stun: 1.4 }); big(f, o, 'ドゴォン', CYAN, 'neg'); }
+    sfx.blast(); shake(30); E.zoomIn(.25); V.crack(x, 300); V.rocks(x, 0, 12); E.addRing(x, ORGB, 360);
+    if (X) { X.boom(x, 40, 120, ORGB, { n: 16, hot: WHITE }); X.dust(x, 10); X.decal('crater', x, 200, ORGB, 7, 0); }
+    if (live(o)) { E.applyHit(o, f.face, { dmg: exact(o, 35), kb: 80, stun: 1.4, stop: .2, heavy: 1, col: ORANGE, fixed: 1 }); if (m.hold && live(o)) Object.assign(o, { x, y: 0, vy: 0, vx: 0, ground: true, state: 'down', stun: 1.4 }); big(f, o, 'ドゴォン', ORANGE, 'neg'); }
   }
   f.target = k < .7 ? SLAMP : POSE.idle;
   if (k > .9) done(f, m);
 } };
 
 /* ================= 4 — PUPPET BREAKER ================= */
+// (Build 0.30v1, the user's: it reaches them ragdolled as well. It is fired at where they are, on the floor or in the air, and a body on
+// the floor is dragged in along the floor)
 const CABLE_V = 3200, CABLE_MAX = 900;
-const BREAKER = { name: 'Puppet Breaker', cd: 13, dur: 1.7, glow: 'blue', run(f, m, t) {
+const BREAKER = { name: 'Puppet Breaker', cd: 13, dur: 1.7, glow: 'fire', run(f, m, t) {
   const o = E.P2, eb = bound(), s = hs(f);
   f.rate = 44; f.vx = 0;
-  if (!m.s) { m.s = 1; facing(f, o); sfx.whoosh(); sfx.steam(); m.d = 0; }
   const h = fist(f, true);
-  if (m.caught === undefined) {                       // the arm, fired out on its cable
+  if (!m.s) { m.s = 1; facing(f, o); sfx.whoosh(); m.d = 0; const u = aimAt(f, h[0], h[1], o, .8); m.ux = u[0]; m.uy = u[1]; }
+  if (m.caught === undefined) {                       // the fist, fired out on its cable
     f.target = POSE.jab;
     m.d = Math.min(CABLE_MAX * s, t * CABLE_V);
-    const tx = h[0] + f.face * m.d;
-    if (can(o) && (o.x - f.x) * f.face > 0 && Math.abs(o.x - tx) < 70 + 30 * hs(o) && Math.abs(mid(o) - h[1]) < 200 * hs(o)) { m.caught = t; m.cx = o.x; m.hold = holdable(o); sfx.hit(true); E.stop(.05); V.sparks(o.x, mid(o), 'white', 8); }
-    else if (m.d >= CABLE_MAX * s) { m.caught = null; m.back = t; m.d0 = m.d; }
+    const tx = h[0] + m.ux * m.d, ty = h[1] + m.uy * m.d, top = live(o) ? o.y + (o.state === 'down' ? 90 : 300) * hs(o) : 0;
+    m.tip = [tx, ty];
+    if (canR(o) && (o.x - f.x) * f.face > 0 && Math.abs(o.x - tx) < 70 + 30 * hs(o) && ty > o.y - 70 && ty < top + 70) {
+      m.caught = t; m.cx = o.x; m.cy = o.y; m.flat = o.state === 'down'; m.hold = holdable(o); sfx.hit(true); E.stop(.05); V.sparks(o.x, ty, 'fire', 8);
+    } else if (m.d >= CABLE_MAX * s || ty < 0) { m.caught = null; m.back = t; m.d0 = m.d; }
     return;
   }
-  if (m.caught === null) { m.d = Math.max(0, m.d0 * (1 - (t - m.back) / .25)); f.target = POSE.idle; if (m.d <= 0) done(f, m); return; }      // (nothing on the end of it: back it comes)
+  if (m.caught === null) {                            // (nothing on the end of it: back it comes)
+    m.d = Math.max(0, m.d0 * (1 - (t - m.back) / .25)); m.tip = [h[0] + m.ux * m.d, h[1] + m.uy * m.d]; f.target = POSE.idle;
+    if (m.d <= 0) done(f, m);
+    return;
+  }
   const k = t - m.caught;
-  if (k < .3) {                                       // them, reeled back in on it
-    const u = ease(k / .3), x = lerp(m.cx, f.x + f.face * 130 * s, u);
-    m.d = Math.max(0, Math.abs(x - h[0]) - 10); f.target = POSE.jab;
-    if (m.hold && live(o)) Object.assign(o, { x: clamp(x, -eb, eb), vx: 0, state: o.ground ? 'hurt' : 'air', stun: .6, act: null, tele: 0, face: -f.face });
+  if (k < .3) {                                       // them, reeled back in on it: along the floor, if that is where they were
+    const u = ease(k / .3), x = clamp(lerp(m.cx, f.x + f.face * 130 * s, u), -eb, eb);
+    f.target = POSE.jab;
+    if (m.hold && live(o)) {
+      if (m.flat) Object.assign(o, { x, y: 0, vx: 0, vy: 0, ground: true, state: 'down', stun: Math.max(o.stun || 0, .5), act: null, tele: 0 });
+      else if (m.cy > 0) Object.assign(o, { x, y: lerp(m.cy, Math.min(m.cy, 140), u), vx: 0, vy: 0, ground: false, state: 'air', stun: .6, act: null, tele: 0, face: -f.face });
+      else Object.assign(o, { x, vx: 0, state: o.ground ? 'hurt' : 'air', stun: .6, act: null, tele: 0, face: -f.face });
+    }
+    if (live(o)) m.tip = [o.x, bodyY(o)];
+    m.d = Math.max(1, Math.hypot(m.tip[0] - h[0], m.tip[1] - h[1]));
     return;
   }
   m.d = 0;
   if (!m.punch) {                                     // and one punch with all of it behind it
-    m.punch = 1; sfx.blast(); sfx.steam(); shake(30); E.zoomIn(.25);
-    if (live(o)) { hit(o, f.face, 40, { kb: 1300, lift: 520, stun: 1, stop: .2, heavy: 1, flung: 1 }); big(f, o, 'ドゴォ', CYAN, 'neg'); E.addBlast(o.x, mid(o), CRGB, 340); }
+    m.punch = 1; sfx.blast(); shake(30); E.zoomIn(.25);
+    if (live(o) && hit(o, f.face, 40, { kb: 1300, lift: 520, stun: 1, stop: .2, heavy: 1, flung: 1 }, true)) { big(f, o, 'ドゴォ', ORANGE, 'neg'); E.addBlast(o.x, mid(o), ORGB, 340); }
   }
   f.target = k < .6 ? PUNCH : POSE.idle;
   if (k > .8) done(f, m);
 } };
 function cable(f, m) {                                // the cable out to the fist, and the fist with its jet behind it
-  const h = fist(f, true), s = hs(f), e = [h[0] + f.face * m.d, h[1]], a = F(h[0], h[1]), b = F(e[0], e[1]), k = a[2] * s;
-  g.strokeStyle = LINE; g.lineWidth = 5 * k; g.beginPath(); g.moveTo(a[0], a[1]); g.lineTo(b[0], b[1]); g.stroke();
-  g.strokeStyle = '#9aa3b5'; g.lineWidth = 2.6 * k; g.setLineDash([7 * k, 4 * k]); g.stroke(); g.setLineDash([]);
-  if (m.caught === undefined && X) X.emit(5, e[0] - f.face * 18 * s, e[1], -f.face * rnd(200, 500), rnd(-60, 60), rnd(3, 6) * s, .2, FIRE);
-  g.fillStyle = '#2c3038'; g.beginPath(); g.roundRect(b[0] - 15 * k, b[1] - 13 * k, 30 * k, 26 * k, 6 * k); g.fill(); g.lineWidth = 2.5 * k; g.strokeStyle = LINE; g.stroke();
-  g.fillStyle = '#a3acb8'; g.fillRect(b[0] - f.face * 15 * k - 3 * k, b[1] - 9 * k, 6 * k, 18 * k);
+  const h = fist(f, true), s = hs(f), e = m.tip || [h[0] + f.face * m.d, h[1]], a = F(h[0], h[1]), b = F(e[0], e[1]), k = a[2] * s, ux = m.ux || f.face, uy = m.uy || 0;
+  g.strokeStyle = LINE; g.lineWidth = 5 * k; g.lineCap = 'round'; g.beginPath(); g.moveTo(a[0], a[1]); g.lineTo(b[0], b[1]); g.stroke(); g.lineCap = 'butt';
+  ray(a, b, 2.6 * k, ORGB, .9);
+  if (m.caught === undefined && X) X.emit(5, e[0] - ux * 18 * s, e[1] - uy * 18 * s, -ux * rnd(200, 500), -uy * rnd(200, 500) + rnd(-60, 60), rnd(3, 6) * s, .2, FIRE);
+  energyFist(b, k, 1.2);
 }
 
 /* ================= E — SUPER CHARGE, and the puppet ================= */
@@ -309,7 +431,7 @@ const P_PROPULSION = { name: 'Steel Propulsion', dur: 2.2, run(q, m, t) {
     if (gap < 160 || t > .55 || !live(o)) {
       m.kick = t; q.vx = 0; q.target = POSE.kick; sfx.whoosh();
       m.up = live(o) && hit(o, q.face, 12, { kb: 0, lift: 1200, stun: 1.2, stop: .1, heavy: 1 }) && holdable(o);
-      if (m.up) big(q, o, 'ガン', CYAN);
+      if (m.up) big(q, o, 'ガン', ORANGE);
     }
     return;
   }
@@ -328,14 +450,14 @@ const P_PROPULSION = { name: 'Steel Propulsion', dur: 2.2, run(q, m, t) {
       const a = s * 24;
       Object.assign(o, { x: clamp(q.x + Math.cos(a) * 80, -eb, eb), y: Math.max(0, m.cy + 80 + Math.sin(a) * 70), vx: 0, vy: 0, ground: false, state: 'air', stun: .6, act: null, tele: 0 });
       SPIN[6] = a; o.pose = SPIN.slice(); o.target = o.pose;
-      if (X && Math.random() < .6) X.emit(1, o.x, mid(o), rnd(-400, 400), rnd(-400, 400), rnd(2, 4), .2, CRGB);
+      if (X && Math.random() < .6) X.emit(1, o.x, mid(o), rnd(-400, 400), rnd(-400, 400), rnd(2, 4), .2, ORGB);
       if ((m.whirl = (m.whirl || 0) + 1) % 8 === 0) sfx.whoosh();
     }
     return;
   }
   if (!m.thrown) {                                    // and thrown, at him
     m.thrown = 1; const dir = p.x >= o.x ? 1 : -1;
-    if (live(o)) { E.applyHit(o, dir, { dmg: exact(o, 20), kb: 950, lift: 480, stun: 1, stop: .12, heavy: 1, col: CYAN, fixed: 1 }); big(q, o, 'ブン', CYAN); }
+    if (live(o)) { E.applyHit(o, dir, { dmg: exact(o, 20), kb: 950, lift: 480, stun: 1, stop: .12, heavy: 1, col: ORANGE, fixed: 1 }); big(q, o, 'ブン', ORANGE); }
     m.fall = 1; q.target = PUNCH;
   }
   q.target = s < .95 ? PUNCH : POSE.idle;
@@ -347,7 +469,7 @@ function order(k) {                                   // a move pressed while Su
   if (pup.m) { sfx.back(); return true; }
   const p = E.P1;
   pup.m = { def: PUP[k], t: 0, key: k };
-  label(pup.f.x, pup.f.y + 380, PUP[k].name.toUpperCase(), CYAN, .8);
+  label(pup.f.x, pup.f.y + 380, PUP[k].name.toUpperCase(), ORANGE, .8);
   if (p.dead) pup.m = null;
   return true;
 }
@@ -376,13 +498,13 @@ function pupTick(dt) {
 const EN_MAX = 100, EN_DRAIN = 1.2, ABS_T = 45, ABS_SCALE = 1.7, COST = { strikes: 20, crush: 30, div: 25, manji: 50, esp: 10 };
 let abs = null;                                       // while he is in it: { en (its energy), t }
 let rise = null;                                      // the giant coming up out of the floor, or going back down: { x, face, t, life, up }
-const ABS_IN = { name: 'Absolute', dur: 2.5, glow: 'blue', run(p, m, t) {
+const ABS_IN = { name: 'Absolute', dur: 2.5, glow: 'fire', run(p, m, t) {
   p.vx = 0; p.rate = 30; p.inv = Math.max(p.inv || 0, .6);
   if (!m.s) { m.s = 1; sfx.charge(); }
-  if (t < .45) { p.target = t < .3 ? ARMS_UP : CLAP; if (t >= .3 && !m.clap) { m.clap = 1; sfx.blast(); shake(20); if (X) X.shock(p.x, 600, GRGB, .5, 12); V.ring(p.x, p.y + 200, 220, GOLD, .25); } return; }
+  if (t < .45) { p.target = t < .3 ? ARMS_UP : CLAP; if (t >= .3 && !m.clap) { m.clap = 1; sfx.blast(); shake(20); if (X) X.shock(p.x, 600, ORGB, .5, 12); V.ring(p.x, p.y + 200, 220, ORANGE, .25); } return; }
   if (!m.rise) {                                      // the floor shaking, and the giant up out of it under him
     m.rise = 1; rise = { x: p.x, face: p.face, t: 0, life: 1.2, up: true };
-    V.crack(p.x, 520); V.rocks(p.x, 0, 22); E.addRing(p.x, GRGB, 700); sfx.rough(1.2); if (X) { X.dust(p.x, 20); X.dim(.45, 2); }
+    V.crack(p.x, 520); V.rocks(p.x, 0, 22); E.addRing(p.x, ORGB, 700); sfx.rough(1.2); if (X) { X.dust(p.x, 20); X.dim(.45, 2); }
   }
   shake(10);
   if (t < 1.65) { p.target = HUNCH; p.y = Math.max(0, 240 * ease(clamp((t - .45) / 1.2, 0, 1))); p.ground = false; p.vy = 0; if (Math.random() < .5) V.rocks(p.x + rnd(-300, 300), 0, 1); return; }      // carried up on it
@@ -391,16 +513,17 @@ const ABS_IN = { name: 'Absolute', dur: 2.5, glow: 'blue', run(p, m, t) {
 } };
 function enter(p) {
   rise = null;
+  const skin0 = p.skin, scale0 = p.scale;              // (how he looked going in: the regular Yuji, or a clan's body; he comes out as that)
   p.skin = ABSOLUTE; p.scale = ABS_SCALE; p.y = 0; p.vy = 0; p.ground = true;
-  abs = { en: EN_MAX, t: 0 };
+  abs = { en: EN_MAX, t: 0, skin0, scale0 };
   E.banner('究極・絶対形態', 'ULTIMATE MECHAMASTER: ABSOLUTE', 'sm');
   sfx.bf(); sfx.blast(); shake(36); E.zoomIn(.4);
-  if (X) { X.flash(GRGB, .45, .4); X.shock(p.x, 900, GRGB, .7, 16); X.pillar(p.x, 160, 1200, GRGB, .6); }
+  if (X) { X.flash(ORGB, .45, .4); X.shock(p.x, 900, ORGB, .7, 16); X.pillar(p.x, 160, 1200, ORGB, .6); }
   relabel();
 }
 function leave(p, why) {                              // powered down: out he climbs, and it goes back into the floor
-  abs = null;
-  p.skin = MECHA; p.scale = undefined; p.inv = Math.max(p.inv || 0, 1);
+  const was = abs; abs = null;
+  p.skin = was.skin0 || E.YUJI; p.scale = was.scale0; p.inv = Math.max(p.inv || 0, 1);
   rise = { x: p.x, face: p.face, t: 0, life: 1, up: false };
   label(p.x, p.y + 520, why, GOLD, 1.4); sfx.steam(); sfx.rough(.8); shake(14);
   if (X) for (let i = 0; i < 10; i++) X.emit(2, p.x + rnd(-200, 200), rnd(100, 500), rnd(-80, 80), rnd(40, 160), rnd(60, 110), rnd(.6, 1.1), '200,204,212', { s1: 2, a: .5, dr: 1.5 });
@@ -424,7 +547,7 @@ function spend(k) {
 }
 // 1 — PIGEON VIOLA: six of them out of its shoulders, finding them, and bursting
 const shots = [];
-const PIGEON = { name: 'Pigeon Viola', cd: 2, dur: .9, glow: 'blue', run(p, m, t) {
+const PIGEON = { name: 'Pigeon Viola', cd: 2, dur: .9, glow: 'fire', run(p, m, t) {
   p.vx = 0; p.rate = 34; p.target = t < .6 ? ARMS_UP : POSE.idle;
   if (m.s) return;
   m.s = 1; if (!spend('strikes')) return; facing(p, E.P2); sfx.charge();
@@ -444,7 +567,7 @@ function flyShots(dt) {
     const near = live(o) && Math.abs(o.x - s.x) < 60 + 30 * hs(o) && s.y > o.y && s.y < o.y + 300 * hs(o);
     if (near || s.t > s.life || s.y < 0) {
       shots.splice(i, 1);
-      if (X) X.boom(s.x, Math.max(20, s.y), 60, CRGB, { n: 10, flash: 0, shake: 10 });
+      if (X) X.boom(s.x, Math.max(20, s.y), 60, ORGB, { n: 10, flash: 0, shake: 10 });
       sfx.blast();
       if (near) hit(o, s.vx >= 0 ? 1 : -1, 12, { kb: 220, lift: 260, stun: .8, stop: .05, heavy: 1 });
     }
@@ -453,10 +576,10 @@ function flyShots(dt) {
 function drawShots() {
   for (const s of shots) {
     if (s.t < 0) continue;
-    if (X) X.tail(s.pts, 14, CRGB);
+    if (X) X.tail(s.pts, 14, ORGB);
     const c = F(s.x, s.y), k = c[2];
-    lit(() => E.glow(E.GLOW.blue, c[0], c[1], 120 * k, .9));
-    g.fillStyle = '#e8fbff'; g.beginPath(); g.arc(c[0], c[1], 9 * k, 0, TAU); g.fill();
+    lit(() => E.glow(E.GLOW.fire, c[0], c[1], 120 * k, .9));
+    g.fillStyle = '#fff1e0'; g.beginPath(); g.arc(c[0], c[1], 9 * k, 0, TAU); g.fill();
   }
 }
 // 2 — ABSOLUTE CANNON: a beam out of its arm, swept along the floor away from it, the floor going up under it as it goes
@@ -468,27 +591,27 @@ function ray(a, b, w, rgb, al) {
   });
 }
 const SWEEP_T = 1.1;
-const ACANNON = { name: 'Absolute Cannon', cd: 4, dur: .7 + SWEEP_T + .7, glow: 'blue', run(p, m, t) {
+const ACANNON = { name: 'Absolute Cannon', cd: 4, dur: .7 + SWEEP_T + .7, glow: 'fire', run(p, m, t) {
   const f = p.face;
   p.vx = 0; p.rate = 30; p.target = PALM;
   if (!m.s) { m.s = 1; if (!spend('crush')) return; facing(p, E.P2); play('home-tdc-charge', .8, () => { sfx.charge(); sfx.rise(.7); }); }
   const h = fist(p, true);
-  if (t < .7) { if (X && Math.random() < .9) { const a = rnd(0, TAU), r = rnd(100, 260); X.emit(1, h[0] + Math.cos(a) * r, h[1] + Math.sin(a) * r, -Math.cos(a) * r * 4, -Math.sin(a) * r * 4, rnd(3, 5), .2, CRGB); } return; }
+  if (t < .7) { if (X && Math.random() < .9) { const a = rnd(0, TAU), r = rnd(100, 260); X.emit(1, h[0] + Math.cos(a) * r, h[1] + Math.sin(a) * r, -Math.cos(a) * r * 4, -Math.sin(a) * r * 4, rnd(3, 5), .2, ORGB); } return; }
   const k = t - .7;
   if (!m.go) {                                        // the sweep: from in front of it, along the floor, across them and past them
     const o = E.P2, eb = bound();
     m.go = 1; m.x0 = p.x + f * 220 * ABS_SCALE / 1.7;
     m.x1 = clamp(live(o) ? o.x + f * 380 : p.x + f * 1500, -eb, eb); if ((m.x1 - m.x0) * f < 500) m.x1 = clamp(m.x0 + f * 500, -eb, eb);
     play('home-tdc-sweep', .9, () => sfx.cannon()); shake(24);
-    V.custom(SWEEP_T, u => { const ex = lerp(m.x0, m.x1, u), a = F(h[0], h[1]), b = F(ex, 0); ray(a, b, 26 * a[2], CRGB, 1 - u * .3); });
+    V.custom(SWEEP_T, u => { const ex = lerp(m.x0, m.x1, u), a = F(h[0], h[1]), b = F(ex, 0); ray(a, b, 26 * a[2], ORGB, 1 - u * .3); });
   }
   if (k > SWEEP_T) {
     p.target = POSE.idle;
     if (!m.last) {                                    // and at the end of it, where they are, the biggest of them
       m.last = 1;
       const o = E.P2, x = live(o) ? o.x : m.x1;
-      if (X) { X.boom(x, 80, 240, CRGB, { n: 30, hot: WHITE, flash: .35, shake: 34 }); X.pillar(x, 140, 1000, CRGB, .5); }
-      E.addBlast(x, 120, CRGB, 600); V.crack(x, 360); sfx.blast(); sfx.rough(1.1);
+      if (X) { X.boom(x, 80, 240, ORGB, { n: 30, hot: WHITE, flash: .35, shake: 34 }); X.pillar(x, 140, 1000, ORGB, .5); }
+      E.addBlast(x, 120, ORGB, 600); V.crack(x, 360); sfx.blast(); sfx.rough(1.1);
       if (can(o) && Math.abs(o.x - x) < 300 + 40 * hs(o)) hit(o, f, 40, { kb: 1000, lift: 760, stun: 1, stop: .2, heavy: 1 });
     }
     return;
@@ -497,13 +620,13 @@ const ACANNON = { name: 'Absolute Cannon', cd: 4, dur: .7 + SWEEP_T + .7, glow: 
   while ((m.n || 0) < n) {                            // and where it touches the floor, up the floor goes
     m.n = (m.n || 0) + 1;
     const ex = clamp(lerp(m.x0, m.x1, m.n / 10), -bound(), bound()), o = E.P2;
-    if (X) X.boom(ex, 40, 100, CRGB, { n: 10, flash: 0, shake: 12 });
+    if (X) X.boom(ex, 40, 100, ORGB, { n: 10, flash: 0, shake: 12 });
     V.crack(ex, 170); sfx.blast();
     if (can(o) && Math.abs(o.x - ex) < 250 + 40 * hs(o) && o.y < 400) hit(o, f, 8, { kb: 60, stun: .8, stop: .04 });
   }
 } };
 // 3 — STEEL CATACLYSM: up, and down with both fists, and the floor feels it end to end
-const CATACLYSM = { name: 'Steel Cataclysm', cd: 3, dur: 1.7, glow: 'blue', run(p, m, t) {
+const CATACLYSM = { name: 'Steel Cataclysm', cd: 3, dur: 1.7, glow: 'fire', run(p, m, t) {
   const o = E.P2, eb = bound();
   p.rate = 40;
   if (!m.s) { m.s = 1; if (!spend('div')) return; facing(p, o); m.x0 = p.x; m.tx = clamp(live(o) ? o.x - p.face * 120 : p.x + p.face * 300, -eb, eb); sfx.roar(.5); }
@@ -513,24 +636,24 @@ const CATACLYSM = { name: 'Steel Cataclysm', cd: 3, dur: 1.7, glow: 'blue', run(
   if (!m.hit) {
     m.hit = 1; p.y = 0; p.vy = 0; p.ground = true;
     const x = clamp(p.x + p.face * 140, -eb, eb);
-    sfx.blast(); sfx.rough(1.3); shake(46); E.zoomIn(.45); V.crack(x, 640); V.rocks(x, 0, 30); E.addRing(x, GRGB, 1200);
-    if (X) { X.boom(x, 60, 220, GRGB, { n: 30, hot: WHITE }); X.shock(x, 1500, GRGB, .7, 18); X.dust(x, 24); X.decal('crater', x, 360, GRGB, 9, 0); X.flash(WHITE, .25, .2); }
+    sfx.blast(); sfx.rough(1.3); shake(46); E.zoomIn(.45); V.crack(x, 640); V.rocks(x, 0, 30); E.addRing(x, ORGB, 1200);
+    if (X) { X.boom(x, 60, 220, ORGB, { n: 30, hot: WHITE }); X.shock(x, 1500, ORGB, .7, 18); X.dust(x, 24); X.decal('crater', x, 360, ORGB, 9, 0); X.flash(WHITE, .25, .2); }
     if (can(o)) {
       const d = Math.abs(o.x - x);
-      if (d < 320 + 40 * hs(o)) { hit(o, o.x >= x ? 1 : -1, 90, { kb: 600, lift: 900, stun: 1.2, stop: .22, heavy: 1 }); big(p, o, 'ズドォン', GOLD, 'neg'); }
+      if (d < 320 + 40 * hs(o)) { hit(o, o.x >= x ? 1 : -1, 90, { kb: 600, lift: 900, stun: 1.2, stop: .22, heavy: 1 }); big(p, o, 'ズドォン', ORANGE, 'neg'); }
       else if (d < 1100 && o.y < 60) hit(o, o.x >= x ? 1 : -1, 30, { kb: 500, lift: 520, stun: .9, stop: .08, heavy: 1 });      // the shock along the floor
     }
   }
   p.target = t < 1.2 ? SLAMP : POSE.idle;
 } };
 // 4 — SEVENTEEN YEARS: everything he has stored up, let go round them at once
-const SEVENTEEN = { name: 'Seventeen Years', cd: 6, dur: 2.5, glow: 'blue', run(p, m, t) {
+const SEVENTEEN = { name: 'Seventeen Years', cd: 6, dur: 2.5, glow: 'fire', run(p, m, t) {
   const o = E.P2;
   p.vx = 0; p.rate = 26;
   if (!m.s) { m.s = 1; if (!spend('manji')) return; facing(p, o); sfx.charge(); sfx.rise(1.2); E.banner('十七年', 'SEVENTEEN YEARS', 'sm'); if (X) X.dim(.6, 1.8); }
   if (t < 1.3) {                                      // all of it drawn in to it
     p.target = ARMS_UP;
-    if (X) for (let i = 0; i < 2; i++) { const a = rnd(0, TAU), r = rnd(300, 700); X.emit(1, p.x + Math.cos(a) * r, p.y + 300 + Math.sin(a) * r, -Math.cos(a) * r * 2.6, -Math.sin(a) * r * 2.6, rnd(3, 6), .35, Math.random() < .5 ? GRGB : CRGB); }
+    if (X) for (let i = 0; i < 2; i++) { const a = rnd(0, TAU), r = rnd(300, 700); X.emit(1, p.x + Math.cos(a) * r, p.y + 300 + Math.sin(a) * r, -Math.cos(a) * r * 2.6, -Math.sin(a) * r * 2.6, rnd(3, 6), .35, Math.random() < .5 ? ORGB : '255,200,120'); }
     if (Math.random() < .3) shake(8);
     return;
   }
@@ -539,18 +662,18 @@ const SEVENTEEN = { name: 'Seventeen Years', cd: 6, dur: 2.5, glow: 'blue', run(
   m.go = 1;
   const x = live(o) ? o.x : p.x + p.face * 500, y = live(o) ? mid(o) : 200;
   play('home-tdc-boom', 1, () => { sfx.blast(); sfx.rough(1.4); }); sfx.bf(); shake(56); E.zoomIn(.6); E.stop(.12);
-  if (X) { X.flash(WHITE, .6, .5); X.flash(GRGB, .35, .8); X.boom(x, y, 420, GRGB, { n: 50, hot: WHITE, life: 1 }); X.pillar(x, 300, 1600, GRGB, 1); X.shock(x, 1500, GRGB, .9, 20); X.decal('crater', x, 460, GRGB, 10, 0); }
-  E.addBlast(x, y, GRGB, 1200); V.crack(x, 700); V.rocks(x, 0, 30);
-  if (can(o) && Math.abs(o.x - x) < 460 + 40 * hs(o)) { hit(o, o.x >= p.x ? 1 : -1, 200, { kb: 1400, lift: 1000, stun: 1.4, stop: .3, heavy: 1, flung: 1 }); big(p, o, '十七年', GOLD, 'neg'); }
+  if (X) { X.flash(WHITE, .6, .5); X.flash(ORGB, .35, .8); X.boom(x, y, 420, ORGB, { n: 50, hot: WHITE, life: 1 }); X.pillar(x, 300, 1600, ORGB, 1); X.shock(x, 1500, ORGB, .9, 20); X.decal('crater', x, 460, ORGB, 10, 0); }
+  E.addBlast(x, y, ORGB, 1200); V.crack(x, 700); V.rocks(x, 0, 30);
+  if (can(o) && Math.abs(o.x - x) < 460 + 40 * hs(o)) { hit(o, o.x >= p.x ? 1 : -1, 200, { kb: 1400, lift: 1000, stun: 1.4, stop: .3, heavy: 1, flung: 1 }); big(p, o, '十七年', ORANGE, 'neg'); }
 } };
 // E in it — EMERGENCY THRUSTERS: full burn forward, and whatever is in the way is put aside
-const THRUSTERS = { name: 'Emergency Thrusters', cd: 1.5, dur: .8, glow: 'blue', run(p, m, t) {
+const THRUSTERS = { name: 'Emergency Thrusters', cd: 1.5, dur: .8, glow: 'fire', run(p, m, t) {
   const o = E.P2, eb = bound();
   p.rate = 40;
-  if (!m.s) { m.s = 1; if (!spend('esp')) return; facing(p, o); sfx.roar(.7); label(p.x, p.y + 640, 'EMERGENCY THRUSTERS', GOLD, 1); }
+  if (!m.s) { m.s = 1; if (!spend('esp')) return; facing(p, o); sfx.roar(.7); label(p.x, p.y + 640, 'EMERGENCY THRUSTERS', ORANGE, 1); }
   if (t < .5) {
     p.target = POSE.dash; p.vx = Math.abs(p.x + p.face * 100) < eb ? p.face * 2600 : 0; jets(p, true);
-    if (!m.hit && can(o) && Math.abs(o.x - p.x) < 220 && (o.x - p.x) * p.face > -60) { m.hit = 1; hit(o, p.face, 40, { kb: 1400, lift: 620, stun: 1, stop: .16, heavy: 1, flung: 1 }); big(p, o, 'ドォン', GOLD); }
+    if (!m.hit && can(o) && Math.abs(o.x - p.x) < 220 && (o.x - p.x) * p.face > -60) { m.hit = 1; hit(o, p.face, 40, { kb: 1400, lift: 620, stun: 1, stop: .16, heavy: 1, flung: 1 }); big(p, o, 'ドォン', ORANGE); }
     return;
   }
   p.vx = 0; p.target = POSE.idle;
@@ -568,7 +691,7 @@ function relabel() {                                  // the hotbar's names, in 
   shownL = key;
   SLOTS.forEach((k, i) => { E.hud.mv[k].querySelector('b').textContent = ds[i].name; E.CD[k] = ds[i].cd; E.cd[k] = Math.min(E.cd[k], ds[i].cd); });
 }
-const ESP = { jp: '充', get col() { return abs ? GOLD : CYAN; }, name: () => (abs ? 'Emergency Thrusters' : sc > 0 ? 'Super Charge · ' + Math.ceil(sc) + 's' : 'Super Charge'),
+const ESP = { jp: '充', get col() { return abs ? ORANGE : CYAN; }, name: () => (abs ? 'Emergency Thrusters' : sc > 0 ? 'Super Charge · ' + Math.ceil(sc) + 's' : 'Super Charge'),
   get left() { return abs ? 0 : scCd; }, get max() { return SC_CD; },
   press(p) {
     if (p.dead) return true;
@@ -583,9 +706,9 @@ const ESP = { jp: '充', get col() { return abs ? GOLD : CYAN; }, name: () => (a
     return true;
   } };
 function awaken(p) { if (!abs) p.move = { def: ABS_IN, t: 0 }; }
-JU.tech.add('mecha', { name: 'Mechamaster', jp: '傀儡操術', mark: '傀', who: 'Puppets, and the one who works them', odds: 0, col: CYAN, glow: 'blue', moves: MOVES,
-  early: true, skin: MECHA, as: ['Mechamaster', '傀儡'], awaken, awkName: 'Absolute', get awkHits() { return !abs; },      // (the giant does not fill its own bar)
-  hint: '<b>E</b> Super Charge: a puppet does your moves, and their waits are not spent · <b>G</b> Ultimate Mechamaster: Absolute' });
+JU.tech.add('mecha', { name: 'Mechamaster', jp: '傀儡操術', mark: '傀', who: 'Puppets, and the one who works them', odds: 0, col: ORANGE, glow: 'fire', moves: MOVES,
+  early: true, as: ['Mechamaster', '傀儡'], awaken, awkName: 'Absolute', get awkHits() { return !abs; },      // (the giant does not fill its own bar. No skin: he is the regular Yuji, the user's)
+  hint: '<b>Hold 2</b> charged Ultra Cannon · <b>E</b> Super Charge: a puppet does your moves · <b>G</b> Ultimate Mechamaster: Absolute' });
 const DEF = T.TECH.mecha, on = () => T.active === DEF;
 JU.especial.add('mecha', ESP);
 
@@ -622,7 +745,7 @@ H.foePower = a => (fpow0 ? fpow0(a) : 1) * (abs && on() ? .5 : 1);      // the g
 H.noStun = (p, a) => !!(firm0 && firm0(p, a)) || !!(abs && on());       // and nothing staggers it
 H.tick = dt => {
   tick0(dt);
-  if (!on()) { if (abs) { const p = E.P1; abs = null; p.skin = JU.tech.skin || E.YUJI; p.scale = undefined; } sc = 0; pup = null; charged = false; rise = null; shots.length = 0; paintMeter(); return; }
+  if (!on()) { if (abs) { const p = E.P1; p.skin = abs.skin0 || E.YUJI; p.scale = abs.scale0; abs = null; } sc = 0; pup = null; charged = false; rise = null; shots.length = 0; paintMeter(); return; }
   const p = E.P1;
   if (scCd > 0) scCd = Math.max(0, scCd - dt);
   if (sc > 0) { sc = Math.max(0, sc - dt); if (sc <= 0) { charged = false; label(p.x, p.y + 480, 'SUPER CHARGE OVER', CYAN, .9); } }
@@ -651,10 +774,11 @@ H.fx = dt => {
     if (!f || !mv || (f.alpha !== undefined && f.alpha < .1)) continue;
     if (mv.ext && (mv.def === BARRAGE || mv.def === PUP.strikes)) armsOut(f, mv);
     if (mv.d > 0 && mv.def === BREAKER) cable(f, mv);
+    if (mv.def === CANNON) cannonFx(f, mv);
   }
   if (shots.length) drawShots();
 };
-const clear = () => { const p = E.P1; if (abs) { abs = null; p.skin = DEF.skin; p.scale = undefined; } sc = 0; scCd = 0; pup = null; charged = false; rise = null; shots.length = 0; shownL = ''; };
+const clear = () => { const p = E.P1; if (abs) { p.skin = abs.skin0 || E.YUJI; p.scale = abs.scale0; abs = null; } sc = 0; scCd = 0; pup = null; charged = false; rise = null; shots.length = 0; shownL = ''; };
 H.reset = () => { reset0(); clear(); };
 H.fightStart = (cfg, wave) => { start0(cfg, wave); if (!wave) clear(); };
 
