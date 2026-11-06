@@ -244,6 +244,8 @@ H.fx = dt => {
   }
 };
 H.cast = () => (fight.megumi ? [fight.megumi] : null);
+const shift0 = H.shift;                                         // (Build 0.31: the arena moved along a raid's street, rwalk.js: the blasts stay where they were)
+H.shift = d => { if (shift0) shift0(d); for (const s of shots) s.x -= d; };
 
 const reset0 = H.reset;
 H.reset = () => {

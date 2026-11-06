@@ -585,6 +585,16 @@ H.fightStart = (cfg, wave) => {
   let done = seen.get(cfg); if (!done) seen.set(cfg, done = {});
   if (!done[wave]) { done[wave] = 1; introduce(o, o.ai.d, th); }       // (once: not again every time the fight is lost and restarted)
 };
+// Build 0.31: the arena moved along a raid's street (rwalk.js): what is flying about, and what is marked on the floor, stays where it was
+const shift0 = H.shift;
+H.shift = d => {
+  if (shift0) shift0(d);
+  for (const p of ps) p.x -= d;
+  for (const m of decals) m.x -= d;
+  for (const z of zaps) { z.x0 -= d; z.x1 -= d; }
+  for (const s of shocks) s.x -= d;
+  for (const gh of ghosts) gh.f.x -= d;
+};
 
 JU.bossfx = { emit, decal, lightning, shock, flash, dim, ghost, flare, dust, boom, beam, beamAt, pillar, rune, tail, orb, glow, lamp, cloud, spray, call, themeOf, lite, hex, TH };
 })();

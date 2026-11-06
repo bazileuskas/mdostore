@@ -178,6 +178,21 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 .raidhud b{font:400 1.5em/1 var(--f-display);letter-spacing:.14em;text-transform:uppercase;color:#ff8a98}
 .raidhud span{letter-spacing:.12em;text-transform:uppercase}
 .raidhud i{font-style:normal;font-size:.85em;color:rgba(244,239,228,.65)}
+/* Build 0.31, raids on the street (rwalk.js): the street's line under the raid's own (how far down it, the healing stations seen, the boss at
+   the far end) and the heal key; on a phone a Heal button, only with a technique that heals and somebody to heal */
+.raidhud .rbar{position:relative;width:min(42vw,24em);height:.42em;margin:.45em 0 .3em;--u:0}
+.raidhud .rbar:empty{display:none}
+.raidhud .rbar>i{position:absolute;top:0;bottom:0;display:block}
+.raidhud .rbar>.rb-road{left:0;right:0;border-radius:1em;background:rgba(244,239,228,.16)}
+.raidhud .rbar>.rb-done{left:0;width:calc(var(--u)*100%);border-radius:1em;background:linear-gradient(90deg,rgba(255,90,110,.15),#ff5a6e)}
+.raidhud .rbar>.rb-heal{top:50%;bottom:auto;width:1em;height:1em;translate:-50% -50%;background:linear-gradient(#8fffa8,#8fffa8) center/100% 34% no-repeat,linear-gradient(#8fffa8,#8fffa8) center/34% 100% no-repeat;filter:drop-shadow(0 0 .25em rgba(143,255,168,.9))}
+.raidhud .rbar>.rb-heal.spent{opacity:.3;filter:none}
+.raidhud .rbar>.rb-boss{right:0;top:50%;bottom:auto;translate:70% -50%;font:400 1.2em/1 var(--f-display);font-style:normal;color:#ff5a6e;text-shadow:0 0 .4em rgba(255,36,64,.8)}
+.raidhud .rbar>.rb-me{top:50%;bottom:auto;left:calc(var(--u)*100%);width:.85em;height:.85em;translate:-50% -50%;border-radius:50%;background:#7fe9ff;box-shadow:0 0 .55em #7fe9ff}
+.raidhud .rhl{font-style:normal;font-size:.85em;letter-spacing:.06em;color:#d8f8ff}
+.raidhud .rhl kbd{display:inline-block;min-width:1.3em;margin-right:.35em;padding:.05em .3em;border:1px solid currentColor;border-radius:.25em;font:inherit;font-weight:700}
+.tc .t-heal{right:calc(var(--rx) + var(--b)*2.1);bottom:calc(var(--by) + var(--b)*2.12);width:calc(var(--b)*.7);border-color:#8fffa8;color:#8fffa8;font-size:.8em}
+.game.healer[data-mode="fight"] .tc .t-heal{display:grid}
 /* playing online (mp.js, from the phone app): the ping, the queue chip's buttons after a duel, the name to play under */
 .mpwho input{width:min(100%,16em)}
 .mp .mpbtns{display:flex;flex-wrap:wrap;gap:.4em;margin:.1em 0 .45em}
@@ -1283,7 +1298,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
   </div>
 
   <div class="side" aria-hidden="true" lang="ja">領域展開</div>
-  <div class="hud tl"><b lang="ja">呪</b>Fan project · Build 0.30v4 · Breakout</div>
+  <div class="hud tl"><b lang="ja">呪</b>Fan project · Build 0.31 · Street Raids</div>
   <div class="hud bl">↑ ↓ Select &nbsp;·&nbsp; Enter Confirm</div>
   <div class="hud br">Title screen</div>
   <div class="acct" id="acct">
@@ -2651,7 +2666,7 @@ window.JU = { sfx, flash, bolts: blackFlash, reduceMotion, startGame, exitGame, 
 // Load every game script fresh on each page load. The dev server sends no cache headers, so without this a reload
 // could run a mix of old and new files (new menu, old moves) while the game is being worked on.
 ['account.js', 'announce.js', 'game.js', 'fx2.js', 'chars.js', 'street.js', 'walk.js', 'foes.js', 'cuts.js', 'sukuna.js', 'school.js', 'story.js', 'story2.js', 'tech.js', 'tech_a.js',
-  'tech_b.js', 'sets.js', 'story3.js', 'cast2.js', 'script.js', 'naoya.js', 'ch45.js', 'ch67.js', 'clan.js', 'clan_a.js', 'clan_b.js', 'boss.js', 'bossfx.js', 'boss_a.js', 'boss_b.js', 'boss_c.js', 'training.js', 'choso.js', 'domain.js', 'domain2.js', 'mahito.js', 'combo.js', 'combat.js', 'cast3.js', 'ch810.js', 'ch1112.js', 'cast4.js', 'ch1316.js', 'cast5.js', 'ch1721.js', 'combat2.js', 'judge.js', 'awaken.js', 'alimit.js', 'ats.js', 'switcher.js', 'tools.js', 'kashimo.js', 'smark.js', 'cast6.js', 'ch2230.js', 'plants.js', 'clash.js', 'block.js', 'cannon.js', 'tced.js', 'shibuya.js', 'kyoto.js', 'evasive.js', 'kokusen.js', 'mp.js', 'pvp.js', 'vengeful.js', 'manga.js', 'haruta.js', 'ratio.js', 'reaper.js', 'inumaki.js', 'kirara.js', 'soul.js', 'slit.js', 'gambler.js', 'uro.js', 'beast.js', 'regis.js', 'especial.js', 'heian.js', 'aheian.js', 'mecha.js', 'yen.js', 'subtech.js', 'metro.js', 'jjh.js', 'shinjuku.js', 'notes.js', 'shop.js', 'ps.js', 'raid.js', 'touch.js', 'idg.js', 'modeset.js', 'dced.js', 'tdced.js', 'tdced2.js', 'lovereap.js', 'brother.js', 'climax.js', 'ragdoll.js'].forEach(src => {
+  'tech_b.js', 'sets.js', 'story3.js', 'cast2.js', 'script.js', 'naoya.js', 'ch45.js', 'ch67.js', 'clan.js', 'clan_a.js', 'clan_b.js', 'boss.js', 'bossfx.js', 'boss_a.js', 'boss_b.js', 'boss_c.js', 'training.js', 'choso.js', 'domain.js', 'domain2.js', 'mahito.js', 'combo.js', 'combat.js', 'cast3.js', 'ch810.js', 'ch1112.js', 'cast4.js', 'ch1316.js', 'cast5.js', 'ch1721.js', 'combat2.js', 'judge.js', 'awaken.js', 'alimit.js', 'ats.js', 'switcher.js', 'tools.js', 'kashimo.js', 'smark.js', 'cast6.js', 'ch2230.js', 'plants.js', 'clash.js', 'block.js', 'cannon.js', 'tced.js', 'shibuya.js', 'kyoto.js', 'evasive.js', 'kokusen.js', 'mp.js', 'pvp.js', 'vengeful.js', 'manga.js', 'haruta.js', 'ratio.js', 'reaper.js', 'inumaki.js', 'kirara.js', 'soul.js', 'slit.js', 'gambler.js', 'uro.js', 'beast.js', 'regis.js', 'especial.js', 'heian.js', 'aheian.js', 'mecha.js', 'yen.js', 'subtech.js', 'metro.js', 'jjh.js', 'shinjuku.js', 'notes.js', 'shop.js', 'ps.js', 'raid.js', 'touch.js', 'idg.js', 'modeset.js', 'dced.js', 'tdced.js', 'tdced2.js', 'lovereap.js', 'brother.js', 'climax.js', 'rwalk.js', 'ragdoll.js'].forEach(src => {
   const s = document.createElement('script');
   s.src = src + '?v=' + Date.now(); s.async = false;      // async = false keeps them running in this order
   document.body.appendChild(s);

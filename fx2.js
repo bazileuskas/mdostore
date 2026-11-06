@@ -171,5 +171,12 @@ H.bf = o => {
   for (let i = 0; i < 9; i++) { const a = rnd(0, TAU), l = rnd(220, 520); bolt(x, y, x + Math.cos(a) * l, y + Math.sin(a) * l, '#ff2440', rnd(.25, .5), rnd(3, 6), '#060205'); }
 };
 
+// Build 0.31: the arena has moved along the street under it (a raid's, rwalk.js): what is flying about stays where it was in the world
+// (custom() draws where its own function says)
+H.shift = d => {
+  for (const e of list) { if (typeof e.x === 'number') e.x -= d; if (typeof e.x1 === 'number') e.x1 -= d; }
+  for (const c of cracks) c.x -= d;
+};
+
 JU.vfx = { slash, bolt, ring, rocks, sparks, fire, mote, puff, custom, crack, impact, split, clear() { list.length = ulist.length = cracks.length = 0; impT = splitT = 0; } };
 })();

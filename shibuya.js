@@ -411,14 +411,20 @@ function begin(q, go) {
   S.st.hold = true; E.keys.clear();
   JU.shop.ask([q]).then(yes => { S.st.hold = false; S.st.wait = E.T + .45; E.keys.clear(); if (yes) go(); });
 }
+// Build 0.31: a raid is a walk down the district's own street now, in the arena the whole way (raid.js, rwalk.js): its fights are waiting
+// along it (the weaker ones two at a time), the last of them at the far end, and there are healing stations on the way
 function raid(id) {
-  const R = RAIDS[id];
-  begin({ mark: '討', tag: 'Raid · ' + R.jp, title: R.name, text: `${R.say} ${R.foes.length} fights, one straight after another, and no leaving once it has begun.`, yes: 'Start the raid', no: 'Not yet', lead: 1 }, () => S.fight({ stay: true, cfg: Object.assign({ foes: R.foes, label: 'Raid · ' + R.name, win: ['祓', 'RAID CLEARED'] }, R.stage ? { stage: R.stage() } : null), after(won) {
+  const R = RAIDS[id], w = { k: 'kyoto', n: 'shinjuku', j: 'jjh' }[R.w] || 'shibuya';
+  const after = won => {
     if (!won) return;
     const first = !M.raids[id];
     M.raids[id] = (M.raids[id] || 0) + 1; M[winsKey(R.w)] = (M[winsKey(R.w)] || 0) + 1; save();
     S.talk([['sign', `${R.name} is cleared. ${reward(R.pay, R.give)}.` + (first ? ` And for the first time through: ${reward(0, R.first).replace('0 Cursed Tokens, ', '')}.` : '')]]);
-  } }));
+  };
+  begin({ mark: '討', tag: 'Raid · ' + R.jp, title: R.name, text: `${R.say} Down the street and in the arena the whole way: ${R.foes.length} of them waiting along it, the last at the far end, and no leaving once it has begun. Look out for healing stations.`, yes: 'Start the raid', no: 'Not yet', lead: 1 }, () => {
+    if (JU.raid && JU.raid.solo && JU.raid.solo({ name: R.name, jp: R.jp, foes: R.foes, w, at: R.at[0], after })) return;
+    S.fight({ stay: true, cfg: Object.assign({ foes: R.foes, label: 'Raid · ' + R.name, win: ['祓', 'RAID CLEARED'] }, R.stage ? { stage: R.stage() } : null), after });      // (one after another, as raids were, if a raid of the other kind is somehow still on)
+  });
 }
 function secret(id) {
   const B = SECRETS[id];

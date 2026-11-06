@@ -789,8 +789,8 @@ function update(dt, real) {
     if (comboT > 0 && (comboT -= dt) <= 0) { combo = 0; comboDmg = 0; hud.combo.classList.remove('on'); }
     if (hooks.tick) hooks.tick(dt);
   }
-  const lim = Math.max(0, STAGE + wide() - VW / 2);
-  cam.x = lerp(cam.x, clamp((P1.x + P2.x) / 2, -lim, lim), 1 - Math.exp(-real * 6));
+  const lim = Math.max(0, STAGE + wide() - VW / 2), aim = hooks.camX ? hooks.camX() : null;      // (Build 0.31: something may say where to look instead, a raid's street, rwalk.js)
+  cam.x = lerp(cam.x, clamp(typeof aim === 'number' ? aim : (P1.x + P2.x) / 2, -lim, lim), 1 - Math.exp(-real * 6));
   if (zoomT > 0) zoomT -= real;
   cam.zoom = lerp(cam.zoom, zoomT > 0 ? 1.16 : 1, 1 - Math.exp(-real * 9));
   // the camera swings round the fighters: toward whichever corner they are in, and hard on a Black Flash
@@ -907,7 +907,7 @@ function frame(now) {
 }
 
 /* ================= input ================= */
-const KEYMAP = { tab: 'skip', x: 'skip', g: 'awk', r: 'clan', t: 'takeover', v: 'vow', b: 'rct', c: 'alt', enter: 'ok', e: 'ok', j: 'm1', '1': 'strikes', '2': 'crush', '3': 'div', '4': 'manji', q: 'dash', shift: 'dash', w: 'jump', arrowup: 'jump', ' ': 'jump' };
+const KEYMAP = { tab: 'skip', x: 'skip', g: 'awk', r: 'clan', t: 'takeover', v: 'vow', b: 'rct', c: 'alt', h: 'heal', enter: 'ok', e: 'ok', j: 'm1', '1': 'strikes', '2': 'crush', '3': 'div', '4': 'manji', q: 'dash', shift: 'dash', w: 'jump', arrowup: 'jump', ' ': 'jump' };
 function press(a) {
   if (performance.now() < armAt) return;
   if (scene) { if (scene.press) scene.press(a); return; }
@@ -990,6 +990,15 @@ JU.eng = {
   stop(t) { stopT = Math.max(stopT, t); }, slow(t) { slowT = Math.max(slowT, t); }, zoomIn(t) { zoomT = Math.max(zoomT, t); },
   setScene(sc) { scene = sc; root.dataset.mode = sc ? sc.mode : 'fight'; },
   setFoe(o) { P2 = o; },                          // which of several is the one he is fighting (raid.js)
+  // Build 0.31: the arena moves d along the street it stands in (a raid's, rwalk.js), and everything in it keeps its place in the world: the
+  // fighters, the camera, what is flying about. Whatever else keeps a place of its own moves it on hooks.shift
+  shift(d) {
+    if (!(d = +d)) return;
+    P1.x -= d; P2.x -= d; cam.x -= d;
+    for (const e of fx) if (typeof e.x === 'number') e.x -= d;
+    for (const gh of ghosts) gh.x -= d;
+    if (hooks.shift) hooks.shift(d);
+  },
   get VW() { return VW; }, get VH() { return VH; }, get GY() { return GY; }, get HY() { return HY; }, get S() { return S; },
   get T() { return T; }, get ZNEAR() { return ZNEAR; }, get P1() { return P1; }, get P2() { return P2; }
 };
