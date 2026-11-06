@@ -17,7 +17,17 @@
    everybody else's follows it, and everything sent between the games says where its arena was, so a curse is where it is in every game.
    Down is out until the street is quiet again (back with half your health), or until somebody heals you (rwalk.js: Limitless, Awakened
    Limitless, the Mechamaster, Love Reaper and its kin can heal a partner; 'heal' here). And every district raid (shibuya.js) is one of
-   these now, alone: R.solo, its groups made from its fights, its rewards its own */
+   these now, alone: R.solo, its groups made from its fights, its rewards its own.
+   Build 0.32, THREE MORE (the user's: "add 3 more raids: Hakari raid (make ur own naem for all of them with raid at the end), Mahito hanami and
+   jogo raid, Hardest one Kashimo. all of them are 1-3 players exept the curses raid thats 2+"). Every kind is in KINDS now, Mahoraga's and the
+   Granite Cannon's with them: its name, how few and how many it takes, what clearing it pays, the groups down its street, and what waits
+   at the end of it:
+     JACKPOT RAID      the Jackpot Gambler at the end of it, on a hot streak. One to three players
+     DISASTER RAID     the street full of what the Soul Shaper made of people, and three disaster curses at the end of it all at once: the
+                       Disaster Flame (whose game turns him from player to player, as Mahoraga), the Disaster Bloom and the Soul Shaper
+                       (each after somebody of their own). Two players or more
+     THUNDER GOD RAID  the hardest: grade ones all the way, everything with more health and everything in it hitting harder (pow), and the
+                       Thunder God at the end of it. One to three players */
 (() => {
 'use strict';
 
@@ -41,16 +51,42 @@ const off = o => (typeof o === 'number' ? o : ox()) - ox();      // how far anot
 
 // the curses of this raid, made up for how many are in it. kind (Build 0.22v1): 'maho', or 'granite' (two players or more, and the Granite
 // Cannon at the end of it, who may drop a Secret CT: dced.js)
-const GRANITE = 'granite', NEED2 = 2;
+const GRANITE = 'granite';
 const granite = () => !!R && R.kind === GRANITE;
+// Build 0.32: every kind of raid there is. boss: what waits at the end, each [the defs it may be, in order of preference; its health alone;
+// its name]: the first is rd_boss (it turns from player to player), the rest rd_boss2, rd_boss3 (each after one of its own). pow: everything
+// in it hits this much harder; tough: the curses on the way have this much more health. max: how many it takes at most (the server's own
+// limit, mp.js, otherwise)
+const JACKPOT = [[['grunt', 3, 1]], [['brute', 2, 1], ['warped2', 1, 1]], [['brute', 2, 1], ['ruin', 1, 1]], [['boss', 1, 0]]];
+const DISASTER = [[['warped2', 3, 1]], [['warped2', 2, 1], ['brute', 2, 1]], [['ruin', 2, 1], ['brute', 1, 1]], [['boss', 1, 0], ['boss2', 1, 0], ['boss3', 1, 0]]];
+const THUNDER = [[['brute', 3, 1], ['ruin', 1, 0]], [['ruin', 2, 1], ['brute', 2, 1]], [['ruin', 3, 1], ['warped2', 2, 1]], [['boss', 1, 0]]];
+const KINDS = {
+  maho: { name: 'Raid', jp: '討伐', min: 1, max: 99, pay: 50, route: WAVES, boss: [[['sb_mahoraga', 'mahoraga'], 900, 'Mahoraga']], banner: ['魔虚羅', 'MAHORAGA'],
+    about: 'a street full of curses and a boss at the end of it, together' },
+  granite: { name: 'Granite raid', jp: '砲', min: 2, max: 99, pay: 50, route: WAVES, boss: [[['gr_ryu', 'sb_mahoraga', 'mahoraga'], 1100, 'Granite Cannon']], banner: ['砲', 'GRANITE CANNON'],
+    about: 'a street full of curses, and the Granite Cannon at the end of it. It takes two' },
+  jackpot: { name: 'Jackpot Raid', jp: '大当り', min: 1, max: 3, pay: 70, route: JACKPOT, boss: [[['hakari'], 1200, 'Jackpot Gambler']], banner: ['大当り', 'JACKPOT GAMBLER'],
+    about: 'a street full of curses, and the Jackpot Gambler at the end of it on a hot streak. One to three players' },
+  disaster: { name: 'Disaster Raid', jp: '災害', min: 2, max: 99, pay: 90, route: DISASTER,
+    boss: [[['jogo'], 900, 'Disaster Flame'], [['hanami'], 1000, 'Disaster Bloom'], [['sb_mahito', 'mahito2', 'mahito'], 1000, 'Soul Shaper']], banner: ['災害', 'THE DISASTER CURSES'],
+    about: 'a street of what the Soul Shaper made of people, and three disaster curses at the end of it, all at once. It takes two' },
+  thunder: { name: 'Thunder God Raid', jp: '雷神', min: 1, max: 3, pay: 120, route: THUNDER, boss: [[['sb_kashimo', 'kashimo'], 1900, 'Thunder God']], banner: ['雷神', 'THUNDER GOD'], pow: 1.3, tough: 1.3,
+    about: 'the hardest there is: grade ones all the way down the street, and the Thunder God at the end of it. One to three players' }
+};
+const KIND = k => (KINDS[k] ? k : 'maho');
+const kindOf = () => KINDS[R ? KIND(R.kind) : 'maho'];
+const cap = K => Math.min(M.MAX || 5, K.max);
+const count = n => ['', 'one', 'two', 'three', 'four', 'five'][n] || String(n);
 function defs(n, kind) {
-  const hp = 1 + .45 * (n - 1), dmg = 1 + .15 * (n - 1);
+  const K = KINDS[KIND(kind)], hp = (1 + .45 * (n - 1)) * (K.tough || 1), dmg = 1 + .15 * (n - 1);
   for (const id of ['grunt', 'brute', 'warped2', 'ruin']) {
     const d = Fi.DEFS[id];
     if (d) Fi.DEFS['rd_' + id] = Object.assign({}, d, { hp: Math.round(d.hp * hp), human: false, atk: d.atk.map(a => Object.assign({}, a, { dmg: a.dmg * dmg })) });
   }
-  const gr = kind === GRANITE && Fi.DEFS.gr_ryu, b = gr || Fi.DEFS.sb_mahoraga || Fi.DEFS.mahoraga;
-  Fi.DEFS.rd_boss = Object.assign({}, b, { name: gr ? 'Granite Cannon' : 'Mahoraga', hp: Math.round((gr ? 1100 : 900) * (1 + .55 * (n - 1))), human: false, atk: b.atk.map(a => Object.assign({}, a, { dmg: a.dmg * (1 + .12 * (n - 1)) })) });
+  K.boss.forEach(([ids, base, name], i) => {
+    const b = ids.map(id => Fi.DEFS[id]).find(Boolean) || Fi.DEFS.mahoraga;
+    Fi.DEFS['rd_boss' + (i ? i + 1 : '')] = Object.assign({}, b, { name, hp: Math.round(base * (1 + .55 * (n - 1))), human: false, atk: (b.atk || []).map(a => Object.assign({}, a, { dmg: a.dmg * (1 + .12 * (n - 1)) })) });
+  });
 }
 // what the fight starts with, before the first wave: nothing to see
 Fi.DEFS.raid0 = { name: 'Raid', jp: '討伐', skin: E.CURSE, hp: 1, scale: 1, speed: 0, range: 0, gap: [9, 9], atk: [], human: true };
@@ -67,9 +103,9 @@ const here = pid => pid === me() || (!!R && pid === R.me) || !!M.peer(pid);
 const fighting = () => !!R && R.phase === 'fight';
 const canRaid = () => M.on && M.kind === 'public' && E.root.dataset.mode === 'street' && S.st && S.st.free && !S.st.hold && !S.st.talk && !(JU.pvp && JU.pvp.busy) && !R && !inv;
 function make(id, hostId, ids, kind) {
-  return { id, host: hostId, ids, me: me(), kind: kind === GRANITE ? GRANITE : 'maho', phase: 'gather', t: 0, wave: 0, list: [], byId: new Map(), alive: new Set(), down: new Set(), allies: new Map(),
+  return { id, host: hostId, ids, me: me(), kind: KIND(kind), phase: 'gather', t: 0, wave: 0, list: [], byId: new Map(), alive: new Set(), down: new Set(), allies: new Map(),
     sendEs: 0, sendMe: 0, turnT: TURN, next: 0, out: [], pend: new Map(),
-    plan: null, route: WAVES, solo: null, quiet: 0, ph: null };      // (Build 0.31: the street, rwalk.js; the groups along it, the last of them the boss; a district raid's own; how long the street has been quiet; the placeholder)
+    plan: null, route: KINDS[KIND(kind)].route, solo: null, quiet: 0, ph: null };      // (route: its kind's, Build 0.32)      // (Build 0.31: the street, rwalk.js; the groups along it, the last of them the boss; a district raid's own; how long the street has been quiet; the placeholder)
 }
 
 /* ================= on screen: a line at the top, the ask, and the raid's own line while it lasts ================= */
@@ -82,17 +118,17 @@ const left = until => Math.max(0, Math.ceil((until - Date.now()) / 1000));
 function paintBox() {
   if (R && R.phase === 'gather') {
     const names = R.ids.map(pid => pid === R.me ? 'you' : esc((M.peer(pid) || {}).name || 'Player'));
-    const gr = granite(), few = gr && R.ids.length < NEED2;
+    const K = kindOf(), few = R.ids.length < K.min, full = K.max < 99 ? ` Up to ${count(cap(K))} players.` : '';
     box.className = 'duel on small';
-    box.innerHTML = `<div class="dask"><b>${gr ? 'Granite raid' : 'Raid'}</b><p>${few ? 'A Granite raid takes two players or more. Waiting for somebody to join.' : 'Waiting for the server to answer.'} In: <u>${names.join(', ')}</u></p><div><button type="button" data-raid="go" class="go"${few ? ' disabled' : ''}>Start now</button><button type="button" data-raid="cancel">Call it off</button></div><em data-left>${left(R.t)}</em></div>`;
+    box.innerHTML = `<div class="dask"><b>${K.name}</b><p>${few ? `A ${K.name} takes ${count(K.min)} players or more. Waiting for somebody to join.` : 'Waiting for the server to answer.'}${full} In: <u>${names.join(', ')}</u></p><div><button type="button" data-raid="go" class="go"${few ? ' disabled' : ''}>Start now</button><button type="button" data-raid="cancel">Call it off</button></div><em data-left>${left(R.t)}</em></div>`;
     return;
   }
   if (inv) {
-    const gr = inv.kind === GRANITE, what = gr ? 'Granite raid' : 'raid';
+    const K = KINDS[KIND(inv.kind)], what = K.name === 'Raid' ? 'raid' : K.name;
     box.className = 'duel on small';
     box.innerHTML = inv.joined
-      ? `<div class="dask"><b>${gr ? 'Granite raid' : 'Raid'}</b><p>You are in <u>${esc(inv.name)}</u>'s ${what}. It starts when the time runs out.</p><div><button type="button" data-raid="no">Leave it</button></div><em data-left>${left(inv.until)}</em></div>`
-      : `<div class="dask"><b>${gr ? 'Granite raid' : 'Raid'}</b><p><u>${esc(inv.name)}</u> is starting a ${what}: ${gr ? 'a street full of curses, and the Granite Cannon at the end of it. It takes two' : 'a street full of curses and a boss at the end of it, together'}.</p><div><button type="button" data-raid="yes" class="go">Join <kbd>Y</kbd></button><button type="button" data-raid="no">No <kbd>N</kbd></button></div><em data-left>${left(inv.until)}</em></div>`;
+      ? `<div class="dask"><b>${K.name}</b><p>You are in <u>${esc(inv.name)}</u>'s ${what}. It starts when the time runs out.</p><div><button type="button" data-raid="no">Leave it</button></div><em data-left>${left(inv.until)}</em></div>`
+      : `<div class="dask"><b>${K.name}</b><p><u>${esc(inv.name)}</u> is starting a ${what}: ${K.about}.</p><div><button type="button" data-raid="yes" class="go">Join <kbd>Y</kbd></button><button type="button" data-raid="no">No <kbd>N</kbd></button></div><em data-left>${left(inv.until)}</em></div>`;
     return;
   }
   box.className = 'duel'; box.innerHTML = '';
@@ -114,9 +150,12 @@ addEventListener('keydown', e => {
   if (k === 'y' || k === 'n') { e.preventDefault(); e.stopPropagation(); click(k === 'y' ? 'yes' : 'no'); }
 }, true);
 // the button in the server's list (mp.js paints it there)
-const chip = () => (M.on && M.kind === 'public' && !R && !inv ? '<button type="button" class="mpraid" data-raid="start">⚔ Start a raid</button><button type="button" class="mpraid gran" data-raid="granite" title="Two players or more. The Granite Cannon may drop a Secret CT">⚔ Granite raid · 2+</button>' : '');
+const chip = () => (M.on && M.kind === 'public' && !R && !inv ? '<button type="button" class="mpraid" data-raid="start">⚔ Start a raid</button><button type="button" class="mpraid gran" data-raid="granite" title="Two players or more. The Granite Cannon may drop a Secret CT">⚔ Granite raid · 2+</button>'
+  + '<button type="button" class="mpraid jack" data-raid="jackpot" title="One to three players. The Jackpot Gambler at the end">⚔ Jackpot Raid · 1–3</button>'      // (Build 0.32)
+  + '<button type="button" class="mpraid dis" data-raid="disaster" title="Two players or more. Three disaster curses at the end, at once">⚔ Disaster Raid · 2+</button>'
+  + '<button type="button" class="mpraid thun" data-raid="thunder" title="One to three players. The hardest raid there is: the Thunder God at the end">⚔ Thunder God Raid · 1–3 · hardest</button>' : '');
 function click(a) {
-  if (a === 'start' || a === 'granite') { if (canRaid()) start(a === 'granite' ? GRANITE : 'maho'); else if (!(S.st && S.st.free) || E.root.dataset.mode !== 'street') toast('Out on the street first.'); return; }
+  if (a === 'start' || (KINDS[a] && a !== 'maho')) { if (canRaid()) start(a === 'start' ? 'maho' : a); else if (!(S.st && S.st.free) || E.root.dataset.mode !== 'street') toast('Out on the street first.'); return; }
   if (a === 'go' && R && R.phase === 'gather' && host()) { go(); return; }
   if (a === 'cancel' && R && R.phase === 'gather') { M.all({ t: 'raid', a: 'cancel', id: R.id }); R = null; paintBox(); M.paint(); sfx.back(); return; }
   if (a === 'yes' && inv && !inv.joined) { if (!canJoin()) { M.to(inv.host, { t: 'raid', a: 'no', id: inv.id }); inv = null; paintBox(); return; } inv.joined = true; M.to(inv.host, { t: 'raid', a: 'join', id: inv.id }); sfx.confirm(); paintBox(); return; }
@@ -129,14 +168,16 @@ function start(kind) {
   R = make(Math.random().toString(36).slice(2, 10), me(), [me()], kind);
   R.t = Date.now() + ASK_T * 1000;
   M.all({ t: 'raid', a: 'ask', id: R.id, k: R.kind });
-  sfx.confirm(); toast(granite() ? 'Granite raid: it takes two. The server has ten seconds to join.' : 'Raid: the server has ten seconds to join.', '#ffd23d'); paintBox(); tickBox(); M.paint();
+  const K = kindOf();
+  sfx.confirm(); toast(K.min > 1 ? `${K.name}: it takes ${count(K.min)}. The server has ten seconds to join.` : `${K.name}: the server has ten seconds to join.${K.max < 99 ? ` Up to ${count(cap(K))} players.` : ''}`, '#ffd23d'); paintBox(); tickBox(); M.paint();
 }
 function go() {                                     // the host: in, with whoever said yes
   if (!R || R.phase !== 'gather') return;
-  R.ids = R.ids.filter(here);
-  if (granite() && R.ids.length < NEED2) {          // a Granite raid takes two: nobody came, so it is off
-    if (Date.now() < R.t) { toast('A Granite raid takes two players or more.', '#ff8a98'); return; }
-    clearInterval(clock); M.all({ t: 'raid', a: 'cancel', id: R.id }); R = null; paintBox(); M.paint(); toast('Nobody joined: a Granite raid takes two players or more.', '#ff8a98'); return;
+  const K = kindOf();
+  R.ids = R.ids.filter(here).slice(0, cap(K));      // (no more than its kind takes: Build 0.32)
+  if (R.ids.length < K.min) {                       // a Granite raid, a Disaster Raid, takes two: nobody came, so it is off
+    if (Date.now() < R.t) { toast(`A ${K.name} takes ${count(K.min)} players or more.`, '#ff8a98'); return; }
+    clearInterval(clock); M.all({ t: 'raid', a: 'cancel', id: R.id }); R = null; paintBox(); M.paint(); toast(`Nobody joined: a ${K.name} takes ${count(K.min)} players or more.`, '#ff8a98'); return;
   }
   clearInterval(clock);
   const plan = W_().plan({ w: W_().here(), at: S.me ? S.me.x - 300 : 0, n: WAVES.length - 1 });      // (Build 0.31: the street, from where the host is standing)
@@ -154,9 +195,10 @@ function begin(id, hostId, ids, kind, plan, solo) {
   if (!solo) defs(R.ids.length, R.kind);
   R.plan = W_().clean(plan) || W_().plan({ w: 'shibuya', at: 0, n: R.route.length - 1 });
   const stage = W_().open(R.plan), n = Math.max(0, R.ids.indexOf(R.me));
-  S.fight({ stay: true, cfg: { foes: ['raid0'], stage, label: solo ? 'Raid · ' + solo.name : 'Raid', p1x: -700 + n * 150, win: null, raid: id, onLose: () => down() }, after: solo ? solo.after : undefined });
-  Fi.nm.p2.textContent = solo ? solo.name : 'Raid'; Fi.nm.p2j.textContent = solo ? solo.jp : '討伐';
-  E.banner(solo ? solo.jp : '討伐', solo ? solo.name.toUpperCase() : 'RAID');
+  const K = kindOf();
+  S.fight({ stay: true, cfg: { foes: ['raid0'], stage, label: solo ? 'Raid · ' + solo.name : K.name, p1x: -700 + n * 150, win: null, raid: id, onLose: () => down() }, after: solo ? solo.after : undefined });
+  Fi.nm.p2.textContent = solo ? solo.name : K.name; Fi.nm.p2j.textContent = solo ? solo.jp : K.jp;
+  E.banner(solo ? solo.jp : K.jp, solo ? solo.name.toUpperCase() : K.name.toUpperCase());
   toast(R.ids.length > 1 ? 'Down the street together: whatever is waiting on it, and the boss at the end.' : 'Down the street: whatever is waiting on it, and the boss at the end.', '#ffd23d');
   paintHud();
 }
@@ -201,7 +243,7 @@ function wave(k, list, at) {
   const last = k >= R.route.length, d0 = list[0] && Fi.DEFS[list[0][1]];
   if (last) {
     if (R.solo) E.banner((d0 && d0.jp) || '討伐', ((d0 && d0.name) || 'The boss').toUpperCase());
-    else if (granite()) E.banner('砲', 'GRANITE CANNON'); else E.banner('魔虚羅', 'MAHORAGA');
+    else E.banner(...kindOf().banner);              // (its kind's: Build 0.32)
   } else if (list.length === 1 && d0 && (d0.kit || d0.hp > 160)) E.banner(d0.jp || '呪霊', (d0.name || 'Curse').toUpperCase(), 'sm');
   else E.banner('襲撃', 'AMBUSH', 'sm');
   const base = typeof at === 'number' ? at : ox();
@@ -259,13 +301,14 @@ function finish(won) {
   const cfg = Fi.fight.cfg, id = R.id, solo = R.solo;
   E.slow(.8); E.banner(won ? '討伐' : '敗北', won ? 'RAID CLEAR' : 'RAID FAILED');
   if (won) sfx.confirm();
-  if (won && !solo) { if (JU.shop && JU.shop.earn) JU.shop.earn(PAY, E.P1); if (JU.yen) JU.yen.earn(PAY * 100); }      // (and yen, as every raid pays: yen.js. A district raid pays its own way: shibuya.js)
+  const K = kindOf(), pay = solo ? 0 : K.pay || PAY;      // (what its kind pays: Build 0.32)
+  if (won && !solo) { if (JU.shop && JU.shop.earn) JU.shop.earn(pay, E.P1); if (JU.yen) JU.yen.earn(pay * 100); }      // (and yen, as every raid pays: yen.js. A district raid pays its own way: shibuya.js)
   const drop = won && !solo && granite() && JU.dced && JU.dced.raidDrop ? JU.dced.raidDrop() : false;      // the Granite Cannon down: everyone in it rolls for the Secret CT, 3%
   paintHud();
   Fi.later(3600, () => {
     if (!R || R.id !== id) return;
     R = null; paintHud(); M.paint(); W_().close();
-    if (!solo) toast(won ? `Raid cleared. +${PAY} tokens.` + (drop ? ' And a Secret CT: Direct Cursed Energy Discharge!' : '') : 'The raid failed.', won ? '#ffd23d' : '#ff8a98');
+    if (!solo) toast(won ? `${K.name === 'Raid' ? 'Raid' : K.name} cleared. +${pay} tokens.` + (drop ? ' And a Secret CT: Direct Cursed Energy Discharge!' : '') : `The ${K.name === 'Raid' ? 'raid' : K.name} failed.`, won ? '#ffd23d' : '#ff8a98');
     else if (!won) toast(`${solo.name}: the raid failed. Its light is still there, for another go.`, '#ff8a98');
     if (Fi.fight.cfg === cfg) { if (won && cfg.onWin) cfg.onWin(); else if (cfg.onFlee) cfg.onFlee(); }
   });
@@ -295,14 +338,15 @@ M.hear('raid', (p, m) => {
   if (!m || typeof m.a !== 'string') return;
   if (m.a === 'ask') {
     if (!canJoin() || inv) { M.to(p.id, { t: 'raid', a: 'no', id: m.id }); return; }
-    inv = { id: m.id, host: p.id, name: p.name, until: Date.now() + ASK_T * 1000, joined: false, kind: m.k === GRANITE ? GRANITE : 'maho' };
+    inv = { id: m.id, host: p.id, name: p.name, until: Date.now() + ASK_T * 1000, joined: false, kind: KIND(m.k) };
     sfx.charge(); paintBox(); tickBox(); M.paint();
     return;
   }
   if (inv && m.id === inv.id && p.id === inv.host) {
     if (m.a === 'cancel') { inv = null; paintBox(); M.paint(); toast('The raid was called off.'); }
+    else if (m.a === 'full') { inv = null; paintBox(); M.paint(); toast('That raid is full.'); }      // (Build 0.32: a kind with a limit)
     else if (m.a === 'go') {
-      if (inv.joined && Array.isArray(m.ids) && m.ids.includes(me()) && canJoin()) begin(m.id, p.id, m.ids.map(String), m.k === GRANITE ? GRANITE : inv.kind, m.plan);
+      if (inv.joined && Array.isArray(m.ids) && m.ids.includes(me()) && canJoin()) begin(m.id, p.id, m.ids.map(String), KINDS[m.k] ? m.k : inv.kind, m.plan);
       else { if (inv.joined) say(p.id, { a: 'left', id: m.id }); inv = null; paintBox(); M.paint(); }
     }
     return;
@@ -310,7 +354,8 @@ M.hear('raid', (p, m) => {
   if (!R || m.id !== R.id || !R.ids.concat(R.phase === 'gather' ? [p.id] : []).includes(p.id)) return;
   const a = m.a;
   if (R.phase === 'gather') {                       // (the host's end of the ask)
-    if (a === 'join' && !R.ids.includes(p.id) && R.ids.length < M.MAX) { R.ids.push(p.id); paintBox(); sfx.hover(); }
+    if (a === 'join' && !R.ids.includes(p.id) && R.ids.length < cap(kindOf())) { R.ids.push(p.id); paintBox(); sfx.hover(); }      // (as many as its kind takes: Build 0.32)
+    else if (a === 'join' && !R.ids.includes(p.id)) say(p.id, { a: 'full' });
     else if (a === 'no' || a === 'left') lose(p.id);
     return;
   }
@@ -466,7 +511,8 @@ function send(dt) {
     tell(m);
   }
 }
-const tick0 = H.tick, fx0 = H.fx, cast0 = H.cast, idle0 = H.foeIdle, ko0 = H.ko, hit0 = H.hit, shield0 = H.shield, start0 = H.fightStart, reset0 = H.reset;
+const tick0 = H.tick, fx0 = H.fx, cast0 = H.cast, idle0 = H.foeIdle, ko0 = H.ko, hit0 = H.hit, shield0 = H.shield, start0 = H.fightStart, reset0 = H.reset, fpow0 = H.foePower;
+H.foePower = a => (fpow0 ? fpow0(a) : 1) * (fighting() && !R.solo ? kindOf().pow || 1 : 1);      // (Build 0.32: everything in the Thunder God Raid hits harder)
 H.foes = () => (fighting() ? R.list : null);
 H.cast = () => {
   const a = cast0 ? cast0() : null;
@@ -575,7 +621,7 @@ function paintHud(quick) {
   hudKey = key; hud.classList.add('on');
   const what = R.phase === 'over' ? 'Over' : boss ? (alive ? `The boss · ${alive > 1 ? alive + ' left' : 'still standing'}` : 'The boss is down')
     : alive ? `${alive} on you · the curtain is down round you` : R.wave ? `The street is quiet · ${n - 1 - R.wave ? n - 1 - R.wave + ' more before the boss' : 'the boss is at the end'}` : 'Walk on down the street';
-  hud.innerHTML = `<b>${R.solo ? esc(R.solo.name) : 'Raid'}</b><span>${what}</span><div class="rbar"></div><i>${who.map(esc).join(' · ')}</i>${Wk ? Wk.chip() : ''}`;
+  hud.innerHTML = `<b>${R.solo ? esc(R.solo.name) : esc(kindOf().name)}</b><span>${what}</span><div class="rbar"></div><i>${who.map(esc).join(' · ')}</i>${Wk ? Wk.chip() : ''}`;
   if (Wk) Wk.paintBar(hud.querySelector('.rbar'));
 }
 // Build 0.31: the arena has moved along the street (rwalk.js, game.js E.shift): every curse in it keeps its place in the world, and so do
@@ -609,7 +655,7 @@ JU.exitGame = () => {
 };
 
 JU.raid = { chip, click, start, WAVES, solo: soloRaid, partners, heal, revive: (frac, by) => up(frac, by), isDown: () => !!R && R.phase === 'fight' && R.down.has(R.me), allies: () => (R && R.phase !== 'gather' ? [...R.allies.values()].filter(a => a.st).map(a => a.f) : []),      // (the others' fighters, for what their techniques carry: ratio.js, reaper.js)
- get state() { return R && { id: R.id, host: R.host, ids: R.ids.slice(), kind: R.kind, phase: R.phase, wave: R.wave, alive: [...R.alive], list: R.list.map(o => ({ eid: o.eid, def: o.def, owner: o.owner, net: !!o.net, hp: r1(o.hp), ko: !!o.ko, x: Math.round(o.x) })), down: [...R.down], allies: [...R.allies.keys()],
+ KINDS, get state() { return R && { id: R.id, host: R.host, ids: R.ids.slice(), kind: R.kind, phase: R.phase, wave: R.wave, alive: [...R.alive], list: R.list.map(o => ({ eid: o.eid, def: o.def, owner: o.owner, net: !!o.net, hp: r1(o.hp), ko: !!o.ko, x: Math.round(o.x) })), down: [...R.down], allies: [...R.allies.keys()],
     solo: R.solo && R.solo.name, route: R.route.map(r => r.map(x => (Array.isArray(x) ? x[0] : x))), quiet: r2(R.quiet), ph: !!R.ph && E.P2 === R.ph }; },
   get invite() { return inv && { id: inv.id, host: inv.host, joined: inv.joined }; } };
 })();

@@ -290,7 +290,8 @@ H.reset = () => { reset0(); dom = rival = clash = wreck = null; voidCd = 0; };
 H.fightStart = (cfg, wave) => { dom = rival = clash = wreck = null; start0(cfg, wave); };
 
 const brief = d => d && { kind: d.kind, mine: mine(d), t: +d.t.toFixed(2), dur: d.dur, fall: d.fall, won: !!d.won };
-Object.assign(D, { raise, drop, kinds: KIND, kind(name, def) { KIND[name] = def; } });
+Object.assign(D, { raise, drop, kinds: KIND, kind(name, def) { KIND[name] = def; },
+  reset() { for (const d of [dom, rival]) if (d && KIND[d.kind] && KIND[d.kind].end) KIND[d.kind].end(); dom = rival = clash = wreck = null; } });      // (Build 0.32: gone at once, with nothing shattering: a story's next beat, script.js)
 Object.defineProperty(D, 'up', { get: () => !!dom && !dom.fall });
 Object.defineProperty(D, 'now', { get: () => (dom && !dom.fall && !clash && mine(dom) ? dom.kind : null) });    // his own domain, standing and doing what it does
 Object.defineProperty(D, 'foe', { get: () => (dom && !dom.fall && !clash && !mine(dom) ? dom.kind : null) });   // an enemy's, standing over him

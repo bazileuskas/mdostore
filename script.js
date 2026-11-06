@@ -4,7 +4,8 @@
 
 const E = JU.eng, C = JU.cast, Fi = JU.fights, V = JU.vfx, ST = JU.stages, D = JU.sets, sfx = JU.sfx, cam = E.cam, root = E.root, H = E.hooks;
 const { clamp, rnd, ZP } = E, cut = JU.school.cut, nm = Fi.nm, fade = root.querySelector('#fade');
-const CH = [], NUM = ['', '壱', '弐', '参', '肆', '伍', '陸', '漆', '捌', '玖', '拾', '拾壱', '拾弐', '拾参', '拾肆', '拾伍', '拾陸', '拾漆', '拾捌', '拾玖', '弐拾', '弐拾壱', '弐拾弐', '弐拾参', '弐拾肆', '弐拾伍', '弐拾陸', '弐拾漆', '弐拾捌', '弐拾玖', '参拾'];
+const CH = [], NUM = ['', '壱', '弐', '参', '肆', '伍', '陸', '漆', '捌', '玖', '拾', '拾壱', '拾弐', '拾参', '拾肆', '拾伍', '拾陸', '拾漆', '拾捌', '拾玖', '弐拾', '弐拾壱', '弐拾弐', '弐拾参', '弐拾肆', '弐拾伍', '弐拾陸', '弐拾漆', '弐拾捌', '弐拾玖', '参拾',
+  '参拾壱', '参拾弐', '参拾参', '参拾肆', '参拾伍', '参拾陸', '参拾漆', '参拾捌', '参拾玖', '肆拾', '肆拾壱', '肆拾弐'];      // (Build 0.32: season four's)
 const DONE = [], onStage = { cast: [], foe: null };    // chapters finished (kept between visits), and who is on stage in the current scene
 try {
   DONE.push(...JSON.parse(localStorage.getItem('ju.done') || '[]'));
@@ -22,13 +23,15 @@ let ally = null, mid = null, token = 0;
 
 // a story fight can hand the player a domain to open with G
 function grant(kind) { if (JU.domain) JU.domain.granted = kind || null; if (kind) root.dataset.g = '1'; else delete root.dataset.g; }
-function setup() { V.clear(); ST.clear(); JU.sukuna.revert(); JU.tech.revert(); grant(null); ally = null; mid = null; for (const k in E.cd) E.cd[k] = 0; }
+function setup() { V.clear(); ST.clear(); JU.sukuna.revert(); JU.tech.revert(); grant(null); ally = null; mid = null; for (const k in E.cd) E.cd[k] = 0; if (JU.domain.reset) JU.domain.reset(); }      // (and whatever domain was still standing: Build 0.32)
 // a Domain Expansion that closes one beat and opens the next under its own white-out
-const expand = (who, tone, next) => { if (!JU.domain.open({ who, tone, reveal: () => next(true) })) next(); };
+// (vs: the other side's, raised against it in the same opening: Build 0.32)
+const expand = (who, tone, next, vs) => { if (!JU.domain.open({ who, tone, vs: vs || undefined, reveal: () => next(true) })) next(); };
 
 /* ---------- beat: a conversation ----------
    { stage, p1: [skin, x], cast: [[skin, x, face, scale, how far back]], foe: [id, x], card: [jp, en], lines, cx, zoom, setup(cast, foe),
-     domain: tone (it ends with the foe, or the first of the cast, opening a domain) } */
+     domain: tone (it ends with the foe, or the first of the cast, opening a domain; by: 'p1', the player opens it; vs: tone, and the foe
+     opens one against it in the same breath: Build 0.32) } */
 function scene(b, next, first, now) {
   const go = () => {
     setup();
@@ -43,7 +46,7 @@ function scene(b, next, first, now) {
     if (b.card) Fi.later(first ? 1700 : 500, () => E.banner(b.card[0], b.card[1], 'sm'));
     cut({
       extra: () => cast, look: () => (at ? at.x : p.x + 1), cx: () => (b.cx === undefined ? (at ? (p.x + at.x) / 2 : p.x) : b.cx), zoom: b.zoom,
-      delay: (b.card ? 2000 : 800) + (first ? 1200 : 0), lines: b.lines, then: b.domain ? () => expand(at, b.domain, next) : next,
+      delay: (b.card ? 2000 : 800) + (first ? 1200 : 0), lines: b.lines, then: b.domain ? () => expand(b.by === 'p1' ? p : at, b.domain, next, b.vs ? { who: at, tone: b.vs } : null) : next,
       tick(real) { for (const f of cast) C.stroll(f, false, real); }
     });
   };
@@ -55,7 +58,9 @@ function scene(b, next, first, now) {
      mid: { at, low (or once the player is down to this share of his health), foe, lines, fn, after,
             ends (the fight is over after these lines, with nobody knocked out), domain: tone (and the foe opens a domain on the way out) },
      as.sealed (his technique has been taken: strikes only), floor, rage, win: [jp, en],
-     domain: tone (the player ends it with a Domain Expansion) } */
+     domain: tone (the player ends it with a Domain Expansion),
+     start(p, o) (Build 0.32: something that happens a moment in, such as two domains raised against each other; startAt: how long in, s),
+     ally.act(f, o, p) (Build 0.32: what the partner does when they step in, in place of the usual blow) } */
 function fightBeat(b, next) {
   fade.classList.add('on');
   Fi.later(700, () => {
@@ -77,6 +82,7 @@ function fightBeat(b, next) {
     if (a.domain) Fi.later(1700, () => { if (JU.domain.granted) E.fx.push({ k: 2, x: E.P1.x, y: 335, n: 'G  ·  DOMAIN EXPANSION', col: '#ff2440', t: 0, life: 2 }); });
     if (b.ally) { const f = stand([b.ally.skin, -700, 1, b.ally.scale]); f.z = ZP + 190; ally = { f, a: b.ally, t: 3.5 }; }
     mid = b.mid ? Object.assign({ done: false, next }, b.mid) : null;
+    if (b.start) { const my = token, cfg = Fi.fight.cfg; Fi.later((b.startAt || 1.1) * 1000, () => { if (my === token && Fi.fight.cfg === cfg && !E.P2.ko) b.start(E.P1, E.P2); }); }
     fade.classList.remove('on');
     if (b.card) E.banner(b.card[0], b.card[1], 'sm');
   });
@@ -93,7 +99,7 @@ function interlude(m) {
   cut({
     look: () => o.x, cx: () => (p.x + o.x) / 2, extra: () => (ally ? [ally.f] : []), lines: m.lines,
     then() {
-      if (m.ends) { ally = null; mid = null; if (m.domain) expand(o, m.domain, m.next); else m.next(); return; }
+      if (m.ends) { ally = null; mid = null; if (m.domain) expand(m.by === 'p1' ? p : o, m.domain, m.next); else m.next(); return; }      // (by: 'p1', the player opens it: Build 0.32)
       E.setScene(null); cam.lift = 0; Fi.fight.paused = false; if (m.after) m.after(p, o);
     }
   });
@@ -114,6 +120,7 @@ H.tick = dt => {
       E.fx.push({ k: 2, x: f.x, y: 370, n: a.call, col: a.col, t: 0, life: 1.1 }); sfx.charge();
       E.after(.35, () => {
         if (o.ko) return;
+        if (a.act) { a.act(f, o, p); return; }      // (a move of their own: Build 0.32)
         E.applyHit(o, f.face, { dmg: a.dmg || 9, kb: 280, lift: 380, stun: .7, stop: .08, heavy: 1, col: a.col });
         for (let i = 0; i < 4; i++) V.slash(o.x + rnd(-30, 30), o.y + rnd(90, 230), rnd(-1, 1) + (i % 2 ? Math.PI : 0), 260, a.col, 10, i * .03);
       });
@@ -125,7 +132,7 @@ H.tick = dt => {
 H.reset = () => { reset0(); token++; grant(null); ally = null; mid = null; };
 
 /* ---------- chapters ---------- */
-const add = (n, title, beats) => { CH[n] = { n, title, beats }; };
+const add = (n, title, beats, o) => { CH[n] = Object.assign({ n, title, beats }, o); };      // (o: fin, the last chapter there is: Build 0.32)
 function run(beats, i, n, my, now) {
   const b = beats[i];
   (b.foes ? fightBeat : scene)(b, soon => { if (my !== token) return; if (i + 1 < beats.length) run(beats, i + 1, n, my, soon); else done(n); }, i === 0, now);
@@ -141,7 +148,8 @@ function play(n) {
 const SEASONS = [
   { n: 1, jp: '第一期', from: 1, about: 'The vessel, the school, the Goodwill Event' },
   { n: 2, jp: '第二期', from: 8, about: 'Hidden Inventory and Shibuya' },
-  { n: 3, jp: '第三期', from: 13, about: 'The Culling Game, and the road to Shinjuku' }
+  { n: 3, jp: '第三期', from: 13, about: 'The Culling Game, and the road to Shinjuku' },
+  { n: 4, jp: '第四期', from: 31, about: 'The Shinjuku Showdown, to the very end' }      // (Build 0.32)
 ];
 const span = s => CH.filter(c => c && c.n >= s.from && c.n < ((SEASONS[s.n] || {}).from || 999));   // SEASONS[s.n] is the season after s
 const seasonOf = n => SEASONS.filter(s => n >= s.from).pop();
@@ -159,7 +167,7 @@ function done(n) {
   Fi.later(3000, () => {
     if (my !== token) return;
     if (CH[n + 1]) play(n + 1);
-    else { E.banner('続', 'TO BE CONTINUED', 'sm'); Fi.later(3400, () => JU.exitGame()); }
+    else { const fin = !!CH[n].fin; E.banner(fin ? '終' : '続', fin ? 'THE END' : 'TO BE CONTINUED', 'sm'); Fi.later(fin ? 4600 : 3400, () => JU.exitGame()); }      // (fin: the story is over. Build 0.32)
   });
 }
 
