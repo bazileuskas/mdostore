@@ -1,4 +1,5 @@
-/* JUJUTSU UNLIMITEDS — LIGHTNING BEAST (Build 0.26; Early Access from Build 0.27). The user: "new CT: LIGHTNING BEAST, m1s its a staff that
+/* JUJUTSU UNLIMITEDS — LIGHTNING BEAST (Build 0.26; Early Access from Build 0.27; out of it in Build 0.30v2 at 2% on the talisman, the user's:
+   "do the final touches for kashimo and release him with a 2% chance and dont change any other precentages"). The user: "new CT: LIGHTNING BEAST, m1s its a staff that
    kashimo carries and make it look like the staff in this image [a long red pole, gold at both ends, a black grip and a gold ring next to each]
    ... make him have 7 m1s and each m1 will emit lightning from it and each m1 make a different m1 sound by that i mean use the same one but
    make it lower pitch each time. have 3 moves for nOW", with the three described:
@@ -1396,9 +1397,9 @@ const SKIN = Object.assign({}, JU.cast6.KASHIMO, {
     g.fillStyle = GOLD; g.fillRect(-3.5, -102, 7, 6); g.fillRect(-3.5, 56, 7, 6); g.fillStyle = GRIP; g.fillRect(-3, -96, 6, 12); g.fillRect(-3, 44, 6, 12);
     g.restore();
   } });
-JU.tech.add('beast', { name: 'Lightning Beast', jp: '雷獣', mark: '雷', who: 'Lightning', odds: 0, col: BOLT, glow: 'blue', moves: MOVES,
-  early: true, skin: SKIN, as: ['Lightning Beast', '雷獣'], m1, guard, awaken, aim: (p, h) => (beastOn() ? Object.assign({}, h, { reach: (h.reach || 150) * BEAST_REACH }) : h), awkName: 'Beast', awkKeep: true, get awkHits() { return !beastOn(); },      // (Beast Mode does not fill its own bar)
-  hint: '<b>E</b> Lightning meter · <b>1</b> Thunderclap Barrage · <b>2</b> Lightning Discharge · <b>3</b> Electric Reversal · <b>4</b> Thunder God\'s Wrath' });
+JU.tech.add('beast', { name: 'Lightning Beast', jp: '雷獣', mark: '雷', who: 'The Thunder God\'s lightning, and his staff', odds: 2, col: BOLT, glow: 'blue', moves: MOVES,      // (2%: nobody else's chance went down for it, the odds just add up to 2 more)
+  skin: SKIN, as: ['Lightning Beast', '雷獣'], m1, guard, awaken, aim: (p, h) => (beastOn() ? Object.assign({}, h, { reach: (h.reach || 150) * BEAST_REACH }) : h), awkName: 'Beast', awkKeep: true, get awkHits() { return !beastOn(); },      // (Beast Mode does not fill its own bar)
+  hint: '<b>E</b> Lightning meter · <b>Two keys together</b> a combo · <b>G</b> Beast Mode' });      // (the bottom-left line is for the basics only)
 const DEF = T.TECH.beast;
 
 /* ---------- wiring ---------- */

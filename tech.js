@@ -140,6 +140,7 @@ function roll() {
   const pool = ORDER.filter(id => !TECH[id].limited), total = pool.reduce((n, id) => n + TECH[id].odds, 0);      // (out of what they all come to. 105 from 0.17v1, when Miracle Dork joined at 5%;
   // 137 from 0.25v1: the user wanted Ten Shadows 20, Transfiguration and Disaster Plants 17 with Slit Mouth at 30, and said a total over 100 was fine.
   // 142 from 0.27, when Love Reaper came out of Early Access at 5% (our number: the user gave none).
+  // 144 from 0.30v2, when the Lightning Beast came out of Early Access at 2% (the user's number, and "dont change any other precentages").
   // 100 again from 0.19, when the Cursed Speaker (15%) and Ratio Man (4%) came out of Early Access: Ten Shadows 31 -> 19, Transfiguration and
   // Disaster Plants 20 -> 14 each, so that every card's number is its real chance)
   let r = Math.random() * total;

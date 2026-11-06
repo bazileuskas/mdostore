@@ -5,6 +5,9 @@
 // Newest first. v = the build, jp = the seal stamped beside it, pic = notes/<pic>.jpg, cap = what the picture shows.
 // A new update goes at the top of this list.
 const NOTES = [
+  { v: '0.30v2', name: 'Lightning Unleashed', jp: '解放', date: '6 Nov 2026', pic: 'unleashed', cap: 'The Lightning Beast in all three: Thunder God\'s Wrath, Thunderclap Barrage: MAX, a slam on the staff, and Beast Mode', items: [
+    'The Lightning Beast is out of Early Access: roll it from the talisman (2%), or look for it in the Daily Shop. Nobody else\'s chance went down for it; the odds just add up to 144 now (142 before). Anybody who had it in Early Access keeps its free slot, and anybody who rolled it while it was limited keeps it',
+    'Its last touches before it went out: every move, MAX move, Beast Mode move, counter and combo was gone over again, and all of it does what it did. Its card says what it is now (the Thunder God\'s lightning, and his staff), and the line at the bottom of a fight is down to the basics: E the Lightning meter, two keys together a combo, G Beast Mode'] },
   { v: '0.30v1', name: 'Overcharge', jp: '過充電', date: '6 Nov 2026', pic: 'overcharge', cap: 'Ultra Cannon held: charging, let go, on a body on the floor; and Puppet Breaker catching one in the air', items: [
     'Mechamaster is the regular Yuji now, in his own look, not a puppet\'s (the giant still has him in its cockpit). Every move is orange: the punches, the cannon, the thrusters, the cable and the giant\'s moves. Super Charge\'s aura is still blue, and its puppet looks as it did',
     'Ultra Cannon can be held. Tap 2 and it is as it was (45). Hold it and it goes on charging, for up to 1.3 seconds; let go, or reach 1.3, and it is a beam that stays on, longer and wider, out to the wall: 4 to 8 hits of 5 and a burst of 25 to 40 where it ends, 45 to 80 by how long it was held. Fully charged, the burst sends them flying',
