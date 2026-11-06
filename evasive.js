@@ -5,15 +5,21 @@
    A BROKEN LIMB (B L) is what Ratio Man's blade and kick leave behind (ratio.js). For six seconds from the latest stack whoever has it cannot
    block, dash or use their Evasive, and their blows do 40% less; every stack after the first takes 40% off what is left (up to five: Collapsed
    Fist leaves three at once, or five). In a duel it is sent with the
-   blow, like bleeding, and whoever has it takes it off his own blows (so it is never taken off twice) */
+   blow, like bleeding, and whoever has it takes it off his own blows (so it is never taken off twice).
+   Build 0.31v2, A SECOND RAGDOLL FILLS IT: an uppercut or a down slam that lands on somebody already ragdolled (in the air from a throw, or
+   lying there) fills their Evasive bar by 40% (ragdoll.js decides when; fill() here), and blue sparks come off them to say so. The bar is
+   the Evasive's twenty seconds coming back: for me evT, for a foe its evAt, so 40% is eight of them. Mine is the line along the top of the
+   Dash slot; theirs is a line under their health now (evb), for whatever has one to use (not a dummy); a duel's other player's is what
+   his game says it is (pvp.js sends it with his state). The user's: "make it so if you uppercut/ downlam an already ragdolled opponent
+   theres blue sparks which indicates their evasive bar filling up by 40%" */
 (() => {
 'use strict';
 
 const E = JU.eng, g = E.g, F = E.F, cam = E.cam, H = E.hooks, POSE = E.POSE, V = JU.vfx, sfx = JU.sfx, Fi = JU.fights, keys = E.keys;
-const { clamp } = E;
+const { clamp, rnd } = E, TAU = Math.PI * 2;
 const EV_CD = 20, EV_T = .2, EV_V = 1300, EV_INV = .6, EV_AWAY = 360;      // how long it takes to come back; the dash it is (seconds, speed); how long nothing touches him; how far a foe's takes it
 const BL_T = 6, BL_MAX = 5, BL_CUT = .6;            // a Broken Limb: how long from the latest stack; how many stacks there can be; and what each leaves of a blow
-const CYAN = '#7fe9ff', BLC = '#ff8a3d', COLD = E.flat('#2f9fc8', '#8af0ff');      // (what an afterimage of it is drawn in)
+const CYAN = '#7fe9ff', BLUE = '#3fb4ff', BLC = '#ff8a3d', COLD = E.flat('#2f9fc8', '#8af0ff');      // (what an afterimage of it is drawn in)
 const duel = () => !!(Fi.fight.cfg && Fi.fight.cfg.pvp);
 const say = (f, text, col, life, up) => E.fx.push({ k: 2, x: f.x, y: f.y + up * (f.scale || 1), n: text, col, t: 0, life });
 
@@ -71,6 +77,31 @@ function foe(o, chance = .5, any = false) {
   return true;
 }
 
+/* ================= Build 0.31v2: a second ragdoll fills the bar ================= */
+// how full somebody's bar is, 0 to 1: mine, or a foe's (never used: full)
+const level = f => (f === E.P1 ? 1 - evT / EV_CD : !f || f.evAt === undefined ? 1 : clamp((E.T - f.evAt) / EV_CD, 0, 1));
+// a share of the bar, put back at once: for me, and for a foe this game runs (never fuller than full)
+function fill(f, frac) {
+  if (!f || !(frac > 0)) return;
+  if (f === E.P1) { evT = Math.max(0, evT - frac * EV_CD); pulse(bar); paint(); }
+  else if (f.evAt !== undefined) f.evAt = Math.max(E.T - EV_CD, f.evAt - frac * EV_CD);
+}
+// and what says so: blue sparks off them, little cold forks of it, and a ring, where the body is (lower, if it is lying there). Bigger and
+// longer-lived than a blow's own sparks, so that they read through the hit-stop and the blow's white flash
+function spark(f) {
+  if (!f) return;
+  const hs = f.scale || 1, lying = (f === E.P1 ? f.ps : f.state) === 'down', x = f.x, y = f.y + (lying ? 45 : 150) * hs;
+  for (let i = 0; i < 20; i++) { const a = rnd(0, TAU), v = rnd(420, 1150); V.puff('blue', x, y, Math.cos(a) * v, Math.sin(a) * v, rnd(36, 66) * hs, rnd(.34, .62), -1100); }
+  for (let i = 0; i < 5; i++) { const a = rnd(0, TAU), v = rnd(300, 800); V.puff('white', x, y, Math.cos(a) * v, Math.sin(a) * v, rnd(14, 24) * hs, rnd(.2, .34), -1100); }
+  for (let i = 0; i < 6; i++) {
+    const a = rnd(0, TAU), l = rnd(100, 180) * hs, m = rnd(.4, .6), k = rnd(-1, 1) * 24 * hs;
+    const x1 = x + Math.cos(a) * l * m - Math.sin(a) * k, y1 = y + Math.sin(a) * l * m + Math.cos(a) * k, life = rnd(.18, .3);
+    V.bolt(x, y, x1, y1, BLUE, life, 3.5, CYAN); V.bolt(x1, y1, x + Math.cos(a) * l, y + Math.sin(a) * l, BLUE, life, 3, CYAN);
+  }
+  V.ring(x, y, 150 * hs, BLUE, .3);
+}
+const pulse = el => { if (!el) return; el.classList.remove('up'); void el.offsetWidth; el.classList.add('up'); };
+
 /* ================= on screen ================= */
 // the Dash slot: a line along its top that empties when the Evasive is used and fills again; lit when there is something to get out of
 const slot = E.hud.mv.dash, bar = document.createElement('i');
@@ -82,6 +113,26 @@ function paint() {
   shown = now;
   bar.style.setProperty('--ev', v); bar.classList.toggle('low', v < 1);
   slot.classList.toggle('evo', ready(p)); slot.classList.toggle('lim', limbed(p));
+}
+// theirs (Build 0.31v2): a line under their health, as mine is along the top of the Dash slot; only for what has an Evasive to use
+const evb = document.createElement('div');
+evb.className = 'evb'; evb.setAttribute('aria-hidden', 'true'); evb.appendChild(document.createElement('i'));
+{ const hp2 = E.root.querySelector('.fb.p2 .hpb'); if (hp2) hp2.after(evb); }
+let shown2 = '', was2 = null, of2 = null;
+function theirs() {
+  const o = E.P2;
+  if (!o || o.ko) return null;
+  if (duel()) return JU.pvp && typeof JU.pvp.theirEv === 'number' ? JU.pvp.theirEv : null;      // (what his game says his is; nothing from an older one)
+  return o.ai && !o.net && (!o.psKind || o.psKind === 'foe') ? level(o) : null;      // (not a dummy, nor another game's curse in a raid)
+}
+function paint2() {
+  const v = theirs(), q = v === null ? null : Math.round(v * 50) / 50, now = q === null ? '-' : String(q);
+  if (q !== null && was2 !== null && of2 === E.P2 && q - was2 >= .3) pulse(evb);      // (a share put back at once, not the clock: it lights up)
+  was2 = q; of2 = E.P2;
+  if (now === shown2) return;
+  shown2 = now;
+  evb.classList.toggle('on', q !== null);
+  if (q !== null) { evb.style.setProperty('--ev', q); evb.classList.toggle('low', q < 1); }
 }
 // over whoever has a Broken Limb: what it is, how many, and how long it has left
 function badge(f) {
@@ -132,7 +183,7 @@ H.tick = dt => {
     b.hot -= dt;
     if ((b.t -= dt) <= 0 || f.ko || f.dead) f.limb = null;
   }
-  paint();
+  paint(); paint2();
 };
 H.fx = dt => {
   fx0(dt);
@@ -140,9 +191,9 @@ H.fx = dt => {
   const p = E.P1;
   if (ready(p) && E.root.dataset.mode === 'fight') prompt(p);
 };
-H.reset = () => { reset0(); evT = 0; slammed = false; paint(); };
-H.fightStart = (cfg, wave) => { start0(cfg, wave); if (!wave) evT = 0; slammed = false; paint(); };
+H.reset = () => { reset0(); evT = 0; slammed = false; paint(); shown2 = ''; was2 = of2 = null; paint2(); };
+H.fightStart = (cfg, wave) => { start0(cfg, wave); if (!wave) evT = 0; slammed = false; paint(); shown2 = ''; was2 = of2 = null; paint2(); };
 
-JU.evasive = { foe, limb, limbed, stacks, cut, ghost, EV_CD, BL_T, BL_MAX, BL_CUT,
+JU.evasive = { foe, limb, limbed, stacks, cut, ghost, fill, spark, level, EV_CD, BL_T, BL_MAX, BL_CUT,
   get cd() { return +evT.toFixed(2); }, set cd(v) { evT = clamp(+v || 0, 0, EV_CD); paint(); }, get ready() { return ready(E.P1); }, get slammed() { return slammed; } };
 })();

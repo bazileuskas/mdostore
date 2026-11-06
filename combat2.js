@@ -48,7 +48,7 @@ const UPPER = { m1: 1, dur: .6, run(p, m, t) {
 function late(p) {
   const o = lastUp.o;
   lastUp = null; spend(); sfx.charge();
-  E.applyHit(o, p.face, { dmg: 30 - FIN.dmg, kb: 70, lift: 1250, stun: .9, stop: .3, heavy: 1, col: INK, rag: 'up' });
+  E.applyHit(o, p.face, { dmg: 30 - FIN.dmg, kb: 70, lift: 1250, stun: .9, stop: .3, heavy: 1, col: INK, rag: 'up', same: 1 });      // (same: the uppercut it catches up, not a second one: ragdoll.js)
   E.blackFlash(); opened(o);
 }
 

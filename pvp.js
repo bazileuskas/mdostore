@@ -193,8 +193,9 @@ function struck(m) {
     if (m.lift) a.lift = Math.min(+m.lift, 900);
     if (m.brk) a.brk = 1;                            // (it breaks a guard, whatever it weighs)
     if (m.dn) a.lying = 1;                           // (his game saw it land on me lying there: it was made to reach somebody on the floor. foes.js lets it through)
+    const was = E.P1.ps;                             // (already ragdolled as it came in: an uppercut or a slam fills my Evasive bar. Build 0.31v2, ragdoll.js)
     landed = Fi.hurt(face, a, 1) || (!!JU.block && JU.block.state.broken > gb);      // (a guard it broke on the way in counts as landing)
-    if (landed && JU.ragdoll) JU.ragdoll.me(m.rag, Math.min(m.dmg, HP * CAP));      // (his uppercut or down slam: on the floor, and for longer, Build 0.30v3; and any blow that throws me, for longer the harder it was, Build 0.31v1: ragdoll.js)
+    if (landed && JU.ragdoll) JU.ragdoll.me(m.rag, Math.min(m.dmg, HP * CAP), was);      // (his uppercut or down slam: on the floor, and for longer, Build 0.30v3; and any blow that throws me, for longer the harder it was, Build 0.31v1: ragdoll.js)
   }
   else Fi.chip(dmg, '#ff5a6e');                      // nothing behind it: rot, bleeding, a domain's sure-hit
   mute = false;
@@ -253,7 +254,7 @@ H.hit = (o, face, h) => {
   if (h.kill) a.kill = 1;                            // (Mr. Instincto: it was meant to finish him)
   if (h.limb) a.bli = (a.bli || 0) + h.limb;         // (a Broken Limb, and a blow made to break guards: Ratio Man's)
   if (h.brk) a.brk = 1;
-  if (h.rag) a.rag = h.rag;                          // (an uppercut's or a down slam's ragdoll: Build 0.30v3, ragdoll.js)
+  if (h.rag && !h.same) a.rag = h.rag;               // (an uppercut's or a down slam's ragdoll: Build 0.30v3, ragdoll.js; not the Black Flash that catches one up, Build 0.31v2)
   if (F.r && F.r.ps === 'down') a.dn = 1;           // (it found him lying there: something made to reach a body on the floor)
 };
 H.ko = o => { if (F) { o.ko = false; return true; } return ko0(o); };        // he is down when his own game says he is
@@ -296,7 +297,7 @@ H.tick = dt => {
   for (const e of E.fx) if (!seen.has(e)) { seen.add(e); if (FXK[e.k] && f.out.length < 40) { const c = {}; for (const k of ['k', 'x', 'y', 'r', 'vx', 's', 'face', 'life', 'col', 'rgb']) if (e[k] !== undefined) c[k] = typeof e[k] === 'number' ? r2(e[k]) : e[k]; f.out.push(['#', c]); } }
   if ((f.sendT -= dt) <= 0) {
     f.sendT = SEND;
-    const m = { a: 's', x: Math.round(p.x), y: Math.round(p.y), f: p.face, sp: r2(p.spin), sc: p.scale || 1, ps: p.dead ? 'down' : p.ps || '', inv: p.inv > 0 || p.dashT > 0 ? 1 : 0, hp: r2(Math.max(0, p.hp)), hs: f.got, p: p.pose.map(r2) };
+    const m = { a: 's', x: Math.round(p.x), y: Math.round(p.y), f: p.face, sp: r2(p.spin), sc: p.scale || 1, ps: p.dead ? 'down' : p.ps || '', inv: p.inv > 0 || p.dashT > 0 ? 1 : 0, hp: r2(Math.max(0, p.hp)), hs: f.got, p: p.pose.map(r2), ev: JU.evasive ? r2(JU.evasive.level(p)) : 1 };      // (ev: my Evasive bar, for the line under my health on his screen. Build 0.31v2)
     if (f.out.length) { m.fx = f.out; f.out = []; }
     say(d.pid, m);
   }
@@ -306,6 +307,7 @@ H.tick = dt => {
 };
 H.reset = () => { if (reset0) reset0(); if (D && (D.phase === 'fight' || D.phase === 'over')) { F = null; D = null; T.revert(); } };
 
-JU.pvp = { invite, HP, CAP, get busy() { return !!D && D.phase !== 'ask' && D.phase !== 'asked'; }, get record() { return { w: REC.w, l: REC.l }; },
+JU.pvp = { invite, HP, CAP, get theirEv() { return F && F.r && typeof F.r.ev === 'number' ? Math.max(0, Math.min(1, F.r.ev)) : null; },      // (his Evasive bar, as his game sends it: evasive.js)
+  get busy() { return !!D && D.phase !== 'ask' && D.phase !== 'asked'; }, get record() { return { w: REC.w, l: REC.l }; },
   get state() { return { d: D && { pid: D.pid, name: D.name, host: D.host, phase: D.phase, bans: D.bans, picks: D.picks }, f: F && { seq: F.seq, sent: F.sent.length, got: F.got, r: F.r, over: F.over, last: F.last } }; } };
 })();

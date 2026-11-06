@@ -354,6 +354,7 @@ H.netFoe = (o, dt) => {                             // (game.js: one somebody el
 // a blow of somebody else's, on a curse of mine: counted here (without the stop and the shake: those are on their screen)
 function remoteHit(o, m) {
   if (o.ko || o.net) return;
+  const was = o.state;                              // (already ragdolled as it came in: a partner's uppercut or slam fills its Evasive bar. Build 0.31v2, ragdoll.js)
   const d = clamp(+m.d || 0, 0, 5000), face = m.f < 0 ? -1 : 1, hs = o.scale || 1, dead = o.hp - d <= 0, kb = clamp(+m.kb || 0, 0, 1600), lift = clamp(+m.lift || 0, 0, 1500);
   o.hp = Math.max(0, o.hp - d); o.lastHit = 0; o.flash = .09; o.tele = 0;
   if (o.ai && !o.poise) o.ai.t = Math.max(o.ai.t, .55);
@@ -364,7 +365,7 @@ function remoteHit(o, m) {
     else { o.state = 'hurt'; o.stun = clamp(+m.stun || .4, .1, 1.2); }
   }
   E.addNum(o.x, o.y + 270 * hs, r1(d), '#bfe6ff'); E.addSpark(o.x - face * 26, o.y + 150 * hs, '#bfe6ff', 70);
-  if (!dead && JU.ragdoll) JU.ragdoll.blow(o, d, m.rag);      // (a partner's blow that throws it is weighed as well: the harder, the longer it lies there. Build 0.31v1, ragdoll.js)
+  if (!dead && JU.ragdoll) JU.ragdoll.blow(o, d, m.rag, was);      // (a partner's blow that throws it is weighed as well: the harder, the longer it lies there. Build 0.31v1, ragdoll.js)
   if (dead && !o.ko) { o.ko = true; killed(o); }
 }
 // one somebody else ran is down: it falls, and goes up in smoke as any curse does
@@ -492,7 +493,7 @@ H.hit = (o, face, h) => {
   if (!fighting() || !o.net) return;
   const d = Math.max(0, (o.hp0 === undefined ? o.hp : o.hp0) - o.hp);
   const pd = R.pend.get(o.eid) || { d: 0, t: 0 }; pd.d += d; pd.t = .7; R.pend.set(o.eid, pd);
-  say(o.owner, { a: 'rh', e: o.eid, d: r1(d), f: face, kb: Math.round(h.kb || 0), lift: Math.round(h.lift || 0), stun: r2(h.stun || .4), rag: h.rag === 'up' || h.rag === 'slam' ? h.rag : 0 });      // (rag: an uppercut's or a slam's, for how long it lies there: ragdoll.js)
+  say(o.owner, { a: 'rh', e: o.eid, d: r1(d), f: face, kb: Math.round(h.kb || 0), lift: Math.round(h.lift || 0), stun: r2(h.stun || .4), rag: (h.rag === 'up' || h.rag === 'slam') && !h.same ? h.rag : 0 });      // (rag: an uppercut's or a slam's, for how long it lies there: ragdoll.js)
 };
 H.ko = o => {
   if (!Fi.fight.cfg || !Fi.fight.cfg.raid) return ko0 ? ko0(o) : false;

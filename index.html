@@ -500,6 +500,15 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 .mv .ev.low{background:rgba(127,233,255,.4);box-shadow:none}
 .mv.evo{border-color:#7fe9ff;animation:evo .45s ease-in-out infinite alternate}
 @keyframes evo{from{background:rgba(10,7,18,.84)}to{background:rgba(30,110,140,.8)}}
+/* Build 0.31v2: theirs, a line under their health (only for what has an Evasive to use); and either one lighting up as an uppercut or a slam
+   on somebody already ragdolled fills it by 40% */
+.fb .evb{display:none;position:relative;width:100%;height:clamp(3px,.6vh,6px);margin-top:-.2em;overflow:hidden;background:rgba(8,6,14,.82)}
+.fb.p2 .evb{transform:skewX(18deg)}
+.fb .evb.on{display:block}
+.fb .evb>i{position:absolute;inset:0;background:#7fe9ff;box-shadow:0 0 8px #7fe9ff;transform-origin:right;transform:scaleX(var(--ev,1))}
+.fb .evb.low>i{background:rgba(127,233,255,.45);box-shadow:none}
+.mv .ev.up,.fb .evb.up>i{animation:evup .7s ease-out}
+@keyframes evup{0%{filter:brightness(2.6) saturate(1.6)}100%{filter:none}}
 .mv.lim{border-color:#ff8a3d;border-bottom-color:#ff8a3d;opacity:.55}
 .mv.lim b{text-decoration:line-through}
 .hpb i{background:linear-gradient(180deg,#ff6b7c,var(--red) 45%,#a80d24)}
@@ -1298,7 +1307,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
   </div>
 
   <div class="side" aria-hidden="true" lang="ja">領域展開</div>
-  <div class="hud tl"><b lang="ja">呪</b>Fan project · Build 0.31v1 · Heavy Blows</div>
+  <div class="hud tl"><b lang="ja">呪</b>Fan project · Build 0.31v2 · Second Wind</div>
   <div class="hud bl">↑ ↓ Select &nbsp;·&nbsp; Enter Confirm</div>
   <div class="hud br">Title screen</div>
   <div class="acct" id="acct">

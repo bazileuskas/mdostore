@@ -31,7 +31,14 @@
    when there was more behind it. A second throw while it lies there is weighed on its own, and only ever adds: it gets up when the longer
    of the two runs out. Every throw that leaves it down longer than the engine would gets the enemy's Evasive roll above (once a throw: a
    short one never does). In a duel, a blow of his that throws me is weighed by what it hit for (pvp.js passes it: `me(k, d)`); in a raid,
-   a partner's blow on a curse this game runs is weighed here as well (raid.js: `blow()`), and their uppercuts and slams count as theirs */
+   a partner's blow on a curse this game runs is weighed here as well (raid.js: `blow()`), and their uppercuts and slams count as theirs.
+   Build 0.31v2, AGAIN: an uppercut or a down slam that lands on one ALREADY RAGDOLLED (in the air from a throw, or lying there, as the blow
+   came in: H.shield sees it first) fills their Evasive bar by AGAIN, 40%, and blue sparks come off them (evasive.js: fill(), spark()). The
+   usual way to it is the air chain's slam on what the uppercut threw. Only theirs to fill where their own game runs them: a foe here; a
+   duel's player in his game (`me(k, d, was)`: what I was doing as his blow came in, pvp.js), a raid's curse in its owner's (raid.js passes
+   what it was doing to `blow()`); the sparks show on every screen that sees it land. Not the Black Flash that catches an uppercut up a
+   moment late (same: it is that uppercut, not a second one). The user's: "make it so if you uppercut/ downlam an already ragdolled
+   opponent theres blue sparks which indicates their evasive bar filling up by 40%" */
 (() => {
 'use strict';
 
@@ -40,6 +47,7 @@ const UP_T = 1.6, SLAM_T = 2, SPIKE = 1300;         // seconds on the floor afte
 const LONG = { up: UP_T, slam: SLAM_T };
 const TUNE = { out: .3, kit: .5, at: [.3, .9] };    // how often a curse gets out of it, and one with a moveset of its own (a boss); how long after it is down
 const BASE = .55;                                   // the engine's own time on the floor (game.js, foes.js)
+const AGAIN = .4;                                   // Build 0.31v2: how much fuller an uppercut or a slam on one already ragdolled leaves their Evasive bar
 const POW = { from: 20, k: 70, max: 3, win: 1 };    // Build 0.31v1: under `from` damage, the engine's own; above it toward `max` s (two thirds of the way there by from + k); win: the second before a throw that counts to it
 const duel = () => !!(Fi.fight.cfg && Fi.fight.cfg.pvp);
 const knocked = s => s === 'air' || s === 'down';
@@ -52,7 +60,7 @@ const lie = (k, d) => Math.max(LONG[RAG(k)] || 0, heavy(d));
 // in, so far; end: when it gets up (the fight's clock); out: how long after it is down it gets out (0: not this time); rolled: whether this
 // throw has had its roll; lay: how long it has lain there since it last came down; st: its stun as last left; own: whether that is still the
 // ragdoll's alone; len: how long the last landing was for
-let tags = new WeakMap(), recent = new WeakMap();
+let tags = new WeakMap(), recent = new WeakMap(), pre = new WeakMap();      // (pre: what each was doing as the blow landing on it came in)
 let mine = null, mrun = [];                         // and me, in a duel: my throw, and the blows on me just now
 let now = 0;                                        // the fight's own clock: it stands still while the fight does (a hit-stop, a pause)
 
@@ -68,9 +76,19 @@ function roll(o) {
   if (!o.ai || o.net || (o.psKind && o.psKind !== 'foe')) return 0;      // nothing on its mind (a dummy, a staged scene), or another game's to run
   return Math.random() < (o.ai.d && o.ai.d.kit ? TUNE.kit : TUNE.out) ? E.rnd(TUNE.at[0], TUNE.at[1]) : 0;
 }
-// a blow has landed on one this game runs, for d: if it threw it, or found it thrown, it is weighed into the throw
-function blow(o, d, k) {
-  if (!o || o.ko || o.poise || o.net || duel()) return;      // (too heavy to throw about; another game's to run; or a duel's puppet, whose own game ragdolls him)
+// Build 0.31v2: an uppercut or a slam on one already ragdolled: blue sparks, and (where it is this game's to fill) its Evasive bar fuller
+function again(f, mine) {
+  const V = JU.evasive;
+  if (!V) return;
+  V.spark(f);
+  if (mine) V.fill(f, AGAIN);
+}
+// a blow has landed on one, for d: if it threw it, or found it thrown, it is weighed into the throw (one this game runs). k: an uppercut's
+// or a slam's; was: what it was doing as the blow came in; same: the same uppercut, caught up (combat2.js), not a second one
+function blow(o, d, k, was, same) {
+  if (!o) return;
+  if (!o.ko && RAG(k) && !same && knocked(was)) again(o, !o.net && !duel());      // (already ragdolled)
+  if (o.ko || o.poise || o.net || duel()) return;      // (too heavy to throw about; another game's to run; or a duel's puppet, whose own game ragdolls him)
   d = Math.max(0, +d || 0);
   let r = recent.get(o);
   if (!r) recent.set(o, r = []);
@@ -81,11 +99,12 @@ function blow(o, d, k) {
   else t.d += d;
   if (RAG(k)) t.k = RAG(k);
 }
-// a duel: a blow of his has just landed on me (pvp.js), for d; k: his uppercut's or down slam's
-function me(k, d) {
+// a duel: a blow of his has just landed on me (pvp.js), for d; k: his uppercut's or down slam's; was: what I was doing as it came in
+function me(k, d, was) {
   const p = E.P1;
   if (p.dead) return;
   const run = note(mrun, Math.max(0, +d || 0));
+  if (RAG(k) && knocked(was)) again(p, true);       // (on me already ragdolled: my Evasive bar, fuller. Build 0.31v2)
   if (!(p.ps === 'air' || p.ps === 'hurt')) return;      // it did not knock me about: blocked, dashed through, No stun; or I was lying there already
   k = RAG(k);
   if (k === 'slam') Object.assign(p, { ps: 'air', ground: false, y: Math.max(p.y, 26), vy: -SPIKE });      // into the floor, as a slam puts anybody
@@ -108,10 +127,14 @@ function hold(f, t, st, stun) {
   return fell;
 }
 
-const hit0 = H.hit, tick0 = H.tick, reset0 = H.reset, start0 = H.fightStart;
+const hit0 = H.hit, tick0 = H.tick, reset0 = H.reset, start0 = H.fightStart, shield0 = H.shield;
+H.shield = (o, face, h) => { if (o) pre.set(o, o.state); return shield0 ? shield0(o, face, h) : false; };      // (the first the engine asks of a blow: what it was doing as it came in)
 H.hit = (o, face, h, dmg) => {                      // (dmg: what it took, as the engine counted it: game.js)
   if (hit0) hit0(o, face, h);
-  if (h) blow(o, typeof dmg === 'number' ? dmg : (h.dmg || 0) * (o.dr || 1), h.rag);
+  if (!h) return;
+  const was = pre.get(o);
+  pre.delete(o);
+  blow(o, typeof dmg === 'number' ? dmg : (h.dmg || 0) * (o.dr || 1), h.rag, was, h.same);
 };
 H.tick = dt => {
   if (tick0) tick0(dt);
@@ -139,12 +162,12 @@ H.tick = dt => {
     else hold(p, mine, p.ps, 'stun');
   }
 };
-const clear = () => { tags = new WeakMap(); recent = new WeakMap(); mine = null; mrun = []; };
+const clear = () => { tags = new WeakMap(); recent = new WeakMap(); pre = new WeakMap(); mine = null; mrun = []; };
 H.reset = () => { if (reset0) reset0(); clear(); };
 H.fightStart = (cfg, wave) => { if (start0) start0(cfg, wave); clear(); };
 
 const left = t => (t.end ? Math.max(0, +(t.end - now).toFixed(2)) : null);
-JU.ragdoll = { me, blow, lie, heavy, UP_T, SLAM_T, LONG, TUNE, POW, BASE,
+JU.ragdoll = { me, blow, lie, heavy, UP_T, SLAM_T, LONG, TUNE, POW, BASE, AGAIN,
   of: o => { const t = tags.get(o); return t ? { k: t.k, d: +t.d.toFixed(1), len: +t.len.toFixed(2), end: t.end, left: left(t), out: +t.out.toFixed(2), lay: +t.lay.toFixed(2), own: t.own } : null; },
   get mine() { return mine && { k: mine.k, d: +mine.d.toFixed(1), len: +mine.len.toFixed(2), end: mine.end, left: left(mine) }; },
   get now() { return now; } };
