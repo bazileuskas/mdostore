@@ -1,7 +1,9 @@
 /* JUJUTSU UNLIMITEDS — Combat Update 2: the uppercut, the Black Flash uppercut and the slam that follows it,
    and three moves that change when they are used in the air (Cursed Strikes, Blade Arm, Mach).
    Build 0.23 (the user: "ADD some more variants to yuji like 2 more variants"): Crushing Blow and Manji Kick in the air as well,
-   SKYFALL CRUSH and MANJI WHEEL, so every one of his four has an air version now */
+   SKYFALL CRUSH and MANJI WHEEL, so every one of his four has an air version now.
+   Build 0.30v3: the uppercut (and the Black Flash uppercut, and the Black Flash slam after it) leave them ragdolled on the floor for
+   longer once they come down: the blows say rag, ragdoll.js does the rest */
 (() => {
 'use strict';
 
@@ -39,14 +41,14 @@ const UPPER = { m1: 1, dur: .6, run(p, m, t) {
   if (!m.sw) { m.sw = 1; sfx.whoosh(); V.slash(p.x + p.face * 95, p.y + 200, p.face > 0 ? 1.25 : Math.PI - 1.25, 340, m.bf ? INK : '#ffffff', 14); }
   if (m.done || t > .27) return;
   if (m.bf) {                                       // Divergent Fist, pressed once on the way up: no timing to hit
-    if (E.tryHit(p, { reach: 190, dmg: 30, kb: 70, lift: 1250, stun: .9, stop: .3, heavy: 1, col: INK })) { m.done = 1; E.blackFlash(); opened(o); }
-  } else if (E.tryHit(p, { reach: 190, dmg: FIN.dmg, kb: 70, lift: 1150, stun: .9, stop: .1, heavy: 1 })) { m.done = 1; lastUp = { at: E.T, o }; }
+    if (E.tryHit(p, { reach: 190, dmg: 30, kb: 70, lift: 1250, stun: .9, stop: .3, heavy: 1, col: INK, rag: 'up' })) { m.done = 1; E.blackFlash(); opened(o); }
+  } else if (E.tryHit(p, { reach: 190, dmg: FIN.dmg, kb: 70, lift: 1150, stun: .9, stop: .1, heavy: 1, rag: 'up' })) { m.done = 1; lastUp = { at: E.T, o }; }
 } };
 // 3 pressed just after the uppercut has already landed: the cursed energy catches it up
 function late(p) {
   const o = lastUp.o;
   lastUp = null; spend(); sfx.charge();
-  E.applyHit(o, p.face, { dmg: 30 - FIN.dmg, kb: 70, lift: 1250, stun: .9, stop: .3, heavy: 1, col: INK });
+  E.applyHit(o, p.face, { dmg: 30 - FIN.dmg, kb: 70, lift: 1250, stun: .9, stop: .3, heavy: 1, col: INK, rag: 'up' });
   E.blackFlash(); opened(o);
 }
 
@@ -64,7 +66,7 @@ const SLAM = { name: 'Black Flash', dur: 1.6, glow: 'red', run(p, m, t) {
     if (t < .2 && Math.hypot(tx - p.x, ty - p.y) > 40) return;
     m.done = 1; sfx.whoosh();
     if (o.ko || m.o !== o) return;
-    E.applyHit(o, p.face, { dmg: 300 / (o.dr || 1), kb: 240, stun: .9, stop: .34, heavy: 1, col: INK, fixed: 1 });
+    E.applyHit(o, p.face, { dmg: 300 / (o.dr || 1), kb: 240, stun: .9, stop: .34, heavy: 1, col: INK, fixed: 1, rag: 'slam' });
     spike(p, o, 1700); E.blackFlash(); V.impact(.5, o.x, o.y + 150);
     for (let i = 0; i < 10; i++) { const a = rnd(0, TAU), l = rnd(260, 620); V.bolt(o.x, o.y + 150, o.x + Math.cos(a) * l, o.y + 150 + Math.sin(a) * l, INK, rnd(.3, .6), rnd(3, 7), '#060205'); }
     return;

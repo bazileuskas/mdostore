@@ -107,7 +107,7 @@ const proof = a => (heat > 0 || !!(a && a.fire)) && !!H.fireproof && H.fireproof
 function hurt(face, a, mul = 1) {
   const p = E.P1;
   if (H.guard && H.guard(face, a, mul)) return false;
-  if (p.dashT > 0 || p.inv > 0 || p.dead || p.ps === 'down' || p.ps === 'up' || fight.paused) return false;
+  if (p.dashT > 0 || p.inv > 0 || p.dead || (p.ps === 'down' && !a.lying) || p.ps === 'up' || fight.paused) return false;      // (lying: a duel's blow that found him on the floor, pvp.js)
   if (proof(a)) return true;                        // it reached him, and it does not burn
   const firm = !!(H.noStun && H.noStun(p, a));      // it hurts, but it stops nothing: not his move, not him (a private server's No stun: ps.js)
   if (p.move && !firm) E.endMove(p);

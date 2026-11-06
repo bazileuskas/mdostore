@@ -301,7 +301,7 @@ const UP = { m1: 1, va: 1, dur: .62, run(p, m, t) {
   if (t < .14) { p.target = PZ.vaLow; if (p.ground) p.vx = p.face * 160; return; }
   p.target = t < .44 ? PZ.vaRise : POSE.idle; if (p.ground) p.vx = t < .2 ? p.face * 240 : 0;
   if (!m.sw) { m.sw = 1; sfx.whoosh(); V.slash(p.x + p.face * 120, p.y + 220, p.face > 0 ? 1.2 : Math.PI - 1.2, 400, m.mad ? MADRED : GOLD, 14); }
-  if (!m.done && t < .28 && E.tryHit(p, { reach: 228, dmg: m.mad ? ONE : M1_DMG, kb: 80, lift: 1150, stun: .9, stop: .1, heavy: 1, col: m.mad ? MADRED : GOLD, mute: 1, kill: m.mad ? 1 : 0 })) m.done = 1;
+  if (!m.done && t < .28 && E.tryHit(p, { reach: 228, dmg: m.mad ? ONE : M1_DMG, kb: 80, lift: 1150, stun: .9, stop: .1, heavy: 1, col: m.mad ? MADRED : GOLD, mute: 1, kill: m.mad ? 1 : 0, rag: 'up' })) m.done = 1;
 } };
 // in the air: the fourth goes down, and so does he, nib first
 const DOWN = { m1: 1, va: 1, dur: 1.4, run(p, m, t) {
@@ -312,7 +312,7 @@ const DOWN = { m1: 1, va: 1, dur: 1.4, run(p, m, t) {
   if (t < .12) { p.target = PZ.vaWind3; p.vy = Math.max(p.vy, 80); p.vx *= .88; return; }      // he hangs there a moment with it raised
   if (!m.aim) { m.aim = 1; p.face = o.x >= p.x ? 1 : -1; sfx.whoosh(); m.vx = clamp((o.x - p.face * 70 - p.x) / Math.max(.1, p.y / 1800), -1500, 1500); }
   p.target = PZ.vaDrive; p.vy = -1800; p.vx = m.vx;
-  if (!m.done && E.tryHit(p, { reach: 232, dmg: m.mad ? ONE : M1_DMG, kb: 160, stun: .9, stop: .12, heavy: 1, col: m.mad ? MADRED : GOLD, mute: 1, kill: m.mad ? 1 : 0 })) {
+  if (!m.done && E.tryHit(p, { reach: 232, dmg: m.mad ? ONE : M1_DMG, kb: 160, stun: .9, stop: .12, heavy: 1, col: m.mad ? MADRED : GOLD, mute: 1, kill: m.mad ? 1 : 0, rag: 'slam' })) {
     m.done = 1;
     if (!o.poise && !o.ko && !duel()) Object.assign(o, { ground: false, state: 'air', y: Math.max(o.y, 26), vy: -1900, vx: p.face * 160, bounced: false });      // and into the floor ahead of him
   }

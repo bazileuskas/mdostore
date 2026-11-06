@@ -115,7 +115,7 @@ const UP5 = { m1: 1, n: 5, dur: .62, run(p, m, t) {
   if (t < .1) { p.target = POSE.kickWind; return; }
   p.target = t < .4 ? POSE.gbUp : POSE.jump;
   if (!m.hop) { m.hop = 1; p.vy = 700; p.ground = false; sfx.whoosh(); }
-  if (!m.done && t < .32 && E.tryHit(p, { reach: 205, dmg: 14, kb: 60, lift: 1180, stun: .9, stop: .1, heavy: 1, col: GREEN, gb: 5 })) {
+  if (!m.done && t < .32 && E.tryHit(p, { reach: 205, dmg: 14, kb: 60, lift: 1180, stun: .9, stop: .1, heavy: 1, col: GREEN, gb: 5, rag: 'up' })) {
     m.done = 1; const o = E.P2;
     roughBurst(o.x, mid(o) + 60, .7); label(o.x, o.y + 460 * hs(o), 'UP', GREEN, .8);
   }
@@ -125,7 +125,7 @@ const DOWN5 = { m1: 1, n: 5, dur: 1, run(p, m, t) {
   if (t < .12) { p.target = POSE.gbAxeW; p.vy = Math.max(p.vy, 0); return; }
   p.target = POSE.gbDive;
   if (!m.dive) { m.dive = 1; p.vy = -1900; sfx.whoosh(); }
-  if (!m.done && E.tryHit(p, { reach: 225, dmg: 28, kb: 120, stun: 1, stop: .16, heavy: 1, col: GREEN, gb: 6 })) {
+  if (!m.done && E.tryHit(p, { reach: 225, dmg: 28, kb: 120, stun: 1, stop: .16, heavy: 1, col: GREEN, gb: 6, rag: 'slam' })) {
     m.done = 1; const o = E.P2;
     if (can(p, o)) Object.assign(o, { ground: false, state: 'air', y: Math.max(o.y, 30), vy: -2400, vx: 0, bounced: true });
     roughBurst(o.x, Math.max(80, mid(o) - 40), 1); V.crack(o.x, 320); V.rocks(o.x, 0, 12); E.addDust(o.x); shake(28);

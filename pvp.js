@@ -192,7 +192,9 @@ function struck(m) {
     const a = { dmg, exact: 1, shown: dmg / K, kb: Math.min(+m.kb || 0, 1400), stun: Math.min(+m.stun || .3, 1.2) }, gb = JU.block ? JU.block.state.broken : 0;
     if (m.lift) a.lift = Math.min(+m.lift, 900);
     if (m.brk) a.brk = 1;                            // (it breaks a guard, whatever it weighs)
+    if (m.dn) a.lying = 1;                           // (his game saw it land on me lying there: it was made to reach somebody on the floor. foes.js lets it through)
     landed = Fi.hurt(face, a, 1) || (!!JU.block && JU.block.state.broken > gb);      // (a guard it broke on the way in counts as landing)
+    if (landed && JU.ragdoll && (m.rag === 'up' || m.rag === 'slam')) JU.ragdoll.me(m.rag);      // (his uppercut or down slam: on the floor, and for longer. Build 0.30v3, ragdoll.js)
   }
   else Fi.chip(dmg, '#ff5a6e');                      // nothing behind it: rot, bleeding, a domain's sure-hit
   mute = false;
@@ -251,6 +253,8 @@ H.hit = (o, face, h) => {
   if (h.kill) a.kill = 1;                            // (Mr. Instincto: it was meant to finish him)
   if (h.limb) a.bli = (a.bli || 0) + h.limb;         // (a Broken Limb, and a blow made to break guards: Ratio Man's)
   if (h.brk) a.brk = 1;
+  if (h.rag) a.rag = h.rag;                          // (an uppercut's or a down slam's ragdoll: Build 0.30v3, ragdoll.js)
+  if (F.r && F.r.ps === 'down') a.dn = 1;           // (it found him lying there: something made to reach a body on the floor)
 };
 H.ko = o => { if (F) { o.ko = false; return true; } return ko0(o); };        // he is down when his own game says he is
 H.tick = dt => {
@@ -264,12 +268,12 @@ H.tick = dt => {
   if (!f.over && (dealt > 0 || f.hit)) {
     const a = f.acc || (f.acc = { dmg: 0, kb: 0, lift: 0, stun: 0, f: p.face, t: E.T });
     a.dmg += dealt;
-    if (f.hit) { a.kb = Math.max(a.kb, f.hit.kb); a.lift = Math.max(a.lift, f.hit.lift); a.stun = Math.max(a.stun, f.hit.stun); a.f = f.hit.f; if (f.hit.bl) a.bl = (a.bl || 0) + f.hit.bl; if (f.hit.kill) a.kill = 1; if (f.hit.bli) a.bli = (a.bli || 0) + f.hit.bli; if (f.hit.brk) a.brk = 1; }
+    if (f.hit) { a.kb = Math.max(a.kb, f.hit.kb); a.lift = Math.max(a.lift, f.hit.lift); a.stun = Math.max(a.stun, f.hit.stun); a.f = f.hit.f; if (f.hit.bl) a.bl = (a.bl || 0) + f.hit.bl; if (f.hit.kill) a.kill = 1; if (f.hit.bli) a.bli = (a.bli || 0) + f.hit.bli; if (f.hit.brk) a.brk = 1; if (f.hit.rag) a.rag = f.hit.rag; if (f.hit.dn) a.dn = 1; }
   }
   f.hit = null;
   if (f.acc && E.T - f.acc.t >= BUNCH) {             // blows that land together go as one
     const a = f.acc, dmg = Math.min(a.dmg, HP * CAP); f.acc = null;
-    say(d.pid, { a: 'hit', n: ++f.seq, dmg: r2(dmg), kb: Math.round(a.kb), lift: Math.round(a.lift), stun: r2(a.stun), f: a.f, bl: a.bl || 0, kill: a.kill || 0, bli: a.bli || 0, brk: a.brk || 0 });
+    say(d.pid, { a: 'hit', n: ++f.seq, dmg: r2(dmg), kb: Math.round(a.kb), lift: Math.round(a.lift), stun: r2(a.stun), f: a.f, bl: a.bl || 0, kill: a.kill || 0, bli: a.bli || 0, brk: a.brk || 0, rag: a.rag || 0, dn: a.dn || 0 });
     f.sent.push({ n: f.seq, dmg });
   }
   // him, as his game says he is

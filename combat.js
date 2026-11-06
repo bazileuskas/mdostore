@@ -23,10 +23,11 @@ function plunge(p, m, t, hang, pose, hit) {
 }
 
 /* ---------- the down slam: the last strike of the chain, thrown in the air. Twice what the finisher does on the ground ---------- */
+// (rag: they lie there longer once they are down, Build 0.30v3: ragdoll.js)
 const SLAM = { m1: 1, dur: 1.4, run(p, m, t) {
   const o = E.P2;
   p.rate = 46;
-  if (plunge(p, m, t, .1, POSE.crush, () => { if (E.tryHit(p, { reach: 190, dmg: FIN.dmg * 2, kb: 260, stun: .9, stop: .14, heavy: 1, ring: 1 })) { m.done = 1; spike(p, o); } })) return;
+  if (plunge(p, m, t, .1, POSE.crush, () => { if (E.tryHit(p, { reach: 190, dmg: FIN.dmg * 2, kb: 260, stun: .9, stop: .14, heavy: 1, ring: 1, rag: 'slam' })) { m.done = 1; spike(p, o); } })) return;
   if (t < .1) { p.target = POSE.crushWind; p.vy = Math.max(p.vy, 80); p.vx *= .9; }
 } };
 const m10 = H.m1;

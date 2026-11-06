@@ -342,7 +342,7 @@ const B_DOWN = { m1: 1, n: 3, lb: 2, last: true, c: 'orange', rate: .62, dur: 1.
   if (t < .12) { p.target = POSE.crushWind; p.vy = Math.max(p.vy, 80); p.vx *= .88; return; }
   if (!m.aim) { m.aim = 1; facing(p, o); strike(m.def); m.vx = clamp((o.x - p.face * 70 - p.x) / Math.max(.1, p.y / 1900), -1600, 1600); }
   p.target = POSE.crush; p.vy = -1900; p.vx = m.vx;
-  if (!m.done && beastHit(p, { reach: 230, dmg: BEAST_DMG[2], kb: 160, stun: 1, stop: .14, heavy: 1, col: P.col, mute: 1, lb: 2, last: 1, c: 'orange' })) {
+  if (!m.done && beastHit(p, { reach: 230, dmg: BEAST_DMG[2], kb: 160, stun: 1, stop: .14, heavy: 1, col: P.col, mute: 1, lb: 2, last: 1, c: 'orange', rag: 'slam' })) {
     m.done = 1;
     if (holdable(o) && !o.poise) Object.assign(o, { ground: false, state: 'air', y: Math.max(o.y, 26), vy: -2100, vx: p.face * 120, bounced: false });
   }
@@ -354,7 +354,7 @@ const B_UP = { m1: 1, n: 3, lb: 2, last: true, c: 'orange', rate: .62, dur: .66,
   if (t < .13) { p.target = POSE.crushWind; if (p.ground) p.vx = p.face * 160; return; }
   p.target = t < .44 ? UPPER : POSE.idle; if (p.ground) p.vx = t < .2 ? p.face * 260 : 0;
   if (!m.sw) { m.sw = 1; strike(m.def); }
-  if (!m.done && t < .3 && beastHit(p, { reach: 230, dmg: BEAST_DMG[2], kb: 80, lift: 1500, stun: 1, stop: .14, heavy: 1, col: P.col, mute: 1, lb: 2, last: 1, c: 'orange' })) { m.done = 1; sky(E.P2.x, mid(E.P2), P.rgb, 8); }
+  if (!m.done && t < .3 && beastHit(p, { reach: 230, dmg: BEAST_DMG[2], kb: 80, lift: 1500, stun: 1, stop: .14, heavy: 1, col: P.col, mute: 1, lb: 2, last: 1, c: 'orange', rag: 'up' })) { m.done = 1; sky(E.P2.x, mid(E.P2), P.rgb, 8); }
 } };
 function dent(x, hard, P) {                         // where something comes down hard
   sfx.blast(); shake(hard ? 30 : 14);

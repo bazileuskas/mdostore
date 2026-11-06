@@ -114,7 +114,7 @@ const UP = { m1: 1, n: 5, rt: 1, dur: .62, run(p, m, t) {
   if (t < .13) { p.target = PZ.rtLow; if (p.ground) p.vx = p.face * 160; return; }
   p.target = t < .44 ? PZ.rtRise : POSE.idle; if (p.ground) p.vx = t < .2 ? p.face * 240 : 0;
   if (!m.sw) { m.sw = 1; sfx.swipe(2); V.slash(p.x + p.face * 110, p.y + 210, p.face > 0 ? 1.2 : Math.PI - 1.2, 380, m.bf ? INK : CLOTH, 13); }
-  if (!m.done && t < .28 && E.tryHit(p, { reach: 200, dmg: m.bf ? M1_BF : M1D[4], kb: 80, lift: 1150, stun: .9, stop: m.bf ? .3 : .1, heavy: 1, col: m.bf ? INK : CLOTH, mute: 1 })) { m.done = 1; up = { at: E.T, o: E.P2 }; }
+  if (!m.done && t < .28 && E.tryHit(p, { reach: 200, dmg: m.bf ? M1_BF : M1D[4], kb: 80, lift: 1150, stun: .9, stop: m.bf ? .3 : .1, heavy: 1, col: m.bf ? INK : CLOTH, mute: 1, rag: 'up' })) { m.done = 1; up = { at: E.T, o: E.P2 }; }
 } };
 // in the air: the fifth goes down, and so does he
 const DOWN = { m1: 1, n: 5, rt: 1, dur: 1.4, run(p, m, t) {
@@ -125,7 +125,7 @@ const DOWN = { m1: 1, n: 5, rt: 1, dur: 1.4, run(p, m, t) {
   if (t < .12) { p.target = PZ.rtWind4; p.vy = Math.max(p.vy, 80); p.vx *= .88; return; }      // a moment up there with it raised
   if (!m.aim) { m.aim = 1; p.face = o.x >= p.x ? 1 : -1; sfx.swipe(2); m.vx = clamp((o.x - p.face * 70 - p.x) / Math.max(.1, p.y / 1800), -1500, 1500); }
   p.target = PZ.rtDrive; p.vy = -1800; p.vx = m.vx;
-  if (!m.done && E.tryHit(p, { reach: 220, dmg: m.bf ? M1_BF : SLAM, kb: 160, stun: .9, stop: m.bf ? .3 : .12, heavy: 1, col: m.bf ? INK : CLOTH, mute: 1 })) {
+  if (!m.done && E.tryHit(p, { reach: 220, dmg: m.bf ? M1_BF : SLAM, kb: 160, stun: .9, stop: m.bf ? .3 : .12, heavy: 1, col: m.bf ? INK : CLOTH, mute: 1, rag: 'slam' })) {
     m.done = 1;
     if (!o.poise && !o.ko && !duel()) Object.assign(o, { ground: false, state: 'air', y: Math.max(o.y, 26), vy: -1900, vx: p.face * 160, bounced: false });      // and into the floor ahead of him
   }

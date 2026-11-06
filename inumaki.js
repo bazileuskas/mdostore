@@ -222,7 +222,7 @@ const FALL = { m1: 1, n: 3, dur: .55, run(p, m, t) {
   rings(p, o);
   if (!o) return;
   held = held && held.o === o ? null : held;
-  E.applyHit(o, o.x >= p.x ? 1 : -1, { dmg: exact(o, 25), kb: 40, stun: .9, stop: .12, heavy: 1, col: COL, fixed: 1, mute: 1 });
+  E.applyHit(o, o.x >= p.x ? 1 : -1, { dmg: exact(o, 25), kb: 40, stun: .9, stop: .12, heavy: 1, col: COL, fixed: 1, mute: 1, rag: 'slam' });
   if (!duel() && !o.poise && !o.ko) Object.assign(o, { ground: false, state: 'air', y: Math.max(o.y, 26), vy: -1900, vx: 0, bounced: true });
   sfx.slam(1); shake(18); V.crack(o.x, 220); V.ring(o.x, 30, 240, COL, .35); E.addDust(o.x);
 } };
