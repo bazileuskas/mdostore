@@ -21,7 +21,13 @@
    Build 0.30v1, the user's: he looks like the regular Yuji now (no puppet's body of his own; the giant still has him in its cockpit),
    every move is orange (blue is left to Super Charge's aura, as their list had it), Ultra Cannon and Puppet Breaker reach them ragdolled
    (on the floor or flung), and Ultra Cannon held charges for up to 1.3 s into a longer, wider beam (45 to 80 by the charge; a tap is 45)
-   The game calls him what the technique is called, Mechamaster; the character's own name is left to the series */
+   The game calls him what the technique is called, Mechamaster; the character's own name is left to the series.
+   Build 0.32v3, the user's: "change mechamarus m1 punching color tro a dark red around his fists. and also the e special lastst for 1 move".
+   HIS STRIKES (the chain, and its uppercut and down slam, which are still the Vessel's own: combat2.js, combat.js; nothing about how they
+   work is touched) burn dark red round both fists while they are thrown, and their swings and the sparks where they land are dark red too
+   (RED_FIST, in H.fx; the swing and the spark the engine has just made are recoloured, H.swing and H.hit). SUPER CHARGE lasts for one move
+   now: the puppet does the next move pressed, and once it has finished it Super Charge is over. SC_T's nine seconds are only how long there
+   is to press it; while the puppet is at it, they stand still */
 (() => {
 'use strict';
 
@@ -29,6 +35,15 @@ const E = JU.eng, g = E.g, F = E.F, cam = E.cam, H = E.hooks, POSE = E.POSE, LIN
 const { rnd, lerp, clamp, ease } = E, TAU = Math.PI * 2, SLOTS = T.SLOTS;
 const CYAN = '#7fd8ff', CRGB = '127,216,255', GOLD = '#ffc94a', GRGB = '255,201,74', FIRE = '255,140,60', WHITE = '255,255,255';
 const ORANGE = '#ff8a2a', ORGB = '255,138,42';      // (every move's colour since 0.30v1, the user's. Blue is Super Charge's aura; gold, the giant's own)
+const RED_FIST = '#8e0c1e', RED_SWING = 'rgba(150,14,32,.95)', RED_SPARK = '#b3122a';      // (Build 0.32v3: his strikes, dark red at the fists, the user's)
+const RED_GLOW = (() => {                           // a dark red glow to lay round a fist: drawn as it is, not added as light, so that it stays dark
+  const c = document.createElement('canvas'); c.width = c.height = 64;
+  const x = c.getContext('2d'), gr = x.createRadialGradient(32, 32, 0, 32, 32, 32);
+  gr.addColorStop(0, 'rgba(170,16,36,.95)'); gr.addColorStop(.35, 'rgba(120,6,22,.7)'); gr.addColorStop(.7, 'rgba(80,0,14,.3)'); gr.addColorStop(1, 'rgba(60,0,10,0)');
+  x.fillStyle = gr; x.fillRect(0, 0, 64, 64);
+  return c;
+})();
+const striking = p => !!(p.move && p.move.def && p.move.def.m1);      // (the chain's strikes, its uppercut, its slam: all marked m1)
 const play = (name, vol, alt, rate = 1) => { if (!sfx.file(name, vol, rate)) alt(); };      // the clip (at home ours, online from where it is posted), or a built sound
 sfx.preload(['home-tdc-beam', 'home-tdc-charge', 'home-tdc-shoot', 'home-tdc-boom', 'home-tdc-sweep']);
 const shake = v => { cam.shake = Math.max(cam.shake, v); };
@@ -393,7 +408,7 @@ function cable(f, m) {                                // the cable out to the fi
 }
 
 /* ================= E — SUPER CHARGE, and the puppet ================= */
-const SC_T = 9, SC_CD = 25, HEEL = 140, P_SCALE = .82;
+const SC_T = 9, SC_CD = 25, HEEL = 140, P_SCALE = .82;      // (Build 0.32v3: SC_T is how long there is to give it its one move)
 let sc = 0, scCd = 0, pup = null;                     // seconds of it left; before it can be used again; the puppet: { f, m (what it is doing), a (how solid it is) }
 function superCharge(p) {
   sc = SC_T; scCd = SC_CD; charged = true;
@@ -468,10 +483,16 @@ function order(k) {                                   // a move pressed while Su
   if (!pup) return false;
   if (pup.m) { sfx.back(); return true; }
   const p = E.P1;
-  pup.m = { def: PUP[k], t: 0, key: k };
+  pup.m = { def: PUP[k], t: 0, key: k, one: sc > 0 };      // (one: it is Super Charge's one move, Build 0.32v3)
   label(pup.f.x, pup.f.y + 380, PUP[k].name.toUpperCase(), ORANGE, .8);
   if (p.dead) pup.m = null;
   return true;
+}
+// Super Charge's one move is done: it is over (Build 0.32v3)
+function spent(p) {
+  if (sc <= 0) return;
+  sc = 0; charged = false;
+  label(p.x, p.y + 480, 'SUPER CHARGE OVER', CYAN, .9);
 }
 function pupTick(dt) {
   const q = pup.f, p = E.P1, o = E.P2, m = pup.m;
@@ -481,7 +502,7 @@ function pupTick(dt) {
   if (m) {
     m.t += dt;
     m.def.run(q, m, m.t);
-    if (m.end || m.t >= m.def.dur) pup.m = null;
+    if (m.end || m.t >= m.def.dur) { pup.m = null; if (m.one) spent(p); }
     E.blend(q, dt);
   } else {                                            // at his side, facing what he is facing
     const heel = clamp(p.x - p.face * HEEL, -bound() + 40, bound() - 40), far = Math.abs(heel - q.x) > 24;
@@ -708,7 +729,7 @@ const ESP = { jp: '充', get col() { return abs ? ORANGE : CYAN; }, name: () => 
 function awaken(p) { if (!abs) p.move = { def: ABS_IN, t: 0 }; }
 JU.tech.add('mecha', { name: 'Mechamaster', jp: '傀儡操術', mark: '傀', who: 'Puppets, and the one who works them', odds: 0, col: ORANGE, glow: 'fire', moves: MOVES,
   early: true, as: ['Mechamaster', '傀儡'], awaken, awkName: 'Absolute', get awkHits() { return !abs; },      // (the giant does not fill its own bar. No skin: he is the regular Yuji, the user's)
-  hint: '<b>Hold 2</b> charged Ultra Cannon · <b>E</b> Super Charge: a puppet does your moves · <b>G</b> Ultimate Mechamaster: Absolute' });
+  hint: '<b>Hold 2</b> charged Ultra Cannon · <b>E</b> Super Charge: a puppet does your next move · <b>G</b> Ultimate Mechamaster: Absolute' });
 const DEF = T.TECH.mecha, on = () => T.active === DEF;
 JU.especial.add('mecha', ESP);
 
@@ -723,7 +744,7 @@ function paintMeter() {
   const show = on() && E.root.dataset.mode === 'fight' && (!!abs || sc > 0);
   meter.classList.toggle('on', show);
   if (!show) { shownM = ''; return; }
-  const v = abs ? abs.en / EN_MAX : sc / SC_T, txt = abs ? 'ABSOLUTE · ENERGY ' + Math.ceil(abs.en) : 'SUPER CHARGE · ' + Math.ceil(sc) + 's', key = txt + '|' + Math.round(v * 40);
+  const v = abs ? abs.en / EN_MAX : sc / SC_T, txt = abs ? 'ABSOLUTE · ENERGY ' + Math.ceil(abs.en) : pup && pup.m ? 'SUPER CHARGE · ' + pup.m.def.name.toUpperCase() : 'SUPER CHARGE · ONE MOVE · ' + Math.ceil(sc) + 's', key = txt + '|' + Math.round(v * 40);
   if (key === shownM) return;
   shownM = key;
   meter.classList.toggle('abs', !!abs); meter.classList.toggle('low', !!abs && abs.en < 25);
@@ -731,7 +752,11 @@ function paintMeter() {
 }
 
 /* ================= wiring ================= */
-const press0 = H.press, tick0 = H.tick, under0 = H.under, fx0 = H.fx, cast0 = H.cast, reset0 = H.reset, start0 = H.fightStart, fpow0 = H.foePower, firm0 = H.noStun;
+const press0 = H.press, tick0 = H.tick, under0 = H.under, fx0 = H.fx, cast0 = H.cast, reset0 = H.reset, start0 = H.fightStart, fpow0 = H.foePower, firm0 = H.noStun, swing0 = H.swing, hit0 = H.hit;
+// Build 0.32v3: his strikes' swing and the spark where one lands, dark red (the engine has just made them: the newest of their kind)
+const recolour = (k, col) => { for (let i = E.fx.length - 1; i >= 0 && i >= E.fx.length - 6; i--) if (E.fx[i].k === k) { E.fx[i].col = col; return; } };
+H.swing = (p, y, r, col) => { if (swing0) swing0(p, y, r, col); if (on() && p === E.P1 && striking(p)) recolour(4, RED_SWING); };
+H.hit = (o, face, h, dmg) => { if (on() && striking(E.P1) && !h.col) recolour(0, RED_SPARK); if (hit0) hit0(o, face, h, dmg); };
 H.press = (a, inScene) => {
   if (!inScene && on() && E.root.dataset.mode === 'fight' && SLOTS.includes(a)) {
     const p = E.P1;
@@ -748,7 +773,7 @@ H.tick = dt => {
   if (!on()) { if (abs) { const p = E.P1; p.skin = abs.skin0 || E.YUJI; p.scale = abs.scale0; abs = null; } sc = 0; pup = null; charged = false; rise = null; shots.length = 0; paintMeter(); return; }
   const p = E.P1;
   if (scCd > 0) scCd = Math.max(0, scCd - dt);
-  if (sc > 0) { sc = Math.max(0, sc - dt); if (sc <= 0) { charged = false; label(p.x, p.y + 480, 'SUPER CHARGE OVER', CYAN, .9); } }
+  if (sc > 0 && !(pup && pup.m)) { sc = Math.max(0, sc - dt); if (sc <= 0) { charged = false; label(p.x, p.y + 480, 'SUPER CHARGE OVER', CYAN, .9); } }      // (not while its one move is under way)
   if (pup) pupTick(dt);
   if (rise) { rise.t += dt; if (rise.t >= rise.life) rise = null; }
   if (shots.length) flyShots(dt);
@@ -769,6 +794,15 @@ H.fx = dt => {
   fx0(dt);
   if (!on()) return;
   const p = E.P1, m = p.move;
+  if (striking(p) && !p.dead && !(p.alpha < .1)) {      // (Build 0.32v3: his strikes, dark red round both fists while they are thrown)
+    const s = hs(p), pulse = 1 + .12 * Math.sin(E.T * 34);
+    for (const front of [true, false]) {
+      const w = fist(p, front), c = F(w[0], w[1]), r = 130 * c[2] * s * pulse;
+      g.drawImage(RED_GLOW, c[0] - r / 2, c[1] - r / 2, r, r);
+      g.globalCompositeOperation = 'lighter'; E.glow(E.GLOW.red, c[0], c[1], r * .42, .35); g.globalCompositeOperation = 'source-over';
+    }
+    if (X && Math.random() < .5) { const w = fist(p, true); X.emit(1, w[0], w[1], rnd(-160, 160), rnd(40, 260), rnd(2, 3.5), .22, '142,12,30'); }
+  }
   if (sc > 0 && !p.dead && X && Math.random() < .45) X.lightning(p.x + rnd(-50, 50), p.y + rnd(40, 300), p.x + rnd(-130, 130), p.y + rnd(40, 320), CRGB, .08, 2, 0);
   for (const [f, mv] of [[p, m], pup ? [pup.f, pup.m] : [null, null]]) {
     if (!f || !mv || (f.alpha !== undefined && f.alpha < .1)) continue;
