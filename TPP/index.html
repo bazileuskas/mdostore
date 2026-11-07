@@ -46,6 +46,8 @@
   --night:#2b2436;
   --night-veil:rgba(43,36,54,.92);
   --moon:#f3e9c6;
+  --rain:rgba(70,96,130,.13);
+  --tape:rgba(243,233,198,.88);
   --font-display:"Fredoka","Arial Rounded MT Bold","Trebuchet MS",sans-serif;
   --font-marker:"Permanent Marker","Segoe Print","Comic Sans MS",cursive;
   --font-hand:"Patrick Hand","Segoe Print","Comic Sans MS",cursive;
@@ -89,6 +91,8 @@ body{
 .logo-the{font-family:var(--font-hand);font-size:98px;fill:var(--like);stroke:var(--halo);stroke-width:10px;paint-order:stroke fill;stroke-linejoin:round}
 .logo-heart{fill:var(--like);stroke:var(--ink);stroke-width:11px;stroke-linejoin:round}
 .menu-buttons{display:flex;flex-direction:column;align-items:center;gap:clamp(4px,1.4vh,14px)}
+.menu-row{display:flex;justify-content:center;gap:clamp(8px,1.6vw,18px)}
+.brush.half{width:min(37vw,226px,27vh)}
 .found{margin:0;font-size:clamp(18px,2.1vw,24px);color:var(--ink-soft);font-variant-numeric:tabular-nums}
 .credit{margin:0;text-align:center;font-size:16px;color:var(--ink-soft);text-wrap:balance}
 .credit a{color:inherit;text-decoration-thickness:1.5px;text-underline-offset:3px}
@@ -141,6 +145,22 @@ body{
 .ecard p{margin:0 4px;font-size:17px;line-height:1.25;color:var(--ink-soft)}
 .ecard.locked h3{color:var(--ink-soft)}
 .ecard .hint::before{content:"hint: ";color:var(--like)}
+
+/* ---------- album ---------- */
+.album-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:26px 20px;width:100%;margin-block:10px 12px}
+@media (max-width:900px){.album-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:440px){.album-grid{grid-template-columns:minmax(0,1fr)}}
+.polaroid{
+  position:relative;margin:0;display:flex;flex-direction:column;gap:8px;min-width:0;padding:10px 10px 14px;background:var(--chalk);
+  border:2.5px solid var(--ink);border-radius:6px 4px 7px 4px;box-shadow:4px 5px 0 var(--paper-deep);transform:rotate(var(--tilt,0deg));
+}
+.polaroid::before{content:"";position:absolute;top:-12px;left:50%;width:78px;height:22px;transform:translateX(-50%) rotate(-3deg);background:var(--tape);border:1.5px solid var(--paper-deep)}
+.polaroid img,.polaroid canvas{display:block;width:100%;max-width:100%;height:auto;aspect-ratio:16/9;object-fit:cover;border:2px solid var(--ink);border-radius:2px;background:var(--paper)}
+.polaroid figcaption{display:flex;flex-direction:column;gap:1px;padding:0 4px}
+.polaroid b{font-family:var(--font-marker);font-weight:400;font-size:20px;letter-spacing:.04em;line-height:1.1}
+.polaroid small{font-size:15px;color:var(--ink-soft);font-variant-numeric:tabular-nums}
+.album-sub{margin:0;font-size:18px;color:var(--ink-soft);text-align:center;text-wrap:balance;font-variant-numeric:tabular-nums}
+.album-empty{margin:18px 0;font-size:21px;color:var(--ink-soft);text-align:center;max-width:34ch;text-wrap:balance}
 
 /* ---------- spooky shop ---------- */
 .screen.scroll.shop{background:var(--night-veil);color:var(--moon)}
@@ -376,6 +396,7 @@ body{
 .post-comments{list-style:none;margin:4px 14px 0;padding:0;display:flex;flex-direction:column;gap:2px;font-size:15px;line-height:1.25;color:var(--ink-soft)}
 .post-comments b{font-family:var(--font-display);font-weight:600;font-size:14px;color:var(--ink)}
 .end-stats{margin:0;font-size:15px;line-height:1.3;color:var(--ink-soft);text-align:center;text-wrap:balance;font-variant-numeric:tabular-nums}
+.end-note{margin:0;font-size:15px;color:var(--ink-soft)}
 
 #wipe{position:fixed;inset:0;z-index:20;background:var(--paper);opacity:0;pointer-events:none;transition:opacity .28s}
 #wipe.on{opacity:1;pointer-events:auto}
@@ -419,9 +440,12 @@ body{
     </svg>
     <div class="menu-buttons">
       <button class="brush red" id="btnPlay" type="button"><span>PLAY</span></button>
-      <button class="brush black" id="btnEndings" type="button"><span>ENDINGS</span></button>
+      <div class="menu-row">
+        <button class="brush black half" id="btnEndings" type="button"><span>ENDINGS</span></button>
+        <button class="brush black half" id="btnAlbum" type="button"><span>ALBUM</span></button>
+      </div>
     </div>
-    <p class="found" id="foundMenu">0 / 15 endings found</p>
+    <p class="found" id="foundMenu">0 / 20 endings found</p>
   </div>
   <p class="credit">inspired by <a href="https://ncase.me/wbwwb/" target="_blank" rel="noopener">We Become What We Behold</a> by Nicky Case</p>
   <button class="shop-card" id="btnShop" type="button" aria-label="Open the spooky shop">
@@ -442,6 +466,21 @@ body{
     <p class="found" id="foundEndings"></p>
     <div class="ending-grid" id="endingGrid"></div>
     <button class="brush black small" id="btnBack" type="button"><span>BACK</span></button>
+  </div>
+</section>
+
+<section id="album" class="screen scroll" aria-label="Album" hidden>
+  <div class="endings-wrap">
+    <svg class="screen-title" viewBox="0 0 700 160" role="img" aria-label="Album">
+      <g filter="url(#rough)">
+        <text class="halo" x="350" y="128" text-anchor="middle" font-size="132">ALBUM</text>
+        <text class="chunky" x="350" y="128" text-anchor="middle" font-size="132">ALBUM</text>
+      </g>
+    </svg>
+    <p class="album-sub" id="albumStats"></p>
+    <div class="album-grid" id="albumGrid"></div>
+    <p class="album-empty" id="albumEmpty" hidden>No photos yet. Every run you finish leaves a photo of the park here.</p>
+    <button class="brush black small" id="btnAlbumBack" type="button"><span>BACK</span></button>
   </div>
 </section>
 
@@ -536,6 +575,7 @@ body{
     <div class="end-meta">
       <p class="found" id="foundEnd"></p>
       <p class="end-candy"><span class="candy-ico"></span><span id="endCandy">+30 candy</span></p>
+      <p class="end-note" id="endNote" hidden>photo saved to your album</p>
     </div>
     <p class="end-stats" id="endStats"></p>
     <div class="end-buttons">
@@ -583,6 +623,7 @@ const C = {
   gold: tok('--gold'), tear: tok('--tear'), blush: tok('--blush'),
   pumpkin: tok('--pumpkin'), pumpkinDark: tok('--pumpkin-dark'), stem: tok('--stem'), stone: tok('--stone'),
   dusk: tok('--dusk'), fog: tok('--fog'), web: tok('--web'), witch: tok('--witch'), slime: tok('--slime'), night: tok('--night'), moon: tok('--moon'),
+  rain: tok('--rain'),
 };
 const FONT_HAND = '"Patrick Hand", "Segoe Print", "Comic Sans MS", cursive';
 const FONT_MARKER = '"Permanent Marker", "Segoe Print", "Comic Sans MS", cursive';
@@ -637,8 +678,8 @@ const Music = {
   timer: 0, next: 0, step: 0, idx: 3,
   start() { if (this.timer || !Sound.ctx) return; this.next = Sound.ctx.currentTime + 0.15; this.timer = setInterval(() => this.pump(), 40); },
   mood() {
-    if (scene === 'game' && (phase === 'twist' || enemyPhase || (ev && ev.type === 'wifi'))) return 'tense';
-    if (EQUIP.decor === 'dec-grave' || EQUIP.decor === 'dec-webs' || (ev && ev.type === 'treat') || !shopEl.hidden) return 'night';
+    if (scene === 'game' && (phase === 'twist' || enemyPhase || (ev && (ev.type === 'wifi' || ev.type === 'rain')))) return 'tense';
+    if (EQUIP.decor === 'dec-grave' || EQUIP.decor === 'dec-webs' || (ev && (ev.type === 'treat' || ev.type === 'ghost')) || !shopEl.hidden) return 'night';
     return 'calm';
   },
   pump() {
@@ -799,6 +840,38 @@ function drawMiniGhost(x, y, s) {
   ghostPath(x, y, s * 0.58, s * 0.66); paint(C.chalk, true);
   for (const k of [-1, 1]) ellipse(x + k * s * 0.2, y - s * 0.12, s * 0.08, s * 0.12, C.ink, false, 7);
 }
+/* ---------- event props ---------- */
+function drawSparkle(x, y, s, col) {
+  const k = 0.28; g.lineWidth = Math.max(1, s * 0.16); g.strokeStyle = C.ink;
+  polyRaw([[x, y - s], [x + s * k, y - s * k], [x + s, y], [x + s * k, y + s * k], [x, y + s], [x - s * k, y + s * k], [x - s, y], [x - s * k, y - s * k]], col, true);
+}
+function drawUmbrellaAt(cx, cy, R, col, hx, hy, lw) {
+  g.lineWidth = lw; g.strokeStyle = C.ink;
+  line(cx, cy, hx, hy);
+  arc(hx - R * 0.09, hy, R * 0.09, 0, Math.PI, 4);
+  g.beginPath();
+  for (let i = 0; i <= 10; i++) { const a = Math.PI + Math.PI * i / 10, px = cx + Math.cos(a) * R + J(.5), py = cy + Math.sin(a) * R * 0.66 + J(.5); i ? g.lineTo(px, py) : g.moveTo(px, py); }
+  for (let i = 0; i < 4; i++) { const xa = cx + R - i * R / 2, xb = xa - R / 2; g.quadraticCurveTo((xa + xb) / 2 + J(.4), cy - R * 0.15, xb, cy + J(.4)); }
+  g.closePath(); paint(col, true);
+  g.lineWidth = lw * 0.6; for (let i = 1; i < 4; i++) line(cx, cy - R * 0.62, cx + R - i * R / 2, cy - R * 0.06);
+  g.lineWidth = lw; line(cx, cy - R * 0.64, cx, cy - R * 0.84);
+}
+function drawBottle(px, py, s) {
+  g.strokeStyle = C.ink; g.lineWidth = Math.max(1.4, s * 0.06);
+  rrect(px - 0.11 * s, py - 0.42 * s, 0.22 * s, 0.36 * s, 0.07 * s, C.blush);
+  rrect(px - 0.06 * s, py - 0.53 * s, 0.12 * s, 0.12 * s, 0.03 * s, C.gold);
+  g.fillStyle = C.ink; g.font = `${Math.max(7, Math.round(0.17 * s))}px ${FONT_MARKER}`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('G', px, py - 0.23 * s);
+  drawSparkle(px + 0.21 * s, py - 0.55 * s, 0.09 * s, C.gold);
+}
+function drawGlow(p, m) {
+  g.globalAlpha = Math.min(1, p.glow) * A;
+  for (let i = 0; i < 3; i++) {
+    const ang = simT * 1.3 + i * 2.1 + (p.seed % 7), sz = m.r * (0.13 + 0.06 * Math.sin(simT * 5 + i * 1.7 + p.seed));
+    drawSparkle(m.hx + Math.cos(ang) * m.hw * 1.32, m.hy + Math.sin(ang) * m.hh * 1.12, sz, C.gold);
+  }
+  g.globalAlpha = A;
+}
+
 function drawParticle(kind, x, y, s, f) {
   if (kind === 'bats') drawBat(x, y, s * 1.1, f.t + (f.seed % 7));
   else if (kind === 'candy') drawCandy(x, y, s * 1.05, f.seed % 2 ? C.pumpkin : C.witch);
@@ -851,6 +924,10 @@ const LINES = {
   remember: ['oh right, my old look', 'I forgot I liked this', 'hm, this feels more like me', 'wait... this is me'],
   kidCrowd: ["who's that?", 'what are they wearing?', "they don't match", 'weird look...', 'are they new?'],
   treat: ['trick or treat!', 'candy!!', 'boo!', 'happy halloween!'],
+  rain: ['my hair!', 'ew, rain', 'not my outfit!', 'umbrella time', "I'll get soaked!"],
+  spooky: ['did you hear that?', 'I felt a chill...', 'is someone there?', 'brr...', 'who said boo?'],
+  silly: ['bleh!', 'pfft-', 'hehehe', 'nyeh!', 'cheese!!'],
+  buy: ['bought it!', 'do I glow now?', 'take my money', 'I need this', 'one please!'],
 };
 const CAPS = {
   first: ['just me :)', 'first post!', 'hi Look4me', 'me at the park', 'no filter', 'this is my face', 'hello world', 'sunny day'],
@@ -867,6 +944,9 @@ const COMMENTS = {
   enemy: ['so glossy...', 'are those likes real?', 'I want shades', 'who are these people', 'hmm'],
   twist: ['but you look great!', 'ooh, new look. copying it', 'cute! getting the same', "why are you upset? you're trending"],
   kid: ['who is this?', 'weird outfit', 'welcome I guess', "do they know what's trending?"],
+  ad: ['is this an ad?', 'take my money', 'does it work?', 'I need this', 'link??', 'sponsored...'],
+  photo: ['everyone looks so perfect', 'twins x12', 'cute group!!', 'we all match lol', 'who is that in the back?'],
+  cheese: ['LMAO', 'best photo ever', 'printing this', 'you all look ridiculous. love it', 'framing this'],
 };
 
 function makeLooks(n) {
@@ -888,6 +968,7 @@ function makePerson(look, i = 0, f = null) {
     enemy: false, exposed: false, realLikes: 0, selfT: Infinity, selfie: false, entering: false,
     alpha: 1, fade: 1, drift: false, avoid: null, reports: 0, banned: false,
     revT: 0, bucket: false, rush: false, newkid: false,
+    umbrella: null, puddle: false, silly: false, spot: null, product: false, glow: 0, glowFade: false,
   };
 }
 
@@ -962,7 +1043,11 @@ function drawFace(p, m) {
   const lw = Math.max(1.5, r * 0.1);
   g.lineWidth = lw;
   const happyArc = (x, y) => arc(x, y + r * 0.06, r * 0.13, Math.PI * 1.15, Math.PI * 1.85, 5);
-  switch (L.eyes) {
+  if (p.silly) {
+    // a goofy face for the group photo: cross-eyed, tongue out
+    for (const k of [-1, 1]) { g.lineWidth = lw * 0.8; ellipse(fx + k * ex, ey, r * 0.19, r * 0.21, C.chalk, true, 9); dot(fx + k * ex - k * r * 0.11, ey + r * 0.04, er * 0.85); }
+    g.lineWidth = lw;
+  } else switch (L.eyes) {
     case 'dots': dot(fx - ex, ey, er); dot(fx + ex, ey, er); break;
     case 'big':
       for (const k of [-1, 1]) { g.lineWidth = lw * 0.8; ellipse(fx + k * ex, ey, r * 0.2, r * 0.22, C.chalk, true, 9); dot(fx + k * ex + lx * r * 0.07, ey + r * 0.03 - (p.lookUp ? r * 0.08 : 0), er * 0.95); }
@@ -990,7 +1075,14 @@ function drawFace(p, m) {
   const my = fy + r * 0.38, mw = r * 0.24;
   g.lineWidth = lw;
   const sad = p.mood < -0.45 || p.pose === 'plea';
-  if (sad) arc(fx, my + r * 0.14, mw * 0.9, Math.PI * 1.2, Math.PI * 1.8, 5);
+  if (p.silly) {
+    // a big open grin with the tongue hanging out
+    const y0 = my - r * 0.06; g.beginPath(); g.moveTo(fx - mw * 1.15 + J(.4), y0); g.lineTo(fx + mw * 1.15 + J(.4), y0);
+    g.quadraticCurveTo(fx, my + r * 0.4, fx - mw * 1.15, y0); g.closePath(); g.fillStyle = C.ink; g.fill(); g.stroke();
+    g.lineWidth = lw * 0.8; ellipse(fx + r * 0.07, my + r * 0.2, r * 0.1, r * 0.13, C.blush, true, 8);
+    g.lineWidth = lw * 0.5; line(fx + r * 0.07, my + r * 0.12, fx + r * 0.07, my + r * 0.24); g.lineWidth = lw;
+  }
+  else if (sad) arc(fx, my + r * 0.14, mw * 0.9, Math.PI * 1.2, Math.PI * 1.8, 5);
   else switch (L.mouth) {
     case 'smile': arc(fx, my - r * 0.1, mw, Math.PI * 0.2, Math.PI * 0.8, 5); break;
     case 'flat': line(fx - mw * 0.75, my, fx + mw * 0.75, my); break;
@@ -1158,7 +1250,9 @@ function drawPerson(p) {
       let hX = x + k * 0.5 * s, hY = m.neckY + 0.6 * s + (p.moving ? Math.sin(p.phase + (k > 0 ? Math.PI : 0)) * 0.05 * s : 0);
       if (p.pose === 'plea') { hX = x + k * 0.05 * s; hY = m.neckY + 0.4 * s; }
       else if (p.selfie && k > 0) { hX = x + 0.62 * s; hY = m.neckY - 0.04 * s; }
-      else if (p.dance || p.joy > 0.6) { hX = x + k * 0.58 * s; hY = m.neckY - 0.12 * s; }
+      else if (p.umbrella && k > 0) { hX = x + 0.36 * s; hY = m.neckY + 0.08 * s; }
+      else if (p.product && k > 0) { hX = x + 0.6 * s; hY = m.neckY - 0.02 * s; }
+      else if (p.dance || p.joy > 0.6 || p.silly) { hX = x + k * 0.58 * s; hY = m.neckY - 0.12 * s; }
       line(x + k * shx * s, m.neckY + 0.16 * s, hX, hY);
       if (k < 0 && p.bucket) pail = [hX, hY];
     }
@@ -1173,6 +1267,13 @@ function drawPerson(p) {
   g.lineWidth = lw;
   drawTop(p, m);
   g.lineWidth = lw;
+  if (p.umbrella) {
+    const topY = m.hy - m.hh - (HAT_H[L.top] || 0.15) * m.r;
+    drawUmbrellaAt(x + 0.16 * s, topY - 0.1 * s, Math.max(0.8 * s, m.hw * 1.45), p.umbrella, x + 0.36 * s, m.neckY + 0.08 * s, lw);
+  }
+  if (p.product && L.body !== 'scarf') drawBottle(x + 0.6 * s, m.neckY - 0.02 * s, s);
+  if (p.glow > 0.02) drawGlow(p, m);
+  g.lineWidth = lw; g.strokeStyle = C.ink;
   if (L.body === 'scarf') {
     rrect(x - 0.32 * s, m.neckY - 0.06 * s, 0.64 * s, 0.15 * s, 0.07 * s, col);
     rrect(x + 0.08 * s, m.neckY + 0.04 * s, 0.13 * s, 0.26 * s, 0.05 * s, col);
@@ -1211,6 +1312,7 @@ function drawOverhead(p) {
   if (p.gone) return;
   const m = metrics(p);
   let topY = m.hy - m.hh - (HAT_H[p.look.top] || 0.15) * m.r;
+  if (p.umbrella) topY -= m.s * 0.72;
   const fs = Math.round(clamp(U * 0.36, 12, 17));
   const stamp = p.banned ? 'BANNED' : p.exposed ? 'FAKE' : '';
   if (scene === 'game' && stamp && phase !== 'ending') {
@@ -1341,6 +1443,7 @@ let capUntil = 0, FIELD = { x0: 0, x1: 1, y0: 0, y1: 1 }, grass = [], decor = []
 let enemyPhase = false, enemiesArrived = false, enemies = [], exposedCount = 0, selfLikes = 0;
 let rankScore = 0, rankOverride = 0, currentRank = 48213, rankMarks = new Set();
 let ev = null, evQueue = [], firstLikeT = -1, runStart = 0, peakSame = 0, bestRank = 48213, SPEED = 1;
+let rainLevel = 0, rainTarget = 0, puddles = [], flashT = -9, spook = null, idleT = 0, lastSnap = false, evPlanned = [];
 
 function computeField() {
   if (scene === 'menu') FIELD = { x0: SAFE.l + U * 0.7, x1: W - SAFE.r - U * 0.7, y0: SAFE.t + U * 2.7, y1: H - SAFE.b - U * 0.4 };
@@ -1427,6 +1530,7 @@ function updateFx(dt) {
   for (const f of fxs) {
     f.t += dt; f.x += f.vx * dt; f.y += f.vy * dt;
     if (f.k === 'bat') f.y += Math.sin(f.t * 3 + f.wob) * U * 0.9 * dt;
+    else if (f.grav) f.vy += 520 * dt;
     else if (!f.fall) f.vy *= (1 - dt * 1.2);
   }
   fxs = fxs.filter(f => f.t < f.life && f.y < H + 40);
@@ -1435,12 +1539,16 @@ function drawFx() {
   for (const f of fxs) {
     if (f.k === 'bat') { g.globalAlpha = 1; SEED = f.seed; drawBat(f.x, f.y, f.s, f.t); continue; }
     g.globalAlpha = f.fall ? 1 : clamp(1 - f.t / f.life, 0, 1);
+    if (f.k === 'drop') { g.fillStyle = C.tear; g.beginPath(); g.ellipse(f.x, f.y, f.s * 0.5, f.s * 0.72, 0, 0, TAU); g.fill(); continue; }
     if (f.k === 'heart') { SEED = f.seed; drawParticle(f.fx, f.x, f.y, f.s * (f.fall ? 1 : 0.8 + Math.min(1, f.t * 6) * 0.2), f); }
     else { g.fillStyle = C.ink; g.font = `${Math.round(f.s)}px ${FONT_HAND}`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(f.ch, f.x, f.y); }
   }
   g.globalAlpha = 1;
 }
 
+function splashAt(p) {
+  for (let i = 0; i < 4; i++) fxs.push({ k: 'drop', x: p.x + rand(-0.4, 0.4) * U, y: p.y - 2, vx: rand(-60, 60), vy: -rand(90, 170), t: 0, life: 0.7, s: U * 0.13, grav: true });
+}
 function say(p, text, dur = 2, big = false) { if (!p || p.gone) return; p.bubble = { text, t: 0, dur, big }; }
 function chatOK(cd = 1) { if (simT < chatNext) return false; chatNext = simT + cd; return true; }
 function startPoof(p, changes, dur = 0.7) {
@@ -1458,6 +1566,7 @@ function pickTarget(p) {
     return;
   }
   if (p.rush) { p.tx = rand(f.x0, f.x1); p.ty = rand(f.y0, f.y1); return; }
+  if (p.spot && ev && ev.type === 'photo') { p.tx = p.spot.x; p.ty = p.spot.y; return; }
   const inf = influencer;
   if (p.avoid && !p.avoid.gone) { const d = Math.sign(p.x - p.avoid.x) || 1; p.tx = p.avoid.x + d * rand(5, 9) * U; p.ty = rand(f.y0, f.y1); }
   else if (!p.enemy && inf && inf !== p && Math.random() < same * 0.7 + 0.1) { p.tx = inf.x + rand(-3.2, 3.2) * U; p.ty = inf.y + rand(-1.6, 1.6) * U; }
@@ -1472,7 +1581,8 @@ function updatePerson(p, dt) {
   p.scribble = approach(p.scribble, p.scribbleTarget, dt * 0.85);
   if (p.alpha !== p.fade) p.alpha = approach(p.alpha, p.fade, dt * 0.35);
   p.joy = Math.max(0, p.joy - dt);
-  p.shake = Math.max(p.rush ? 0.3 : 0, p.shake - dt * 0.7);
+  if (p.glowFade && p.glow > 0) p.glow = Math.max(0, p.glow - dt * 0.35);
+  p.shake =Math.max(p.rush ? 0.3 : 0, p.shake - dt * 0.7);
   if (p.focusT > 0) { p.focusT -= dt; if (p.focusT <= 0) p.focus = null; }
   if (p.recent.length && simT - p.recent[0] > 6) p.recent = p.recent.filter(t => simT - t < 6);
   const hsT = p.floating ? 2.3 : 1 + Math.max(0, p.recent.length - 8) * 0.06;
@@ -1495,7 +1605,7 @@ function updatePerson(p, dt) {
       else { const st = Math.min(d, sp * dt); p.x += dx / d * st; p.y += dy / d * st; if (Math.abs(dx) > 0.5) p.dir = dx > 0 ? 1 : -1; p.moving = true; p.phase += dt * sp / U * 5; }
     }
   } else p.moving = false;
-  if (p.entering && p.x <= FIELD.x1) p.entering = false;
+  if (p.entering && (p.x <= FIELD.x1 || Math.abs(p.x - p.tx) < 3)) p.entering = false;
   if (!p.exit && !p.floating && !p.entering) { p.x = clamp(p.x, FIELD.x0, FIELD.x1); p.y = clamp(p.y, FIELD.y0, FIELD.y1); }
 
   let lt = p.dir * 0.35;
@@ -1552,6 +1662,7 @@ function updateRank() {
 /* ================= menu ================= */
 function setupMenu() {
   scene = 'menu'; phase = 'none'; computeField(); fxs = []; layoutDecor();
+  rainLevel = 0; rainTarget = 0; puddles = []; flashT = -9; spook = null;
   const n = W < 600 ? 6 : 10, looks = makeLooks(n);
   people = looks.map((L, i) => { const p = makePerson(L, i, FIELD); p.x = i % 2 ? rand(W * 0.6, W) : rand(0, W * 0.4); pickTarget(p); p.x = p.tx; p.y = p.ty; p.idle = rand(0.3, 3); return p; });
   menuHeartT = 1.5; menuBatT = rand(1, 3);
@@ -1574,7 +1685,11 @@ function startGame() {
   enemyPhase = false; enemiesArrived = false; enemies = []; exposedCount = 0; selfLikes = 0;
   rankScore = 0; rankOverride = 0; currentRank = -1; rankMarks = new Set();
   ev = null; firstLikeT = -1; runStart = simT; peakSame = 0; bestRank = 48213; hideEventTag();
-  evQueue = shuffle(['wifi', 'newkid', 'treat']).slice(0, 2).map((type, i) => ({ type, at: i === 0 ? rand(16, 24) : rand(46, 56) }));
+  rainLevel = 0; rainTarget = 0; puddles = []; flashT = -9; spook = null; idleT = 0;
+  // three of the seven park events per run, timed from your first like
+  const EV_AT = [rand(16, 24), rand(46, 56), rand(78, 88)];
+  evQueue = shuffle(EV_TYPES.slice()).slice(0, 3).map((type, i) => ({ type, at: EV_AT[i] }));
+  evPlanned = evQueue.map(q => q.type);
   baseline = rawSameness(); same = 0; sameTimer = 0;
   meterFill.style.width = '0%';
   resetL4M();
@@ -1614,6 +1729,7 @@ function setInfluencer(best) {
 function like(p, ps = null) {
   p.likes++; totalLikes++; p.recent.push(simT); if (p.enemy) p.realLikes++;
   if (firstLikeT < 0) firstLikeT = playT;
+  idleT = 0; milestones.delete('idle');
   creditPost(p, ps);
   addHearts(p, 1); Sound.like(p.recent.length); p.hopV = Math.max(p.hopV, U * 6.5); p.joy = 1.2; p.mood = Math.min(1, p.mood + 0.6);
   const n = p.recent.length;
@@ -1631,6 +1747,11 @@ function like(p, ps = null) {
       if (ev.got >= 15) { startSugarRush(); return; }
     } else if (ev.type === 'wifi' && !p.enemy) revertSome(p, 2, true);
     else if (ev.type === 'newkid' && p === ev.kid && p.likes >= 4) { startWelcome(p); return; }
+    else if (ev.type === 'rain' && p === ev.jumper) {
+      ev.got++; splashAt(p); updateEventTag();
+      if (ev.got >= 3) { startSplash(p); return; }
+    } else if (ev.type === 'photo' && p.spot && !p.silly) makeSilly(p);
+    else if (ev.type === 'sponsor' && p === ev.star && ev.got < ev.need) { if (sellGlow()) return; }
   }
   const locals = people.filter(q => !q.enemy && !q.gone), zero = locals.filter(q => q.likes === 0);
   if (locals.length >= 4 && zero.length === 1 && locals.every(q => q.likes === 0 || q.likes >= 2)) { startGhosted(zero[0]); return; }
@@ -1653,8 +1774,9 @@ function updateCopying(dt) {
     if (p === inf || p.poof || p.gone || p.enemy || (p.newkid && ev && ev.type === 'newkid')) continue;
     const disp = inf.likes - p.likes;
     if (disp >= 3) p.mood = Math.max(-1, p.mood - dt * 0.045); else p.mood = approach(p.mood, 0, dt * 0.05);
-    if (distracted) continue;
-    p.copyT -= dt; if (p.copyT > 0) continue;
+    if (distracted || p.puddle) continue;
+    // under an umbrella nobody can see what's trending very well
+    p.copyT -= dt * (ev && ev.type === 'rain' ? 0.4 : 1); if (p.copyT > 0) continue;
     const pressure = clamp(same * 0.7 + Math.min(1, inf.likes / 24) * 0.5, 0, 1);
     p.copyT = (inf.enemy ? lerp(11, 4.5, pressure) : lerp(8, 0.55, pressure)) * rand(0.75, 1.25);
     if (!(turned || disp >= 3 || same > 0.7)) continue;
@@ -1701,6 +1823,12 @@ function updateGame(dt) {
       if (playT > 3.8 && !hintShown) { hintShown = true; caption('click someone to give them a like ♥', 28); }
       if (playT > 10) for (const p of people) if (!p.bubble && !p.poof && Math.random() < dt * 0.05) { if (chatOK(1.6)) say(p, pick(LINES.ambient), 1.8); if (Math.random() < 0.5) { p.hopV = U * 6; addNote(p); } }
       if (playT >= 40) { startOffline(); return; }
+    }
+    // stop liking for long enough (with the app closed) and Look4me starts liking for you
+    if (totalLikes > 0 && !ev && !enemyPhase && !L4M.open) {
+      idleT += dt;
+      if (idleT >= 20 && !milestones.has('idle')) { milestones.add('idle'); caption('Look4me: still there? we can do the liking for you.', 4.2); }
+      if (idleT >= 35) { startAutoplay(); return; }
     }
     if (enemyPhase) {
       const rate = 1 + exposedCount * 0.5;
@@ -1821,6 +1949,7 @@ function reportLocal(p) {
 }
 function report(ps) {
   const p = ps.person;
+  if (ps.kind === 'ad' && ev && ev.type === 'sponsor' && ev.star === p && phase === 'play') { pullAd(); return; }
   if (!p.enemy) { if (phase === 'play') reportLocal(p); else toast(`@${p.name}'s likes look real.`); return; }
   if (p.exposed) { toast(`@${p.name} is already exposed.`); return; }
   if (phase !== 'play') return;
@@ -2046,14 +2175,21 @@ function startDeadBattery() {
   after(12.4, () => finish('battery'), 'seq');
 }
 
-/* ---------- park events: each run gets two of these, timed from your first like ---------- */
+/* ---------- park events: each run gets three of these, timed from your first like ---------- */
+const EV_TYPES = ['wifi', 'newkid', 'treat', 'rain', 'photo', 'sponsor', 'ghost'];
 const EV_ICON = {
+  rain: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.6 12.4a9.4 8.4 0 0 1 18.8 0c-1.6-1.3-3.1-1.3-4.7 0-1.6-1.3-3.1-1.3-4.7 0-1.6-1.3-3.1-1.3-4.7 0-1.6-1.3-3.1-1.3-4.7 0z" style="fill:var(--tear);stroke:var(--ink)" stroke-width="1.8" stroke-linejoin="round"/><path d="M12 12.4v6.4a2 2 0 0 1-4 0" style="fill:none;stroke:var(--ink)" stroke-width="2" stroke-linecap="round"/></svg>',
+  photo: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.4 7.2l1.4-2.6h4.4l1.4 2.6" style="fill:var(--chalk);stroke:var(--ink)" stroke-width="1.8" stroke-linejoin="round"/><rect x="2.8" y="7.2" width="18.4" height="12.4" rx="3" style="fill:var(--chalk);stroke:var(--ink)" stroke-width="1.8"/><circle cx="12" cy="13.4" r="3.6" style="fill:var(--tear);stroke:var(--ink)" stroke-width="1.8"/></svg>',
+  sponsor: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7.6" y="8.4" width="8.8" height="13" rx="2.6" style="fill:var(--blush);stroke:var(--ink)" stroke-width="1.8"/><rect x="9.4" y="4" width="5.2" height="4.4" rx="1.1" style="fill:var(--gold);stroke:var(--ink)" stroke-width="1.6"/><path d="M19.4 2.6l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z" style="fill:var(--gold);stroke:var(--ink)" stroke-width="1"/></svg>',
+  ghost: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 21.4V11a7 7 0 0 1 14 0v10.4l-2.3-1.6-2.4 1.6-2.3-1.6-2.3 1.6-2.4-1.6z" style="fill:var(--chalk);stroke:var(--ink)" stroke-width="1.8" stroke-linejoin="round"/><circle cx="9.5" cy="11" r="1.4" style="fill:var(--ink)"/><circle cx="14.5" cy="11" r="1.4" style="fill:var(--ink)"/></svg>',
   wifi: '<svg viewBox="0 0 24 24" aria-hidden="true" style="fill:none;stroke:var(--ink);stroke-width:2.2;stroke-linecap:round"><path d="M2.5 9.5a14 14 0 0 1 19 0M5.5 13a9.5 9.5 0 0 1 13 0M8.6 16.4a5 5 0 0 1 6.8 0"/><circle cx="12" cy="19.6" r="1.1"/><path d="M3.5 3.5l17 17" style="stroke:var(--like)"/></svg>',
   newkid: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.4 6.1 6.6.5-5 4.3 1.6 6.4L12 16.3 6.4 19.8 8 13.4 3 9.1l6.6-.5z" style="fill:var(--gold);stroke:var(--ink)" stroke-width="1.8" stroke-linejoin="round"/></svg>',
   treat: ICON_CANDY,
 };
-const EV_NAME = { wifi: 'wi-fi down', newkid: 'new kid', treat: 'trick-or-treat' };
+const EV_NAME = { wifi: 'wi-fi down', newkid: 'new kid', treat: 'trick-or-treat', rain: 'rainy day', photo: 'group photo', sponsor: '#ad', ghost: 'something spooky' };
 const localsNow = (except) => people.filter(q => q !== except && !q.enemy && !q.gone);
+const diffCount = p => TRAITS.filter(t => p.look[t] !== p.origin[t]).length;
+const evStill = type => ev && ev.type === type && phase === 'play';
 function isOrigin(p) { return TRAITS.every(t => p.look[t] === p.origin[t]); }
 function revertSome(p, n, liked) {
   // on their own, people never shake off the last copied trait. only a like helps them all the way back.
@@ -2086,12 +2222,20 @@ function updateEventTag() {
   const tag = $('#eventTag'), icon = $('#eventIcon'), left = Math.max(0, Math.ceil(ev.dur - ev.t));
   tag.hidden = false;
   if (icon.dataset.type !== ev.type) { icon.innerHTML = EV_ICON[ev.type]; icon.dataset.type = ev.type; $('#eventName').textContent = EV_NAME[ev.type]; }
-  const info = ev.type === 'treat' ? `+${ev.got} candy · ${left}s` : ev.type === 'newkid' ? `say hi? · ${left}s` : `${left}s`;
+  const info = ev.type === 'treat' ? `+${ev.got} candy · ${left}s`
+    : ev.type === 'newkid' ? `say hi? · ${left}s`
+    : ev.type === 'rain' ? `join in? · ${left}s`
+    : ev.type === 'photo' ? `goofy ${localsNow().filter(q => q.silly).length}/${ev.need} · ${left}s`
+    : ev.type === 'sponsor' ? `sold ${ev.got}/${ev.need} · ${left}s`
+    : ev.type === 'ghost' ? `boo? · ${left}s` : `${left}s`;
   if ($('#eventInfo').textContent !== info) $('#eventInfo').textContent = info;
 }
 function hideEventTag() { $('#eventTag').hidden = true; $('#eventIcon').dataset.type = ''; }
 function startEvent(type) {
-  ev = { type, t: 0, dur: type === 'newkid' ? 16 : 20, got: 0, startSame: same, mid: false, kid: null };
+  const DUR = { newkid: 16, rain: 18, photo: 15, sponsor: 18, ghost: 16 };
+  ev = { type, t: 0, dur: DUR[type] || 20, got: 0, need: 0, startSame: same, mid: false, kid: null, cd: 0 };
+  if (type === 'photo') ev.need = Math.min(5, localsNow().length);
+  if (type === 'sponsor') { ev.star = influencer; ev.need = Math.min(8, localsNow(influencer).length); }
   updateEventTag();
   if (type === 'wifi') {
     caption("the wi-fi is down! nobody can see what's trending.", 4);
@@ -2114,11 +2258,124 @@ function startEvent(type) {
     caption('trick-or-treat hour! every like you give earns a candy.', 4.2);
     Sound.spooky();
     for (const p of people) if (!p.enemy && p.look.body !== 'scarf') p.bucket = true;
+  } else if (type === 'rain') {
+    // everyone hides under an umbrella except whoever looks most like themselves, who dances in it
+    const locals = localsNow(), cands = locals.filter(p => p !== influencer && !p.newkid).sort((a, b) => diffCount(a) - diffCount(b));
+    const jumper = cands[0] || pick(locals); ev.jumper = jumper;
+    rainTarget = 1; makePuddles();
+    caption("uh oh, it's starting to rain!", 3.4); Sound.noise(1.4, 700, 0.05);
+    const cols = ['#e5484d', '#3e7bfa', '#f2c230', '#38b26a', '#9a6bf0', '#ff8a3d', '#22a9a9'];
+    for (const p of people) if (p !== jumper) after(rand(0.6, 2.2), () => { if (evStill('rain')) { p.umbrella = pick(cols); if (!p.enemy && chatOK(0.7)) say(p, pick(LINES.rain), 1.6); } }, 'event');
+    after(2.6, () => { if (evStill('rain')) { jumper.dance = true; jumper.puddle = true; say(jumper, 'I love the rain!', 2.2); } }, 'event');
+    after(4.6, () => { if (evStill('rain')) caption(`@${jumper.name} doesn't care how they look in the rain.`, 3.8); }, 'event');
+    after(9, () => { if (evStill('rain')) say(pick(localsNow(jumper)), `@${jumper.name} is getting soaked!`, 2.2); }, 'event');
+  } else if (type === 'photo') {
+    lineUp(localsNow());
+    caption('Look4me wants a group photo! everyone line up.', 3.6); Sound.tone(1200, 0.08, 'square', 0.03);
+  } else if (type === 'sponsor') {
+    const star = ev.star; star.product = true;
+    ev.post = post(star, '#ad GLOW serum. look like me in one day!', 'ad');
+    caption(`@${star.name} got a brand deal with GLOW™!`, 3.6); Sound.coin();
+    after(1.4, () => { if (evStill('sponsor')) say(star, 'use my code: PERFECT', 2.2); }, 'event');
+    after(4.2, () => { if (evStill('sponsor')) caption(`every like on @${star.name} sells a bottle.`, 3.6); }, 'event');
+  } else if (type === 'ghost') {
+    spook = makeSpook(); ev.spook = spook;
+    caption('something is in the park...', 3.4); Sound.spooky();
+    after(3.6, () => { if (evStill('ghost')) say(pick(localsNow()), pick(LINES.spooky), 2); }, 'event');
+    after(6.4, () => { if (evStill('ghost')) caption('did something just wave at you?', 3.2); }, 'event');
+    after(10, () => { if (evStill('ghost')) say(pick(localsNow()), pick(LINES.spooky), 2); }, 'event');
   }
+}
+function makePuddles() {
+  const f = FIELD; puddles = [];
+  for (let i = 0; i < 6; i++) puddles.push({ x: lerp(f.x0, f.x1, (i + rand(0.15, 0.85)) / 6), y: rand(f.y0 + U, f.y1), rx: U * rand(0.9, 1.6), ry: U * rand(0.22, 0.36), ph: rand(1) });
+}
+function lineUp(locals) {
+  // two neat rows, sorted left to right, for the camera
+  const f = FIELD, n = locals.length, gap = U * 1.45, perRow = Math.max(2, Math.min(n, Math.floor((f.x1 - f.x0) * 0.9 / gap)));
+  const cx = (f.x0 + f.x1) / 2;
+  locals.slice().sort((a, b) => a.x - b.x).forEach((p, i) => {
+    const row = Math.floor(i / perRow), inRow = Math.min(perRow, n - row * perRow), col = i % perRow;
+    p.spot = { x: clamp(cx + (col - (inRow - 1) / 2) * gap + (row % 2 ? gap * 0.5 : 0), f.x0, f.x1), y: clamp(lerp(f.y0, f.y1, 0.66) - row * U * 1.3, f.y0, f.y1) };
+    p.idle = 0; p.selfie = false; pickTarget(p);
+  });
+}
+function makeSilly(p) {
+  p.silly = true; p.joy = 1.5;
+  if (chatOK(0.4)) say(p, pick(LINES.silly), 1.4);
+  const n = localsNow().filter(q => q.silly).length;
+  if (n === 1) after(0.8, () => { if (evStill('photo')) say(pick(localsNow(p).filter(q => !q.silly)), "you'll ruin the photo!", 2); }, 'event');
+  updateEventTag();
+  // enough goofy faces: straight to the countdown
+  if (n >= ev.need && ev.t < ev.dur - 3.4) ev.t = ev.dur - 3.4;
+}
+function sellGlow() {
+  const e = ev, star = e.star, pool = localsNow(star), fresh = pool.filter(q => !q.glow);
+  const buyer = pick(fresh.length ? fresh : pool); e.got++;
+  if (buyer) {
+    buyer.glow = 1; buyer.glowFade = false;
+    const diffs = TRAITS.filter(t => buyer.look[t] !== star.look[t]);
+    if (diffs.length) { const t = pick(diffs); startPoof(buyer, { [t]: star.look[t] }, 0.6); }
+    const m = metrics(buyer); fxs.push({ k: 'note', ch: '+GLOW™', x: m.hx, y: m.hy - m.hh - U * 0.7, vx: 0, vy: -45, t: 0, life: 1.3, s: U * 0.4 });
+    if (chatOK(0.8)) say(buyer, pick(LINES.buy), 1.6);
+  }
+  Sound.coin(); updateEventTag();
+  if (e.got >= e.need) { startSoldOut(star); return true; }
+  return false;
+}
+function pullAd() {
+  const e = ev, star = e.star;
+  toast('reported. the #ad was taken down.'); Sound.busted();
+  say(star, '...I just wanted the money', 2.4); star.mood = -1;
+  caption(`GLOW™ dropped @${star.name}.`, 3.4);
+  endEventQuiet();
+}
+function makeSpook() {
+  const f = FIELD;
+  return { name: 'boo', look: { size: 'l' }, x: W + U * 2, y: lerp(f.y0, f.y1, 0.4), tx: lerp(f.x0, f.x1, 0.7), ty: lerp(f.y0, f.y1, 0.4), alpha: 0, alphaT: 0.3, likes: 0, seed: randi(1, 1e6), bubble: null, gone: false, leaving: false, still: false };
+}
+const spookHead = sp => ({ x: sp.x, y: sp.y - U * 1.25 + Math.sin(simT * 2.2 + sp.seed) * U * 0.2, s: U * 1.25 });
+function updateSpook(dt) {
+  const sp = spook;
+  if (sp.bubble) { sp.bubble.t += dt; if (sp.bubble.t >= sp.bubble.dur) sp.bubble = null; }
+  sp.alpha = approach(sp.alpha, sp.alphaT, dt * 0.6);
+  if (sp.leaving && sp.alpha <= 0.01) { spook = null; if (hoverP === sp) hoverP = null; if (selP === sp) selP = null; return; }
+  if (sp.still) return;
+  const dx = sp.tx - sp.x, dy = sp.ty - sp.y, d = Math.hypot(dx, dy), spd = U * (sp.leaving ? 1.6 : 0.9);
+  if (d < 4) { const f = FIELD; sp.tx = rand(f.x0 + U, f.x1 - U); sp.ty = rand(f.y0 + U * 0.6, f.y1 - U * 0.4); }
+  else { const st = Math.min(d, spd * dt); sp.x += dx / d * st; sp.y += dy / d * st; }
+}
+function spookHit(x, y) {
+  const sp = spook; if (!sp || sp.alpha < 0.05 || sp.leaving) return false;
+  const h = spookHead(sp), dx = (x - h.x) / (h.s * 0.7), dy = (y - h.y) / (h.s * 0.95);
+  return dx * dx + dy * dy <= 1;
+}
+function drawSpook(sp) {
+  const h = spookHead(sp);
+  g.globalAlpha = sp.alpha * 0.5; g.fillStyle = C.shadow; g.beginPath(); g.ellipse(sp.x, sp.y, U * 0.55, U * 0.13, 0, 0, TAU); g.fill();
+  g.globalAlpha = sp.alpha; SEED = sp.seed; drawMiniGhost(h.x, h.y, h.s);
+  g.lineWidth = Math.max(1.4, h.s * 0.06); ellipse(h.x, h.y + h.s * 0.16, h.s * 0.07, h.s * 0.09, C.ink, false, 7);
+  g.globalAlpha = 1;
+}
+function spookLike() {
+  const sp = spook, e = ev, h = spookHead(sp);
+  sp.likes++; totalLikes++; idleT = 0; e.got = sp.likes;
+  for (let i = 0; i < 2; i++) fxs.push({ k: 'heart', fx: fxKind(), x: h.x + rand(-0.3, 0.3) * h.s, y: h.y - h.s * 0.6, vx: rand(-30, 30), vy: -rand(80, 120), t: 0, life: 1.1, s: U * rand(0.16, 0.24), seed: randi(1, 1e6) });
+  Sound.like(sp.likes * 3); Sound.tone(520, 0.4, 'sine', 0.04, 780);
+  sp.alphaT = Math.min(0.85, 0.3 + sp.likes * 0.22);
+  updateEventTag();
+  if (sp.likes >= 3) { startBoo(); return; }
+  say(sp, sp.likes === 1 ? 'eep!' : 'hehe... me?', 1.6);
 }
 function updateEvent(dt) {
   if (!ev) {
-    if (evQueue.length && firstLikeT >= 0 && !people.some(p => p.entering) && playT - firstLikeT >= evQueue[0].at) startEvent(evQueue.shift().type);
+    if (evQueue.length && firstLikeT >= 0 && !people.some(p => p.entering) && playT - firstLikeT >= evQueue[0].at) {
+      let type = evQueue.shift().type;
+      // a brand deal needs somebody popular to sign. if nobody is yet, the park gets a different event
+      if (type === 'sponsor' && !(influencer && !influencer.enemy && !influencer.gone && influencer.likes >= 3 && localsNow(influencer).length >= 2))
+        type = pick(EV_TYPES.filter(t => t !== 'sponsor' && !evPlanned.includes(t))) || 'rain';
+      startEvent(type);
+    }
     return;
   }
   ev.t += dt;
@@ -2128,20 +2385,43 @@ function updateEvent(dt) {
     if (ev.startSame >= 0.15 && !people.some(p => p.poof) && people.every(p => p.enemy || p.gone || isOrigin(p))) { startUnplugged(); return; }
   } else if (ev.type === 'treat') {
     if (Math.random() < dt * 0.5 && chatOK(1.4)) { const p = pick(localsNow()); if (p && !p.bubble) say(p, pick(LINES.treat), 1.6); }
+  } else if (ev.type === 'rain') {
+    if (ev.jumper.puddle && Math.random() < dt * 1.2) splashAt(ev.jumper);
+  } else if (ev.type === 'photo') {
+    if (!ev.mid && ev.t > 3.8) { ev.mid = true; caption('everyone is posing perfectly. a like makes someone laugh.', 3.8); }
+    const left = ev.dur - ev.t;
+    if (ev.cd === 0 && left <= 3.2) { ev.cd = 3; caption('3...', 1); Sound.tick(); }
+    else if (ev.cd === 3 && left <= 2.2) { ev.cd = 2; caption('2...', 1); Sound.tick(); }
+    else if (ev.cd === 2 && left <= 1.2) { ev.cd = 1; caption('1...', 1); Sound.tick(); }
+    if (ev.t >= ev.dur) { resolvePhoto(); return; }
   }
   if (ev.t >= ev.dur) endEvent(); else updateEventTag();
 }
-function endEventQuiet() {
+function endEventQuiet(keep = {}) {
   if (!ev) return;
+  const e = ev;
   cancelTag('event');
-  if (ev.type === 'wifi') setWifiUI(false);
-  if (ev.kid) ev.kid.newkid = false;
-  for (const p of people) p.bucket = false;
+  if (e.type === 'wifi') setWifiUI(false);
+  if (e.kid) e.kid.newkid = false;
+  for (const p of people) {
+    p.bucket = false; p.spot = null;
+    if (!keep.silly) p.silly = false;
+    if (!keep.rain) p.umbrella = null;
+    if (!keep.glow) { p.product = false; if (p.glow) p.glowFade = true; }
+  }
+  if (e.jumper && !keep.rain) { e.jumper.puddle = false; if (phase === 'play') e.jumper.dance = false; }
+  if (!keep.rain) rainTarget = 0;
+  if (spook && !keep.spook) { spook.leaving = true; spook.alphaT = 0; spook.still = false; }
   ev = null; hideEventTag();
 }
 function endEvent() {
-  const e = ev; endEventQuiet();
+  const e = ev;
+  if (e.type === 'ghost' && spook) say(spook, '...boo.', 1.6);
+  endEventQuiet();
   if (e.type === 'wifi') caption('the wi-fi is back.', 3);
+  else if (e.type === 'rain') { caption('the rain stopped.', 3); say(e.jumper, 'aww.', 1.4); }
+  else if (e.type === 'sponsor') caption(`the #ad is over. ${e.got} ${e.got === 1 ? 'bottle' : 'bottles'} of GLOW™ sold.`, 3.4);
+  else if (e.type === 'ghost') caption('the chill went away.', 3);
   else if (e.type === 'treat') { caption(`trick-or-treat is over. you got ${e.got} candy!`, 3.4); saveShop(); }
   else if (e.type === 'newkid' && e.kid && !e.kid.gone) {
     const kid = e.kid, target = influencer && influencer !== kid ? { ...influencer.look } : modeLook();
@@ -2184,6 +2464,100 @@ function startSugarRush() {
   after(3.6, () => say(pick(people), 'more candy!!', 1.6), 'seq');
   after(8, () => finish('sugar'), 'seq');
 }
+function startSplash(j) {
+  endEventQuiet({ rain: true }); enterSeq(); rainTarget = 1;
+  const others = localsNow(j);
+  for (const p of people) { p.frozen = true; p.focus = j; p.focusT = 0; }
+  j.focus = null; j.joy = 3; j.hopV = U * 7; j.dance = true; splashAt(j);
+  say(j, 'come on in! the water is great!', 2.6); Sound.like(6);
+  after(2.4, () => say(pick(others), '...okay, why not', 2), 'seq');
+  after(3.2, () => shuffle(people.filter(p => p !== j && !p.gone)).forEach((p, i) => after(i * 0.12, () => {
+    p.umbrella = null; p.frozen = false; p.dance = true; p.hopV = U * 6; p.idle = 0; splashAt(p);
+    if (i % 2 === 0) Sound.noise(0.18, 900, 0.06);
+  }, 'seq')), 'seq');
+  const t1 = 3.2 + people.length * 0.12 + 1.2;
+  after(t1, () => { caption('nobody looks perfect in the rain.', 3.4); say(pick(others), 'my hair is ruined. I love it', 2.4); }, 'seq');
+  after(t1 + 3.8, () => caption('nobody cared.', 3), 'seq');
+  after(t1 + 7, () => finish('splash'), 'seq');
+}
+function snapGroup(locals) { return shuffle(locals.slice()).slice(0, 8).map(q => ({ look: { ...q.look }, seed: q.seed, silly: q.silly })); }
+function resolvePhoto() {
+  const e = ev, locals = localsNow(), sillies = locals.filter(q => q.silly);
+  flashT = simT; Sound.noise(0.12, 4200, 0.22); Sound.tone(1400, 0.06, 'square', 0.03);
+  const group = snapGroup(locals);
+  if (sillies.length >= e.need) { startCheese(group); return; }
+  endEventQuiet();
+  const star = influencer && !influencer.enemy && !influencer.gone ? influencer : pick(locals);
+  const ps = post(star, 'group photo! everyone looks perfect', 'photo', true, { group });
+  if (!sillies.length) { caption('click! a perfect group photo.', 3); return; }
+  caption(`click! ${sillies.length === 1 ? 'one person' : sillies.length + ' people'} pulled a face.`, 3.4);
+  const s0 = sillies[0];
+  after(1.6, () => { if (phase !== 'play') return; say(pick(localsNow(s0)), `@${s0.name} ruined the photo`, 2.2); if (ps) addComment(ps, `@${s0.name} ruined it`); }, 'game');
+  after(3.2, () => {
+    if (phase !== 'play') return;
+    // the goofy ones get the message, and try harder to fit in
+    const inf = influencer;
+    for (const q of sillies) {
+      q.mood = -1;
+      if (inf && inf !== q && !inf.enemy && !q.gone) { const ch = {}; TRAITS.filter(t => q.look[t] !== inf.look[t]).slice(0, 2).forEach(t => { ch[t] = inf.look[t]; }); if (Object.keys(ch).length) startPoof(q, ch, 0.6); }
+    }
+    say(s0, "sorry... I'll look normal next time", 2.4);
+  }, 'game');
+}
+function startCheese(group) {
+  endEventQuiet({ silly: true }); enterSeq();
+  const locals = localsNow();
+  for (const p of people) { p.frozen = true; p.focus = null; }
+  after(0.9, () => { caption('nobody looked perfect in the photo.', 3.6); post(pick(locals), 'our group photo lol', 'cheese', true, { group }); }, 'seq');
+  after(2.4, () => { for (const p of locals) { p.joy = 3; p.dance = true; } say(pick(locals), 'HAHAHA look at your face', 2.2); Sound.chord([523, 659, 784]); }, 'seq');
+  after(4.2, () => say(pick(locals), "I'm framing this", 2), 'seq');
+  after(5.2, () => { rainHearts(26); caption(`it got more likes than anything ever posted in ${PARK}.`, 4.4); }, 'seq');
+  after(10, () => finish('cheese'), 'seq');
+}
+function startSoldOut(star) {
+  endEventQuiet({ glow: true }); enterSeq();
+  const locals = localsNow(), buyers = locals.filter(p => p !== star);
+  for (const p of people) { p.frozen = true; p.focus = star; p.focusT = 0; }
+  star.focus = null; star.joy = 3;
+  caption('GLOW™ sold out!', 3); Sound.coin(); rainHearts(16, C.gold, 'hearts');
+  say(star, "I'm rich!!", 2);
+  after(1.6, () => shuffle(buyers.slice()).forEach((p, i) => after(i * 0.1, () => { p.glow = 1; p.glowFade = false; if (!looksSame(p, star)) startPoof(p, { ...star.look }, 0.6); if (i % 3 === 0) Sound.coin(); }, 'seq')), 'seq');
+  const t1 = 1.6 + buyers.length * 0.1 + 1.4;
+  after(t1, () => caption('everyone glowed exactly the same.', 3.4), 'seq');
+  after(t1 + 3.6, () => { for (const p of locals) p.glowFade = true; star.product = false; say(pick(buyers), '...wait. I still feel the same.', 2.6); }, 'seq');
+  after(t1 + 6.6, () => caption("it didn't change anything. but it sold out in a day.", 4.2), 'seq');
+  after(t1 + 10.6, () => finish('soldout'), 'seq');
+}
+function startBoo() {
+  const sp = spook; endEventQuiet({ spook: true }); enterSeq();
+  sp.alphaT = 0.95; sp.still = true;
+  const locals = localsNow();
+  for (const p of people) { p.frozen = true; p.focus = sp; p.focusT = 0; p.lookUp = true; }
+  say(sp, 'you... can see me?', 2.4); Sound.spooky();
+  after(1.6, () => caption('the ghost got the most likes.', 3.4), 'seq');
+  after(2.8, () => say(pick(locals), 'whoa... I want to be a ghost too', 2.4), 'seq');
+  after(4.4, () => shuffle(locals.slice()).forEach((p, i) => after(i * 0.13, () => { startPoof(p, { head: 'ghost', top: 'none', extra: 'none' }, 0.7); p.fade = 0.55; if (i % 3 === 0) Sound.spooky(); }, 'seq')), 'seq');
+  const t1 = 4.4 + locals.length * 0.13 + 1.4;
+  after(t1, () => { for (const p of locals) { p.lookUp = false; p.dance = true; } say(sp, 'boo!', 1.6); caption('everyone wanted to be invisible too.', 4.4); }, 'seq');
+  after(t1 + 5, () => finish('boo'), 'seq');
+}
+function startAutoplay() {
+  enterSeq();
+  const locals = localsNow(), inf = influencer && !influencer.gone && !influencer.enemy ? influencer : pick(locals);
+  const others = shuffle(localsNow(inf));
+  for (const p of people) { p.frozen = true; p.focus = inf; p.focusT = 0; p.idle = 0; }
+  inf.focus = null;
+  caption('you stopped liking. Look4me turned on autoplay.', 3.6); Sound.tone(880, 0.12, 'square', 0.04, 1320);
+  let k = 0;
+  const auto = () => { k++; inf.likes++; addHearts(inf, 1, C.gold, 'hearts'); Sound.tick(); if (k < 46) after(k < 10 ? 0.3 : 0.15, auto, 'seq'); };
+  after(1.2, auto, 'seq');
+  after(2.6, () => say(inf, 'who keeps liking me??', 2), 'seq');
+  after(3.8, () => others.forEach((p, i) => after(i * 0.16, () => { if (!looksSame(p, inf)) { startPoof(p, { ...inf.look }, 0.6); if (i % 3 === 0) Sound.copy(); } }, 'seq')), 'seq');
+  const t1 = 3.8 + others.length * 0.16 + 1.2;
+  after(t1, () => caption('the algorithm picked a favorite. everyone copied it.', 4.2), 'seq');
+  after(t1 + 4.4, () => caption("it didn't need you at all.", 3.4), 'seq');
+  after(t1 + 8, () => finish('autoplay'), 'seq');
+}
 function drawWifiOff(x, y, s) {
   g.strokeStyle = C.ink; g.lineWidth = Math.max(2, s * 0.14);
   for (let i = 1; i <= 3; i++) arc(x, y + s * 0.5, s * 0.36 * i, Math.PI * 1.22, Math.PI * 1.78, 6);
@@ -2207,15 +2581,41 @@ const ENDINGS = [
   { id: 'unplugged', title: 'UNPLUGGED', text: 'Without the feed, everyone remembered who they were. When the wi-fi came back, nobody checked.', hint: 'when the wi-fi goes down, help everyone remember their old look.', happy: true },
   { id: 'welcome', title: 'WELCOME', text: 'Someone liked the new kid exactly as they were. That was all it took.', hint: 'be nice to the new kid before they try to fit in.', happy: true },
   { id: 'sugar', title: 'SUGAR RUSH', text: 'Too many treats. Everyone was too busy running around to copy anyone.', hint: 'collect every candy during trick-or-treat hour.', happy: true },
+  { id: 'splash', title: 'SPLASH', text: 'Nobody looks perfect in the rain. Nobody cared.', hint: 'when it rains, like whoever is dancing in it.', happy: true },
+  { id: 'cheese', title: 'SAY CHEESE', text: 'Nobody looked perfect in the group photo. It was the best one ever taken.', hint: 'during the group photo, make people laugh.', happy: true },
+  { id: 'soldout', title: 'SOLD OUT', text: "Everyone bought the glow. It didn't change anything, but it sold out in a day.", hint: 'when someone gets a brand deal, help them sell every bottle.', happy: false },
+  { id: 'boo', title: 'BOO', text: 'The ghost got the most likes. Everyone wanted to be invisible too.', hint: 'something invisible is hanging around the park. be nice to it.', happy: false },
+  { id: 'autoplay', title: 'AUTOPLAY', text: 'You stopped liking. The app kept going without you, and it was better at it.', hint: "stop liking for a while. something else won't.", happy: false },
 ];
 let found = new Set((store.get('pp.endings', []) || []).filter(id => ENDINGS.some(e => e.id === id)));
 const foundText = () => `${found.size} / ${ENDINGS.length} endings found`;
 
+function clockStr(secs) { return `${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, '0')}`; }
+function albumList() { return (store.get('pp.album', []) || []).filter(a => a && ENDINGS.some(e => e.id === a.id)); }
+/* a polaroid of the park the moment the run ended, for the album */
+function snapAlbum(id) {
+  let img = null;
+  try {
+    const w = 320, h = 180, oc = document.createElement('canvas'); oc.width = w; oc.height = h;
+    const sw = cv.width, sh = cv.height; let cw = sw, ch = sw * 9 / 16; if (ch > sh) { ch = sh; cw = sh * 16 / 9; }
+    oc.getContext('2d').drawImage(cv, (sw - cw) / 2, (sh - ch) / 2, cw, ch, 0, 0, w, h);
+    img = oc.toDataURL('image/jpeg', 0.72);
+  } catch (err) { img = null; }
+  const list = albumList();
+  list.unshift({ id, img, t: Date.now(), likes: totalLikes, peak: Math.round(peakSame * 100), secs: Math.max(0, Math.round(simT - runStart)) });
+  for (const keep of [12, 6, 2]) {
+    try { localStorage.setItem('pp.album', JSON.stringify(list.slice(0, keep))); return !!img; } catch (err) { /* storage full: keep fewer photos */ }
+  }
+  return false;
+}
 function finish(id) {
   phase = 'ending'; cancelTag('seq'); openL4M(false);
   const e = ENDINGS.find(x => x.id === id), isNew = !found.has(id), reward = isNew ? 30 : 10;
   found.add(id); store.set('pp.endings', [...found]);
   candy += reward; saveShop(); updateCandy();
+  const st = store.get('pp.stats', {}) || {};
+  store.set('pp.stats', { runs: (st.runs || 0) + 1, likes: (st.likes || 0) + totalLikes, secs: (st.secs || 0) + Math.max(0, Math.round(simT - runStart)) });
+  lastSnap = snapAlbum(id);
   Sound.chord(e.happy ? [523, 659, 784] : [440, 523, 659]);
   after(0.3, () => showEndCard(e, isNew, reward), 'game');
 }
@@ -2310,6 +2710,43 @@ const THUMBS = {
       for (let i = 0; i < 3; i++) { const x = w * (0.22 + i * 0.29) - u * 0.55; line(x, h * 0.62, x - u * 0.35, h * 0.62); line(x, h * 0.72, x - u * 0.25, h * 0.72); }
     },
   }),
+  splash: (w, h, u) => ({
+    before: () => { g.fillStyle = C.tear; g.globalAlpha = 0.5; [[0.2, 0.95, 0.7], [0.52, 0.98, 0.9], [0.82, 0.95, 0.65]].forEach(([x, y, r]) => { g.beginPath(); g.ellipse(w * x, h * y, u * r, u * 0.16, 0, 0, TAU); g.fill(); }); g.globalAlpha = 1; },
+    people: DIVERSE.map((L, i) => mock(L, w * (0.2 + i * 0.31), h * 0.93, { dance: true, joy: 1, lift: [u * 0.25, 0, u * 0.18][i] })),
+    after: () => {
+      const R = mulberry(77); g.strokeStyle = C.tear; g.lineWidth = 1.6;
+      for (let i = 0; i < 28; i++) { SEED = 300 + i; const x = R() * w, y = R() * h * 0.92; line(x, y, x - u * 0.08, y + u * 0.3); }
+      // an umbrella somebody tossed away, upside down on the grass
+      SEED = 9; g.save(); g.translate(w * 0.9, h * 0.86); g.rotate(Math.PI - 0.35); drawUmbrellaAt(0, 0, u * 0.4, '#e5484d', 0, u * 0.72, 1.8); g.restore();
+    },
+  }),
+  cheese: (w, h, u) => ({
+    before: () => { SEED = 41; g.lineWidth = 2.2; g.strokeStyle = C.ink; rrect(w * 0.07, h * 0.06, w * 0.86, h * 0.9, 5, C.chalk); g.fillStyle = C.paper; g.fillRect(w * 0.1, h * 0.1, w * 0.8, h * 0.72); },
+    people: DIVERSE.map((L, i) => mock({ ...L, size: 's' }, w * (0.27 + i * 0.23), h * 0.8, { silly: true, joy: 1 })),
+    after: () => { stampText('say cheese!', w * 0.5, h * 0.89, u * 0.26, C.like, -0.03); SEED = 44; drawSparkle(w * 0.84, h * 0.2, u * 0.2, C.gold); },
+  }),
+  soldout: (w, h, u) => ({
+    people: [0.2, 0.5, 0.8].map((x, i) => mock(SAME_LOOK, w * x, h * (0.91 + (i % 2) * 0.04), { glow: 1, product: i === 1, joy: i === 1 ? 1 : 0 })),
+    after: () => stampText('SOLD OUT', w * 0.5, h * 0.09, u * 0.32, C.like, -0.06),
+  }),
+  boo: (w, h, u) => ({
+    people: [],
+    after: () => {
+      A = 0.6; g.globalAlpha = A;
+      DIVERSE.forEach((L, i) => drawPerson(mock({ ...L, head: 'ghost', top: 'none', extra: 'none' }, w * (0.18 + i * 0.27), h * (0.92 - (i % 2) * 0.05), { dance: true })));
+      A = 1; g.globalAlpha = 0.85; SEED = 6; drawMiniGhost(w * 0.86, h * 0.34, u * 0.75); g.globalAlpha = 1;
+      stampText('boo!', w * 0.86, h * 0.1, u * 0.3, C.ink, 0.12);
+    },
+  }),
+  autoplay: (w, h, u) => ({
+    people: [0.2, 0.5, 0.8].map((x, i) => mock(SAME_LOOK, w * x, h * (0.93 - (i % 2) * 0.03), { lookUp: true })),
+    after: () => {
+      SEED = 61; g.lineWidth = 2.2; g.strokeStyle = C.ink;
+      rrect(w * 0.595, h * 0.05, w * 0.11, h * 0.16, 6, C.chalk);
+      polyRaw([[w * 0.635, h * 0.085], [w * 0.635, h * 0.175], [w * 0.68, h * 0.13]], C.like, false);
+      [[0.08, 0.12], [0.36, 0.1], [0.9, 0.12], [0.66, 0.3]].forEach(([x, y], i) => { SEED = 70 + i; g.lineWidth = 1.6; heartShape(w * x, h * y, u * 0.11, C.gold); });
+    },
+  }),
 };
 function drawThumb(cvs, id, locked) {
   const cw = Math.max(120, cvs.clientWidth || 280), ch = Math.round(cw * 9 / 16);
@@ -2330,6 +2767,7 @@ function drawThumb(cvs, id, locked) {
       g.fillStyle = C.inkSoft; g.font = `${Math.round(u * 0.62)}px ${FONT_MARKER}`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('?', x, hy + 2);
     } else {
       const sc = THUMBS[id](cw, ch, u);
+      if (sc.before) sc.before();
       sc.people.sort((a, b) => a.y - b.y).forEach(drawPerson);
       if (sc.after) sc.after();
     }
@@ -2401,13 +2839,14 @@ const l4mEl = $('#l4m'), feedEl = $('#l4mFeed'), worldEl = $('#l4mWorld'), world
 const fabEl = $('#btnL4M'), fabDot = $('#fabDot'), fabRank = $('#fabRank'), rankNum = $('#rankNum'), rankBox = $('#l4mRank'), toastEl = $('#l4mToast');
 const battEl = $('#batt'), battFill = $('#battFill'), battPct = $('#battPct');
 
-function post(p, text, kind = 'first', chatter = true) {
-  if (scene !== 'game' || p.gone) return null;
-  const ps = { id: L4M.nextId++, person: p, kind, comments: [], look: { ...p.look }, caption: text, t: simT, likes: 0, self: 0, mine: 0, fake: false, mood: 0, joy: false };
+function post(p, text, kind = 'first', chatter = true, extra = null) {
+  if (scene !== 'game' || !p || p.gone) return null;
+  const ps = { id: L4M.nextId++, person: p, kind, comments: [], look: { ...p.look }, caption: text, t: simT, likes: 0, self: 0, mine: 0, fake: false, mood: 0, joy: false, spooky: !!(spook && !spook.leaving) };
+  if (extra) Object.assign(ps, extra);
   L4M.posts.unshift(ps); p.lastPost = ps;
   while (L4M.posts.length > 24) L4M.posts.pop();
   if (chatter) {
-    const n = kind === 'enemy' || kind === 'twist' || kind === 'kid' ? 2 : Math.random() < 0.55 ? 1 : 0;
+    const n = ['enemy', 'twist', 'kid', 'ad', 'photo', 'cheese'].includes(kind) ? 2 : Math.random() < 0.55 ? 1 : 0;
     for (let i = 0; i < n; i++) after(rand(1.5, 5) + i * rand(2, 4), () => addComment(ps), 'game');
   }
   if (L4M.open) syncFeed(); else { L4M.unseen++; updateFab(); }
@@ -2463,14 +2902,28 @@ function drawAvatar(cvs, look, seed) {
 }
 function drawPostPic(cvs, ps) {
   const S = cvs.width, p = ps.person;
+  if (ps.group) { drawGroupPic(cvs, ps); return; }
   withDraw(cvs.getContext('2d'), S / 3.9, () => {
     g.setTransform(1, 0, 0, 1, 0, 0); g.fillStyle = C.paper; g.fillRect(0, 0, S, S);
     const R = mulberry(ps.id * 131 + 7); g.strokeStyle = C.grass; g.lineWidth = 3; g.lineCap = 'round';
     for (let i = 0; i < 12; i++) { SEED = i * 17 + ps.id; const x = R() * S, y = R() * S; line(x - 9, y, x + 9, y - 5); }
-    const q = mock(ps.look, S / 2, S * 0.9, { seed: p.seed, selfie: p.enemy && ps.look.eyes === 'shades', joy: ps.joy ? 1 : 0, mood: ps.mood, tears: ps.mood < 0 ? 1 : 0 });
+    if (ps.spooky) { g.globalAlpha = 0.22; SEED = ps.id; drawMiniGhost(S * 0.8, S * 0.3, S * 0.22); g.globalAlpha = 1; }
+    const q = mock(ps.look, S / 2, S * 0.9, { seed: p.seed, selfie: p.enemy && ps.look.eyes === 'shades', joy: ps.joy ? 1 : 0, mood: ps.mood, tears: ps.mood < 0 ? 1 : 0, product: ps.kind === 'ad' });
     drawPerson(q);
     if (p.enemy) stampText('#1 look', S * 0.2, S * 0.1, S * 0.08, C.gold, -0.12);
+    else if (ps.kind === 'ad') stampText('#ad', S * 0.16, S * 0.1, S * 0.09, C.like, -0.14);
     else if (TRAITS.some(t => COSTUME_VALUES.has(ps.look[t]))) { SEED = ps.id; drawPumpkin(S * 0.88, S * 0.96, S * 0.13, true); }
+  });
+}
+function drawGroupPic(cvs, ps) {
+  const S = cvs.width, grp = ps.group, back = grp.slice(0, Math.floor(grp.length / 2)), front = grp.slice(back.length);
+  withDraw(cvs.getContext('2d'), S / 7.4, () => {
+    g.setTransform(1, 0, 0, 1, 0, 0); g.fillStyle = C.paper; g.fillRect(0, 0, S, S);
+    const R = mulberry(ps.id * 131 + 7); g.strokeStyle = C.grass; g.lineWidth = 3; g.lineCap = 'round';
+    for (let i = 0; i < 12; i++) { SEED = i * 17 + ps.id; const x = R() * S, y = R() * S; line(x - 9, y, x + 9, y - 5); }
+    [[back, S * 0.66, S * 0.06], [front, S * 0.95, 0]].forEach(([row, y, off]) => row.forEach((q, i) => drawPerson(mock(q.look, S * (i + 0.5) / row.length + off, y, { seed: q.seed, silly: q.silly, joy: q.silly ? 1 : 0 }))));
+    if (ps.kind === 'cheese') stampText('LOL', S * 0.16, S * 0.12, S * 0.1, C.like, -0.15);
+    else stampText('perfect.', S * 0.2, S * 0.12, S * 0.08, C.gold, -0.12);
   });
 }
 function buildPost(ps) {
@@ -2583,13 +3036,13 @@ function appLike(ps, el) {
 }
 
 /* ================= DOM: screens, HUD, cards ================= */
-const menuEl = $('#menu'), endingsEl = $('#endings'), shopEl = $('#shop'), endEl = $('#endcard'), hudEl = $('#hud');
+const menuEl = $('#menu'), endingsEl = $('#endings'), albumEl = $('#album'), shopEl = $('#shop'), endEl = $('#endcard'), hudEl = $('#hud');
 const trendEl = $('#trend'), trendPic = $('#trendPic'), trendName = $('#trendName'), trendLikes = $('#trendLikes');
 const capEl = $('#caption'), meterFill = $('#meterFill'), wipeEl = $('#wipe');
 const trendCtx = trendPic.getContext('2d');
 
 function showScreen(name) {
-  menuEl.hidden = name !== 'menu'; endingsEl.hidden = name !== 'endings'; shopEl.hidden = name !== 'shop'; endEl.hidden = name !== 'end'; hudEl.hidden = name !== 'game';
+  menuEl.hidden = name !== 'menu'; endingsEl.hidden = name !== 'endings'; albumEl.hidden = name !== 'album'; shopEl.hidden = name !== 'shop'; endEl.hidden = name !== 'end'; hudEl.hidden = name !== 'game';
   if (name !== 'game') openL4M(false);
 }
 function caption(text, dur = 3) {
@@ -2645,13 +3098,36 @@ function showEndCard(e, isNew, reward) {
   }
   $('#endText').textContent = e.text; $('#endStamp').hidden = !isNew; $('#foundEnd').textContent = foundText();
   $('#endCandy').textContent = `+${reward} candy`;
-  const secs = Math.max(0, Math.round(simT - runStart)), clock = `${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, '0')}`;
+  const secs = Math.max(0, Math.round(simT - runStart)), clock = clockStr(secs);
   $('#endStats').textContent = `${fmt(totalLikes)} ${totalLikes === 1 ? 'like' : 'likes'} given · ${Math.round(peakSame * 100)}% alike at the peak · best rank #${fmt(Math.max(1, Math.min(bestRank, currentRank > 0 ? currentRank : bestRank)))} · ${clock}`;
+  $('#endNote').hidden = !lastSnap;
   showScreen('end');
   requestAnimationFrame(() => drawThumb($('#endThumb'), e.id, false));
   try { $('#btnAgain').focus({ preventScroll: true }); } catch (err) { /* focus optional */ }
 }
 
+function buildAlbum() {
+  const grid = $('#albumGrid'), list = albumList(), st = store.get('pp.stats', {}) || {};
+  grid.innerHTML = '';
+  list.forEach((a, i) => {
+    const e = ENDINGS.find(x => x.id === a.id);
+    const fig = document.createElement('figure'); fig.className = 'polaroid';
+    fig.style.setProperty('--tilt', ((((i * 53) % 9) - 4) * 0.55).toFixed(2) + 'deg');
+    let pic;
+    if (a.img) { pic = document.createElement('img'); pic.src = a.img; pic.alt = `${PARK} at the ${e.title} ending`; pic.loading = 'lazy'; pic.decoding = 'async'; }
+    else { pic = document.createElement('canvas'); pic.setAttribute('aria-hidden', 'true'); pic.dataset.id = a.id; }
+    const cap = document.createElement('figcaption'), b = document.createElement('b'), sm = document.createElement('small');
+    b.textContent = e.title;
+    const day = new Date(a.t || Date.now()).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toLowerCase();
+    sm.textContent = `${day} · ${fmt(a.likes || 0)} ${a.likes === 1 ? 'like' : 'likes'} · ${clockStr(a.secs || 0)}`;
+    cap.append(b, sm); fig.append(pic, cap); grid.append(fig);
+  });
+  $('#albumEmpty').hidden = list.length > 0;
+  const runs = st.runs || 0;
+  const tot = st.secs || 0, park = tot >= 3600 ? `${Math.floor(tot / 3600)}h ${Math.floor(tot % 3600 / 60)}m` : clockStr(tot);
+  $('#albumStats').textContent = runs ? `${fmt(runs)} ${runs === 1 ? 'run' : 'runs'} · ${fmt(st.likes || 0)} likes given · ${park} in the park · ${foundText()}` : foundText();
+  requestAnimationFrame(() => grid.querySelectorAll('canvas[data-id]').forEach(c => drawThumb(c, c.dataset.id, false)));
+}
 function goMenu() { clearTimers(); caption('', 0); setupMenu(); showScreen('menu'); updateFound(); updateCandy(); }
 
 /* ---------- spooky shop ---------- */
@@ -2788,6 +3264,8 @@ document.querySelectorAll('.candy-ico').forEach(el => { el.outerHTML = ICON_CAND
 $('#btnPlay').addEventListener('click', () => { Sound.init(); Sound.like(3); wipe(startGame); });
 $('#btnEndings').addEventListener('click', () => { Sound.init(); showScreen('endings'); buildGallery(); try { $('#btnBack').focus({ preventScroll: true }); } catch (e) { /* optional */ } });
 $('#btnBack').addEventListener('click', () => { showScreen('menu'); updateFound(); });
+$('#btnAlbum').addEventListener('click', () => { Sound.init(); Sound.noise(0.1, 4200, 0.12); showScreen('album'); buildAlbum(); albumEl.scrollTop = 0; try { $('#btnAlbumBack').focus({ preventScroll: true }); } catch (e) { /* optional */ } });
+$('#btnAlbumBack').addEventListener('click', () => { showScreen('menu'); try { $('#btnAlbum').focus({ preventScroll: true }); } catch (e) { /* optional */ } });
 $('#btnShop').addEventListener('click', () => { Sound.init(); Sound.spooky(); openShop(); });
 $('#btnShopBack').addEventListener('click', () => { showScreen('menu'); updateCandy(); try { $('#btnShop').focus({ preventScroll: true }); } catch (e) { /* optional */ } });
 $('#btnQuit').addEventListener('click', () => wipe(goMenu));
@@ -2814,6 +3292,7 @@ btnSpeed.addEventListener('click', () => { SPEED = SPEED === 1 ? 2 : 1; btnSpeed
 
 /* input */
 function tapPerson(p, ps = null) {
+  if (p && p === spook) { if (scene === 'game' && phase === 'play' && ev && ev.type === 'ghost') { spookLike(); return true; } return false; }
   if (scene === 'menu') { addHearts(p, 1); p.hopV = U * 6; Sound.like(0); return true; }
   if (scene !== 'game') return false;
   if (phase === 'play') { like(p, ps); return true; }
@@ -2823,13 +3302,13 @@ function tapPerson(p, ps = null) {
 cv.addEventListener('pointerdown', e => {
   Sound.init(); keyMode = false;
   pointer = { x: e.clientX, y: e.clientY, has: true };
-  const p = hitTest(e.clientX, e.clientY); if (p) tapPerson(p);
+  const p = spookHit(e.clientX, e.clientY) ? spook : hitTest(e.clientX, e.clientY); if (p) tapPerson(p);
 });
-cv.addEventListener('pointermove', e => { pointer = { x: e.clientX, y: e.clientY, has: true }; hoverP = e.pointerType === 'mouse' ? hitTest(e.clientX, e.clientY) : null; });
+cv.addEventListener('pointermove', e => { pointer = { x: e.clientX, y: e.clientY, has: true }; hoverP = e.pointerType === 'mouse' ? (spookHit(e.clientX, e.clientY) ? spook : hitTest(e.clientX, e.clientY)) : null; });
 cv.addEventListener('pointerleave', () => { hoverP = null; });
 cv.addEventListener('keydown', e => {
   if (scene !== 'game' || !endEl.hidden) return;
-  const list = people.filter(p => !p.gone).sort((a, b) => a.x - b.x); if (!list.length) return;
+  const list = people.filter(p => !p.gone).concat(spook && !spook.leaving && spook.alpha > 0.05 ? [spook] : []).sort((a, b) => a.x - b.x); if (!list.length) return;
   if (e.key === 'ArrowRight' || e.key === 'ArrowLeft' || e.key === 'ArrowUp' || e.key === 'ArrowDown') {
     e.preventDefault(); keyMode = true;
     const cur = list.indexOf(selP), step = (e.key === 'ArrowRight' || e.key === 'ArrowDown') ? 1 : -1;
@@ -2840,6 +3319,7 @@ document.addEventListener('keydown', e => {
   if (e.key !== 'Escape') return;
   if (L4M.open) { openL4M(false); try { fabEl.focus({ preventScroll: true }); } catch (err) { /* optional */ } }
   else if (!endingsEl.hidden) { showScreen('menu'); updateFound(); }
+  else if (!albumEl.hidden) showScreen('menu');
   else if (!shopEl.hidden) { showScreen('menu'); updateCandy(); }
   else if (scene === 'game' && endEl.hidden) wipe(goMenu);
 });
@@ -2868,15 +3348,52 @@ function render() {
   if (EQUIP.decor === 'dec-grave') { ctx.fillStyle = C.dusk; ctx.fillRect(0, 0, W, H); }
   drawGrass();
   drawDecor(false);
+  drawPuddles();
   const list = people.filter(p => !p.gone).sort((a, b) => a.y - b.y);
   const ringOn = scene === 'game' && (phase === 'play' || phase === 'twist');
+  const ringed = p => ringOn && (p === hoverP || (keyMode && p === selP && document.activeElement === cv));
   for (const p of list) {
-    if (ringOn && (p === hoverP || (keyMode && p === selP && document.activeElement === cv))) drawRing(p);
+    if (ringed(p)) drawRing(p);
     A = p.alpha; g.globalAlpha = A; drawPerson(p); A = 1; g.globalAlpha = 1;
   }
   drawDecor(true);
+  if (spook) { if (ringed(spook)) drawRing(spook); drawSpook(spook); }
+  drawRain();
   for (const p of list) drawOverhead(p);
+  if (spook && spook.bubble && spook.alpha > 0.1) { const h = spookHead(spook); drawBubble(spook, { hx: h.x }, h.y - h.s * 0.95); }
   drawFx();
+  drawFlash();
+}
+function drawPuddles() {
+  if (rainLevel <= 0.01 || !puddles.length) return;
+  for (const q of puddles) {
+    g.globalAlpha = rainLevel * 0.5; g.fillStyle = C.tear; g.beginPath(); g.ellipse(q.x, q.y, q.rx, q.ry, 0, 0, TAU); g.fill();
+    const ph = (simT * 0.8 + q.ph) % 1;
+    g.globalAlpha = rainLevel * 0.8 * (1 - ph); g.strokeStyle = C.chalk; g.lineWidth = 1.5;
+    g.beginPath(); g.ellipse(q.x + q.rx * 0.2, q.y, q.rx * 0.65 * ph + 1, q.ry * 0.65 * ph + 1, 0, 0, TAU); g.stroke();
+  }
+  g.globalAlpha = 1;
+}
+function drawRain() {
+  if (rainLevel <= 0.01) return;
+  g.globalAlpha = rainLevel; g.fillStyle = C.rain; g.fillRect(0, 0, W, H);
+  if (!RM) {
+    g.globalAlpha = rainLevel * 0.85; g.strokeStyle = C.tear; g.lineWidth = 1.6; g.lineCap = 'round';
+    const n = Math.round(W * H / 7000), span = W + 200;
+    g.beginPath();
+    for (let i = 0; i < n; i++) {
+      const sp = 380 + hash01(i * 3 + 1) * 240;
+      const y = (hash01(i * 13 + 5) * (H + 40) + simT * sp) % (H + 40) - 20;
+      let x = (hash01(i * 7 + 3) * span - simT * sp * 0.22) % span; if (x < 0) x += span; x -= 100;
+      g.moveTo(x, y); g.lineTo(x - 4, y + 15);
+    }
+    g.stroke();
+  }
+  g.globalAlpha = 1;
+}
+function drawFlash() {
+  const a = 1 - (simT - flashT) / 0.7; if (a <= 0 || a > 1) return;
+  g.globalAlpha = a * 0.92; g.fillStyle = C.chalk; g.fillRect(0, 0, W, H); g.globalAlpha = 1;
 }
 
 let last = 0, boilAcc = 0;
@@ -2889,7 +3406,7 @@ function frame(ts) {
   boilAcc += dt;
   if (boilAcc >= BOIL_STEP) {
     boilAcc = 0; BOIL++; BOIL_LIVE = BOIL;
-    if (!RM && (!menuEl.hidden || !endEl.hidden || !endingsEl.hidden || !shopEl.hidden)) { roughNoise.setAttribute('seed', String(1 + BOIL % 3)); brushNoise.setAttribute('seed', String(3 + BOIL % 3)); }
+    if (!RM && (!menuEl.hidden || !endEl.hidden || !endingsEl.hidden || !albumEl.hidden || !shopEl.hidden)) { roughNoise.setAttribute('seed', String(1 + BOIL % 3)); brushNoise.setAttribute('seed', String(3 + BOIL % 3)); }
   }
   tick(step);
   render();
@@ -2901,6 +3418,8 @@ function tick(dt) {
   if (scene === 'menu') updateMenu(dt);
   else if (scene === 'game') updateGame(dt);
   for (const p of people) updatePerson(p, dt);
+  if (spook) updateSpook(dt);
+  rainLevel = approach(rainLevel, rainTarget, dt * 0.7);
   separate(dt);
   updateFx(dt);
   updateDecor(dt);
