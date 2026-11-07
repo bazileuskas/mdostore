@@ -401,7 +401,7 @@ function drawFighter(f, alpha) {
   g.restore();
   g.lineWidth = 3; g.strokeStyle = LINE; g.stroke();
   if (sk.back) sk.back();
-  g.save(); g.translate(3, -TOR - 19); g.rotate(ps[1]); sk.head(); g.restore();
+  g.save(); g.translate(3, -TOR - 19); g.rotate(ps[1]); sk.head(f); g.restore();      // (f: a flat skin's head asks it for its outline, sil)
   if (four) limb(1, -TOR + 40, (low ? low[0] : ps[2] * .6 - .2) + lean, 23, ARM * .9, sk.armF2 || sk.armF);
   limb(7, -TOR + 13, ps[2] + lean, 27, ARM, sk.armF);
   g.restore();
@@ -675,7 +675,7 @@ function updatePlayer(dt) {
   if (hooks.playerPre && hooks.playerPre(p, o, dt)) { /* knocked about: foes.js is driving */ }
   else if (p.dashT > 0) {
     p.dashT -= dt; p.vx = p.dashDir * (p.dashV || 1050); p.target = POSE.dash; p.rate = 34;
-    if ((p.ghostT -= dt) <= 0) { p.ghostT = .028; ghosts.push({ skin: p.dashTint ? (p.dashTint.torso ? p.dashTint : FRAMES) : p.skin, x: p.x, y: p.y, face: p.face, spin: 1, scale: p.scale, pose: p.pose.slice(), t: 0, tint: p.dashTint }); }
+    if ((p.ghostT -= dt) <= 0) { p.ghostT = .028; ghosts.push({ skin: p.dashTint ? (p.dashTint.torso ? p.dashTint : FRAMES) : p.skin, x: p.x, y: p.y, face: p.face, spin: 1, scale: p.scale, pose: p.pose.slice(), t: 0, tint: p.dashTint, sil: p.skin && p.skin.sil }); }
     if (p.dashT <= 0) p.vx *= .2;
   } else if (p.move) {
     const m = p.move;
@@ -817,10 +817,11 @@ const flats = {};
 function flat(side, front = side) {
   const key = side + '|' + front;
   return flats[key] || (flats[key] = { torso: [side, front], armF: [side, front, side, front, .22], armB: [side, side, side, side, .22],
-    legF: [side, front, side, front, .18], legB: [side, side, side, side, .18], chest() {}, head() { headBase(side, front); } });
+    legF: [side, front, side, front, .18], legB: [side, side, side, side, .18], chest() {}, head(f) { if (f && f.sil) f.sil(side, front); else headBase(side, front); } });
+  // (sil: the outline of a head that is not the usual square one, drawn in these two tones: THUKUNA ;3's, Build 0.33)
 }
 // the same fighter, standing as he is, in another skin
-const over = (f, skin) => ({ skin, x: f.x, y: f.y, z: f.z, face: f.face, spin: f.spin === undefined ? 1 : f.spin, scale: f.scale, pose: f.pose, four: f.four || (f.skin && f.skin.four), low: f.low });
+const over = (f, skin) => ({ skin, x: f.x, y: f.y, z: f.z, face: f.face, spin: f.spin === undefined ? 1 : f.spin, scale: f.scale, pose: f.pose, four: f.four || (f.skin && f.skin.four), low: f.low, sil: f.sil || (f.skin && f.skin.sil) });
 const FLASH = flat('#e6e2ee', '#ffffff'), FRAMES = flat('#1e56c8', '#4fa2ff');      // a hit's flash; the blue frames a dash can leave
 function drawBody(f) {
   const rim = hooks.rim ? hooks.rim(f) : null;      // a technique may light the edge of him ({ col, blur }) or wash all of him one colour ({ wash, a })

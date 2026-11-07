@@ -5,6 +5,11 @@
 // Newest first. v = the build, jp = the seal stamped beside it, pic = notes/<pic>.jpg, cap = what the picture shows.
 // A new update goes at the top of this list.
 const NOTES = [
+  { v: '0.33', name: 'THUKUNA ;3', jp: 'チュクナ', date: '7 Nov 2026', pic: 'thukuna', cap: 'He becomes THUKUNA; THUKUNA; the World Cutting Slash; and Instant Kill, one of his strikes', items: [
+    'THUKUNA ;3, a new cursed technique for admins only (the team\'s account, and whoever the team has given admin powers: nobody else sees it or can equip it). The King of Curses in the Vessel\'s body, and all four of his moves are the World Cutting Slash: the grid drawn over everything, and the cut that nothing stops',
+    'Each of his strikes is one of the game\'s moves that kill in one, at random, and never the same one twice running: the Executioner\'s Sword, "Die", Overtime, Instant Kill, Reaping Slash, Idle Transfiguration and Mr. Instincto\'s Black Flash',
+    'E: he becomes THUKUNA. A cut-in first, a manga panel of him ("DISMANTLE!"), and then that is what he is: a head nearly twice the size, a red T-shirt, crazed red eyes, the grin with its two front teeth, black claws. E again and he is the King of Curses again',
+    'Every one of his moves screams THUKUNAAAAAA in the copy at home (online, they sound as the King of Jujutsu\'s do)'] },
   { v: '0.32v3', name: 'Red Fists', jp: '赤拳', date: '7 Nov 2026', pic: 'redfists', cap: 'The Mechamaster\'s strikes, dark red at the fists; the puppet\'s one move; and Super Charge over', items: [
     'The Mechamaster\'s strikes burn dark red round both fists now, and their swings and the sparks where they land are dark red too: all four of the chain, and the uppercut and the down slam that finish it (which work just as they did)',
     'Super Charge lasts for one move: the puppet does the next move you press, and as soon as it has finished it Super Charge is over. You have nine seconds to give it that move, and while it is doing it the time stands still. It still waits 25 seconds before you can call it again'] },
