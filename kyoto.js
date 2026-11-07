@@ -165,20 +165,25 @@ function alley() {
     }
     fill(d.id === 'bamboo' ? '#1c1a14' : d.id === 'torii' ? '#2a2420' : '#1e1a1c', () => slab(d.x0, d.x1, BZ - 4, d.z1, 12));
     box(cx, 12, d.z1, w, 620, 30, '#0c0a0e', '#0c0a0e');
-    const n = d.id === 'hanami' ? 5 : 11;
-    for (let i = n - 1; i >= 0; i--) {
-      const z = lerp(BZ + 70, d.z1 - 80, i / (n - 1));
-      if (d.id === 'torii') {                                                                              // gate after gate after gate, each one somebody's thanks
-        box(d.x0 + 26, 12, z, 22, 330, 22, VERM, VERM2); box(d.x1 - 26, 12, z, 22, 330, 22, VERM, VERM2); box(cx, 330, z, w + 40, 26, 22, VERM, VERM2, '#e0583e'); box(cx, 292, z, w - 30, 14, 18, VERM, VERM2);
-        box(d.x0 + 26, 12, z, 26, 40, 26, '#17120f', '#0c0908'); box(d.x1 - 26, 12, z, 26, 40, 26, '#17120f', '#0c0908');
-      } else if (d.id === 'bamboo') for (const s of [-1, 1]) for (let j = 0; j < 2; j++) {                 // bamboo, close on both sides and far over his head
-        const x = (s < 0 ? d.x0 + 24 + j * 30 : d.x1 - 24 - j * 30) + Math.sin(i * 3 + j) * 10;
-        box(x, 12, z + j * 40, 16, 900, 16, j ? '#3f7a3a' : '#5a9a48', '#2a5626'); fill('#2a5626', () => { const a = P(x - 9, 200 + (i * 53 % 130), z + j * 40), b = P(x + 9, 206 + (i * 53 % 130), z + j * 40); g.rect(a[0], b[1], b[0] - a[0], a[1] - b[1]); });
-      } else for (const s of [-1, 1]) { const q = P(s < 0 ? d.x0 + 30 : d.x1 - 30, 240, z); g.fillStyle = (i + (s > 0)) % 2 ? '#e0452f' : '#f6e7c4'; g.beginPath(); g.ellipse(q[0], q[1], 17 * q[2], 25 * q[2], 0, 0, TAU); g.fill(); lit(() => glow((i + (s > 0)) % 2 ? GLOW.red : GLOW.fire, q[0], q[1], 200 * q[2], .7)); }
-    }
     if (d.id === 'torii') { const q = P(cx, 150, d.z1 - 200); lit(() => glow(GLOW.fire, q[0], q[1], 800 * q[2], .3)); }
+    // (what stands along it, a row at a time, is drawn as props, rowProps below: in its place among whoever walks down it. Build 0.32v2)
   }
 }
+// one row of what stands along a lane: a torii, a pair of bamboo stalks either side, or a pair of lanterns. Build 0.32v2: these were drawn
+// all at once with the lane, so whoever walked down it was drawn over every one of them, the torii he had just walked under too
+const ROWS = d => (d.id === 'hanami' ? 5 : 11);
+function row(d, i) {
+  if (d.x1 < cam.x - 2800 || d.x0 > cam.x + 2800) return;
+  const cx = (d.x0 + d.x1) / 2, w = d.x1 - d.x0, n = ROWS(d), z = lerp(BZ + 70, d.z1 - 80, i / (n - 1));
+  if (d.id === 'torii') {                                                                                // gate after gate after gate, each one somebody's thanks
+    box(d.x0 + 26, 12, z, 22, 330, 22, VERM, VERM2); box(d.x1 - 26, 12, z, 22, 330, 22, VERM, VERM2); box(cx, 330, z, w + 40, 26, 22, VERM, VERM2, '#e0583e'); box(cx, 292, z, w - 30, 14, 18, VERM, VERM2);
+    box(d.x0 + 26, 12, z, 26, 40, 26, '#17120f', '#0c0908'); box(d.x1 - 26, 12, z, 26, 40, 26, '#17120f', '#0c0908');
+  } else if (d.id === 'bamboo') for (const s of [-1, 1]) for (let j = 0; j < 2; j++) {                   // bamboo, close on both sides and far over his head
+    const x = (s < 0 ? d.x0 + 24 + j * 30 : d.x1 - 24 - j * 30) + Math.sin(i * 3 + j) * 10;
+    box(x, 12, z + j * 40, 16, 900, 16, j ? '#3f7a3a' : '#5a9a48', '#2a5626'); fill('#2a5626', () => { const a = P(x - 9, 200 + (i * 53 % 130), z + j * 40), b = P(x + 9, 206 + (i * 53 % 130), z + j * 40); g.rect(a[0], b[1], b[0] - a[0], a[1] - b[1]); });
+  } else for (const s of [-1, 1]) { const q = P(s < 0 ? d.x0 + 30 : d.x1 - 30, 240, z); g.fillStyle = (i + (s > 0)) % 2 ? '#e0452f' : '#f6e7c4'; g.beginPath(); g.ellipse(q[0], q[1], 17 * q[2], 25 * q[2], 0, 0, TAU); g.fill(); lit(() => glow((i + (s > 0)) % 2 ? GLOW.red : GLOW.fire, q[0], q[1], 200 * q[2], .7)); }
+}
+const rowProps = () => DEEP.filter(d => d.id !== 'yasaka').flatMap(d => Array.from({ length: ROWS(d) }, (_, i) => ({ z: lerp(BZ + 70, d.z1 - 80, i / (ROWS(d) - 1)) + (d.id === 'bamboo' ? 40 : 0), draw: () => row(d, i) })));
 function front() {                                    // stone lanterns on the near side, here and there
   for (const x of [1100, 3350, 6200, 8000, 9750, 11450]) { if (Math.abs(x - cam.x) > 1700) continue; box(x, 12, 452, 40, 130, 40, '#3b3d44', '#27292e', '#4a4d55'); box(x, 142, 446, 62, 40, 52, '#44474e', '#2c2e33', '#55585f'); const q = P(x, 162, 446); lit(() => glow(GLOW.fire, q[0], q[1], 130 * q[2], .45)); }
 }
@@ -226,7 +231,7 @@ const spots = [
   ...mine(SH.RAIDS).map(id => ({ x: SH.RAIDS[id].at[0], z: SH.RAIDS[id].at[1], r: 150, h: 430, icon: '討', col: '#ff5a6e', raid: id, label: () => 'Raid · ' + SH.RAIDS[id].name + (M.raids[id] ? ' · cleared ' + M.raids[id] : ''), use: () => K.raid(id) })),
   ...mine(SH.SECRETS).map(id => ({ x: SH.SECRETS[id].at[0], z: SH.SECRETS[id].at[1], r: 140, h: 430, icon: '？', col: '#c77dff', secret: id, show: SH.SECRETS[id].show, label: () => (M.secrets[id] ? SH.SECRETS[id].name + ' · again' : 'Something is here'), use: () => K.secret(id) }))
 ];
-const props = [...LAMPS.map(x => ({ z: 1270, draw: () => lamp(x) })),
+const props = [...LAMPS.map(x => ({ z: 1270, draw: () => lamp(x) })), ...rowProps(),      // (rowProps: the lanes' torii, bamboo and lanterns, Build 0.32v2)
   { z: 1356, draw: () => arch(DEEP[0], '竹林の小径', '#2a3a22', '#bfe6a0') }, { z: 1356, draw: () => arch(DEEP[1], '花見小路', '#3a1a12', '#ffd98a') }, { z: 1356, draw: () => arch(DEEP[3], '千本鳥居', VERM, '#f4efe4') },
   ...spots.filter(s => s.raid || s.secret).map(s => ({ z: s.z + 1, draw: () => column(s, s.raid ? GLOW.red : GLOW.purple, s.raid ? 'rgba(255,90,110,.9)' : 'rgba(199,125,255,.9)') }))];
 

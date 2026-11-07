@@ -69,7 +69,22 @@ const WOOD = '#4a3426', WOOD2 = '#2e2018', PLAS = '#ece6d8', PLAS2 = '#bdb6a6', 
 function roofT(x, y, z, w, d, h, col = TILE) {
   const ov = 70, x0 = x - w / 2 - ov, x1 = x + w / 2 + ov, zf = z - ov, zb = z + d + ov, zr = z + d / 2;
   const tl = P(x0, y + 26, zf), tr = P(x1, y + 26, zf), mid = P(x, y - 10, zf), rl = P(x - w / 2 + w * .2, y + h, zr), rr = P(x + w / 2 - w * .2, y + h, zr), bl = P(x0, y + 26, zb), br = P(x1, y + 26, zb);
+  // the hips going back from the corners: only as much of them as shows above the eaves. From the street you are always under the eaves,
+  // so the back corners come out lower than the front ones, and the hips were drawn down over the front of the building, windows and all
+  // (Build 0.32v2, the user's picture of the school building). Seen from above the eaves (a lifted camera), they are all still there
+  // and under the eaves, what you see from under them: the dark wood between the edge of the eaves and the top of the wall (only seen
+  // from under them: from above it is the roof that shows)
+  const wl = P(x - w / 2, y, z), wr = P(x + w / 2, y, z);
+  if (tl[1] < wl[1]) {
+    g.fillStyle = '#241913'; quad(tl, tr, wr, wl); g.fill();
+    g.strokeStyle = 'rgba(120,86,60,.5)'; g.lineWidth = 1.5; g.beginPath();
+    for (let i = 1; i < 14; i++) { const u = i / 14, a = P(lerp(x0, x1, u), y + 26, zf), b = P(lerp(x - w / 2, x + w / 2, u), y, z); g.moveTo(a[0], a[1]); g.lineTo(b[0], b[1]); }      // the rafters
+    g.stroke();
+  }
+  const ex = tr[0] - tl[0], ey = tr[1] - tl[1], el = Math.hypot(ex, ey) || 1, ux = ex / el * 6000, uy = ey / el * 6000;
+  g.save(); g.beginPath(); g.moveTo(tl[0] - ux, tl[1] - uy); g.lineTo(tr[0] + ux, tr[1] + uy); g.lineTo(tr[0] + ux, -99999); g.lineTo(tl[0] - ux, -99999); g.closePath(); g.clip();
   g.fillStyle = TILE2; quad(tl, rl, rl, bl); g.fill(); quad(tr, rr, rr, br); g.fill();
+  g.restore();
   g.beginPath(); g.moveTo(tl[0], tl[1]); g.quadraticCurveTo(mid[0], mid[1] + (tl[1] - mid[1]) * .2, tr[0], tr[1]); g.lineTo(rr[0], rr[1]); g.lineTo(rl[0], rl[1]); g.closePath(); g.fillStyle = col; g.fill();
   g.strokeStyle = 'rgba(0,0,0,.28)'; g.lineWidth = 1.5; g.beginPath();
   for (let i = 1; i < 18; i++) { const u = i / 18, e = P(lerp(x0, x1, u), y + 26 - Math.sin(u * Math.PI) * 30, zf), r = P(lerp(x - w / 2 + w * .2, x + w / 2 - w * .2, u), y + h, zr); g.moveTo(e[0], e[1]); g.lineTo(r[0], r[1]); }
@@ -258,7 +273,9 @@ function hall(x0, x1, top, roomIds, opts = {}) {
     if (o.x1 > o.x0) for (const s of [-1, 1]) box(s < 0 ? o.x0 + 28 : o.x1 - 28, 12, BZ - 4, 56, FL - 12, 8, '#e9dcc0', '#b9ad92');      // its sliding doors, pushed open
     x = o.x1;
   }
-  box(x0 + 10, 12, BZ, 20, FL - 12, 520, opts.side || PLAS2, opts.side || PLAS2); box(x1 - 10, 12, BZ, 20, FL - 12, 520, opts.side || PLAS2, opts.side || PLAS2);
+  // its two ends: the front edge of each, and the outside of whichever end the camera is past (Build 0.32v2: both were whole walls as
+  // deep as the building, so from either side the inside of the far one was drawn over the rooms, and over whoever was in them)
+  for (const [ex, past] of [[x0 + 10, cam.x < x0], [x1 - 10, cam.x > x1]]) box(ex, 12, BZ, 20, FL - 12, past ? 520 : 40, opts.side || PLAS2, opts.side || PLAS2);
   roofT(cx, top, BZ, w, 520, opts.rh || 260);
   if (opts.sign) { box(cx, top - 70, BZ - 6, opts.sign[2] || 300, 50, 6, '#2a1c12', '#1a120c'); text(opts.sign[0], cx, top - 45, BZ - 10, 26, '#e8c86a'); if (opts.sign[1]) text(opts.sign[1], cx, FL + 24, BZ - 6, 15, '#2a1c12', EN); }
   for (const o of ops) { const lab = { yuji: 'THE VESSEL', megumi: 'SHADOW SUMMONER', nobara: 'STRAW DOLL', klass: '1年 FIRST YEARS', yaga: '学長室 PRINCIPAL', inf: '医務室 INFIRMARY' }[Object.keys(ROOMS).find(k => ROOMS[k] === o)]; box((o.x0 + o.x1) / 2, FL - 34, BZ - 8, 170, 26, 4, '#f4efe4', '#bdb6a6'); text(lab, (o.x0 + o.x1) / 2, FL - 21, BZ - 10, 13, '#2a1c12', EN); }
@@ -313,16 +330,24 @@ function buildings() {
   if (near(0, 1100)) { cedar(60, BZ + 60, 1200, 0); cedar(1030, BZ + 60, 1150, 1); }
   if (near(6340, 6380) || near(7360, 7440)) { cedar(6350, BZ + 40, 1150, 1); cedar(7370, BZ + 40, 1150, 2); }
   forest(8080, DEEP.bstairs.x0); forest(DEEP.bstairs.x1, 11000);
-  storehouse();
-  hall(1080, 2380, 780, ['yuji', 'megumi', 'nobara'], { rail: true, sign: ['学生寮', 'DORMITORY', 260] });
-  vending();
-  hall(2990, 4130, 860, ['klass', 'yaga'], { sign: ['校舎', 'SCHOOL BUILDING', 280], rh: 300 });
-  if (near(4280, 4320) || near(5480, 5520)) { box(4300, 12, BZ, 40, 260, 40, PLAS, PLAS2); box(5500, 12, BZ, 40, 260, 40, PLAS, PLAS2); }
-  hall(5580, 6320, 700, ['inf'], { sign: ['医務室', 'INFIRMARY', 220], win: 'rgba(220,240,255,.85)' });
-  mainGate();
-  if (near(8420, 8820)) { box(DEEP.bstairs.x0 - 40, 12, BZ, 80, 120, 80, STONE, STONE2, '#a39e94'); box(DEEP.bstairs.x1 + 40, 12, BZ, 80, 120, 80, STONE, STONE2, '#a39e94'); text('呪術高専 参道', (DEEP.bstairs.x0 + DEEP.bstairs.x1) / 2, 150, BZ - 2, 18, '#2a2d34'); }
-  konbini(); stationHouse();
+  // and the buildings outside-in, the furthest from the camera first, as the other worlds do: so the front of the one nearer the middle
+  // is drawn over its neighbour's side wall, and not the side wall over the front (Build 0.32v2: in their order along the walk, the school
+  // building's side was drawn over the wall the vending machines stand in, from anywhere west of it)
+  for (const b of BUILDS.slice().sort((p, q) => Math.abs((q.x0 + q.x1) / 2 - cam.x) - Math.abs((p.x0 + p.x1) / 2 - cam.x))) b.draw();
 }
+const BUILDS = [
+  { x0: 150, x1: 650, draw: () => storehouse() },
+  { x0: 1080, x1: 2380, draw: () => hall(1080, 2380, 780, ['yuji', 'megumi', 'nobara'], { rail: true, sign: ['学生寮', 'DORMITORY', 260] }) },
+  { x0: 2420, x1: 2960, draw: () => vending() },
+  { x0: 2990, x1: 4130, draw: () => hall(2990, 4130, 860, ['klass', 'yaga'], { sign: ['校舎', 'SCHOOL BUILDING', 280], rh: 300 }) },
+  { x0: 4280, x1: 4320, draw: () => { if (near(4280, 4320)) box(4300, 12, BZ, 40, 260, 40, PLAS, PLAS2); } },
+  { x0: 5480, x1: 5520, draw: () => { if (near(5480, 5520)) box(5500, 12, BZ, 40, 260, 40, PLAS, PLAS2); } },
+  { x0: 5580, x1: 6320, draw: () => hall(5580, 6320, 700, ['inf'], { sign: ['医務室', 'INFIRMARY', 220], win: 'rgba(220,240,255,.85)' }) },
+  { x0: 7420, x1: 8070, draw: () => mainGate() },
+  { x0: 8420, x1: 8820, draw: () => { if (near(8420, 8820)) { box(DEEP.bstairs.x0 - 40, 12, BZ, 80, 120, 80, STONE, STONE2, '#a39e94'); box(DEEP.bstairs.x1 + 40, 12, BZ, 80, 120, 80, STONE, STONE2, '#a39e94'); text('呪術高専 参道', (DEEP.bstairs.x0 + DEEP.bstairs.x1) / 2, 150, BZ - 2, 18, '#2a2d34'); } } },
+  { x0: 11040, x1: 11560, draw: () => konbini() },
+  { x0: 11640, x1: 12480, draw: () => stationHouse() }
+];
 
 /* ---------- things that share the walk with people ---------- */
 const LOCAL = { body: '#d7dbe2', side: '#9aa0aa', band: '#dd0077', band2: '#2a6fd0', door: '#c9ced8', dest: '新宿' };
