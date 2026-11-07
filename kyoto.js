@@ -198,7 +198,7 @@ const UTAHIME = Object.assign({}, C.civ(1), { torso: ['#d9d4c8', '#f1ece0'], arm
     g.fillStyle = '#f4efe4'; g.fillRect(-27, -22, 54, 5); g.fillStyle = LINE; g.beginPath(); g.ellipse(5, 3, 2.4, 3, 0, 0, TAU); g.fill(); g.beginPath(); g.ellipse(17, 3, 2.1, 3, 0, 0, TAU); g.fill();
     g.strokeStyle = '#a8705c'; g.lineWidth = 2.4; g.beginPath(); g.moveTo(0, 8); g.lineTo(22, 12); g.stroke();
   } });
-Object.assign(JU.story.WHO, { todo: ['Clapping Brawler', '拍手', '#38c8ff'], mai: ['Bullet Maker', '構築', '#c77dff'], utahime: ['Shrine Singer', '歌姫', '#e0452f'], maki: ['Heavenly Blade', '天与', '#7ddc9a'], kyoto: ['Kyoto', '京都', '#ffb04a'] });
+Object.assign(JU.story.WHO, { utahime: ['Shrine Singer', '歌姫', '#e0452f'], kyoto: ['Kyoto', '京都', '#ffb04a'] });      // (Clapping Brawler, Bullet Maker and Heavenly Blade: the story's own, cast2 and cast5. Build 0.34)
 K.mk('todo', { hp: 480 }); K.mk('uro', { hp: 600 }); K.mk('yorozu', { hp: 640 }); K.mk('yuta', { hp: 760, dr: .7 }); K.mk('naoya2', { hp: 620 });
 Fi.DEFS.sb_geto = Object.assign({}, Fi.DEFS.kenjaku, { name: 'Curse Eater', jp: '呪霊使い', skin: JU.cast3.GETO, hp: 520 });
 Object.assign(SH.RAIDS, {

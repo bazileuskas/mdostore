@@ -151,7 +151,7 @@ Object.assign(Fi.DEFS, {
 });
 
 Object.assign(JU.story.WHO, {
-  nanami: ['Ratio Blade', '七三', '#ffd27a'], mahito: ['Soul Shaper', '魂', '#9db4ff'], jogo: ['Disaster Flame', '火山', '#ff8c50'], todo: ['Clapping Brawler', '拍手', '#7ad7ff'],
+  nanami: ['Ratio Blade', '七三', '#e2c060'], mahito: ['Soul Shaper', '魂', '#9db4ff'], jogo: ['Disaster Flame', '火山', '#ff8c50'], todo: ['Clapping Brawler', '拍手', '#38c8ff'],
   hanami: ['Disaster Bloom', '花', '#7ddc6a'], eso: ['Rot Wing', '翅', '#c77dff'], kechizu: ['Rot Maw', '腐', '#8dff6a'], naoya: ['Frame Runner', '投射', '#ffd23d'], maki: ['Heavenly Blade', '天与', '#7ddc9a']
 });
 

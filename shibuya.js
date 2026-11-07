@@ -377,8 +377,9 @@ const IJICHI = Object.assign({}, C.GOJO, {
     g.lineWidth = 1.8; g.strokeStyle = '#2a2c36'; g.strokeRect(-1, -3, 11, 11); g.strokeRect(12.5, -3, 10, 11); g.beginPath(); g.moveTo(10, 1); g.lineTo(12.5, 1); g.stroke();
     g.lineWidth = 2; g.strokeStyle = LINE; g.beginPath(); g.moveTo(8, 17); g.lineTo(15, 16); g.stroke();
   } });
-Object.assign(JU.story.WHO, { ijichi: ['The Driver', '運転手', '#9aa3b5'], ygojo: ['Blindfolded Infinity', '無限', '#38c8ff'], nanami: ['Ratio Blade', '七三', '#e2c060'], nobara: ['Straw Doll', '藁人形', '#ff9a4d'],
-  shoko: ['The Healer', '医師', '#b08cff'], panda: ['Panda', 'パンダ', '#e8ecf4'], yuki: ['Star Rage', '星', '#ffd23d'], sign: ['Shibuya', '渋谷', '#ffd23d'] });
+// (Ratio Blade, Straw Doll, The Healer, Panda and Star Rage are the story's own now, in these colours: cast2, cast7, story3, cast5, cast4.
+// This file is loaded only when the city is (Build 0.34), and a talk in the story has to look the same before it)
+Object.assign(JU.story.WHO, { ijichi: ['The Driver', '運転手', '#9aa3b5'], ygojo: ['Blindfolded Infinity', '無限', '#38c8ff'], sign: ['Shibuya', '渋谷', '#ffd23d'] });
 
 // ---- the raids, and what is hiding
 const RAIDS = {

@@ -352,7 +352,7 @@ const tomb = {
 JU.chapters.STAGES.ruins = () => ruins;
 JU.chapters.STAGES.tomb = () => tomb;
 
-Object.assign(JU.story.WHO, { yuta: ['Keeper of the Queen', '女王の器', LILAC], yuki: ['Star Rage', '星', '#ffd87a'], tengen: ['Barrier Master', '結界師', '#d9d2bc'] });
+Object.assign(JU.story.WHO, { yuta: ['Keeper of the Queen', '女王の器', LILAC], yuki: ['Star Rage', '星', '#ffd23d'], tengen: ['Barrier Master', '結界師', '#d9d2bc'] });
 
 JU.cast4 = { YUTA, YUKI, TENGEN, RUIN, rika, grip, ruins, tomb };
 })();

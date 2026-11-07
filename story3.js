@@ -6,7 +6,7 @@ const E = JU.eng, C = JU.cast, S = JU.story, Fi = JU.fights, V = JU.vfx, ST = JU
 const { clamp, rnd } = E, cut = JU.school.cut, nm = Fi.nm;
 const fade = root.querySelector('#fade');
 
-Object.assign(S.WHO, { shoko: ['The Healer', '医師', '#b9c3cc'], nobara: ['Straw Doll', '藁人形', '#ff9a4d'] });
+Object.assign(S.WHO, { shoko: ['The Healer', '医師', '#b08cff'], nobara: ['Straw Doll', '藁人形', '#ff9a4d'] });
 
 // Sukuna as an opponent: quicker than anything so far, and he throws cuts from range
 Fi.DEFS.sukuna = { name: 'King of Curses', jp: '呪いの王', skin: JU.sukuna.SUKUNA, hp: 240, scale: 1, speed: 250, range: 190, gap: [.45, 1.1], dr: .6,

@@ -344,7 +344,7 @@ const MOVES = {
     p.vx = 0; p.target = t > .3 ? POSE.idle : D.SIGN;
     if (m.c) return;
     m.c = 1; p.inv = Math.max(p.inv, 1);
-    if (JU.training.on) E.cd.manji = 0;             // no waiting in Training
+    if (JU.training && JU.training.on) E.cd.manji = 0;             // no waiting in Training
     quick = { r: false, two: false };
     if (gojo()) hint('R  +  2  ·  0.2 SECOND DOMAIN');
     play('home-gojo-de', 1);                          // "Domain Expansion..."

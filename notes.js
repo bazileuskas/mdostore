@@ -5,6 +5,11 @@
 // Newest first. v = the build, jp = the seal stamped beside it, pic = notes/<pic>.jpg, cap = what the picture shows.
 // A new update goes at the top of this list.
 const NOTES = [
+  { v: '0.34', name: 'Piece by Piece', jp: '少しずつ', date: '7 Nov 2026', pic: 'pieces', cap: 'The city loading when Free Exploration is pressed; Training and Jujutsu High, each in the moment it was asked for; and a raid down a street of the city', items: [
+    'The game no longer loads all at once. The title screen comes first, and the rest of the game (the fights, the techniques, the story) loads behind it a file at a time, with a red line along the foot of the screen and how far it has got in the corner. A menu opened before it is all in waits for it, with a bar',
+    'Some of it waits until it is wanted. Training loads when Training is pressed; the city (Free Exploration\'s districts, and the servers, raids and 1v1s in them) when Free Exploration, Queue up or Join is pressed; the Patch Notes when they are opened. If one takes a moment, a card says what is loading: Back (or Esc) stops waiting for it, and if it could not be loaded, Try again',
+    'The sounds wait too: none are fetched while the game is loading. Then the equipped technique\'s come first and the rest behind them, two at a time, and the ones the website does not have are not asked for at all any more',
+    'On the website the game\'s files are kept from one visit to the next now (each build has its own number), so coming back is quicker. And it all plays exactly as it did: whatever loads later still runs where it always did'] },
   { v: '0.33', name: 'THUKUNA ;3', jp: 'チュクナ', date: '7 Nov 2026', pic: 'thukuna', cap: 'He becomes THUKUNA; THUKUNA; the World Cutting Slash; and Instant Kill, one of his strikes', items: [
     'THUKUNA ;3, a new cursed technique for admins only (the team\'s account, and whoever the team has given admin powers: nobody else sees it or can equip it). The King of Curses in the Vessel\'s body, and all four of his moves are the World Cutting Slash: the grid drawn over everything, and the cut that nothing stops',
     'Each of his strikes is one of the game\'s moves that kill in one, at random, and never the same one twice running: the Executioner\'s Sword, "Die", Overtime, Instant Kill, Reaping Slash, Idle Transfiguration and Mr. Instincto\'s Black Flash',

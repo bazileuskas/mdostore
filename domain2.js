@@ -282,7 +282,7 @@ H.awaken = p => {
   if (!(K && K.id === 'gojo' && t && t.id === 'limitless')) return awaken0(p);
   if (voidCd > 0) { E.fx.push({ k: 2, x: p.x, y: p.y + 390, n: 'Domain: ' + Math.ceil(voidCd) + 's', col: '#8fb7c8', t: 0, life: 1.1 }); return; }
   if (!p.ground || p.move || p.ps || p.dead || E.P2.ko) return;
-  voidCd = JU.training.on ? 0 : 30; p.inv = Math.max(p.inv, 1);   // no waiting in Training
+  voidCd = JU.training && JU.training.on ? 0 : 30; p.inv = Math.max(p.inv, 1);   // no waiting in Training
   D.open({ who: p, tone: 'blue', skin: JU.cast.GOJO, kind: 'void',
     reveal() { raise('void', { who: p, dur: 6 }); E.after(.25, () => { if (!clash) E.banner('無量空処', 'UNLIMITED VOID', 'sm'); }); } });
 };

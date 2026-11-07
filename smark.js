@@ -69,7 +69,7 @@ const MOVES = {
     p.vx = 0; p.rate = 20; p.target = t < 1.1 ? JU.domain.SIGN : POSE.idle;
     if (m.s) return;
     m.s = 1; p.inv = Math.max(p.inv, 1.4); sfx.bf(); sfx.blast(); shake(30); E.slow(.5); E.zoomIn(.6); E.banner('神術・御廚子', 'SHINJUTSU SHRINE', 'sm');
-    if (JU.training.on) E.cd.manji = 0;             // no waiting in Training
+    if (JU.training && JU.training.on) E.cd.manji = 0;             // no waiting in Training
     raise({ rise: 1, dur: 9, n: 1000, per: 3, x: 0, sc: 1.3, open: true });
   } }
 };

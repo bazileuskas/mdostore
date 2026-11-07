@@ -93,6 +93,26 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 .hud.tl{left:var(--pad-x);top:clamp(16px,3.4vh,34px)}
 .hud.bl{left:var(--pad-x);bottom:clamp(14px,3.2vh,30px)}
 .hud.br{right:clamp(16px,3vw,44px);bottom:clamp(14px,3.2vh,30px)}
+/* Build 0.34, piece by piece (the loader at the bottom): the line along the foot of the title screen while the game loads behind it, and
+   the card a menu or a mode waits on when what it needs is not in yet */
+.jline{position:fixed;left:0;bottom:0;width:100%;height:2px;transform-origin:0 50%;transform:scaleX(0);background:var(--red);box-shadow:0 0 8px rgba(255,36,64,.55);z-index:5;pointer-events:none;transition:transform .3s ease-out,opacity .6s ease .4s}
+.jline.done{opacity:0}
+.jload{position:fixed;inset:0;z-index:80;display:grid;place-content:center;justify-items:center;gap:clamp(10px,1.6vh,16px);padding:0 16px;background:rgba(5,4,10,.7);opacity:0;visibility:hidden;transition:opacity .18s,visibility 0s .18s;cursor:progress}
+.jload.on{opacity:1;visibility:visible;transition:opacity .18s}
+.jload b{font:400 clamp(30px,5.4vh,56px)/1 var(--f-jp);color:var(--red)}
+.jload span{font:400 clamp(15px,2.2vh,24px)/1.25 var(--f-display);letter-spacing:.18em;text-transform:uppercase;color:var(--bone);text-align:center}
+.jload i{display:block;width:min(340px,70vw);height:3px;background:rgba(244,239,228,.14);overflow:hidden}
+.jload u{display:block;width:100%;height:100%;transform-origin:0 50%;transform:scaleX(0);background:var(--red);transition:transform .2s}
+.jload small{min-height:1em;font:400 clamp(10px,1.3vh,13px)/1 var(--f-ui);letter-spacing:.28em;text-transform:uppercase;color:rgba(244,239,228,.5);text-align:center}
+.jload p{display:flex;gap:12px;margin-top:4px}
+.jload button{font:400 clamp(11px,1.4vh,14px)/1 var(--f-ui);letter-spacing:.24em;text-transform:uppercase;color:rgba(244,239,228,.72);background:none;border:1px solid rgba(244,239,228,.28);padding:.75em 1.3em;cursor:pointer}
+.jload button:hover,.jload button:focus-visible{color:var(--bone);border-color:var(--red);outline:none}
+.jload button[data-j="again"]{display:none}
+.jload.err button[data-j="again"]{display:block;color:var(--bone);border-color:var(--red)}
+.jload.err{cursor:default}
+.jload.err span{color:#ff8a98}
+.jload.err u{background:#5a1020}
+@media (prefers-reduced-motion:reduce){.jline,.jload,.jload u{transition:none}}
 .sfx{margin-top:clamp(9px,1.7vh,19px);padding:7px 12px 6px;cursor:pointer;white-space:nowrap;
   background:rgba(5,4,10,.4);border:1px solid rgba(244,239,228,.22);color:rgba(244,239,228,.6);
   font:400 clamp(11px,1.25vh,18px)/1 var(--f-ui);letter-spacing:.28em;transition:color .15s,border-color .15s}
@@ -1315,7 +1335,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
   </div>
 
   <div class="side" aria-hidden="true" lang="ja">領域展開</div>
-  <div class="hud tl"><b lang="ja">呪</b>Fan project · Build 0.33 · THUKUNA ;3</div>
+  <div class="hud tl"><b lang="ja">呪</b>Fan project · Build 0.34 · Piece by Piece</div>
   <div class="hud bl">↑ ↓ Select &nbsp;·&nbsp; Enter Confirm</div>
   <div class="hud br">Title screen</div>
   <div class="acct" id="acct">
@@ -1599,6 +1619,7 @@ const sfx = (() => {
   const load = name => {
     if (clips[name]) return clips[name];
     const web = !HOME && WEB[name], c = clips[name] = { el: null, ok: false, at: web ? web[1] : 0, end: web ? web[2] || 0 : 0 };
+    if (!HOME && !web && !(window.JU_SOUNDS && window.JU_SOUNDS[name]) && /^(home|jjs|vengeful)-/.test(name)) return c;      // (one that is never put online, and has no link: not asked for, so no request that can only fail. Build 0.34)
     try {
       c.el = new Audio(web ? web[0] : (window.JU_SOUNDS && window.JU_SOUNDS[name]) || 'sounds/' + name + '.mp3'); c.el.preload = 'auto';
       c.el.addEventListener('canplaythrough', () => { c.ok = true; }, { once: true });
@@ -1625,13 +1646,39 @@ const sfx = (() => {
     } catch (e) {}
     return n || true;
   };
+  // Build 0.34, piece by piece: while the game is still loading behind the title screen (the loader holds them), what a file asks to have
+  // ready waits (owed), so that the game's own files come first. When they are in, the loader fetches the sounds of the technique that is
+  // equipped (of: each file's own), and the rest stream in behind them two at a time (trickle). One that is played before it has come is
+  // fetched there and then, as before
+  let held = false;
+  const owed = [], of = {};
+  const owner = () => { const s = document.currentScript; return s ? s.dataset.file || (s.src || '').split('/').pop().split('?')[0] : ''; };
+  let trickling = false;
+  const trickle = () => {
+    if (trickling) return;
+    trickling = true;
+    const next = () => {
+      while (owed.length && clips[owed[0]]) owed.shift();
+      if (!owed.length) return;
+      const c = load(owed.shift());
+      if (!c.el) { next(); return; }
+      let gone = false;
+      const go = () => { if (!gone) { gone = true; next(); } };
+      c.el.addEventListener('canplaythrough', go, { once: true }); c.el.addEventListener('error', go, { once: true }); setTimeout(go, 4000);
+    };
+    next(); next();
+  };
   return {
+    hold(v) { held = !!v; },
+    get owed() { return owed.filter(n => !clips[n]).length; },
+    fetchFor(files) { for (const f of files) if (f && of[f]) of[f].forEach(load); },
+    trickle,
     get on() { return on; },
     unlock() {
       if (!a) { const AC = window.AudioContext || window.webkitAudioContext; if (AC) try { a = new AC(); } catch (e) {} }
       if (a && a.state === 'suspended') a.resume();
     },
-    preload(names) { names.forEach(load); },
+    preload(names) { const f = held && owner(); if (!f) { names.forEach(load); return; } (of[f] = of[f] || []).push(...names); owed.push(...names); },
     hover() { tone(640, 430, .07, 'triangle', .05); },
     confirm() { tone(170, 36, .4, 'sine', .4); noise(.25, .22, 1600); tone(900, 200, .12, 'sawtooth', .04); },
     back() { tone(320, 520, .09, 'triangle', .06); },
@@ -2512,13 +2559,13 @@ function burst(x, y) {
 /* ================= menu + sub-screens ================= */
 const SLOTS = '<div class="slots">' + '<div class="slot"><b lang="ja">封</b><i>SEALED</i></div>'.repeat(3) + '</div>';
 const PANELS = {
-  play: { num: '壱', jp: '開始', title: 'Play', body: '', onOpen() { window.JU.chapters.mount($('#pBody')); } },
-  technique: { num: '弐', jp: '術式', title: 'Cursed Technique', body: '', onOpen() { if (window.JU.tech) window.JU.tech.mount($('#pBody')); } },
-  clan: { num: '参', jp: '一族', title: 'Clan', body: '', onOpen() { if (window.JU.clan) window.JU.clan.mount($('#pBody')); } },
-  notes: { num: '肆', jp: '更新', title: 'Patch Notes', body: '', onOpen() { if (window.JU.notes) window.JU.notes.mount($('#pBody')); } },
-  shop: { num: '商', jp: '売店', title: 'Shop', body: '', onOpen() { if (window.JU.shop) window.JU.shop.mount($('#pBody')); } },
-  tools: { num: '具', jp: '呪具', title: 'Cursed Tools', body: '', onOpen() { if (window.JU.tools) window.JU.tools.mount($('#pBody')); } },
-  subtech: { num: '副', jp: '副術式', title: 'Sub Techniques', body: '', onOpen() { if (window.JU.sub) window.JU.sub.mount($('#pBody')); } },
+  play: { num: '壱', jp: '開始', title: 'Play', need: ['core'], body: '', onOpen() { window.JU.chapters.mount($('#pBody')); } },
+  technique: { num: '弐', jp: '術式', title: 'Cursed Technique', need: ['core'], body: '', onOpen() { if (window.JU.tech) window.JU.tech.mount($('#pBody')); } },
+  clan: { num: '参', jp: '一族', title: 'Clan', need: ['core'], body: '', onOpen() { if (window.JU.clan) window.JU.clan.mount($('#pBody')); } },
+  notes: { num: '肆', jp: '更新', title: 'Patch Notes', need: ['notes'], body: '', onOpen() { if (window.JU.notes) window.JU.notes.mount($('#pBody')); } },
+  shop: { num: '商', jp: '売店', title: 'Shop', need: ['core'], body: '', onOpen() { if (window.JU.shop) window.JU.shop.mount($('#pBody')); } },
+  tools: { num: '具', jp: '呪具', title: 'Cursed Tools', need: ['core'], body: '', onOpen() { if (window.JU.tools) window.JU.tools.mount($('#pBody')); } },
+  subtech: { num: '副', jp: '副術式', title: 'Sub Techniques', need: ['core'], body: '', onOpen() { if (window.JU.sub) window.JU.sub.mount($('#pBody')); } },
   credits: { num: '伍', jp: '制作', title: 'Credits', body:
     `<dl class="cred">
        <dt>Game</dt><dd>Jujutsu Unlimiteds</dd>
@@ -2545,6 +2592,8 @@ function select(i, focus) {
 function openPanel(id, x, y) {
   const d = PANELS[id];
   if (!d || panelOpen) return;
+  const L = window.JU.load;                         // (Build 0.34: what it shows may not have loaded yet. Then it waits for it, with a bar)
+  if (d.need && L && !L.has(d.need)) { L.need(d.need, d.title).then(ok => { if (ok) openPanel(id, x, y); }); return; }
   panelOpen = true;
   $('#pNum').textContent = d.num; $('#pJp').textContent = d.jp; $('#pk').textContent = d.jp; panel.dataset.id = id;
   $('#pTitle').textContent = d.title; $('#pBody').innerHTML = d.body;
@@ -2683,14 +2732,202 @@ window.JU = { sfx, flash, bolts: blackFlash, reduceMotion, startGame, exitGame, 
 })();
 </script>
 <script>
-// Load every game script fresh on each page load. The dev server sends no cache headers, so without this a reload
-// could run a mix of old and new files (new menu, old moves) while the game is being worked on.
+// Load every game script, piece by piece (Build 0.34, the user's: "make it so it doesent load in the WHOLE game at once but piece by piece.
+// so the training dummy area only loads in when you press it").
+//   The list is every game file in the order it has always run in (the phone app's build finds its places in it by this very text). Most
+//   of it loads straight away, a file at a time behind the title screen (the engine, the techniques, the fights, the story: 'core'), with a
+//   line along the foot of the screen for how far it has got; a menu that is opened before it is all in waits for it, with a bar. PIECES
+//   are held back until something asks for them: Training, when Training is pressed; the city (Free Exploration's districts, and the
+//   servers, raids and 1v1s in them), when Free Exploration, Queue up or Join is pressed; the Patch Notes, when they are opened.
+//   A file held back still runs as if it were in its old place in the list. There a stand-in is put in for each of the engine's hooks it
+//   plugs into that a later file plugs into too, and for anything of JU's it wraps that a later file wraps too (KEEP): it passes straight
+//   through until the file comes, and through the file after that. And what the file puts on the game's screen goes in where it would have.
+//   So nothing that plugged in after it changes order. build.py keeps KEEP up to date (python build.py, before a push).
+//   Files are asked for under the build's number (?v=0.34, from the corner of the title screen), so the browser and the site's cache can
+//   keep them from one visit to the next. At home they are fetched fresh every time, as before (the dev server sends no cache headers:
+//   without that a reload could run a mix of old and new files, new menu, old moves). The page sent to friends (build.py) has every file
+//   in it already and holds nothing back (JU_ALL)
+(() => {
+'use strict';
+const J = window.JU, HOME = /^(localhost|127\.0\.0\.1)$/.test(location.hostname), ALL = !!window.JU_ALL;
+const LIST = [];
 ['account.js', 'announce.js', 'game.js', 'fx2.js', 'chars.js', 'street.js', 'walk.js', 'foes.js', 'cuts.js', 'sukuna.js', 'school.js', 'story.js', 'story2.js', 'tech.js', 'tech_a.js',
-  'tech_b.js', 'sets.js', 'story3.js', 'cast2.js', 'script.js', 'naoya.js', 'ch45.js', 'ch67.js', 'clan.js', 'clan_a.js', 'clan_b.js', 'boss.js', 'bossfx.js', 'boss_a.js', 'boss_b.js', 'boss_c.js', 'training.js', 'choso.js', 'domain.js', 'domain2.js', 'mahito.js', 'combo.js', 'combat.js', 'cast3.js', 'ch810.js', 'ch1112.js', 'cast4.js', 'ch1316.js', 'cast5.js', 'ch1721.js', 'combat2.js', 'judge.js', 'awaken.js', 'alimit.js', 'ats.js', 'switcher.js', 'tools.js', 'kashimo.js', 'smark.js', 'cast6.js', 'ch2230.js', 'plants.js', 'clash.js', 'block.js', 'cannon.js', 'tced.js', 'shibuya.js', 'kyoto.js', 'evasive.js', 'kokusen.js', 'mp.js', 'pvp.js', 'vengeful.js', 'manga.js', 'haruta.js', 'ratio.js', 'reaper.js', 'inumaki.js', 'kirara.js', 'soul.js', 'slit.js', 'gambler.js', 'uro.js', 'beast.js', 'regis.js', 'especial.js', 'heian.js', 'aheian.js', 'cast7.js', 'ch3142.js', 'mecha.js', 'thukuna.js', 'yen.js', 'subtech.js', 'metro.js', 'jjh.js', 'shinjuku.js', 'notes.js', 'shop.js', 'ps.js', 'raid.js', 'touch.js', 'idg.js', 'modeset.js', 'dced.js', 'tdced.js', 'tdced2.js', 'lovereap.js', 'brother.js', 'climax.js', 'rwalk.js', 'ragdoll.js'].forEach(src => {
+  'tech_b.js', 'sets.js', 'story3.js', 'cast2.js', 'script.js', 'naoya.js', 'ch45.js', 'ch67.js', 'clan.js', 'clan_a.js', 'clan_b.js', 'boss.js', 'bossfx.js', 'boss_a.js', 'boss_b.js', 'boss_c.js', 'training.js', 'choso.js', 'domain.js', 'domain2.js', 'mahito.js', 'combo.js', 'combat.js', 'cast3.js', 'ch810.js', 'ch1112.js', 'cast4.js', 'ch1316.js', 'cast5.js', 'ch1721.js', 'combat2.js', 'judge.js', 'awaken.js', 'alimit.js', 'ats.js', 'switcher.js', 'tools.js', 'kashimo.js', 'smark.js', 'cast6.js', 'ch2230.js', 'plants.js', 'clash.js', 'block.js', 'cannon.js', 'tced.js', 'shibuya.js', 'kyoto.js', 'evasive.js', 'kokusen.js', 'mp.js', 'pvp.js', 'vengeful.js', 'manga.js', 'haruta.js', 'ratio.js', 'reaper.js', 'inumaki.js', 'kirara.js', 'soul.js', 'slit.js', 'gambler.js', 'uro.js', 'beast.js', 'regis.js', 'especial.js', 'heian.js', 'aheian.js', 'cast7.js', 'ch3142.js', 'mecha.js', 'thukuna.js', 'yen.js', 'subtech.js', 'metro.js', 'jjh.js', 'shinjuku.js', 'notes.js', 'shop.js', 'ps.js', 'raid.js', 'touch.js', 'idg.js', 'modeset.js', 'dced.js', 'tdced.js', 'tdced2.js', 'lovereap.js', 'brother.js', 'climax.js', 'rwalk.js', 'ragdoll.js'].forEach(src => LIST.push(src));
+const PIECES = {
+  training: ['training.js'],
+  city: ['shibuya.js', 'kyoto.js', 'pvp.js', 'metro.js', 'jjh.js', 'shinjuku.js', 'ps.js', 'raid.js', 'rwalk.js'],
+  notes: ['notes.js']
+};
+const NEEDS = { training: ['core'], city: ['core', 'training'], notes: [] };      // (ps.js makes its dummies out of the training curse)
+const NAMES = { core: 'the game', training: 'Training', city: 'the city', notes: 'the patch notes' };
+const MODES = { training: 'training', free: 'city' };      // a mode on the Play screen, and the piece it needs
+const KEEP = {"training.js": ["ko", "tick"], "shibuya.js": ["fightStart", "reset"], "pvp.js": ["fightStart", "fx", "hit", "ko", "power", "reset", "tick", "JU.exitGame"], "ps.js": ["fightStart", "fx", "hit", "power", "shield", "tick", "JU.exitGame"], "raid.js": ["fightStart", "fx", "hit", "reset", "shield", "struck", "tick"], "rwalk.js": ["reset", "tick"]};      // (build.py)
+
+const all = list => [].concat(list).every(p => got.has(p));
+const got = new Set();
+if (ALL) {                                          // the page sent to friends: it is all in, and has run
+  got.add('core'); for (const p in PIECES) got.add(p);
+  J.load = { has: all, need: () => Promise.resolve(true), want: () => Promise.resolve(), PIECES, KEEP, get loaded() { return [...got]; } };
+  return;
+}
+const bn = /Build ([\w.]+)/.exec((document.querySelector('.hud.tl') || {}).textContent || '');
+const VER = HOME || !bn ? String(Date.now()) : bn[1];
+const url = f => f + '?v=' + encodeURIComponent(VER);
+const IN = {};
+for (const p in PIECES) for (const f of PIECES[p]) IN[f] = p;
+const busy = {}, ran = new Set(), PLACE = {}, count = {};
+const fileOf = id => { const t = J.tech && J.tech.TECH[id]; return t && t.file; };
+
+/* ---------- a held-back file's place, kept for it as the list goes past ---------- */
+function place(f) {
+  if (ran.has(f) || PLACE[f]) return;
+  const E = J.eng, H = E.hooks, p = PLACE[f] = { keys: new Set(), ju: new Set(), below: {}, slot: {}, mark: document.createComment(' ' + f + ' ') };
+  for (const k of KEEP[f] || []) {
+    if (k.startsWith('JU.')) {                      // something of JU's that it wraps (JU.exitGame): only a function is stood in for
+      const n = k.slice(3), below = J[n];
+      if (typeof below !== 'function') continue;
+      p.ju.add(n); p.below['JU.' + n] = below;
+      J[n] = function () { return (p.slot['JU.' + n] || below).apply(this, arguments); };
+      continue;
+    }
+    const below = p.below[k] = H[k];
+    p.keys.add(k);
+    H[k] = function () { const fn = p.slot[k] || below; return fn ? fn.apply(this, arguments) : undefined; };
+  }
+  E.root.appendChild(p.mark);
+}
+// and when it comes: it is run there and then, with the engine's hooks (and JU) as they stood at its place
+function run(f, code) {
+  if (ran.has(f)) return;
+  ran.add(f);
   const s = document.createElement('script');
-  s.src = src + '?v=' + Date.now(); s.async = false;      // async = false keeps them running in this order
+  s.dataset.file = f;
+  s.textContent = code + '\n//# sourceURL=' + url(f);
+  const E = J.eng, p = PLACE[f];
+  if (!E || !p) { document.head.appendChild(s); return; }      // (the patch notes, opened before the game was in: nothing of the engine's to keep)
+  const real = E.hooks;
+  let loading = true;
+  E.hooks = new Proxy(real, {
+    get: (t, k) => (p.keys.has(k) ? (loading ? (p.slot[k] || p.below[k]) : t[k]) : t[k]),
+    set: (t, k, v) => { if (p.keys.has(k)) p.slot[k] = v; else t[k] = v; return true; }
+  });
+  if (p.ju.size) window.JU = new Proxy(J, {
+    get: (t, k) => (loading && p.ju.has(k) ? (p.slot['JU.' + k] || p.below['JU.' + k]) : t[k]),
+    set: (t, k, v) => { if (p.ju.has(k)) p.slot['JU.' + k] = v; else t[k] = v; return true; }
+  });
+  E.root.appendChild = function (n) { return this.insertBefore(n, p.mark); };
+  try { document.head.appendChild(s); }
+  finally { loading = false; E.hooks = real; window.JU = J; delete E.root.appendChild; }
+}
+
+/* ---------- the core: the list, but for what is held back (whose places are kept instead) ---------- */
+const foot = document.createElement('div');
+foot.className = 'jline'; foot.setAttribute('aria-hidden', 'true');
+document.body.appendChild(foot);
+const br = document.querySelector('.hud.br'), brText = br ? br.textContent : '';
+const files = LIST.filter(f => !IN[f]);
+let n = 0, lost = 0, coreIn;
+busy.core = new Promise(r => { coreIn = r; });
+function step() {
+  const k = n / files.length;
+  foot.style.transform = 'scaleX(' + k.toFixed(3) + ')';
+  if (br) br.textContent = n < files.length ? 'Loading the game · ' + Math.floor(k * 100) + '%' : lost ? 'Some of the game did not load · reload the page' : brText;
+  paint();
+}
+const tag = src => { const s = document.createElement('script'); s.async = false; s.src = src; return s; };
+const code = js => 'data:text/javascript,' + encodeURIComponent(js);
+J.sfx.hold(true);                                   // (its sounds wait for the files: index.html's sfx)
+for (const f of LIST) {
+  if (IN[f]) { document.body.appendChild(tag(code('JU.load.place(' + JSON.stringify(f) + ')'))); continue; }
+  const s = tag(url(f));
+  s.onload = () => { n++; step(); };
+  s.onerror = () => { n++; lost++; step(); };
   document.body.appendChild(s);
+}
+document.body.appendChild(tag(code('JU.load.coreIn()')));
+function settle() {                                 // the core is in
+  got.add('core'); delete busy.core; foot.classList.add('done'); step();
+  // sounds: the equipped technique's, now, and the rest behind them, two at a time (index.html's sfx)
+  J.sfx.hold(false);
+  J.sfx.fetchFor([fileOf(J.tech && J.tech.equipped)]);
+  J.sfx.trickle();
+  // a mode started some other way than from the Play screen waits for its piece here too
+  const start0 = J.game.start;
+  J.game.start = (mode, arg) => {
+    J.sfx.fetchFor([fileOf(J.tech.equipped)]);      // (if another technique has been equipped since, its sounds go first)
+    const p = MODES[mode];
+    if (!p || got.has(p)) return start0(mode, arg);
+    need([p]).then(ok => { if (ok) start0(mode, arg); else if (J.exitGame) J.exitGame(); });
+  };
+  coreIn();
+}
+
+/* ---------- a piece ---------- */
+function want(p) {
+  if (got.has(p)) return Promise.resolve();
+  if (busy[p]) return busy[p];
+  const pre = Promise.all((NEEDS[p] || []).map(want));
+  const fs = PIECES[p].slice().sort((a, b) => LIST.indexOf(a) - LIST.indexOf(b));
+  count[p] = 0;
+  const texts = Promise.all(fs.map(f => fetch(url(f)).then(r => { if (!r.ok) throw new Error(f + ': ' + r.status); return r.text(); })
+    .then(t => { count[p]++; paint(); return t; })));
+  return busy[p] = Promise.all([pre, texts]).then(([, ts]) => {
+    fs.forEach((f, i) => run(f, ts[i]));
+    got.add(p); delete busy[p]; paint();
+  }, e => { delete busy[p]; throw e; });
+}
+
+/* ---------- waiting for one: the card ---------- */
+const card = document.createElement('div');
+card.className = 'jload'; card.setAttribute('role', 'status'); card.setAttribute('aria-live', 'polite');
+card.innerHTML = '<b lang="ja">読込</b><span></span><i><u></u></i><small></small><p><button type="button" data-j="again">Try again</button><button type="button" data-j="back">Back</button></p>';
+document.body.appendChild(card);
+card.addEventListener('click', e => {               // (Back: whatever was waiting does not go ahead; what was loading carries on loading)
+  const b = e.target.closest('button');
+  if (!b || !ask) return;
+  if (b.dataset.j === 'back') ask.done(false); else if (ask.again) ask.again();
 });
+let ask = null, showT = 0;                          // ask: what is waiting (only the last thing asked for goes ahead)
+const say = (list, word) => word + ' ' + list.map(p => NAMES[p] || p).join(' and ');
+function frac(list) {
+  let a = 0;
+  for (const p of list) a += got.has(p) ? 1 : p === 'core' ? n / files.length : (count[p] || 0) / PIECES[p].length;
+  return a / list.length;
+}
+function paint() {
+  if (!ask) return;
+  card.querySelector('u').style.transform = 'scaleX(' + frac(ask.need).toFixed(3) + ')';
+}
+function need(list, why) {
+  list = [].concat(list).filter(p => !got.has(p));
+  if (!list.length) return Promise.resolve(true);
+  if (ask) ask.done(false);
+  return new Promise(res => {
+    const a = ask = { need: list, why, done(ok) { if (ask === a) { ask = null; clearTimeout(showT); card.classList.remove('on', 'err'); } res(ok); } };
+    card.classList.remove('err'); card.querySelector('span').textContent = say(list, 'Loading'); card.querySelector('small').textContent = '';
+    paint();
+    clearTimeout(showT); showT = setTimeout(() => { if (ask === a) card.classList.add('on'); }, 120);      // (if it is quick, it never shows)
+    const go = () => Promise.all(list.map(want)).then(() => a.done(true), () => {
+      if (ask !== a) return;
+      card.classList.add('on', 'err'); card.querySelector('span').textContent = say(list, 'Could not load');
+      card.querySelector('small').textContent = 'Check the connection';
+      a.again = () => { a.again = null; card.classList.remove('err'); card.querySelector('span').textContent = say(list, 'Loading'); card.querySelector('small').textContent = ''; go(); };
+    });
+    go();
+  });
+}
+addEventListener('keydown', e => { if (ask && e.key === 'Escape') { e.preventDefault(); e.stopImmediatePropagation(); ask.done(false); } }, true);
+// a mode on the Play screen whose piece is not in yet: wait for it, then press it again (ps.js asks where Free Exploration is to go, then)
+document.addEventListener('click', e => {
+  const m = e.target && e.target.closest ? e.target.closest('.mode') : null;
+  const p = m && m.dataset.mode && MODES[m.dataset.mode];
+  if (!p || got.has(p) || !m.closest('#pBody')) return;
+  e.preventDefault(); e.stopImmediatePropagation();
+  need([p]).then(ok => { if (ok && m.isConnected) m.click(); });
+}, true);
+
+J.load = { has: all, need, want, place, coreIn: settle, PIECES, KEEP, get loaded() { return [...got]; } };
+})();
 </script>
 </body>
 </html>

@@ -21,7 +21,9 @@ function mk(rgb) {
 Object.assign(E.GLOW, { green: mk('125,220,106'), gold: mk('255,210,61'), teal: mk('120,230,200'), indigo: mk('143,155,255'), white: mk('255,255,255') });
 
 // def: { name, jp, who, odds, col, glow, moves: { strikes, crush, div, manji }, dash?, m1?(i), aim?(p, h), guard?(face, a), tick?(dt) }
-const add = (id, def) => { def.id = id; TECH[id] = def; ORDER.push(id); };
+// (file: the game file it came from, so that its sounds can be fetched when it is the one being played: index.html's sfx. Build 0.34)
+const fileNow = () => { const s = document.currentScript; return s ? s.dataset.file || (s.src || '').split('/').pop().split('?')[0] : ''; };
+const add = (id, def) => { def.id = id; if (!def.file) def.file = fileNow(); TECH[id] = def; ORDER.push(id); };
 // Yuji, as a technique of his own: free, never rolled, always there. Equipping it is fighting with the moves everybody starts with
 add('yuji', { name: 'The Vessel', jp: '器', mark: '拳', who: 'Cursed Strikes, Divergent Fist and Black Flash', odds: 0, col: '#ff7a59', glow: 'blue', free: true, base: true,
   moves: Object.fromEntries(SLOTS.map(k => [k, { name: BASE.names[k], cd: BASE.cd[k] }])) });

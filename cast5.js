@@ -580,7 +580,7 @@ const court = {
 Object.assign(JU.chapters.STAGES, { pit: () => pit, garage: () => garage, theatre: () => theatre, court: () => court });
 
 Object.assign(JU.story.WHO, {
-  ogi: ['Blazing Elder', '炎刀', FLAME], mai: ['Bullet Maker', '構築', '#9ad0c0'], hei: ['Clan Swordsman', '剣士', '#9aa3b5'], panda: ['Panda', 'パンダ', '#e6e5df'],
+  ogi: ['Blazing Elder', '炎刀', FLAME], mai: ['Bullet Maker', '構築', '#c77dff'], hei: ['Clan Swordsman', '剣士', '#9aa3b5'], panda: ['Panda', 'パンダ', '#e8ecf4'],
   hakari: ['Jackpot Gambler', '博徒', '#7ad7ff'], haba: ['Rotor Head', '回転翼', '#9fd8ff'], higuruma: ['The Judge', '裁判官', GOLD], judgeman: ['The Arbiter', 'ジャッジマン', GOLD],
   kogane: ['Tally', '点', '#b9c3cc']
 });
