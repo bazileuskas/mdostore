@@ -27,7 +27,14 @@
                        Disaster Flame (whose game turns him from player to player, as Mahoraga), the Disaster Bloom and the Soul Shaper
                        (each after somebody of their own). Two players or more
      THUNDER GOD RAID  the hardest: grade ones all the way, everything with more health and everything in it hitting harder (pow), and the
-                       Thunder God at the end of it. One to three players */
+                       Thunder God at the end of it. One to three players
+   Build 0.34v1, the user's: "make the new raids easier but not too easy". Their bosses had a great deal more health than Mahoraga's (and
+   take less of every hit: the Jackpot Gambler .6, the Thunder God .65, the Disaster Bloom .55), and a test fighter that only walks in and
+   strikes took 1.5 times as long on the Gambler as on Mahoraga, twice as long on the Thunder God, and on the Disaster Bloom (as she is for two) five times as
+   long, while she hit it hardest of all. So: the Gambler 1200 -> 860 (a little more than Mahoraga still); the three disaster curses
+   900/1000/1000 -> 500/340/560 (the Bloom most, as she takes least); the Thunder God 1900 -> 1300, everything in his raid hitting 15%
+   harder instead of 30% and the curses on his street 15% tougher instead of 30%, one fewer in each of the first two groups. Mahoraga's and
+   the Granite Cannon's raids are as they were */
 (() => {
 'use strict';
 
@@ -59,18 +66,18 @@ const granite = () => !!R && R.kind === GRANITE;
 // limit, mp.js, otherwise)
 const JACKPOT = [[['grunt', 3, 1]], [['brute', 2, 1], ['warped2', 1, 1]], [['brute', 2, 1], ['ruin', 1, 1]], [['boss', 1, 0]]];
 const DISASTER = [[['warped2', 3, 1]], [['warped2', 2, 1], ['brute', 2, 1]], [['ruin', 2, 1], ['brute', 1, 1]], [['boss', 1, 0], ['boss2', 1, 0], ['boss3', 1, 0]]];
-const THUNDER = [[['brute', 3, 1], ['ruin', 1, 0]], [['ruin', 2, 1], ['brute', 2, 1]], [['ruin', 3, 1], ['warped2', 2, 1]], [['boss', 1, 0]]];
+const THUNDER = [[['brute', 2, 1], ['ruin', 1, 0]], [['ruin', 2, 1], ['brute', 1, 1]], [['ruin', 3, 1], ['warped2', 2, 1]], [['boss', 1, 0]]];
 const KINDS = {
   maho: { name: 'Raid', jp: '討伐', min: 1, max: 99, pay: 50, route: WAVES, boss: [[['sb_mahoraga', 'mahoraga'], 900, 'Mahoraga']], banner: ['魔虚羅', 'MAHORAGA'],
     about: 'a street full of curses and a boss at the end of it, together' },
   granite: { name: 'Granite raid', jp: '砲', min: 2, max: 99, pay: 50, route: WAVES, boss: [[['gr_ryu', 'sb_mahoraga', 'mahoraga'], 1100, 'Granite Cannon']], banner: ['砲', 'GRANITE CANNON'],
     about: 'a street full of curses, and the Granite Cannon at the end of it. It takes two' },
-  jackpot: { name: 'Jackpot Raid', jp: '大当り', min: 1, max: 3, pay: 70, route: JACKPOT, boss: [[['hakari'], 1200, 'Jackpot Gambler']], banner: ['大当り', 'JACKPOT GAMBLER'],
+  jackpot: { name: 'Jackpot Raid', jp: '大当り', min: 1, max: 3, pay: 70, route: JACKPOT, boss: [[['hakari'], 860, 'Jackpot Gambler']], banner: ['大当り', 'JACKPOT GAMBLER'],
     about: 'a street full of curses, and the Jackpot Gambler at the end of it on a hot streak. One to three players' },
   disaster: { name: 'Disaster Raid', jp: '災害', min: 2, max: 99, pay: 90, route: DISASTER,
-    boss: [[['jogo'], 900, 'Disaster Flame'], [['hanami'], 1000, 'Disaster Bloom'], [['sb_mahito', 'mahito2', 'mahito'], 1000, 'Soul Shaper']], banner: ['災害', 'THE DISASTER CURSES'],
+    boss: [[['jogo'], 500, 'Disaster Flame'], [['hanami'], 340, 'Disaster Bloom'], [['sb_mahito', 'mahito2', 'mahito'], 560, 'Soul Shaper']], banner: ['災害', 'THE DISASTER CURSES'],
     about: 'a street of what the Soul Shaper made of people, and three disaster curses at the end of it, all at once. It takes two' },
-  thunder: { name: 'Thunder God Raid', jp: '雷神', min: 1, max: 3, pay: 120, route: THUNDER, boss: [[['sb_kashimo', 'kashimo'], 1900, 'Thunder God']], banner: ['雷神', 'THUNDER GOD'], pow: 1.3, tough: 1.3,
+  thunder: { name: 'Thunder God Raid', jp: '雷神', min: 1, max: 3, pay: 120, route: THUNDER, boss: [[['sb_kashimo', 'kashimo'], 1300, 'Thunder God']], banner: ['雷神', 'THUNDER GOD'], pow: 1.15, tough: 1.15,
     about: 'the hardest there is: grade ones all the way down the street, and the Thunder God at the end of it. One to three players' }
 };
 const KIND = k => (KINDS[k] ? k : 'maho');

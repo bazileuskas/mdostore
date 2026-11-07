@@ -5,6 +5,11 @@
 // Newest first. v = the build, jp = the seal stamped beside it, pic = notes/<pic>.jpg, cap = what the picture shows.
 // A new update goes at the top of this list.
 const NOTES = [
+  { v: '0.34v1', name: 'Easier Raids', jp: '緩和', date: '7 Nov 2026', pic: 'easyraids', cap: 'A group on the Jackpot Raid\'s street, and the Jackpot Gambler at the end of it; a group on the Thunder God Raid\'s street, and the Thunder God', items: [
+    'The Jackpot Raid, the Disaster Raid and the Thunder God Raid are easier, but none of them is easy. Their bosses had a great deal more health than Mahoraga, and take less of every hit. The Jackpot Gambler: 1200 health, now 860 (still a little more than Mahoraga)',
+    'The Disaster Raid\'s three disaster curses: the Disaster Flame 900, now 500; the Disaster Bloom 1000, now 340 (she takes less of every hit than anything else in the game, and was by far the longest fight); the Soul Shaper 1000, now 560. All three still come at once, and with more players they have more health, as before',
+    'The Thunder God Raid is still the hardest. The Thunder God: 1900 health, now 1300. Everything in it hits 15% harder (it was 30%), the curses on his street have 15% more health (it was 30%), and the first two groups of them have one fewer each',
+    'Mahoraga\'s raid and the Granite Cannon\'s are just as they were, and what clearing each raid pays has not changed'] },
   { v: '0.34', name: 'Piece by Piece', jp: '少しずつ', date: '7 Nov 2026', pic: 'pieces', cap: 'The city loading when Free Exploration is pressed; Training and Jujutsu High, each in the moment it was asked for; and a raid down a street of the city', items: [
     'The game no longer loads all at once. The title screen comes first, and the rest of the game (the fights, the techniques, the story) loads behind it a file at a time, with a red line along the foot of the screen and how far it has got in the corner. A menu opened before it is all in waits for it, with a bar',
     'Some of it waits until it is wanted. Training loads when Training is pressed; the city (Free Exploration\'s districts, and the servers, raids and 1v1s in them) when Free Exploration, Queue up or Join is pressed; the Patch Notes when they are opened. If one takes a moment, a card says what is loading: Back (or Esc) stops waiting for it, and if it could not be loaded, Try again',
