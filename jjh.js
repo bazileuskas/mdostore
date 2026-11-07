@@ -187,12 +187,23 @@ function steps(a, upward) {                         // the stone stairs: down th
     fill(i % 2 ? '#a7a196' : '#938d82', () => slab(a.x0 + 10, a.x1 - 10, z, z + (a.z1 - BZ) / n, y));
   }
   fill('#938d82', () => slab(a.x0 + 10, a.x1 - 10, BZ - 4, BZ + 60, 12));
-  for (let i = 5; i >= 0; i--) {                     // torii, one after another down the flight
-    const z = BZ + 160 + i * 250, y = 12 + (upward ? 1 : -1) * (z - BZ - 60) * .45;
-    torii(cx, y, z, a.x1 - a.x0 + 40, 380);
-  }
-  for (const s of [-1, 1]) for (let i = 4; i >= 0; i--) { const z = BZ + 260 + i * 300; cedar(cx + s * (a.x1 - a.x0) * .9, z, 1000, i); }
   if (!upward) g.restore();
+}
+// Build 0.32v1: what stands on the stairs, the torii one after another down the flight and the cedars either side of it, as props: each
+// one is drawn in its own place in the depth, among the others and among whoever is on the stairs (walk.js sorts props and people
+// together). Before, the stairs drew every torii and then every cedar, so a cedar far down the flight came out over a torii right in front
+// of you; and anybody walking down was drawn over every torii, even the ones he had just walked under
+function stairsProps(a, upward) {
+  const cx = (a.x0 + a.x1) / 2, w = a.x1 - a.x0, out = [];
+  const held = fn => () => {
+    if (!near(a.x0, a.x1, 3200)) return;
+    if (upward) { fn(); return; }
+    const m = P(cx, 12, BZ)[1];                       // (going down: the ground in front hides all of it that is lower than its edge, as steps() has it)
+    g.save(); g.beginPath(); g.rect(-9999, -9999, 30000, m + 9999); g.clip(); fn(); g.restore();
+  };
+  for (let i = 0; i < 6; i++) { const z = BZ + 160 + i * 250, y = 12 + (upward ? 1 : -1) * (z - BZ - 60) * .45; out.push({ z, draw: held(() => torii(cx, y, z, w + 40, 380)) }); }
+  for (const s of [-1, 1]) for (let i = 0; i < 5; i++) { const z = BZ + 260 + i * 300; out.push({ z, draw: held(() => cedar(cx + s * w * .9, z, 1000, i)) }); }
+  return out;
 }
 function alley() {
   for (const id in ROOMS) room(id);
@@ -297,6 +308,11 @@ function stationHouse() {                            // a small wooden station: 
   text('きっぷうりば', 12260, 280, BZ - 58, 18, '#111');
 }
 function buildings() {
+  // the cedars that stand just behind the buildings first, so that the buildings in front of them are drawn over them and not under
+  // (Build 0.32v1: they were drawn last, and their branches came out over the roofs; and the woods by the gate started inside the gate)
+  if (near(0, 1100)) { cedar(60, BZ + 60, 1200, 0); cedar(1030, BZ + 60, 1150, 1); }
+  if (near(6340, 6380) || near(7360, 7440)) { cedar(6350, BZ + 40, 1150, 1); cedar(7370, BZ + 40, 1150, 2); }
+  forest(8080, DEEP.bstairs.x0); forest(DEEP.bstairs.x1, 11000);
   storehouse();
   hall(1080, 2380, 780, ['yuji', 'megumi', 'nobara'], { rail: true, sign: ['学生寮', 'DORMITORY', 260] });
   vending();
@@ -304,11 +320,8 @@ function buildings() {
   if (near(4280, 4320) || near(5480, 5520)) { box(4300, 12, BZ, 40, 260, 40, PLAS, PLAS2); box(5500, 12, BZ, 40, 260, 40, PLAS, PLAS2); }
   hall(5580, 6320, 700, ['inf'], { sign: ['医務室', 'INFIRMARY', 220], win: 'rgba(220,240,255,.85)' });
   mainGate();
-  forest(TREES[0] - 40, DEEP.bstairs.x0); forest(DEEP.bstairs.x1, 11000);
   if (near(8420, 8820)) { box(DEEP.bstairs.x0 - 40, 12, BZ, 80, 120, 80, STONE, STONE2, '#a39e94'); box(DEEP.bstairs.x1 + 40, 12, BZ, 80, 120, 80, STONE, STONE2, '#a39e94'); text('呪術高専 参道', (DEEP.bstairs.x0 + DEEP.bstairs.x1) / 2, 150, BZ - 2, 18, '#2a2d34'); }
   konbini(); stationHouse();
-  if (near(6340, 6380) || near(7380, 7440)) { cedar(6350, BZ + 40, 1150, 1); cedar(7400, BZ + 40, 1150, 2); }
-  if (near(0, 1100)) { cedar(60, BZ + 60, 1200, 0); cedar(1030, BZ + 60, 1150, 1); }
 }
 
 /* ---------- things that share the walk with people ---------- */
@@ -337,6 +350,7 @@ function furniture(id) {
 const w = R => R.x1 - R.x0;
 const people = [];                                   // whoever is about the place: drawn, and turned toward him, here (walk.js only draws a world's cast)
 const props = [
+  ...stairsProps(DEEP.gstairs, false), ...stairsProps(DEEP.bstairs, true),      // (Build 0.32v1: the torii and cedars on both flights of stairs)
   ...Object.keys(ROOMS).flatMap(id => furniture(id).map(p => ({ z: p.z, draw() { if (near(ROOMS[id].x0, ROOMS[id].x1)) p.draw(); } }))),
   { z: 1900, draw() { if (near(4320, 5480)) { box(4900, 12, 1900, 120, 40, 120, '#6a5a4a', '#4a3e32'); box(4900, 52, 1900, 90, 90, 90, '#5a4a3a', '#3a3028', '#6a5a4a'); box(4900, 142, 1890, 130, 20, 110, '#4a3e32', '#2e261e'); const q = P(4900, 170, 1900); lit(() => glow(GLOW.fire, q[0], q[1], 160 * q[2], .4)); for (let i = 0; i < 2; i++) { const s = P(4900 + Math.sin(E.T + i) * 20, 220 + ((E.T * 40 + i * 60) % 160), 1900); g.fillStyle = 'rgba(220,220,230,.2)'; g.beginPath(); g.arc(s[0], s[1], 18 * s[2], 0, TAU); g.fill(); } } } },      // the incense burner, smoking
   ...[[4480, 1700], [5320, 1700], [4480, 2050], [5320, 2050]].map(([x, z]) => ({ z, draw() { if (near(4320, 5480)) lantern(x, z); } })),
