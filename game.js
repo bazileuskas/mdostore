@@ -28,6 +28,7 @@ const hooks = {};   // other files plug behaviour in here: foes.js, fx2.js, suku
 
 function resize() {
   DPR = Math.min(window.devicePixelRatio || 1, 2, 2400 / window.innerWidth, 1350 / window.innerHeight);   // cap the drawing resolution so huge windows stay smooth
+  if (hooks.dpr) DPR = hooks.dpr(DPR);              // (Build 0.35: BIT MODE draws the fight a few hundred pixels across, bitmode.js)
   W = window.innerWidth; H = window.innerHeight;
   S = Math.min(H / 720, W / 900);
   VW = W / S; VH = H / S;

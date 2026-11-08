@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Comic+Neue:wght@700&family=Oswald:wght@400;600&family=Shantell+Sans:ital,wght@1,700;1,800&family=Yuji+Syuku&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box}
 :root{
@@ -14,6 +15,7 @@
   --f-display:'Anton',Impact,Haettenschweiler,'Arial Narrow Bold',sans-serif;
   --f-jp:'Yuji Syuku','Yu Mincho','Hiragino Mincho ProN','MS PMincho',serif;
   --f-ui:'Oswald','Segoe UI',system-ui,sans-serif;
+  --f-pix:'Press Start 2P',ui-monospace,Consolas,monospace;
   --pad-x:clamp(22px,6.5vw,120px);
   --extrude:
     .005em .006em 0 #ff2440, .010em .012em 0 #f01f3a, .015em .018em 0 #dc1a34,
@@ -1296,6 +1298,141 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
   .ready *,.panel.open .pin>*{animation-duration:.01s!important;animation-delay:0s!important}
   .panel,.panel.open{transition-duration:.01s}
 }
+
+/* ================= Build 0.35: BIT MODE, a DLC (bitmode.js; its Secret CT, BITKING: bitking.js) ================= */
+/* the button over Play: an arcade machine's, green, with stepped corners and the lines of an old screen. Its bits creep out over the menu
+   round it (#bitfx, drawn in the title's own loop) */
+.mbtn.bitb{--g:#39ff14;display:flex;align-items:center;justify-content:center;gap:.8em;margin-bottom:clamp(2px,.7vh,10px);padding:.78em 1.1em .68em;
+  font:400 clamp(12px,min(1.4vw,2.45vh),34px)/1 var(--f-pix);letter-spacing:.08em;color:#d9ffd0;text-transform:uppercase;transform:none;background:#031207;
+  text-shadow:0 0 6px var(--g),0 0 16px rgba(57,255,20,.55),.12em .12em 0 #062a0c;
+  clip-path:polygon(0 8px,8px 8px,8px 0,calc(100% - 8px) 0,calc(100% - 8px) 8px,100% 8px,100% calc(100% - 8px),calc(100% - 8px) calc(100% - 8px),calc(100% - 8px) 100%,8px 100%,8px calc(100% - 8px),0 calc(100% - 8px));
+  box-shadow:inset 0 0 0 4px #000,inset 0 0 0 8px var(--g),inset 0 0 26px rgba(57,255,20,.35)}
+.mbtn.bitb::before{border:0;z-index:0;background:repeating-linear-gradient(180deg,rgba(0,0,0,.34) 0 2px,transparent 2px 4px);box-shadow:none}
+.mbtn.bitb::after{z-index:0;transform:none;clip-path:none;background:linear-gradient(100deg,transparent 30%,rgba(217,255,208,.3) 45%,transparent 60%);background-size:260% 100%;animation:bitsheen 3.2s linear infinite}
+.mbtn.bitb>*{position:relative;z-index:1}
+.mbtn.bitb small{font:400 .46em/1 var(--f-pix);letter-spacing:.1em;padding:.55em .6em .45em;color:#031207;background:var(--g);box-shadow:0 0 10px var(--g);text-shadow:none;animation:bitblink 1s steps(1) infinite}
+.mbtn.bitb.sel,.mbtn.bitb:active{transform:none;color:#fff}
+.mbtn.bitb.sel{box-shadow:inset 0 0 0 4px #000,inset 0 0 0 8px #b8ff9c,inset 0 0 36px rgba(57,255,20,.65)}
+.mbtn.bitb.sel::before{box-shadow:none}
+.mbtn.bitb:focus-visible::before{outline:0}
+.ready .mbtn.bitb{animation:bitboot .9s steps(1) .95s both}
+.ready .menu .mbtn[data-id="play"] .lbl{animation:nearbit 4.3s steps(1) 2.6s infinite}      /* (the button under it, caught now and then) */
+@keyframes bitboot{0%{opacity:0}12%{opacity:1}22%{opacity:0}34%{opacity:1}46%{opacity:.25}58%,100%{opacity:1}}
+@keyframes bitblink{50%{opacity:0}}
+@keyframes bitsheen{from{background-position:130% 0}to{background-position:-130% 0}}
+@keyframes nearbit{0%,90%,100%{text-shadow:none;translate:0 0}91%{text-shadow:3px 0 #39ff14,-3px 0 #ff3dd8;translate:4px 0}93%{text-shadow:-2px 0 #39ff14;translate:-3px 0}95%{text-shadow:none;translate:1px 0}}
+/* a phone on its side: with BIT MODE on top the menu is a button taller, so all of it is a little smaller, and clear of the account in the corner */
+@media (max-height:520px) and (min-aspect-ratio:1/1){
+  .menu{gap:4px}
+  .menu .mbtn:not(.bitb){font-size:clamp(14px,5.4vh,30px);padding-top:.38em;padding-bottom:.38em}
+  .mbtn.bitb{font-size:clamp(10px,2.9vh,16px);padding:.55em .9em .45em;margin-bottom:2px}
+}
+#bitfx{z-index:4;pointer-events:none;image-rendering:pixelated}
+/* pressed: the menu breaks into strips (copies of it, cut), and comes back on the way out */
+.ui.shard{pointer-events:none}
+.shard,.shard *{animation:none!important;transition:none!important}
+.shard .ghost,.shard .t1,.shard .t2,.shard .seal,.shard .tag,.shard .mbtn,.shard .wallet{opacity:1}
+.shard .cut{opacity:.26;transform:translateZ(90px) rotate(-7deg) scaleX(1)}
+.stage.broken .hud,.stage.broken .acct,.stage.broken .side{opacity:0!important;transition:opacity .25s}
+.ui.reboot{animation:reboot .75s steps(1) both}
+@keyframes reboot{0%{opacity:0}14%{opacity:1;filter:hue-rotate(90deg) saturate(3)}26%{opacity:0}40%{opacity:1;filter:none}54%{opacity:.4}68%,100%{opacity:1}}
+
+/* the event page: BITHIT × JUJUTSU UNLIMITEDS, on an old screen switched on */
+.bitev{position:fixed;inset:0;z-index:9;display:grid;place-items:center;overflow:hidden auto;background:#000;color:#d9ffd0;font-family:var(--f-pix);visibility:hidden}
+.bitev.open{visibility:visible;animation:crton .55s steps(9) both}
+.bitev.closing{animation:crtoff .42s ease-in both}
+@keyframes crton{0%,35%{clip-path:inset(49.5% 0 49.5% 0);filter:brightness(4)}100%{clip-path:inset(0 0 0 0);filter:none}}
+@keyframes crtoff{0%{clip-path:inset(0 0 0 0)}60%{clip-path:inset(49.5% 0 49.5% 0);filter:brightness(3)}100%{clip-path:inset(49.8% 50% 49.8% 50%);opacity:0}}
+#bvbg{position:absolute;z-index:0;image-rendering:pixelated}
+.bvscan{position:absolute;inset:0;z-index:3;pointer-events:none;
+  background:repeating-linear-gradient(180deg,rgba(0,0,0,.26) 0 2px,transparent 2px 4px),radial-gradient(ellipse at 50% 50%,transparent 62%,rgba(0,0,0,.62) 100%)}
+.bvin{position:relative;z-index:2;display:grid;justify-items:center;gap:clamp(10px,2.3vh,28px);width:min(1180px,94vw);padding:clamp(14px,3vh,40px) 0}
+.bvlogo{display:flex;align-items:center;gap:clamp(10px,2vw,30px)}
+.bvword{position:static;width:auto;height:clamp(52px,11vh,130px);aspect-ratio:37/10;image-rendering:pixelated;filter:drop-shadow(0 0 14px rgba(57,255,20,.5))}
+.bvx{font:400 clamp(24px,5vh,60px)/1 var(--f-pix);color:#fff;text-shadow:0 0 12px #39ff14}
+.bvju{font:400 clamp(16px,3.6vh,42px)/1.08 var(--f-display);letter-spacing:.06em;color:var(--bone);text-shadow:.06em .06em 0 var(--red)}
+.bvtag{margin:0;font-size:clamp(9px,1.5vh,16px);letter-spacing:.2em;color:#39ff14}
+.bvtag span{padding:.4em .55em .3em;color:#000;background:#39ff14;margin:0 .7em}
+.bvstages{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:clamp(6px,1vw,16px);width:100%}
+.bvst{--c:#39ff14;position:relative;display:grid;justify-items:center;align-content:start;gap:.75em;padding:1em .5em 1.1em;border:0;cursor:pointer;color:#d9ffd0;
+  font:400 clamp(7px,min(.85vw,1.55vh),14px)/1.25 var(--f-pix);background:#031207;outline:none;
+  box-shadow:inset 0 0 0 3px #000,inset 0 0 0 6px var(--c),inset 0 0 22px rgba(57,255,20,.18);transition:transform .12s steps(2)}
+.bvst canvas{position:static;width:clamp(44px,9vh,110px);height:auto;aspect-ratio:1;image-rendering:pixelated}
+.bvst small{color:var(--c);letter-spacing:.12em}
+.bvst b{font-weight:400;font-size:1.22em;color:#fff;text-align:center}
+.bvst em{font-style:normal;font-size:.82em;opacity:.7;text-align:center}
+.bvst i{font-style:normal;font-size:.92em;color:var(--c)}
+.bvst.next i{animation:bitblink 1s steps(1) infinite}
+.bvst.done i{color:#ffd23d}
+.bvst.lock{cursor:not-allowed;filter:grayscale(1) brightness(.55)}
+.bvst.raid{background:linear-gradient(180deg,#073010,#031207)}
+.bvst:not(.lock):hover,.bvst:focus-visible{transform:translateY(-4px);box-shadow:inset 0 0 0 3px #000,inset 0 0 0 6px #fff,inset 0 0 30px var(--c),0 0 18px var(--c)}
+.bvst.no{animation:nope .3s}
+.bvst.fresh{animation:bvfresh .45s steps(2) 4}
+@keyframes bvfresh{50%{box-shadow:inset 0 0 0 3px #000,inset 0 0 0 6px #fff,0 0 30px var(--c)}}
+.bvprize{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:clamp(10px,2vw,30px);width:min(780px,100%);padding:clamp(10px,1.6vh,18px) clamp(14px,2vw,26px);background:#02100a;
+  box-shadow:inset 0 0 0 3px #000,inset 0 0 0 6px #ffd23d,inset 0 0 30px rgba(255,210,61,.22)}
+.bvprize canvas{position:static;width:clamp(58px,11vh,120px);height:auto;aspect-ratio:1;image-rendering:pixelated}
+.bvprize small{color:#ffd23d;font-size:clamp(8px,1.2vh,13px);letter-spacing:.2em}
+.bvprize b{display:block;margin:.35em 0;font:400 clamp(20px,4.4vh,52px)/1 var(--f-pix);color:#39ff14;text-shadow:0 0 12px #39ff14,.1em .1em 0 #062a0c}
+.bvprize p{margin:0 0 .6em;font-size:clamp(8px,1.3vh,14px);color:#fff;line-height:1.4}
+.bvprize i{font-style:normal;font-size:clamp(7px,1.1vh,12px);color:#ffd23d}
+.bvprize:not(.got) b{color:#1b5a26;text-shadow:none}
+.bvprize.reveal{animation:bvreveal 1.4s steps(7) both}
+@keyframes bvreveal{0%{filter:brightness(4);transform:scale(1.18)}100%{filter:none;transform:none}}
+.bveq{font:400 clamp(10px,1.6vh,18px)/1 var(--f-pix);padding:.9em 1.2em;border:0;cursor:pointer;color:#000;background:#39ff14;box-shadow:0 0 16px #39ff14;outline:none}
+.bveq.on{background:#ffd23d;box-shadow:0 0 16px #ffd23d}
+.bveq:hover,.bveq:focus-visible{outline:3px solid #fff;outline-offset:3px}
+.bvfoot{display:flex;align-items:center;justify-content:space-between;width:100%;gap:1em}
+.bvfoot button,.bverr button{font:400 clamp(9px,1.4vh,15px)/1 var(--f-pix);padding:.8em 1em;border:0;cursor:pointer;color:#d9ffd0;background:#031207;box-shadow:inset 0 0 0 2px #39ff14;outline:none}
+.bvfoot button:hover,.bvfoot button:focus-visible,.bverr button:hover,.bverr button:focus-visible{color:#000;background:#39ff14}
+.bvfoot small{opacity:.6;font-size:.7em;margin-left:.6em}
+.bvcoin{font-size:clamp(8px,1.3vh,14px);color:#ffd23d;animation:bitblink 1.2s steps(1) infinite;text-align:center}
+.bverr{display:grid;justify-items:center;gap:1.6em;font-size:clamp(10px,1.8vh,18px);text-align:center;line-height:1.6;color:#39ff14}
+.bverr span{color:#d9ffd0;font-size:.8em}
+.bverr p{display:flex;gap:1em;margin:0}
+@media (max-width:640px){.bvstages{grid-template-columns:repeat(2,minmax(0,1fr))}.bvst.raid{grid-column:1 / -1}.bvlogo{flex-wrap:wrap;justify-content:center}.bvprize{grid-template-columns:auto 1fr}.bveq{grid-column:1 / -1}}
+@media (max-height:520px) and (min-aspect-ratio:1/1){.bvin{gap:8px;padding:10px 0}.bvst{gap:.5em;padding:.7em .4em .8em}.bvst canvas{width:clamp(30px,9vh,60px)}}
+
+/* in a fight, in BIT MODE: drawn small and blown up square, the lines of an old screen over it, the bars and names in arcade letters */
+.game.bit #gc{image-rendering:pixelated}
+.game.bit::after{content:"";position:absolute;inset:0;z-index:8;pointer-events:none;background:repeating-linear-gradient(180deg,rgba(0,0,0,.2) 0 2px,transparent 2px 4px)}
+.game.bit .fb{font-family:var(--f-pix);font-size:clamp(9px,min(1.1vw,2vh),24px);letter-spacing:.04em}
+.game.bit .hpb{transform:none;border:0;background:#041207;box-shadow:0 0 0 3px #000,0 0 0 6px #39ff14,6px 6px 0 6px #000}
+.game.bit .fb.p2 .hpb{transform:none;box-shadow:0 0 0 3px #000,0 0 0 6px #ff3dd8,-6px 6px 0 6px #000}
+.game.bit .hpb i{background:repeating-linear-gradient(90deg,#39ff14 0 8px,#22c10a 8px 10px)}
+.game.bit .fb.p2 .hpb i{background:repeating-linear-gradient(90deg,#ff3dd8 0 8px,#c11fa3 8px 10px)}
+.game.bit .vs{font-family:var(--f-pix);font-size:clamp(14px,min(2vw,3.6vh),44px);color:#39ff14;text-shadow:.1em .1em 0 #000}
+.game.bit .vs span{font-family:var(--f-pix);font-size:.32em;letter-spacing:.1em;margin-right:0;color:#d9ffd0}
+.game.bit .banner b{font-family:var(--f-pix);font-size:clamp(26px,min(5.6vw,10vh),120px);color:#d9ffd0;filter:none;text-shadow:.08em .08em 0 #000,0 0 .3em #39ff14}
+.game.bit .banner.sm b{font-size:clamp(18px,min(3.8vw,7vh),84px)}
+.game.bit .banner.xs b{font-size:clamp(14px,min(2.6vw,5vh),60px)}
+.game.bit .combo{font-family:var(--f-pix);font-size:clamp(20px,min(3.2vw,5.6vh),70px)}
+.game>.bvov{inset:0;z-index:12;display:none;place-content:center;justify-items:center;gap:clamp(10px,2.4vh,26px);font-family:var(--f-pix);color:#d9ffd0;text-align:center;background:rgba(0,0,0,.58);pointer-events:auto}
+.game>.bvov.on{display:grid}
+.game>.bvov.intro{background:none;pointer-events:none}
+.bvov b{font-weight:400;font-size:clamp(24px,min(5.4vw,10vh),120px);color:#39ff14;text-shadow:.08em .08em 0 #000,0 0 .3em #39ff14}
+.bvov.over b{color:#ff2440;text-shadow:.08em .08em 0 #000,0 0 .3em #ff2440}
+.bvov span{font-size:clamp(11px,2.2vh,26px);color:#fff}
+.bvov i{font-style:normal;font-size:clamp(40px,10vh,130px);color:#ffd23d;text-shadow:.08em .08em 0 #000}
+.bvov small{font-size:clamp(8px,1.4vh,15px);opacity:.8;animation:bitblink 1s steps(1) infinite}
+.bvov em{font-style:normal;font-size:clamp(12px,2.4vh,28px);color:#ffd23d;line-height:1.7}
+.bvov em u{text-decoration:none;font-size:1.6em;color:#39ff14;text-shadow:0 0 .4em #39ff14}
+.bvov.intro small{color:#39ff14;animation:none;opacity:1}
+.bvov.intro b{font-size:clamp(18px,min(3.8vw,7vh),84px)}
+.bvov.intro i{font-size:clamp(20px,4vh,48px);color:#fff;animation:bitblink .5s steps(1) infinite}
+.game>.bvtoast{left:50%;top:40%;translate:-50% 0;z-index:12;padding:.8em 1.2em;font:400 clamp(9px,1.6vh,16px)/1.5 var(--f-pix);color:#000;background:#39ff14}
+/* BITKING's mode: on his bar, and across the screen as it changes */
+.bkm{display:none;align-items:center;gap:.6em;margin-top:.2em;padding-left:.3em;font:400 clamp(7px,min(.7vw,1.3vh),13px)/1 var(--f-pix);letter-spacing:.06em;color:var(--c,#39ff14)}
+.game.bkon[data-mode="fight"] .bkm{display:flex}
+.bkm b{font-weight:400;padding:.45em .5em .35em;color:#000;background:var(--c,#39ff14)}
+.bkm span{text-shadow:0 0 8px var(--c,#39ff14),.12em .12em 0 #000}
+.bkm.king b{background:linear-gradient(90deg,#ffe83d,#ff6a2a,#7fe9ff,#8cff3a,#a65cff,#ff2440,#ffd23d,#ff3dd8)}
+.game>.bkban{left:0;right:0;top:17%;display:grid;justify-items:center;gap:.5em;opacity:0;font-family:var(--f-pix);color:var(--c,#39ff14);text-shadow:.1em .1em 0 #000,0 0 .4em var(--c,#39ff14)}
+.bkban small{font-size:clamp(9px,1.6vh,18px);color:#fff}
+.bkban b{font-weight:400;font-size:clamp(18px,min(3.4vw,6vh),64px)}
+.bkban.on{animation:bkban 1.1s steps(8) both}
+@keyframes bkban{0%{opacity:0;transform:scale(1.6)}15%{opacity:1;transform:none}80%{opacity:1}100%{opacity:0}}
 </style>
 </head>
 <body>
@@ -1303,6 +1440,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 <canvas id="scene"></canvas>
 <div class="halftone"></div>
 <div class="vignette"></div>
+<canvas id="bitfx" aria-hidden="true"></canvas>
 
 <main class="stage" id="stage">
   <div class="ui" id="ui">
@@ -1318,6 +1456,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
     </header>
 
     <nav class="menu" aria-label="Main menu">
+      <button class="mbtn bitb" style="--i:0" data-id="bit" aria-label="BIT MODE, a DLC: the BITHIT event"><span class="bk">BIT MODE</span><small aria-hidden="true">NEW DLC</small></button>
       <button class="mbtn" style="--i:0" data-id="play"><span class="num" aria-hidden="true">壱</span><span class="lbl">Play</span><span class="jp" aria-hidden="true" lang="ja">開始</span></button>
       <button class="mbtn" style="--i:1" data-id="technique"><span class="num" aria-hidden="true">弐</span><span class="lbl">Cursed Technique</span><span class="jp" aria-hidden="true" lang="ja">術式</span></button>
       <button class="mbtn" style="--i:2" data-id="clan"><span class="num" aria-hidden="true">参</span><span class="lbl">Clan</span><span class="jp" aria-hidden="true" lang="ja">一族</span></button>
@@ -1335,7 +1474,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
   </div>
 
   <div class="side" aria-hidden="true" lang="ja">領域展開</div>
-  <div class="hud tl"><b lang="ja">呪</b>Fan project · Build 0.34v1 · Easier Raids</div>
+  <div class="hud tl"><b lang="ja">呪</b>Fan project · Build 0.35 · BIT MODE</div>
   <div class="hud bl">↑ ↓ Select &nbsp;·&nbsp; Enter Confirm</div>
   <div class="hud br">Title screen</div>
   <div class="acct" id="acct">
@@ -1352,6 +1491,13 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
     <div class="pbody" id="pBody"></div>
     <button class="back" id="back">◀ Back<small>ESC</small></button>
   </div>
+</section>
+
+<!-- Build 0.35: BIT MODE's event page. bitmode.js fills it in once the DLC has come down -->
+<section class="bitev" id="bitev" role="dialog" aria-modal="true" aria-label="BITHIT × Jujutsu Unlimiteds: BIT MODE" inert>
+  <canvas id="bvbg" aria-hidden="true"></canvas>
+  <div class="bvin" id="bvIn"></div>
+  <div class="bvscan" aria-hidden="true"></div>
 </section>
 
 <section class="game" id="game" aria-label="Fight" inert>
@@ -1404,6 +1550,16 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
     <filter id="ink-fine"x="-10%" y="-10%" width="120%" height="120%">
       <feTurbulence type="fractalNoise" baseFrequency=".09" numOctaves="2" seed="11" result="n"/>
       <feDisplacementMap in="SourceGraphic" in2="n" scale="3.5" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <!-- Build 0.35, BIT MODE: four levels of red, green and blue, 64 colours, as an old console had (bitmode.js draws the fight through it,
+         darkened by a quarter and with a 4x4 pattern added first: so each level is reached in a dither, and white is still white) -->
+    <filter id="bitq" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
+      <feComponentTransfer>
+        <feFuncR type="discrete" tableValues="0 .333 .667 1"/>
+        <feFuncG type="discrete" tableValues="0 .333 .667 1"/>
+        <feFuncB type="discrete" tableValues="0 .333 .667 1"/>
+        <feFuncA type="discrete" tableValues="1"/>
+      </feComponentTransfer>
     </filter>
   </defs>
 </svg>
@@ -1674,6 +1830,9 @@ const sfx = (() => {
     fetchFor(files) { for (const f of files) if (f && of[f]) of[f].forEach(load); },
     trickle,
     get on() { return on; },
+    get ctx() { return a; },                        // (Build 0.35: BIT MODE makes its own music and BITKING its own sounds on it, bitmode.js / bitking.js)
+    thump(i = 0) { tone(66, 34, .2, 'sine', .55); noise(.05, .1, 240); setTimeout(() => tone(58, 30, .24, 'sine', .42 + i * .02), 125); },      // a heartbeat: lub, dub
+    crack() { noise(.55, .42, 1900); tone(200, 38, .5, 'square', .07); tone(90, 30, .7, 'sine', .4); },
     unlock() {
       if (!a) { const AC = window.AudioContext || window.webkitAudioContext; if (AC) try { a = new AC(); } catch (e) {} }
       if (a && a.state === 'suspended') a.resume();
@@ -2150,8 +2309,8 @@ const FLOOR = -2.2;
 const core = { x: 0, y: .9, z: 10, r: 1.5 };
 
 // each menu entry tints the scene
-const ACCENTS = [[170, 92, 255], [56, 200, 255], [255, 44, 72], [226, 180, 96], [240, 232, 214], [255, 210, 61], [207, 216, 224], [159, 232, 112]];      // (one per menu button, in order: the last is Sub Techniques)
-const accent = ACCENTS[0].slice();
+const ACCENTS = [[57, 255, 20], [170, 92, 255], [56, 200, 255], [255, 44, 72], [226, 180, 96], [240, 232, 214], [255, 210, 61], [207, 216, 224], [159, 232, 112]];      // (one per menu button, in order: the first is BIT MODE's, Build 0.35; the last is Sub Techniques)
+const accent = ACCENTS[1].slice();                  // (Play's, where the cursor starts)
 let accentTarget = 0;
 const ac = a => `rgba(${accent[0] | 0},${accent[1] | 0},${accent[2] | 0},${a})`;
 
@@ -2615,6 +2774,139 @@ function closePanel() {
   btns[sel].focus({ preventScroll: true });
 }
 
+/* ---------- Build 0.35: BIT MODE's button (the user's: "a green button in style of the 1980s arcade and also make it so it looks liek the
+   bits are infecting its surrondings when it is pressed it play an aniamtion of it starting to beat and liek the main menu breaking and
+   then it opens an event page"). Its bits creep off it over the menu round it, a halo with fingers that breathes (#bitfx). Pressed: it
+   beats like a heart, faster and faster, the bits pushed further out at every beat; then the menu breaks into strips that fall away, the
+   bits flood the screen, and the event page comes on like an old screen. The DLC itself (bitmode.js) is downloaded while all that plays ---------- */
+const bitBtn = $('.mbtn.bitb'), bitCv = $('#bitfx'), bitX = bitCv.getContext('2d'), bitEl = $('#bitev');
+let bitOpen = false, bitBusy = false, bitFlood = 0, bitPulse = 0, bitT = 0, bitMsg = '';
+const bitDigits = [];
+const hsh = (x, y) => { const h = Math.sin(x * 127.1 + y * 311.7) * 43758.5453; return h - Math.floor(h); };
+const vnoise = (x, y) => {
+  const xi = Math.floor(x), yi = Math.floor(y), xf = x - xi, yf = y - yi, u = xf * xf * (3 - 2 * xf), v = yf * yf * (3 - 2 * yf);
+  return lerp(lerp(hsh(xi, yi), hsh(xi + 1, yi), u), lerp(hsh(xi, yi + 1), hsh(xi + 1, yi + 1), u), v);
+};
+const DIG = { 0: [7, 5, 5, 5, 7], 1: [2, 6, 2, 2, 7] };
+function drawBits(dt) {
+  const W = Math.ceil(innerWidth / 2), Hh = Math.ceil(innerHeight / 2), c = bitX;
+  if (bitCv.width !== W || bitCv.height !== Hh) { bitCv.width = W; bitCv.height = Hh; }
+  c.clearRect(0, 0, W, Hh);
+  if (inGame || panelOpen || (bitOpen && !bitBusy) || !document.body.classList.contains('ready')) return;
+  bitT += dt;
+  const r = bitBtn.getBoundingClientRect();
+  if (!r.width || +getComputedStyle(bitBtn).opacity < .3) return;
+  const flood = bitFlood, CS = flood > 0 ? 16 : 8, s = .5;
+  bitPulse = Math.max(0, bitPulse - dt * 1.5);
+  const R = (reduceMotion ? 34 : 30 + 16 * Math.sin(bitT * .8)) + bitPulse * 110 + flood * flood * Math.hypot(innerWidth, innerHeight) * 1.3;
+  const cx0 = Math.max(0, Math.floor((r.left - R * 1.9) / CS)), cx1 = Math.min(Math.ceil(innerWidth / CS), Math.ceil((r.right + R * 1.9) / CS));
+  const cy0 = Math.max(0, Math.floor((r.top - R * 1.9) / CS)), cy1 = Math.min(Math.ceil(innerHeight / CS), Math.ceil((r.bottom + R * 1.9) / CS));
+  const drift = reduceMotion ? 0 : bitT * .05, ac = flood ? null : $('#acct').getBoundingClientRect();      // (the account and the sound switches stay clean, till it all breaks)
+  for (let cy = cy0; cy < cy1; cy++) for (let cx = cx0; cx < cx1; cx++) {
+    const px = cx * CS + CS / 2, py = cy * CS + CS / 2, d = Math.hypot(Math.max(r.left - px, 0, px - r.right), Math.max(r.top - py, 0, py - r.bottom));
+    if (d <= 0 && !flood) continue;                 // (not over the button itself)
+    if (ac && px > ac.left - 6 && px < ac.right + 6 && py > ac.top - 6 && py < ac.bottom + 6) continue;
+    const n1 = hsh(cx, cy), n2 = vnoise(cx * (CS / 8) * .2 + drift, cy * (CS / 8) * .2), reach = R * (.3 + 1.5 * n2 * n2) + 6 * n1;
+    if (d > reach) continue;
+    if (n1 > .9 && !reduceMotion && Math.sin(bitT * 9 + n1 * 60) > .2) continue;      // (some of them flicker)
+    const u = d / Math.max(1, reach);
+    c.globalAlpha = flood ? Math.min(1, .55 + flood) : .88 - u * .5;
+    c.fillStyle = n1 > .975 ? '#ffffff' : u < .35 ? '#39ff14' : u < .7 ? '#1fa80c' : '#0b4418';
+    c.fillRect(cx * CS * s, cy * CS * s, CS * s - 1, CS * s - 1);
+  }
+  // 0s and 1s, let off it
+  if (!reduceMotion && Math.random() < dt * (3 + bitPulse * 20)) {
+    const side = Math.random() < .5 ? -1 : 1;
+    bitDigits.push({ x: side < 0 ? r.left - 4 : r.right + 4, y: r.top + Math.random() * r.height, vx: side * (20 + Math.random() * 50), vy: -10 - Math.random() * 30, d: Math.random() < .5 ? 0 : 1, t: 0 });
+  }
+  for (let i = bitDigits.length - 1; i >= 0; i--) {
+    const q = bitDigits[i]; q.t += dt; q.x += q.vx * dt; q.y += q.vy * dt;
+    if (q.t > 1.6) { bitDigits.splice(i, 1); continue; }
+    c.globalAlpha = 1 - q.t / 1.6; c.fillStyle = '#7dff5a';
+    DIG[q.d].forEach((row, y) => { for (let b = 0; b < 3; b++) if (row & (4 >> b)) c.fillRect(Math.round(q.x * s) + b * 2, Math.round(q.y * s) + y * 2, 2, 2); });
+  }
+  c.globalAlpha = 1;
+  if (flood >= 1 && bitMsg) {                       // (the DLC still coming down)
+    c.font = '8px "Press Start 2P", monospace'; c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.fillStyle = '#000'; c.fillRect(W / 2 - 90, Hh / 2 - 12, 180, 24);
+    c.fillStyle = '#39ff14'; c.fillText(bitMsg, W / 2, Hh / 2 + 1);
+  }
+}
+function bitBeat(i) {
+  sfx.thump(i);
+  bitPulse = Math.min(1.7, bitPulse + .5 + i * .14);
+  bitBtn.animate([{ transform: 'scale(1)' }, { transform: `scale(${(1.08 + i * .028).toFixed(3)})`, offset: .25 }, { transform: 'scale(.97)', offset: .55 }, { transform: 'scale(1)' }], { duration: 300, easing: 'ease-out' });
+  if (!reduceMotion) { stage.classList.remove('shake'); void stage.offsetWidth; stage.classList.add('shake'); }
+  const r = bitBtn.getBoundingClientRect(); burst(r.left + r.width / 2, r.top + r.height / 2);
+}
+function bitShatter() {
+  const N = 7;
+  for (let i = 0; i < N; i++) {
+    const c = ui.cloneNode(true);
+    c.removeAttribute('id'); c.querySelectorAll('[id]').forEach(n => n.removeAttribute('id'));
+    c.classList.add('shard'); c.setAttribute('aria-hidden', 'true'); c.inert = true;
+    c.style.clipPath = `inset(${(i / N * 100).toFixed(2)}% -20% ${(100 - (i + 1) / N * 100).toFixed(2)}% -20%)`;
+    ui.after(c);
+    const dir = i % 2 ? 1 : -1, j = 12 + Math.random() * 22;
+    c.animate([
+      { translate: '0 0', rotate: '0deg', opacity: 1, filter: 'none' },
+      { translate: `${dir * j}px 0`, rotate: '0deg', opacity: 1, filter: 'hue-rotate(80deg) saturate(2.5)', offset: .12 },
+      { translate: `${(-dir * j * .6).toFixed(1)}px 0`, rotate: '0deg', opacity: 1, filter: 'none', offset: .22 },
+      { translate: `${(dir * j * .3).toFixed(1)}px 6px`, rotate: `${dir}deg`, opacity: 1, filter: 'none', offset: .32 },
+      { translate: `${(dir * (40 + Math.random() * 120)).toFixed(0)}px ${(innerHeight * (.9 + Math.random() * .4)).toFixed(0)}px`, rotate: `${(dir * (6 + Math.random() * 14)).toFixed(1)}deg`, opacity: 0, filter: 'none' }
+    ], { duration: 1100, easing: 'cubic-bezier(.5,0,.9,.6)', fill: 'forwards' }).finished.then(() => c.remove(), () => c.remove());
+  }
+  ui.style.visibility = 'hidden';
+}
+function bitBreak() {
+  sfx.crack();
+  stage.classList.add('broken');
+  const t0 = performance.now();
+  bitFlood = .001;
+  const grow = () => { if (!bitBusy) return; bitFlood = Math.min(1, (performance.now() - t0) / 900); if (bitFlood < 1) requestAnimationFrame(grow); };
+  requestAnimationFrame(grow);
+  if (reduceMotion) ui.style.visibility = 'hidden'; else bitShatter();
+}
+function bitLoad() { const L = window.JU.load; return L && L.want ? L.want('bit').then(() => !!window.JU.bitmode, () => false) : Promise.resolve(!!window.JU.bitmode); }
+function openBit() {
+  if (bitOpen || bitBusy || inGame || panelOpen) return;
+  bitBusy = true; bitMsg = ''; stage.inert = true; sfx.unlock();
+  const loading = bitLoad();
+  const beats = reduceMotion ? [0] : [0, 560, 960, 1260, 1480, 1650], tBreak = reduceMotion ? 200 : 1850;
+  beats.forEach((t, i) => setTimeout(() => bitBeat(i), t));
+  setTimeout(bitBreak, tBreak);
+  const shown = new Promise(r => setTimeout(r, tBreak + (reduceMotion ? 300 : 950)));
+  shown.then(() => { bitMsg = 'LOADING DLC...'; });
+  Promise.all([loading, shown]).then(([ok]) => showBit(ok));
+}
+function showBit(ok) {
+  bitOpen = true; bitBusy = false; bitFlood = 0; bitMsg = ''; sceneHidden = true;
+  if (ok) window.JU.bitmode.open();
+  else $('#bvIn').innerHTML = '<div class="bverr"><b>COULD NOT LOAD BIT MODE</b><span>CHECK THE CONNECTION AND TRY AGAIN</span><p><button type="button" data-bv="again">TRY AGAIN</button><button type="button" data-bv="back">◀ BACK</button></p></div>';
+  bitEl.classList.remove('closing'); bitEl.classList.add('open'); bitEl.inert = false; stage.inert = true;
+  sfx.confirm();
+  if (!ok) setTimeout(() => { const b = bitEl.querySelector('[data-bv]'); if (b) b.focus(); }, 80);
+}
+function closeBit() {
+  if (!bitOpen || inGame) return;
+  bitOpen = false;
+  if (window.JU.bitmode) window.JU.bitmode.close();
+  bitEl.classList.add('closing'); bitEl.inert = true;
+  setTimeout(() => { if (!bitOpen) bitEl.classList.remove('open', 'closing'); }, 430);
+  stage.inert = false; stage.classList.remove('broken'); sceneHidden = false;
+  ui.style.visibility = ''; ui.classList.remove('reboot'); void ui.offsetWidth; ui.classList.add('reboot');
+  setTimeout(() => ui.classList.remove('reboot'), 800);
+  sfx.back();
+  btns[sel].focus({ preventScroll: true });
+}
+bitEl.addEventListener('click', e => {
+  const b = e.target.closest('[data-bv]');
+  if (!b) return;
+  if (b.dataset.bv === 'back') { closeBit(); return; }
+  $('#bvIn').innerHTML = '<div class="bverr"><b>LOADING DLC...</b></div>';
+  bitLoad().then(ok => { if (bitOpen) { bitOpen = false; showBit(ok); } });
+});
+
 // Play: the same wipe, but into the arena (game.js)
 const gameEl = $('#game');
 let inGame = false;
@@ -2622,7 +2914,7 @@ function startGame(x, y, mode, arg) {
   if (inGame || panelOpen || !window.JU.game) return;
   inGame = true;
   gameEl.style.setProperty('--px', x + 'px'); gameEl.style.setProperty('--py', y + 'px');
-  gameEl.classList.add('open'); gameEl.inert = false; stage.inert = true;
+  gameEl.classList.add('open'); gameEl.inert = false; stage.inert = true; bitEl.inert = true;
   burst(x, y); sfx.confirm();
   clearTimeout(hideTimer);
   hideTimer = setTimeout(() => { sceneHidden = true; }, 750);
@@ -2630,11 +2922,11 @@ function startGame(x, y, mode, arg) {
 }
 function exitGame() {
   if (!inGame) return;
-  inGame = false; clearTimeout(hideTimer); sceneHidden = false;
+  inGame = false; clearTimeout(hideTimer); sceneHidden = bitOpen;
   window.JU.game.stop();
-  gameEl.classList.remove('open'); gameEl.inert = true; stage.inert = false;
+  gameEl.classList.remove('open'); gameEl.inert = true; stage.inert = bitOpen; bitEl.inert = !bitOpen;      // (a BIT MODE stage goes back to its event page: bitmode.js)
   sfx.back();
-  btns[sel].focus({ preventScroll: true });
+  if (!bitOpen) btns[sel].focus({ preventScroll: true });
 }
 
 btns.forEach((b, i) => {
@@ -2644,6 +2936,7 @@ btns.forEach((b, i) => {
     select(i);
     let x = e.clientX, y = e.clientY;
     if (!e.detail || (!x && !y)) { const r = b.getBoundingClientRect(); x = r.left + r.width * .3; y = r.top + r.height / 2; }
+    if (b.dataset.id === 'bit') { openBit(); return; }
     openPanel(b.dataset.id, x, y);
   });
 });
@@ -2675,6 +2968,10 @@ addEventListener('keydown', e => {
   if (inGame) return;   // game.js owns the keyboard during a fight
   if (e.target instanceof HTMLInputElement) return;   // a name being typed on the account scroll
   const k = e.key;
+  if (bitOpen || bitBusy) {                         // (BIT MODE's page: bitmode.js has the arrows; Esc goes back to the title)
+    if (bitOpen && (k === 'Escape' || k === 'Backspace')) { e.preventDefault(); closeBit(); }
+    return;
+  }
   if (panelOpen) {
     if (k === 'Escape' || k === 'Backspace') { e.preventDefault(); closePanel(); }
     return;
@@ -2695,7 +2992,7 @@ function frame(now) {
   const real = (now - last) / 1000, dt = Math.min(.05, Math.max(0, real) || 0);
   last = now; T += dt;
   if (!isFinite(mouse.sx) || !isFinite(mouse.sy)) mouse.sx = mouse.sy = mouse.x = mouse.y = 0;      // (a pointer read while the window measured nothing)
-  if (sceneHidden && !inGame && !panelOpen) sceneHidden = false;      // (nothing is covering the title: draw it)
+  if (sceneHidden && !inGame && !panelOpen && !bitOpen) sceneHidden = false;      // (nothing is covering the title: draw it)
   const k = 1 - Math.exp(-dt * 5);
   // a slow idle drift keeps the parallax alive when the pointer is still
   mouse.sx = lerp(mouse.sx, mouse.x + Math.sin(T * .31) * .1, k);
@@ -2708,10 +3005,11 @@ function frame(now) {
   }
   if (!sceneHidden) drawScene(reduceMotion ? dt * .25 : dt);
   drawFx(Math.min(.5, real));   // sparks run on wall-clock time so they never linger after a stall
+  try { drawBits(Math.min(.05, real)); } catch (e) {}      // (BIT MODE's bits: never the reason the title stops)
 }
 
 resize();
-select(0);
+select(Math.max(0, btns.findIndex(b => b.dataset.id === 'play')));      // (Play is where the cursor starts, though BIT MODE sits above it)
 requestAnimationFrame(frame);
 
 // hold the intro until the display fonts are in (or give up waiting)
@@ -2728,7 +3026,8 @@ Promise.race([fonts, new Promise(r => setTimeout(r, 1800))]).then(() => {
   }, 420);
 });
 
-window.JU = { sfx, flash, bolts: blackFlash, reduceMotion, startGame, exitGame, openPanel, closePanel, get gore() { return gore; }, set gore(v) { setGore(v); } };
+window.JU = { sfx, flash, bolts: blackFlash, reduceMotion, startGame, exitGame, openPanel, closePanel, get gore() { return gore; }, set gore(v) { setGore(v); },
+  bitTitle: { close: closeBit, get open() { return bitOpen; }, get busy() { return bitBusy; } } };
 })();
 </script>
 <script>
@@ -2752,16 +3051,17 @@ window.JU = { sfx, flash, bolts: blackFlash, reduceMotion, startGame, exitGame, 
 const J = window.JU, HOME = /^(localhost|127\.0\.0\.1)$/.test(location.hostname), ALL = !!window.JU_ALL;
 const LIST = [];
 ['account.js', 'announce.js', 'game.js', 'fx2.js', 'chars.js', 'street.js', 'walk.js', 'foes.js', 'cuts.js', 'sukuna.js', 'school.js', 'story.js', 'story2.js', 'tech.js', 'tech_a.js',
-  'tech_b.js', 'sets.js', 'story3.js', 'cast2.js', 'script.js', 'naoya.js', 'ch45.js', 'ch67.js', 'clan.js', 'clan_a.js', 'clan_b.js', 'boss.js', 'bossfx.js', 'boss_a.js', 'boss_b.js', 'boss_c.js', 'training.js', 'choso.js', 'domain.js', 'domain2.js', 'mahito.js', 'combo.js', 'combat.js', 'cast3.js', 'ch810.js', 'ch1112.js', 'cast4.js', 'ch1316.js', 'cast5.js', 'ch1721.js', 'combat2.js', 'judge.js', 'awaken.js', 'alimit.js', 'ats.js', 'switcher.js', 'tools.js', 'kashimo.js', 'smark.js', 'cast6.js', 'ch2230.js', 'plants.js', 'clash.js', 'block.js', 'cannon.js', 'tced.js', 'shibuya.js', 'kyoto.js', 'evasive.js', 'kokusen.js', 'mp.js', 'pvp.js', 'vengeful.js', 'manga.js', 'haruta.js', 'ratio.js', 'reaper.js', 'inumaki.js', 'kirara.js', 'soul.js', 'slit.js', 'gambler.js', 'uro.js', 'beast.js', 'regis.js', 'especial.js', 'heian.js', 'aheian.js', 'cast7.js', 'ch3142.js', 'mecha.js', 'thukuna.js', 'yen.js', 'subtech.js', 'metro.js', 'jjh.js', 'shinjuku.js', 'notes.js', 'shop.js', 'ps.js', 'raid.js', 'touch.js', 'idg.js', 'modeset.js', 'dced.js', 'tdced.js', 'tdced2.js', 'lovereap.js', 'brother.js', 'climax.js', 'rwalk.js', 'ragdoll.js'].forEach(src => LIST.push(src));
+  'tech_b.js', 'sets.js', 'story3.js', 'cast2.js', 'script.js', 'naoya.js', 'ch45.js', 'ch67.js', 'clan.js', 'clan_a.js', 'clan_b.js', 'boss.js', 'bossfx.js', 'boss_a.js', 'boss_b.js', 'boss_c.js', 'training.js', 'choso.js', 'domain.js', 'domain2.js', 'mahito.js', 'combo.js', 'combat.js', 'cast3.js', 'ch810.js', 'ch1112.js', 'cast4.js', 'ch1316.js', 'cast5.js', 'ch1721.js', 'combat2.js', 'judge.js', 'awaken.js', 'alimit.js', 'ats.js', 'switcher.js', 'tools.js', 'kashimo.js', 'smark.js', 'cast6.js', 'ch2230.js', 'plants.js', 'clash.js', 'block.js', 'cannon.js', 'tced.js', 'shibuya.js', 'kyoto.js', 'evasive.js', 'kokusen.js', 'mp.js', 'pvp.js', 'vengeful.js', 'manga.js', 'haruta.js', 'ratio.js', 'reaper.js', 'inumaki.js', 'kirara.js', 'soul.js', 'slit.js', 'gambler.js', 'uro.js', 'beast.js', 'regis.js', 'especial.js', 'heian.js', 'aheian.js', 'cast7.js', 'ch3142.js', 'mecha.js', 'thukuna.js', 'bitking.js', 'yen.js', 'subtech.js', 'metro.js', 'jjh.js', 'shinjuku.js', 'notes.js', 'shop.js', 'ps.js', 'raid.js', 'touch.js', 'idg.js', 'modeset.js', 'dced.js', 'tdced.js', 'tdced2.js', 'lovereap.js', 'brother.js', 'climax.js', 'rwalk.js', 'ragdoll.js', 'bitmode.js'].forEach(src => LIST.push(src));
 const PIECES = {
   training: ['training.js'],
   city: ['shibuya.js', 'kyoto.js', 'pvp.js', 'metro.js', 'jjh.js', 'shinjuku.js', 'ps.js', 'raid.js', 'rwalk.js'],
-  notes: ['notes.js']
+  notes: ['notes.js'],
+  bit: ['bitmode.js']                               // (Build 0.35: the BIT MODE DLC, downloaded when its button is pressed. Its raid needs the city too, asked for when it starts)
 };
-const NEEDS = { training: ['core'], city: ['core', 'training'], notes: [] };      // (ps.js makes its dummies out of the training curse)
-const NAMES = { core: 'the game', training: 'Training', city: 'the city', notes: 'the patch notes' };
-const MODES = { training: 'training', free: 'city' };      // a mode on the Play screen, and the piece it needs
-const KEEP = {"training.js": ["ko", "tick"], "shibuya.js": ["fightStart", "reset"], "pvp.js": ["fightStart", "fx", "hit", "ko", "power", "reset", "tick", "JU.exitGame"], "ps.js": ["fightStart", "fx", "hit", "power", "shield", "tick", "JU.exitGame"], "raid.js": ["fightStart", "fx", "hit", "reset", "shield", "struck", "tick"], "rwalk.js": ["reset", "tick"]};      // (build.py)
+const NEEDS = { training: ['core'], city: ['core', 'training'], notes: [], bit: ['core'] };      // (ps.js makes its dummies out of the training curse)
+const NAMES = { core: 'the game', training: 'Training', city: 'the city', notes: 'the patch notes', bit: 'BIT MODE' };
+const MODES = { training: 'training', free: 'city', bit: 'bit' };      // a mode on the Play screen, and the piece it needs
+const KEEP = {"training.js": ["ko", "tick"], "shibuya.js": ["fightStart", "reset"], "pvp.js": ["fightStart", "fx", "hit", "ko", "power", "reset", "tick", "JU.exitGame"], "ps.js": ["fightStart", "fx", "hit", "power", "shield", "tick", "JU.exitGame"], "raid.js": ["fightStart", "fx", "hit", "reset", "shield", "struck", "tick", "JU.exitGame"], "rwalk.js": ["reset", "tick"]};      // (build.py)
 
 const all = list => [].concat(list).every(p => got.has(p));
 const got = new Set();
