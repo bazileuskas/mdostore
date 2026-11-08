@@ -20,8 +20,8 @@
 (() => {
 'use strict';
 
-const E = JU.eng, g = E.g, F = E.F, cam = E.cam, H = E.hooks, POSE = E.POSE, V = JU.vfx, sfx = JU.sfx, Fi = JU.fights, T = JU.tech;
-const { rnd, clamp, lerp } = E, TAU = Math.PI * 2, SLOTS = T.SLOTS;
+const E = JU.eng, g = E.g, F = E.F, P = E.P, cam = E.cam, H = E.hooks, POSE = E.POSE, V = JU.vfx, sfx = JU.sfx, Fi = JU.fights, T = JU.tech;
+const { rnd, clamp, lerp, ZP } = E, TAU = Math.PI * 2, SLOTS = T.SLOTS;
 const GREEN = '#39ff14', GOLD = '#ffd23d', INK = '#020804';
 const PIX = '"Press Start 2P", ui-monospace, Consolas, monospace';
 const dev = () => !!(JU.shop && JU.shop.dev);
@@ -131,7 +131,54 @@ function pix(x, y, n, col, sp = 520, s = 10, life = .6) {
 const cross = (x, y, r, col, life = .5) => { booms.push({ x, y, r, col, t: 0, life }); if (booms.length > 24) booms.shift(); };
 const word = (x, y, n, col, size = 26, life = 1) => { const w = { x, y, n, col, size, t: 0, life }; words.push(w); if (words.length > 30) words.shift(); return w; };
 const zap = (x0, y0, x1, y1, col) => zaps.push({ x0, y0, x1, y1, col, t: 0, life: .16 });
-function clearAll() { parts.length = shots.length = booms.length = words.length = zaps.length = props.length = DOTS.length = 0; }
+
+/* ---------- Build 0.36, the user's "make BITKING's moves look cooler": light, trails, square shockwaves, afterimages, windows, glitches ---------- */
+const rings = [], sparks = [], echoes = [], wins = [], pillars = [];
+let flashA = 0, flashC = '#ffffff', glitchT = 0, glitchP = 0, glitchL = 1;
+// a glow in squares, added on top (no blur: it stays pixels)
+function glowSq(x, y, s, col, a = 1) {
+  const c = F(x, y), w = s * c[2];
+  g.globalCompositeOperation = 'lighter'; g.fillStyle = col;
+  g.globalAlpha = .07 * a; g.fillRect(c[0] - w * 1.7, c[1] - w * 1.7, w * 3.4, w * 3.4);
+  g.globalAlpha = .13 * a; g.fillRect(c[0] - w * 1.1, c[1] - w * 1.1, w * 2.2, w * 2.2);
+  g.globalAlpha = .2 * a; g.fillRect(c[0] - w * .65, c[1] - w * .65, w * 1.3, w * 1.3);
+  g.globalAlpha = 1; g.globalCompositeOperation = 'source-over';
+}
+// a square shockwave of bits: upright on the fighting plane, or flat on the floor (floor: true)
+const ringq = (x, y, r, col, life = .4, th = 16, floor = false) => { rings.push({ x, y, r, col, life, th, floor, t: 0 }); if (rings.length > 30) rings.shift(); };
+// rays of bits thrown off a hit, the eight ways a pixel can go
+function spark(x, y, len, col, n = 8, life = .26) {
+  const a0 = Math.random() < .5 ? 0 : Math.PI / 8;
+  sparks.push({ x, y, len, col, n, life, t: 0, a0 });
+  if (sparks.length > 40) sparks.shift();
+}
+// him as he was a moment ago, in the colours of his mode
+function echo(p, col, alt, life = .3) {
+  echoes.push({ x: p.x, y: p.y, z: p.z, face: p.face, spin: p.spin === undefined ? 1 : p.spin, scale: p.scale, pose: p.pose.slice(), col, alt, t: 0, life, skin: p.skin });
+  if (echoes.length > 24) echoes.shift();
+}
+// bits drawn in from all round to (x, y): a move gathering itself
+function gather(x, y, R, col, n = 3) {
+  if (parts.length > 700) return;
+  for (let i = 0; i < n; i++) {
+    const a = rnd(0, TAU), r = R * rnd(.7, 1.2), life = rnd(.18, .3);
+    parts.push({ x: x + Math.cos(a) * r, y: y + Math.sin(a) * r, vx: -Math.cos(a) * r / life, vy: -Math.sin(a) * r / life, s: rnd(7, 13), col: Array.isArray(col) ? col[i % col.length] : col, t: 0, life, fl: 1 });
+  }
+}
+// the screen: a flash of a colour, and the picture breaking into slices for a moment
+const flash = (col, a = .5) => { if (JU.reduceMotion) return; flashC = col; flashA = Math.max(flashA, a * .7); };      // (never a white-out: a tint for a moment)
+const glitch = (t, p = .6) => { glitchT = Math.max(glitchT, t); glitchL = Math.max(glitchT, .01); glitchP = Math.max(glitchP, p); };
+// an old computer's error window, popping up on whatever it is stuck to
+function win(o, dx, dy, col, title, life = 1.2) {
+  wins.push({ o, dx, dy, col, title, life, t: 0, code: '0x' + (Math.random() * 0xffffff | 0).toString(16).toUpperCase().padStart(6, '0') });
+  if (wins.length > 16) wins.shift();
+}
+// a column of bits going up off the floor
+const pillar = (x, w, col, life = .5) => { pillars.push({ x, w, col, life, t: 0 }); if (pillars.length > 10) pillars.shift(); };
+function clearAll() {
+  parts.length = shots.length = booms.length = words.length = zaps.length = props.length = DOTS.length = 0;
+  rings.length = sparks.length = echoes.length = wins.length = pillars.length = 0; flashA = 0; glitchT = 0; glitchP = 0;
+}
 
 /* ---------- who he can hit: the one he is fighting, or everybody in a raid ---------- */
 function targets() {
@@ -212,6 +259,7 @@ function blast(p, M, sz, dmg, v, more) {
   }
   chip8('pew');
   pix(hx, hy, 4, [colOf(M), '#fff'], 300, 8, .25);
+  spark(hx, hy, 70 * sz, colOf(M), 8, .14);           // (the muzzle)
 }
 function steer(s, dt) {
   let best = null, bd = 1e9;
@@ -227,6 +275,8 @@ function updShots(dt) {
     if (s.home) steer(s, dt);
     if (s.grav) s.vy -= s.grav * dt;
     s.x += s.vx * dt; s.y += s.vy * dt;
+    const tr = s.tr || (s.tr = []);                   // where it has just been: its tail
+    if ((s.trT = (s.trT || 0) + dt) > .016) { s.trT = 0; tr.unshift(s.x, s.y); if (tr.length > (s.bomb ? 0 : 14)) tr.length = s.bomb ? 0 : 14; }
     if (Math.random() < dt * 30) parts.push({ x: s.x, y: s.y, vx: -s.vx * .05, vy: 0, s: s.s * .45, col: s.M.alt, t: 0, life: .2 });
     let gone = s.t >= s.life || Math.abs(s.x - E.P1.x) > 2400 || s.y > 2200;
     if (!gone) for (const o of targets()) {
@@ -237,6 +287,7 @@ function updShots(dt) {
         if (s.touch) { s.touch(s, o); gone = true; break; }
         strike(s.p, o, { dmg: s.dmg, kb: s.kb, lift: s.lift, stun: s.stun, heavy: s.heavy, stop: s.stop }, s.M);
         pix(s.x, s.y, 6, [colOf(s.M), s.M.alt], 420, s.s * .45, .45);
+        spark(s.x, s.y, s.s * 3.2, colOf(s.M), 8, .22); ringq(s.x, s.y, s.s * 2.6, s.M.alt, .28, Math.max(6, s.s * .32));
         if (s.onHit) s.onHit(s, o);
         if (!s.pierce) { gone = true; break; }
       }
@@ -253,10 +304,22 @@ function drawShot(s) {
     g.fillStyle = '#3b3b48'; g.fillRect(c[0] - 2 * st, c[1] - 3 * st, 2 * st, 2 * st);
     g.fillStyle = '#c9a36a'; g.fillRect(c[0] + st, c[1] - 6 * st, st, 2 * st);
     g.fillStyle = Math.random() < .5 ? '#fff' : col; g.fillRect(c[0] + st * 1.5, c[1] - 8 * st, st * 1.6, st * 1.6);
+    if (s.t > .35 && (s.t * 14 | 0) % 2) { g.globalAlpha = .55; g.fillStyle = '#ff2440'; for (let y = -4; y <= 4; y++) { const w = Math.round(Math.sqrt(Math.max(0, 20 - y * y))); g.fillRect(c[0] - w * st, c[1] + y * st - st / 2, w * 2 * st, st); } g.globalAlpha = 1; }   // (about to go: it blinks red)
+    if (Math.random() < .6) parts.push({ x: s.x + s.s * .2, y: s.y + s.s * .55, vx: rnd(-120, 120), vy: rnd(80, 260), s: rnd(4, 8), col: Math.random() < .5 ? '#fff' : GOLD, t: 0, life: .22 });
     return;
   }
-  bit(s.x - s.vx * .018, s.y - s.vy * .018, s.s * .7, s.M.alt, .5);
+  const tr = s.tr, big = s.s > 60;
+  if (tr && tr.length > 2) {                        // the tail: smaller and fainter bits back along the way it came
+    const n = tr.length / 2;
+    for (let i = n - 1; i >= 1; i--) { const u = i / n; sq(tr[i * 2], tr[i * 2 + 1], s.s * (1 - u * .8) * .62, i % 2 ? col : s.M.alt, (1 - u) * .7); }
+  }
+  glowSq(s.x, s.y, s.s * (big ? .9 : 1.25), col, big ? 1.2 : 1);
   bit(s.x, s.y, s.s, col);
+  if (big) {                                        // the big one has a face of bits that churns
+    const c = F(s.x, s.y), w = s.s * c[2], cell = w / 6, tk = E.T * 18 | 0;
+    for (let i = 0; i < 6; i++) for (let j = 0; j < 6; j++) if (((i * 7 + j * 3 + tk) % 5) === 0) { g.fillStyle = (i + j + tk) % 2 ? '#ffffff' : s.M.alt; g.fillRect(c[0] - w / 2 + i * cell, c[1] - w / 2 + j * cell, cell, cell); }
+  }
+  if (((E.T * 20 + s.x) | 0) % 6 === 0) { const c = F(s.x, s.y), k = s.s * c[2] * .9; g.fillStyle = '#fff'; g.fillRect(c[0] - k, c[1] - 1.5, k * 2, 3); g.fillRect(c[0] - 1.5, c[1] - k, 3, k * 2); }      // (a twinkle)
 }
 
 /* ---------- the four, and what they turn into when the key is held ---------- */
@@ -296,18 +359,31 @@ const BLASTER = { name: 'Pixel Blaster', cd: 3, dur: 9, run(p, m, t) {
 const HYPER = { name: 'Hyper Blaster', cd: 7, dur: 9, run(p, m, t) {
   const tt = t * m.sp, M = m.M, sz = m.sz;
   p.vx = 0; p.rate = 30;
-  if (tt < .55) { p.target = POSE.divWind; m.ch = tt / .55; if (Math.random() < .7) parts.push({ x: p.x + p.face * 70 + rnd(-160, 160), y: p.y + 240 + rnd(-140, 140), vx: 0, vy: 0, s: 10, col: colOf(M), t: 0, life: .2 }); return; }
+  if (tt < .55) {
+    p.target = POSE.divWind; m.ch = tt / .55;
+    gather(p.x + p.face * 60, p.y + 260 + 40 * m.ch, 260 * sz, [colOf(M), M.alt, '#fff'], 2);
+    if (!m.e1 && tt > .25) { m.e1 = 1; ringq(p.x + p.face * 60, p.y + 290, 150 * sz, colOf(M), .3, 10); }
+    return;
+  }
   if (!m.f) {
-    m.f = 1; m.ch = 0; p.target = POSE.div; cam.shake = Math.max(cam.shake, 12); chip8('big');
+    m.f = 1; m.ch = 0; p.target = POSE.div; cam.shake = Math.max(cam.shake, 16); chip8('big');
     const o = focus(), y = o ? clamp(mid(o), 120, 260) : p.y + 175;
     shots.push({ p, M, x: p.x + p.face * 110, y, vx: p.face * 1150 * m.sp, vy: 0, s: 96 * sz, dmg: 140, kb: 950, lift: 640, heavy: 1, stop: .16, pierce: 1, home: M.f.home ? 900 : 0, hit: new Set(), t: 0, life: 1.8,
-      onHit: s => cross(s.x, s.y, 240 * sz, colOf(M)) });
+      onHit: s => { cross(s.x, s.y, 240 * sz, colOf(M)); ringq(s.x, s.y, 300 * sz, '#ffffff', .45, 22); spark(s.x, s.y, 320 * sz, colOf(M), 16, .35); flash(colOf(M), .35); glitch(.18, .5); } });
+    ringq(p.x + p.face * 110, y, 200 * sz, colOf(M), .3, 14); spark(p.x + p.face * 110, y, 260 * sz, '#ffffff', 8, .2); flash('#ffffff', .25);
+    for (let i = 0; i < 6; i++) parts.push({ x: p.x + p.face * 120, y: y + rnd(-60, 60) * sz, vx: p.face * rnd(900, 1500), vy: 0, s: rnd(8, 14), col: Math.random() < .5 ? '#fff' : M.alt, t: 0, life: .25, fl: 1 });
   }
   if (tt > .95) E.endMove(p);
 }, draw(p, m) {
   if (!m.ch) return;
-  const s = 20 + 76 * m.ch * m.sz, y = p.y + 260 + 40 * m.ch;
-  bit(p.x + p.face * 60, y, s, colOf(m.M), .6 + .4 * m.ch);
+  const s = 20 + 76 * m.ch * m.sz, x = p.x + p.face * 60, y = p.y + 260 + 40 * m.ch, col = colOf(m.M), c = F(x, y);
+  glowSq(x, y, s * (1.1 + .15 * Math.sin(E.T * 30)), col, .6 + .6 * m.ch);
+  for (let i = 0; i < 2; i++) {                     // two square frames turning about it, closing in
+    const r = (s * .5 + 40 * (1 - m.ch)) * (1 + i * .4) * c[2], a = E.T * (i ? -7 : 9);
+    g.save(); g.translate(c[0], c[1]); g.rotate(a); g.strokeStyle = i ? m.M.alt : col; g.lineWidth = Math.max(2, 5 * c[2]); g.globalAlpha = .5 + .5 * m.ch;
+    g.strokeRect(-r, -r, r * 2, r * 2); g.restore(); g.globalAlpha = 1;
+  }
+  bit(x, y, s, col, .6 + .4 * m.ch);
 } };
 
 // 2: BYTE DASH, through them as a streak of bits, carrying them
@@ -316,17 +392,19 @@ const DASH = { name: 'Byte Dash', cd: 4, dur: 9, run(p, m, t) {
   if (!decided(p, m, t, COMBO)) return;
   const tt = (t - m.t0) * m.sp, M = m.M;
   p.rate = 44;
-  if (tt < .1) { p.target = POSE.dashWind || POSE.kickWind; p.vx = 0; return; }
+  if (tt < .1) { p.target = POSE.dashWind || POSE.kickWind; p.vx = 0; gather(p.x, p.y + 160, 180, colOf(M), 1); return; }
   if (tt < .46) {
-    if (!m.go) { m.go = 1; m.n = 0; p.inv = Math.max(p.inv || 0, .42 / m.sp); chip8('dash'); }
+    if (!m.go) { m.go = 1; m.n = 0; p.inv = Math.max(p.inv || 0, .42 / m.sp); chip8('dash'); ringq(p.x, p.y + 150, 150 * m.sz, colOf(M), .25, 12); flash(colOf(M), .12); }
     p.target = POSE.dash; p.vx = p.face * 2300 * m.sp;
     parts.push({ x: p.x - p.face * 40, y: p.y + rnd(30, 280), vx: -p.face * 200, vy: 0, s: 16 * m.sz, col: Math.random() < .5 ? colOf(M) : M.alt, t: 0, life: .22 });
+    if ((m.eT = (m.eT || 0) + 1) % 2 === 0) echo(p, colOf(M), M.alt, .28);       // (a frame of him left behind every other frame)
+    for (let i = 0; i < 2; i++) parts.push({ x: p.x - p.face * rnd(60, 260), y: p.y + rnd(20, 300), vx: -p.face * rnd(300, 700), vy: 0, s: rnd(5, 9), col: '#fff', t: 0, life: .14, fl: 1 });
     if (!m.o) for (const o of targets()) if (can(o) && Math.abs(o.x - p.x) < 130 * m.sz && o.y < 260) { m.o = o; break; }
     const o = m.o;
     if (o && !o.ko) {
       if (!o.net) { o.vx = p.vx; o.x = clamp(p.x + p.face * 70, -960, 960); }
       const k = Math.floor((tt - .1) / .04);
-      if (k !== m.k && m.n < 8) { m.k = k; m.n++; strike(p, o, { dmg: 5, kb: 0, stun: .6, stop: .01, mute: m.n % 2 }, M); }
+      if (k !== m.k && m.n < 8) { m.k = k; m.n++; strike(p, o, { dmg: 5, kb: 0, stun: .6, stop: .01, mute: m.n % 2 }, M); spark(o.x + rnd(-30, 30), mid(o) + rnd(-50, 50), 90, m.n % 2 ? '#fff' : colOf(M), 8, .16); }
     }
     return;
   }
@@ -335,9 +413,11 @@ const DASH = { name: 'Byte Dash', cd: 4, dur: 9, run(p, m, t) {
     const o = m.o;
     if (o && !o.ko) {
       pix(p.x, p.y + 150, 14, [colOf(M), M.alt], 420, 12, .3);
+      echo(p, colOf(M), M.alt, .4);
       p.x = clamp(o.x + p.face * 150, -955, 955); p.face = -p.face;
       strike(p, o, { dmg: 30, kb: 950, lift: 520, heavy: 1, stop: .12 }, M);
       cross(o.x, mid(o), 200 * m.sz, colOf(M)); chip8('boom');
+      ringq(o.x, mid(o), 240 * m.sz, '#fff', .35, 18); spark(o.x, mid(o), 300 * m.sz, colOf(M), 16, .3); flash(colOf(M), .3); cam.shake = Math.max(cam.shake, 14);
     } else pix(p.x + p.face * 60, p.y + 150, 10, [colOf(M), M.alt], 300, 10, .3);
   }
   p.target = POSE.idle;
@@ -348,7 +428,7 @@ const COMBO = { name: 'Combo Breaker', cd: 8, dur: 9, run(p, m, t) {
   const tt = t * m.sp, M = m.M;
   if (m.o === undefined) {
     const o = focus(); m.o = o && can(o, true) && Math.abs(o.x - p.x) < 1200 ? o : null;
-    if (m.o) { pix(p.x, p.y + 150, 12, [colOf(M), M.alt], 380, 12, .3); const side = m.o.x >= p.x ? 1 : -1; p.x = clamp(m.o.x - side * 120, -955, 955); p.face = side; chip8('dash'); }
+    if (m.o) { pix(p.x, p.y + 150, 12, [colOf(M), M.alt], 380, 12, .3); echo(p, colOf(M), M.alt, .35); const side = m.o.x >= p.x ? 1 : -1; p.x = clamp(m.o.x - side * 120, -955, 955); p.face = side; chip8('dash'); ringq(p.x, p.y + 150, 160, colOf(M), .25, 12); }
   }
   const o = m.o;
   p.vx = 0; p.rate = 50;
@@ -361,7 +441,11 @@ const COMBO = { name: 'Combo Breaker', cd: 8, dur: 9, run(p, m, t) {
       p.target = [POSE.jab, POSE.cross, POSE.hook, POSE.kick][m.n % 4];
       if (can(o, true)) strike(p, o, { dmg: 5, kb: 0, stun: .7, stop: .02, mute: m.n % 3 }, M);
       if (!m.w) m.w = word(o.x, o.y + 360 * hs(o), '', colOf(M), 30, 1.6);
-      m.w.n = 'x' + m.n + ' COMBO'; m.w.t = 0; m.w.x = o.x;
+      m.w.n = 'x' + m.n + ' COMBO'; m.w.t = 0; m.w.x = o.x; m.w.pop = 1; m.w.rain = m.n >= 12;
+      const hx = o.x - p.face * rnd(10, 50), hy = mid(o) + rnd(-80, 90);
+      spark(hx, hy, 100 + m.n * 6, m.n % 2 ? '#fff' : colOf(M), 8, .18);
+      if (m.n % 4 === 0) { ringq(hx, hy, 120 + m.n * 8, colOf(M), .22, 10); cam.shake = Math.max(cam.shake, 5 + m.n * .4); }
+      if (m.n % 3 === 0) echo(p, colOf(M), M.alt, .2);
       if (m.n % 2) sfx.whoosh();
     }
     return;
@@ -369,8 +453,10 @@ const COMBO = { name: 'Combo Breaker', cd: 8, dur: 9, run(p, m, t) {
   if (!m.up) {
     m.up = 1; p.target = POSE.crush;
     strike(p, o, { dmg: 50, kb: 300, lift: 1100, heavy: 1, stop: .18 }, M);
-    cross(o.x, mid(o), 220 * m.sz, colOf(M)); chip8('boom'); cam.shake = Math.max(cam.shake, 16);
-    word(o.x, o.y + 420 * hs(o), 'COMBO BREAKER!', GOLD, 30, 1.4);
+    cross(o.x, mid(o), 220 * m.sz, colOf(M)); chip8('boom'); cam.shake = Math.max(cam.shake, 18);
+    const w = word(o.x, o.y + 420 * hs(o), 'COMBO BREAKER!', GOLD, 30, 1.4); w.pop = 1; w.rain = 1;
+    pillar(o.x, 120 * m.sz, colOf(M), .6); ringq(o.x, 0, 300 * m.sz, colOf(M), .45, 18, true);
+    spark(o.x, mid(o), 380, '#fff', 16, .32); flash(GOLD, .3); glitch(.12, .4);
   }
   if (tt > 1.3) E.endMove(p);
 } };
@@ -382,18 +468,35 @@ function cartridge(x, M, sz, follow) {
       if (!q.landed) {
         if (follow && !follow.ko && q.t < .2) q.x = lerp(q.x, follow.x, .2);
         const u = Math.min(1, q.t / .32); q.y = 1300 * (1 - u * u);
+        if (Math.random() < .8) parts.push({ x: q.x + rnd(-120, 120) * sz, y: q.y + 280 * sz + rnd(0, 120), vx: 0, vy: rnd(500, 900), s: rnd(5, 9), col: '#fff', t: 0, life: .12, fl: 1 });      // (the air it pushes down)
         if (u >= 1) {
-          q.landed = true; q.y = 0; chip8('boom'); cam.shake = Math.max(cam.shake, 22);
+          q.landed = true; q.y = 0; chip8('boom'); cam.shake = Math.max(cam.shake, 24);
           for (const o of targets()) {
             const d = Math.abs(o.x - q.x);
             if (d < 150 * sz && can(o, true)) strike(E.P1, o, { dmg: 80, kb: 500, lift: 720, heavy: 1, stop: .16 }, M);
             else if (d < 440 * sz && o.y < 120 && can(o)) strike(E.P1, o, { dmg: 20, kb: 700, lift: 300, stop: .06 }, M);
           }
           pix(q.x, 20, 26, [colOf(M), M.alt, '#7c7c88'], 700, 16, .7); cross(q.x, 60, 300 * sz, colOf(M), .45); V.rocks(q.x, 0, 8);
+          ringq(q.x, 0, 420 * sz, colOf(M), .5, 20, true); ringq(q.x, 0, 260 * sz, '#ffffff', .35, 14, true);
+          for (const s of [-1, 1]) for (let i = 0; i < 9; i++) parts.push({ x: q.x + s * 110 * sz, y: rnd(5, 60), vx: s * rnd(500, 1300), vy: rnd(40, 240), s: rnd(10, 22), col: ['#9a9aa8', '#7c7c88', colOf(M)][i % 3], t: 0, life: rnd(.35, .6) });
+          spark(q.x, 120, 340 * sz, colOf(M), 16, .3); flash('#ffffff', .3); glitch(.1, .35);
         }
-      } else if (q.t > .95 && !q.broke) { q.broke = 1; pix(q.x, 150 * sz, 30, ['#7c7c88', '#5a5a66', colOf(M)], 520, 18, .6); }
+      } else if (q.t > .95 && !q.broke) {
+        q.broke = 1; pix(q.x, 150 * sz, 30, ['#7c7c88', '#5a5a66', colOf(M)], 520, 18, .6);
+        for (let i = 0; i < 9; i++) parts.push({ x: q.x + rnd(-100, 100) * sz, y: 30 * sz, vx: rnd(-500, 500), vy: rnd(500, 1100), s: 12 * sz, col: GOLD, t: 0, life: .8 });      // (its pins, flying)
+        ringq(q.x, 140 * sz, 200 * sz, colOf(M), .3, 12);
+      }
     },
-    draw(q) { if (!q.broke) drawCart(q.x, q.y, q.sz, colOf(q.M)); } };
+    draw(q) {
+      if (q.broke) return;
+      if (!q.landed) {                                // its shadow on the floor, growing as it comes
+        const u = Math.min(1, q.t / .32), a = P(q.x - 130 * sz * (.4 + .6 * u), 0, ZP - 60), b = P(q.x + 130 * sz * (.4 + .6 * u), 0, ZP + 60);
+        g.fillStyle = 'rgba(0,0,0,.45)'; g.fillRect(a[0], b[1], b[0] - a[0], a[1] - b[1]);
+        glowSq(q.x, q.y + 130 * sz, 140 * sz, colOf(q.M), .5);
+      }
+      const sh = q.landed && q.t < .5 ? (1 - q.t / .5) * 10 : 0;
+      drawCart(q.x + rnd(-sh, sh), q.y, q.sz, colOf(q.M));
+    } };
   props.push(q);
   return q;
 }
@@ -425,13 +528,22 @@ const CRASH = { name: 'System Crash', cd: 10, dur: 9, run(p, m, t) {
   p.vx = 0; p.rate = 30; p.target = POSE.div;
   if (!m.lock) {
     m.lock = 1; const o = focus();
-    if (o && can(o, true)) { m.o = o; o.bkIce = E.T + 1.9; word(o.x, o.y + 380 * hs(o), 'ERROR', '#ff3dd8', 30, 1.3); chip8('err'); }
+    if (o && can(o, true)) { m.o = o; o.bkIce = E.T + 1.9; const w = word(o.x, o.y + 380 * hs(o), 'ERROR', '#ff3dd8', 30, 1.3); w.pop = 1; chip8('err'); glitch(.15, .3); }
   }
   const o = m.o;
   if (o && !o.ko && tt < 1.15 && Math.random() < .8) parts.push({ x: o.x + rnd(-70, 70) * hs(o), y: o.y + rnd(20, 300) * hs(o), vx: rnd(-60, 60), vy: 0, s: rnd(10, 26), col: ['#ff3dd8', '#3dfcff', '#ffe83d', '#fff', INK][Math.random() * 5 | 0], t: 0, life: .14 });
+  if (o && !o.ko && tt < 1.1) {                      // windows popping up all over them, faster and faster
+    const n = Math.min(7, Math.floor((tt / 1.1) ** .7 * 7.99));
+    while ((m.wn || 0) < n) { m.wn = (m.wn || 0) + 1; const k = hs(o); win(o, rnd(-150, 150) * k, rnd(60, 330) * k, m.wn % 2 ? '#ff3dd8' : '#3dfcff', ['ERROR', 'NOT RESPONDING', 'STACK OVERFLOW', 'ACCESS DENIED', 'BAD SECTOR', 'SEGFAULT', 'FATAL'][m.wn - 1], 1.25 - tt); chip8('err'); }
+  }
   if (tt >= 1.15 && !m.f) {
     m.f = 1;
-    if (o && !o.ko) { strike(p, o, { dmg: 160, exact: 1, kb: 700, lift: 560, heavy: 1, stop: .22 }, M); cross(o.x, mid(o), 260 * m.sz, '#ff3dd8'); word(o.x, o.y + 440 * hs(o), 'FATAL ERROR', '#ff3dd8', 30, 1.4); chip8('boom'); cam.shake = Math.max(cam.shake, 20); }
+    if (o && !o.ko) {
+      strike(p, o, { dmg: 160, exact: 1, kb: 700, lift: 560, heavy: 1, stop: .22 }, M); cross(o.x, mid(o), 260 * m.sz, '#ff3dd8');
+      const w = word(o.x, o.y + 440 * hs(o), 'FATAL ERROR', '#ff3dd8', 30, 1.4); w.pop = 1; chip8('boom'); cam.shake = Math.max(cam.shake, 22);
+      ringq(o.x, mid(o), 340, '#3dfcff', .45, 20); spark(o.x, mid(o), 400, '#ff3dd8', 16, .35); flash('#1d3bff', .45); glitch(.4, 1);
+      for (const q of wins) if (q.o === o) q.t = Math.max(q.t, q.life - .12);
+    }
   }
   if (tt > 1.45) E.endMove(p);
 } };
@@ -442,11 +554,12 @@ const BEAM = { name: 'Mega Beam', cd: 6, dur: 9, run(p, m, t) {
   if (!decided(p, m, t, ORBIT)) return;
   const tt = (t - m.t0) * m.sp;
   p.vx = 0; p.rate = 30;
-  if (tt < .32) { p.target = POSE.divWind; m.ch = tt / .32; return; }
+  if (tt < .32) { p.target = POSE.divWind; m.ch = tt / .32; gather(p.x + p.face * 80, p.y + 175 * hs(p), 230 * m.sz, [colOf(m.M), m.M.alt, '#fff'], 2); return; }
   p.target = POSE.div; m.ch = 0;
   if (!m.on) {
-    m.on = 1; chip8('beam'); cam.shake = Math.max(cam.shake, 10);
+    m.on = 1; chip8('beam'); cam.shake = Math.max(cam.shake, 12);
     const o = m.M.f.home && focus(); m.y = o ? clamp(mid(o), 90, 300) : p.y + 175 * hs(p);
+    flash(colOf(m.M), .3); ringq(p.x + p.face * 80, m.y, 180 * m.sz, '#fff', .3, 14); glitch(.08, .3);
   }
   m.bt = tt - .32;
   const k = Math.floor(m.bt / .05);
@@ -454,22 +567,50 @@ const BEAM = { name: 'Mega Beam', cd: 6, dur: 9, run(p, m, t) {
     m.k = k; const half = 72 * m.sz;
     for (const o of targets()) {
       const dx = (o.x - p.x) * p.face;
-      if (can(o) && dx > -20 && dx < 1900 && o.y < m.y + half && o.y + 290 * hs(o) > m.y - half) strike(p, o, { dmg: 7, kb: 120, stun: .32, stop: .012, mute: k % 2 }, m.M);
+      if (can(o) && dx > -20 && dx < 1900 && o.y < m.y + half && o.y + 290 * hs(o) > m.y - half) {
+        strike(p, o, { dmg: 7, kb: 120, stun: .32, stop: .012, mute: k % 2 }, m.M);
+        spark(o.x - p.face * 30, m.y + rnd(-half, half) * .6, 120 * m.sz, k % 2 ? '#fff' : colOf(m.M), 8, .14);
+      }
     }
+    if (k % 3 === 0) ringq(p.x + p.face * 90, m.y, 120 * m.sz, colOf(m.M), .2, 9);
+    cam.shake = Math.max(cam.shake, 6);
   }
   if (tt > 1.2) E.endMove(p);
 }, draw(p, m) {
-  if (m.ch) { const s = 14 + 40 * m.ch * m.sz; bit(p.x + p.face * 80, p.y + 175 * hs(p), s, colOf(m.M), .8); return; }
+  if (!m.M) return;                                 // (the frame it was pressed in: it has not started yet)
+  const M = m.M, col = colOf(M);
+  if (m.ch) {
+    const s = 14 + 40 * m.ch * m.sz, x = p.x + p.face * 80, y = p.y + 175 * hs(p);
+    glowSq(x, y, s * 1.4, col, .5 + m.ch);
+    bit(x, y, s, col, .8); return;
+  }
   if (!m.on || m.bt > .72) return;
   const u = m.bt / .72, half = 72 * m.sz * (u < .1 ? u / .1 : u > .85 ? (1 - u) / .15 : 1), x0 = p.x + p.face * 80, x1 = p.x + p.face * 1950;
-  const a = F(Math.min(x0, x1), m.y + half), b = F(Math.max(x0, x1), m.y - half), M = m.M;
-  const h = b[1] - a[1];
-  g.fillStyle = INK; g.fillRect(a[0], a[1] - 4, b[0] - a[0], h + 8);
-  g.fillStyle = colOf(M); g.fillRect(a[0], a[1], b[0] - a[0], h);
-  g.fillStyle = M.alt; g.fillRect(a[0], a[1] + h * .25, b[0] - a[0], h * .5);
-  g.fillStyle = '#fff'; g.fillRect(a[0], a[1] + h * .4, b[0] - a[0], h * .2);
-  g.fillStyle = 'rgba(0,0,0,.25)'; for (let y = a[1]; y < b[1]; y += 6) g.fillRect(a[0], y, b[0] - a[0], 2);
-  for (let i = 0; i < 6; i++) bit(p.x + p.face * rnd(100, 1900), m.y + rnd(-half, half) * 1.3, rnd(10, 24) * m.sz, Math.random() < .5 ? '#fff' : colOf(M), .9);
+  const a = F(Math.min(x0, x1), m.y + half), b = F(Math.max(x0, x1), m.y - half);
+  const h = b[1] - a[1], W = b[0] - a[0], k = a[2];
+  g.globalCompositeOperation = 'lighter';             // light spilling round it
+  g.fillStyle = col; g.globalAlpha = .12; g.fillRect(a[0], a[1] - h * .7, W, h * 2.4);
+  g.globalAlpha = .18; g.fillRect(a[0], a[1] - h * .3, W, h * 1.6);
+  g.globalAlpha = 1; g.globalCompositeOperation = 'source-over';
+  g.fillStyle = INK; g.fillRect(a[0], a[1] - 4, W, h + 8);
+  g.fillStyle = col; g.fillRect(a[0], a[1], W, h);
+  g.fillStyle = M.alt; g.fillRect(a[0], a[1] + h * .25, W, h * .5);
+  g.fillStyle = '#fff'; g.fillRect(a[0], a[1] + h * (.4 + .03 * Math.sin(E.T * 60)), W, h * .2);
+  const cell = Math.max(6, 18 * k * m.sz), off = (E.T * 2400 * k) % (cell * 2), dir = p.face;
+  for (let row = 0; row < 3; row++) {                 // data running down it, cell by cell
+    const y = a[1] + h * (.18 + row * .3);
+    g.fillStyle = row === 1 ? col : '#ffffff'; g.globalAlpha = .55;
+    for (let x = (dir > 0 ? a[0] + off : b[0] - off); dir > 0 ? x < b[0] : x > a[0]; x += dir * cell * 2) if (((x / cell) | 0) % 3) g.fillRect(x, y, cell * .9, Math.max(2, cell * .5));
+  }
+  g.globalAlpha = 1;
+  for (let i = 0; i < 14; i++) {                    // its edges: ragged, never still
+    const ex = rnd(a[0], b[0]), top = Math.random() < .5, s = rnd(6, 16) * k * m.sz;
+    g.fillStyle = Math.random() < .5 ? col : M.alt; g.fillRect(ex, top ? a[1] - s - rnd(0, 10) * k : b[1] + rnd(0, 10) * k, s, s);
+  }
+  g.fillStyle = 'rgba(0,0,0,.25)'; for (let y = a[1]; y < b[1]; y += 6) g.fillRect(a[0], y, W, 2);
+  for (let i = 0; i < 6; i++) bit(p.x + p.face * rnd(100, 1900), m.y + rnd(-half, half) * 1.3, rnd(10, 24) * m.sz, Math.random() < .5 ? '#fff' : col, .9);
+  const mx = p.x + p.face * 80, pulse = 1 + .25 * Math.sin(E.T * 50);      // the mouth of it, at his hands
+  glowSq(mx, m.y, half * 1.3 * pulse, col, 1.4); bit(mx, m.y, half * 1.1 * pulse, '#ffffff', .95);
 } };
 // hold 4: ORBITAL LASER, from the top of the screen, wherever they went
 const ORBIT = { name: 'Orbital Laser', cd: 10, dur: 9, run(p, m, t) {
@@ -479,31 +620,52 @@ const ORBIT = { name: 'Orbital Laser', cd: 10, dur: 9, run(p, m, t) {
   if (m.x === undefined) { m.x = o ? o.x : p.x + p.face * 420; chip8('err'); }
   if (tt < .7 && o && !o.ko) m.x = lerp(m.x, o.x, .14);
   if (tt >= .7) {
-    if (!m.f) { m.f = 1; chip8('beam'); }
+    if (!m.f) { m.f = 1; chip8('beam'); flash('#ffffff', .4); glitch(.12, .45); ringq(m.x, 0, 360 * m.sz, colOf(m.M), .5, 18, true); }
     const k = Math.floor((tt - .7) / .08);
     if (k !== m.k && k < 6) {
-      m.k = k; cam.shake = Math.max(cam.shake, 9);
+      m.k = k; cam.shake = Math.max(cam.shake, 11);
       for (const q of targets()) if (can(q, true) && Math.abs(q.x - m.x) < 115 * m.sz) strike(p, q, { dmg: 30, kb: 60, stun: .5, stop: .04, heavy: k === 5, lift: k === 5 ? 500 : 0 }, m.M);
       pix(m.x, 10, 6, [colOf(m.M), '#fff'], 500, 12, .4);
+      ringq(m.x, 0, (170 + k * 30) * m.sz, k % 2 ? '#fff' : colOf(m.M), .3, 12, true);
+      for (let i = 0; i < 4; i++) parts.push({ x: m.x + rnd(-120, 120) * m.sz, y: rnd(0, 40), vx: rnd(-80, 80), vy: rnd(600, 1300), s: rnd(8, 14), col: Math.random() < .5 ? '#fff' : colOf(m.M), t: 0, life: .4, fl: 1 });
+      if (k === 5) { spark(m.x, 150, 380, colOf(m.M), 16, .35); flash(colOf(m.M), .35); }
     }
   }
   if (tt > 1.35) E.endMove(p);
 }, draw(p, m) {
   if (m.x === undefined) return;
   const tt = m.t * m.sp, col = colOf(m.M);
-  if (tt < .7) {                                    // the reticle on them
+  if (tt < .7) {                                    // the reticle on them, turning and closing, and the satellite over them at the top of the screen
     const c = F(m.x, 150), r = (130 - 60 * tt / .7) * c[2] * m.sz, s = Math.max(3, r * .12);
-    g.fillStyle = col;
-    for (const [dx, dy] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) { g.fillRect(c[0] + dx * r - (dx > 0 ? s * 3 : 0), c[1] + dy * r - (dy > 0 ? s : 0), s * 3, s); g.fillRect(c[0] + dx * r - (dx > 0 ? s : 0), c[1] + dy * r - (dy > 0 ? s * 3 : 0), s, s * 3); }
-    g.fillRect(c[0] - s / 2, c[1] - s / 2, s, s);
+    g.save(); g.translate(c[0], c[1]); g.rotate(tt * 5); g.fillStyle = col;
+    for (const [dx, dy] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) { g.fillRect(dx * r - (dx > 0 ? s * 3 : 0), dy * r - (dy > 0 ? s : 0), s * 3, s); g.fillRect(dx * r - (dx > 0 ? s : 0), dy * r - (dy > 0 ? s * 3 : 0), s, s * 3); }
+    g.restore();
+    g.fillStyle = (tt * 12 | 0) % 2 ? '#fff' : col; g.fillRect(c[0] - s, c[1] - s, s * 2, s * 2);
+    g.globalAlpha = .35 + .3 * Math.sin(tt * 40); g.fillStyle = col; g.fillRect(c[0] - 1.5, 0, 3, c[1] - r);      // (the line it is drawn down)
+    g.globalAlpha = 1;
+    const sx = c[0], sy = 34, u = 6;                  // a satellite of bits
+    g.fillStyle = INK; g.fillRect(sx - 9 * u, sy - 3 * u, 18 * u, 6 * u);
+    g.fillStyle = '#2f6bff'; g.fillRect(sx - 8.5 * u, sy - 2.5 * u, 6 * u, 5 * u); g.fillRect(sx + 2.5 * u, sy - 2.5 * u, 6 * u, 5 * u);
+    g.fillStyle = '#d8dde8'; g.fillRect(sx - 2 * u, sy - 3 * u, 4 * u, 6 * u);
+    g.fillStyle = (tt * 8 | 0) % 2 ? '#ff2440' : '#fff'; g.fillRect(sx - u, sy + 3 * u, 2 * u, 2 * u);
     return;
   }
   if (tt > 1.25) return;
   const u = (tt - .7) / .55, w = 115 * m.sz * (u < .1 ? u / .1 : u > .8 ? (1 - u) / .2 : 1), top = F(m.x - w, 2400), bot = F(m.x + w, 0);
-  g.fillStyle = INK; g.fillRect(top[0] - 4, -20, bot[0] - top[0] + 8, bot[1] + 20);
-  g.fillStyle = col; g.fillRect(top[0], -20, bot[0] - top[0], bot[1] + 20);
-  g.fillStyle = m.M.alt; g.fillRect(top[0] + (bot[0] - top[0]) * .25, -20, (bot[0] - top[0]) * .5, bot[1] + 20);
-  g.fillStyle = '#fff'; g.fillRect(top[0] + (bot[0] - top[0]) * .4, -20, (bot[0] - top[0]) * .2, bot[1] + 20);
+  const W = bot[0] - top[0];
+  g.globalCompositeOperation = 'lighter';
+  g.fillStyle = col; g.globalAlpha = .14; g.fillRect(top[0] - W, -20, W * 3, bot[1] + 20);
+  g.globalAlpha = .3; const fl = F(m.x, 0); g.fillRect(fl[0] - W * 1.6, fl[1] - W * .25, W * 3.2, W * .5);      // (the floor where it lands, lit)
+  g.globalAlpha = 1; g.globalCompositeOperation = 'source-over';
+  g.fillStyle = INK; g.fillRect(top[0] - 4, -20, W + 8, bot[1] + 20);
+  g.fillStyle = col; g.fillRect(top[0], -20, W, bot[1] + 20);
+  g.fillStyle = m.M.alt; g.fillRect(top[0] + W * .25, -20, W * .5, bot[1] + 20);
+  g.fillStyle = '#fff'; g.fillRect(top[0] + W * (.4 + .04 * Math.sin(E.T * 70)), -20, W * .2, bot[1] + 20);
+  const cell = Math.max(6, W * .14), off = (E.T * 2600) % (cell * 2);
+  g.fillStyle = '#ffffff'; g.globalAlpha = .5;
+  for (let y = -20 + off; y < bot[1]; y += cell * 2) g.fillRect(top[0] + W * .12, y, cell * .8, cell * .8), g.fillRect(top[0] + W * .7, y + cell, cell * .8, cell * .8);
+  g.globalAlpha = 1;
+  for (let i = 0; i < 10; i++) { const s = rnd(5, 14) * top[2]; g.fillStyle = Math.random() < .5 ? col : '#fff'; g.fillRect(Math.random() < .5 ? top[0] - s - rnd(0, 8) : bot[0] + rnd(0, 8), rnd(0, bot[1]), s, s); }
 } };
 
 /* ---------- the same four in the air ---------- */
@@ -516,9 +678,12 @@ const RAIN = { name: 'Bit Rain', dur: 9, hover: 1, run(p, m, t) {
   while ((m.n || 0) < n) {
     m.n = (m.n || 0) + 1;
     const o = focus(), cx = o ? o.x : p.x + p.face * 320;
-    for (let i = 0; i < M.f.count; i++) shots.push({ p, M, x: cx + rnd(-80, 80) + (i - (M.f.count - 1) / 2) * 150, y: p.y + 260 + rnd(0, 120), vx: rnd(-30, 30), vy: -1500 * m.sp, s: 22 * m.sz, dmg: 5, kb: 90, stun: .3, down: 1, home: M.f.home ? 700 : 0, hit: new Set(), t: 0, life: 1.4 });
+    for (let i = 0; i < M.f.count; i++) shots.push({ p, M, x: cx + rnd(-80, 80) + (i - (M.f.count - 1) / 2) * 150, y: p.y + 260 + rnd(0, 120), vx: rnd(-30, 30), vy: -1500 * m.sp, s: 22 * m.sz, dmg: 5, kb: 90, stun: .3, down: 1, home: M.f.home ? 700 : 0, hit: new Set(), t: 0, life: 1.4,
+      floor: s => { spark(s.x, 6, 70 * m.sz, colOf(M), 8, .18); pix(s.x, 4, 3, [colOf(M), M.alt], 260, 8, .3); } });
     chip8('pew');
+    if (m.n % 4 === 1) ringq(p.x, p.y + 230, 110, colOf(M), .2, 8);
   }
+  if (Math.random() < .5) gather(p.x, p.y + 200, 160, [colOf(M), '#fff'], 1);
   if (tt > .74) E.endMove(p);
 } };
 // 2: SPRITE DIVE
@@ -538,12 +703,16 @@ const DIVE = { name: 'Sprite Dive', dur: 9, run(p, m, t) {
       const dx = m.tx - p.x, dy = -Math.max(1, p.y), L = Math.hypot(dx, dy) || 1;
       p.vx = dx / L * 3200 * m.sp; p.vy = dy / L * 3200 * m.sp; p.face = dx >= 0 ? 1 : -1;
       parts.push({ x: p.x, y: p.y + rnd(60, 260), vx: 0, vy: 300, s: 16 * m.sz, col: Math.random() < .5 ? colOf(M) : M.alt, t: 0, life: .2 });
+      echo(p, colOf(M), M.alt, .25);
+      for (let i = 0; i < 2; i++) parts.push({ x: p.x + rnd(-80, 80), y: p.y + rnd(40, 320), vx: -p.vx * .25, vy: -p.vy * .25, s: rnd(5, 9), col: '#fff', t: 0, life: .12, fl: 1 });
       if (tt > 1.4) E.endMove(p);
       return;
     }
     m.ph = 'up';
     for (const o of targets()) if (can(o, true) && Math.abs(o.x - p.x) < 175 * m.sz && o.y < 300) strike(p, o, { dmg: 65, kb: 720, lift: 640, heavy: 1, stop: .12 }, M);
-    cross(p.x, 30, 230 * m.sz, colOf(M)); cam.shake = Math.max(cam.shake, 16); chip8('boom');
+    cross(p.x, 30, 230 * m.sz, colOf(M)); cam.shake = Math.max(cam.shake, 18); chip8('boom');
+    ringq(p.x, 0, 330 * m.sz, colOf(M), .45, 18, true); ringq(p.x, 0, 180 * m.sz, '#fff', .3, 12, true); spark(p.x, 60, 300 * m.sz, colOf(M), 16, .3);
+    pillar(p.x, 90 * m.sz, colOf(M), .4); flash(colOf(M), .25);
     p.vy = 560; p.vx = -p.face * 200; p.ground = false; p.y = Math.max(p.y, 1);
     return;
   }
@@ -553,8 +722,10 @@ const DIVE = { name: 'Sprite Dive', dur: 9, run(p, m, t) {
 // 3: 8-BIT BOMB, and the cross it goes off in
 function explode(s) {
   const M = s.M, sz = s.sz || 1, x = s.x, y = Math.max(40, s.y), R = 340 * sz;
-  cross(x, y, R, colOf(M), .55); chip8('boom'); cam.shake = Math.max(cam.shake, 18);
+  cross(x, y, R, colOf(M), .55); chip8('boom'); cam.shake = Math.max(cam.shake, 20);
   pix(x, y, 18, [colOf(M), M.alt, '#fff'], 640, 16, .55);
+  ringq(x, y, R * .8, '#ffffff', .35, 18); spark(x, y, R * 1.1, colOf(M), 16, .3); flash('#fff3c0', .35); glitch(.1, .35);
+  for (let i = 0; i < 7; i++) parts.push({ x: x + rnd(-60, 60), y: y + rnd(-20, 40), vx: rnd(-90, 90), vy: rnd(150, 360), s: rnd(18, 30) * sz, col: ['#2a2a33', '#3b3b48', '#55555f'][i % 3], t: 0, life: rnd(.6, .9), fl: 1 });      // (smoke, in squares)
   for (const o of targets()) {
     if (!can(o, true)) continue;
     const dx = Math.abs(o.x - x), arm = (dx < R && Math.abs(mid(o) - y) < 120 * sz + 150) || (dx < 90 * sz + 40 && o.y < y + R);
@@ -570,6 +741,8 @@ const BOMB = { name: '8-Bit Bomb', dur: 9, run(p, m, t) {
     for (let i = 0; i < M.f.count; i++) {
       const dx = tx - p.x + (i - (M.f.count - 1) / 2) * 260;
       shots.push({ p, M, sz: m.sz, bomb: 1, x: p.x + p.face * 50, y: p.y + 210, vx: dx / .6, vy: 420, grav: 2200, s: 48 * m.sz, dmg: 0, down: 1, home: 0, hit: new Set(), t: 0, life: 3, touch: s => explode(s), floor: s => explode(s) });
+      const lx = tx + (i - (M.f.count - 1) / 2) * 260;        // where it will come down, marked on the floor
+      props.push({ x: lx, t: 0, life: .62, draw(q) { const u = q.t / q.life, a = P(q.x - 90, 0, ZP - 50), b = P(q.x + 90, 0, ZP + 50); g.strokeStyle = (q.t * 16 | 0) % 2 ? '#ff2440' : '#fff'; g.lineWidth = 3; g.globalAlpha = .4 + .6 * u; g.strokeRect(a[0], b[1], b[0] - a[0], a[1] - b[1]); g.globalAlpha = 1; } });
     }
     chip8('fall');
   }
@@ -580,8 +753,10 @@ const STORM = { name: 'Pixel Storm', dur: 9, hover: 1, run(p, m, t) {
   init(p, m);
   const tt = t * m.sp, M = m.M;
   p.vy = 0; p.vx *= .85; p.rate = 40; p.target = OPEN; p.spin = Math.cos(tt * 20);
+  for (let i = 0; i < 2; i++) { const a = tt * 14 + i * Math.PI, r = 150 + 30 * Math.sin(tt * 9); parts.push({ x: p.x + Math.cos(a) * r, y: p.y + 160 + Math.sin(a) * r * .8, vx: 0, vy: 0, s: 12, col: i ? M.alt : colOf(M), t: 0, life: .12, fl: 1 }); }      // (a ring of bits going round him)
   for (const [i, at] of [[0, .1], [1, .45]]) if (tt >= at && !m['w' + i]) {
     m['w' + i] = 1; chip8('pew'); chip8('big');
+    ringq(p.x, p.y + 160, 260, colOf(M), .3, 14); spark(p.x, p.y + 160, 220, '#fff', 8, .2); cam.shake = Math.max(cam.shake, 8);
     for (let j = 0; j < 8; j++) {
       const a = j / 8 * TAU + i * TAU / 16, v = 1300 * m.sp;
       shots.push({ p, M, x: p.x, y: p.y + 160, vx: Math.cos(a) * v, vy: Math.sin(a) * v, s: 20 * m.sz, dmg: 5, kb: 140, stun: .3, down: 1, home: M.f.home ? 1300 : 600, hit: new Set(), t: 0, life: 1.1 });      // (they all bend round for them a little; LOCK-ON, a lot)
@@ -600,7 +775,10 @@ function shiftStrike(p) {
   chip8('mode');
   pix(p.x, p.y + 150, 20, [colOf(M), M.alt, '#fff'], 700, 13, .45);
   V.ring(p.x, p.y + 150, 260, colOf(M), .3);
+  ringq(p.x, p.y + 150, 280, colOf(M), .35, 16); ringq(p.x, 0, 240, M.alt, .35, 12, true);
+  echo(p, colOf(M), M.alt, .4); pillar(p.x, 70, colOf(M), .35);
   if (scd > 0) return;
+  spark(p.x, p.y + 150, 300, colOf(M), 16, .3); flash(colOf(M), .2);
   scd = SCD;
   for (const o of targets()) if (can(o) && Math.abs(o.x - p.x) < 270 && o.y < 300) strike(p, o, { dmg: 25, kb: 620, lift: 280, stop: .06 }, M);
 }
@@ -621,16 +799,25 @@ const ESP = { jp: 'セーブ', col: GREEN, name: () => (saved ? 'Load State' : '
     if (p.dead) return true;
     if (!saved) {
       if (ecd > 0) { sfx.back(); return true; }
-      saved = { hp: p.hp, x: p.x };
-      word(p.x, p.y + 400, 'SAVED', GREEN, 24, 1); chip8('save'); pix(p.x, p.y + 330, 10, [GREEN, '#fff'], 260, 10, .4);
+      saved = { hp: p.hp, x: p.x, pose: p.pose.slice(), face: p.face, scale: p.scale, spin: p.spin === undefined ? 1 : p.spin, skin: p.skin };
+      const w = word(p.x, p.y + 400, 'SAVED', GREEN, 24, 1); w.pop = 1; chip8('save'); pix(p.x, p.y + 330, 10, [GREEN, '#fff'], 260, 10, .4);
+      props.push({ x: p.x, y: p.y, t: 0, life: .35, draw(q) {          // a camera's shutter, closing on him
+        const u = q.t / q.life, c = F(q.x, q.y + 170), r = (260 - 150 * u) * c[2], th = Math.max(2, 6 * c[2]);
+        g.strokeStyle = '#fff'; g.globalAlpha = 1 - u; g.lineWidth = th; g.strokeRect(c[0] - r * .7, c[1] - r, r * 1.4, r * 2); g.globalAlpha = 1;
+      } });
+      flash('#ffffff', .18);
       return true;
     }
     const s = saved; saved = null; ecd = ECD;
+    const from = { x: p.x, y: p.y };
     pix(p.x, p.y + 150, 22, [GREEN, '#fff', colOf(mode())], 620, 13, .45);
+    echo(p, GREEN, '#b8ff9c', .5);
     if (p.move) E.endMove(p);
     p.hp = Math.max(p.hp, s.hp); p.x = clamp(s.x, -955, 955); p.y = 0; p.vy = 0; p.vx = 0; p.ground = true; p.ps = null; p.stun = 0; p.inv = Math.max(p.inv || 0, .6);
     pix(p.x, p.y + 150, 22, [GREEN, '#fff'], 620, 13, .45);
-    word(p.x, p.y + 400, 'LOADED', GREEN, 24, 1); chip8('load');
+    const w = word(p.x, p.y + 400, '◄◄ LOADED', GREEN, 24, 1); w.pop = 1; chip8('load');
+    for (let i = 0; i < 18; i++) { const u = i / 17; parts.push({ x: lerp(from.x, p.x, u), y: lerp(from.y, p.y, u) + 150 + rnd(-90, 90), vx: (p.x - from.x) * .6, vy: 0, s: rnd(8, 14), col: i % 2 ? GREEN : '#fff', t: -u * .12, life: .3 + u * .12, fl: 1 }); }      // (the way back, in bits)
+    ringq(p.x, p.y + 150, 220, GREEN, .35, 14); glitch(.25, .5); flash(GREEN, .2);
     return true;
   } };
 
@@ -639,18 +826,24 @@ let ks = null;                                       // { t, side, x }: the scre
 const KILL = { dur: 9, run(p, m, t) {
   const M = m.M || (m.M = mode());
   p.vx = 0; p.inv = Math.max(p.inv || 0, .3); p.rate = 26;
-  if (!m.go) { m.go = 1; m.n = 0; ks = { t: 0, side: p.face, x: p.x, M, seed: Math.random() * 1e4 }; chip8('kill'); E.banner('崩壊', 'KILL SCREEN', 'sm'); }
+  if (!m.go) { m.go = 1; m.n = 0; ks = { t: 0, side: p.face, x: p.x, M, seed: Math.random() * 1e4 }; chip8('kill'); E.banner('崩壊', 'KILL SCREEN', 'sm'); glitch(.5, 1); flash('#ffffff', .4); }
   ks.t = t; ks.x = p.x;
   p.target = t < .5 ? POSE.divWind : SKY;
+  if (t < .6) gather(p.x, p.y + 200, 320, RAINBOW, 3);
   const N = duel() ? 10 : 50;
   if (t >= .6 && t < 3.6) {
     const k = Math.floor((t - .6) / (3 / N));
     while (m.n <= k && m.n < N) {
       m.n++;
-      for (const o of targets()) if ((o.x - p.x) * ks.side > -40) { o.bkIce = E.T + .25; if (!o.net) o.vx = 0; strike(p, o, { dmg: 30, exact: 1, flat: 1, kb: 0, stun: .6, stop: 0, mute: m.n % 3 !== 0 }, M); }
+      for (const o of targets()) if ((o.x - p.x) * ks.side > -40) {
+        o.bkIce = E.T + .25; if (!o.net) o.vx = 0; strike(p, o, { dmg: 30, exact: 1, flat: 1, kb: 0, stun: .6, stop: 0, mute: m.n % 3 !== 0 }, M);
+        if (m.n % 2) spark(o.x + rnd(-60, 60), mid(o) + rnd(-90, 90), 110, RAINBOW[m.n % 10], 8, .16);
+        if (m.n % 10 === 0) { win(o, rnd(-160, 160), rnd(80, 340), RAINBOW[(m.n / 10) % 10 | 0], 'KILL SCREEN', .5); ringq(o.x, mid(o), 260, '#fff', .25, 12); }
+      }
+      if (m.n % 6 === 0) { glitch(.12, .5); cam.shake = Math.max(cam.shake, 8); }
     }
   }
-  if (t >= 3.6 && !m.end) { m.end = 1; chip8('over'); for (const o of targets()) if ((o.x - p.x) * ks.side > -40) word(o.x, o.y + 420, 'GAME OVER', '#ff2440', 30, 1.5); }
+  if (t >= 3.6 && !m.end) { m.end = 1; chip8('over'); flash('#ff2440', .35); glitch(.3, .8); for (const o of targets()) if ((o.x - p.x) * ks.side > -40) { const w = word(o.x, o.y + 420, 'GAME OVER', '#ff2440', 30, 1.5); w.pop = 1; } }
   if (t > 4.1) { ks = null; E.endMove(p); }
 } };
 // drawn over everything, in screen space: tiles of garbage, as an old game's last level was when its counter ran out
@@ -670,6 +863,15 @@ function drawKill() {
     if (kind === 5) { g.fillStyle = GREEN; g.fillRect(x + 4, y + 4, 8, 8); g.fillRect(x + 16, y + 14, 8, 8); }
   }
   g.globalAlpha = 1;
+  if (u > 0 && out < 1) {                            // the line where the world gives out: white, ragged, flickering
+    g.fillStyle = (tick % 2) ? '#ffffff' : colOf(ks.M);
+    for (let r = 0; r < rows; r++) {
+      const jag = (Math.sin(r * 1.7 + ks.seed) * .5 + .5) * 3 * TS, x = ks.side > 0 ? edge + jag : edge - jag - TS;
+      g.globalAlpha = (.6 + .4 * Math.random()) * (1 - out); g.fillRect(x + (ks.side > 0 ? -4 : TS), r * TS, 4, TS);
+      if (Math.random() < .15) g.fillRect(x + ks.side * rnd(-30, 30), r * TS + rnd(0, TS), rnd(6, 16), 4);
+    }
+    g.globalAlpha = 1;
+  }
   if (ks.t > 3.55) {
     const a = clamp((ks.t - 3.55) / .2, 0, 1) * (1 - out * .6), cx = ks.side > 0 ? (sx + VW) / 2 : sx / 2;
     g.globalAlpha = a; g.font = `44px ${PIX}`; g.textAlign = 'center'; g.textBaseline = 'middle';
@@ -686,7 +888,8 @@ H.lastStand = () => {
   if (on() && lives > 0 && !duel() && p) {
     lives--;
     p.hp = p.max; p.dead = false; p.ps = 'up'; p.stun = .35; p.inv = 2.4; p.vx = 0;
-    word(p.x, p.y + 420, '1UP!', GREEN, 36, 1.5); pix(p.x, p.y + 150, 30, [GREEN, GOLD, '#fff'], 760, 14, .7); chip8('up');
+    const w = word(p.x, p.y + 420, '1UP!', GREEN, 36, 1.5); w.pop = 1; w.rain = 1; pix(p.x, p.y + 150, 30, [GREEN, GOLD, '#fff'], 760, 14, .7); chip8('up');
+    pillar(p.x, 110, GREEN, .7); ringq(p.x, 0, 320, GOLD, .5, 18, true); ringq(p.x, p.y + 150, 260, GREEN, .4, 14); flash(GREEN, .35); glitch(.15, .4);
     E.banner('残機', 'EXTRA LIFE', 'sm');
     return true;
   }
@@ -738,7 +941,7 @@ DEF = T.TECH.bitking;
 if (JU.especial) JU.especial.add('bitking', ESP);
 JU.awakened.LIST.push({ id: 'bitking', secret: true, name: 'BITKING', mark: '王', col: GREEN,
   what: '15 moves and 50 modes. Pixel Blaster, Byte Dash, Cartridge Slam, Mega Beam (hold one for a bigger one), four more in the air, Save State on E, Kill Screen on G, and an extra life.',
-  later: () => `Beat the BIT MODE DLC: the green button above Play. Stages cleared: ${Math.min(S.st, 5)} of 5.`,
+  later: () => `It came from the BIT MODE DLC, which has ended (Build 0.36): it stays with everyone who beat it. Stages you cleared: ${Math.min(S.st, 5)} of 5.`,
   open: () => dev() || !!S.king });
 
 /* ---------- the mode, on his health bar and across the screen as it changes ---------- */
@@ -771,7 +974,7 @@ E.root.addEventListener('wheel', e => {
 
 /* ---------- wiring ---------- */
 const press0 = H.press, tick0 = H.tick, fx0 = H.fx, post0 = H.post, reset0 = H.reset, start0 = H.fightStart, rim0 = H.rim,
-  grav0 = H.gravity, rate0 = H.foeRate, hit0 = H.hit, shift0 = H.shift;
+  grav0 = H.gravity, rate0 = H.foeRate, hit0 = H.hit, shift0 = H.shift, under0 = H.under || (() => {});
 H.press = (a, inScene) => {
   if (!inScene && on() && fighting()) {
     const p = E.P1;
@@ -802,7 +1005,8 @@ H.rim = f => {
 };
 H.shift = d => {
   if (shift0) shift0(d);
-  for (const L of [parts, shots, booms, words, props]) for (const q of L) if (typeof q.x === 'number') q.x -= d;
+  for (const L of [parts, shots, booms, words, props, rings, sparks, echoes, pillars]) for (const q of L) if (typeof q.x === 'number') q.x -= d;
+  for (const s of shots) if (s.tr) for (let i = 0; i < s.tr.length; i += 2) s.tr[i] -= d;
   for (const z of zaps) { z.x0 -= d; z.x1 -= d; }
   if (saved) saved.x -= d;
   if (ks) ks.x -= d;
@@ -826,17 +1030,89 @@ H.tick = dt => {
   else if (!E.root.classList.contains('bkon')) paintMode(false);
   if (ks && !(E.P1.move && E.P1.move.def === KILL)) ks = null;      // (cut short, by whatever ended it: the screen mends)
 };
+// (Build 0.36) him as he just was, drawn under everybody: flat, in his mode's colours, fading
+H.under = dt => {
+  under0(dt);
+  for (let i = echoes.length - 1; i >= 0; i--) {
+    const q = echoes[i]; q.t += dt;
+    if (q.t >= q.life) { echoes.splice(i, 1); continue; }
+    const u = q.t / q.life;
+    E.drawFighter(E.over(q, E.flat(q.col, q.alt)), .55 * (1 - u));
+  }
+  for (const q of pillars) {                        // the floor under a column of bits, lit
+    const u = q.t / q.life, c = F(q.x, 0), w = q.w * 2.2 * c[2];
+    g.globalCompositeOperation = 'lighter'; g.globalAlpha = .35 * (1 - u); g.fillStyle = q.col;
+    g.fillRect(c[0] - w, c[1] - w * .12, w * 2, w * .24); g.globalAlpha = 1; g.globalCompositeOperation = 'source-over';
+  }
+};
 H.fx = dt => {
   fx0(dt);
+  const p0 = E.P1;
+  if (on() && fighting() && p0 && !p0.dead && Math.random() < dt * 14) {      // (Build 0.36) bits coming off him all the time, rising
+    const M = mode(), k = hs(p0);
+    parts.push({ x: p0.x + rnd(-45, 45) * k, y: p0.y + rnd(20, 300) * k, vx: rnd(-20, 20), vy: rnd(90, 200), s: rnd(5, 10), col: Math.random() < .7 ? colOf(M) : M.alt, t: 0, life: rnd(.5, .9), fl: 1 });
+  }
   for (let i = parts.length - 1; i >= 0; i--) {
     const q = parts[i]; q.t += dt;
     if (q.t >= q.life) { parts.splice(i, 1); continue; }
-    q.vy -= 1500 * dt; q.x += q.vx * dt; q.y += q.vy * dt;
+    if (q.t < 0) continue;                            // (not yet: one of a row that goes off one after another)
+    if (!q.fl) q.vy -= 1500 * dt;                     // (fl: it floats)
+    q.x += q.vx * dt; q.y += q.vy * dt;
     if (q.y < 0) { q.y = 0; q.vy *= -.35; q.vx *= .6; }
     sq(q.x, q.y, q.s, q.col, 1 - (q.t / q.life) ** 2);
   }
+  for (let i = pillars.length - 1; i >= 0; i--) {     // a column of bits going up
+    const q = pillars[i]; q.t += dt;
+    if (q.t >= q.life) { pillars.splice(i, 1); continue; }
+    const u = q.t / q.life, top = 1500 * Math.min(1, u * 3), cell = 26, tk = E.T * 30 | 0;
+    for (let y = 0; y < top; y += cell) {
+      const k = (y / cell) | 0, wv = q.w * (1 - u) * (.6 + .4 * Math.sin(k * 1.3 + tk * .2));
+      sq(q.x + Math.sin(k * 2.1 + tk) * 8, y, Math.max(4, wv * .5), (k + tk) % 3 ? q.col : '#fff', (1 - u) * (1 - y / 1600));
+    }
+    glowSq(q.x, 120, q.w * 1.4, q.col, 1 - u);
+  }
   for (const q of props) if (q.draw) q.draw(q);
   for (const s of shots) drawShot(s);
+  for (let i = rings.length - 1; i >= 0; i--) {       // square shockwaves of bits
+    const q = rings[i]; q.t += dt;
+    if (q.t >= q.life) { rings.splice(i, 1); continue; }
+    const u = q.t / q.life, r = q.r * (1 - (1 - u) ** 3), th = q.th * (1 - u * .7), a = 1 - u * u, n = Math.max(4, Math.round(r / (th * 1.4)));
+    for (let j = 0; j < n; j++) {
+      const v = j / n * 2 - 1;
+      if (q.floor) {                                  // lying on the floor: a square in true depth
+        for (const [x, z] of [[v * r, -r * .5], [v * r, r * .5], [-r, v * r * .5], [r, v * r * .5]]) {
+          const c = P(q.x + x, 0, ZP + z), w = th * c[2];
+          g.globalAlpha = a; g.fillStyle = j % 2 ? q.col : '#ffffff'; g.fillRect(c[0] - w / 2, c[1] - w / 4, w, w / 2);
+        }
+      } else for (const [x, y] of [[v * r, -r], [v * r, r], [-r, v * r], [r, v * r]]) bit(q.x + x, q.y + y, th, j % 2 ? q.col : '#ffffff', a);
+    }
+    g.globalAlpha = 1;
+  }
+  for (let i = sparks.length - 1; i >= 0; i--) {      // rays of bits
+    const q = sparks[i]; q.t += dt;
+    if (q.t >= q.life) { sparks.splice(i, 1); continue; }
+    const u = q.t / q.life, r1 = q.len * (1 - (1 - u) ** 2), r0 = r1 * .45;
+    for (let j = 0; j < q.n; j++) {
+      const ang = q.a0 + j / q.n * TAU, cs = Math.cos(ang), sn = Math.sin(ang), long = j % 2 ? .65 : 1;
+      for (let k = 0; k < 4; k++) { const r = lerp(r0, r1, k / 3) * long; sq(q.x + cs * r, q.y + sn * r, (12 - k * 2.5) * (1 - u * .6), k ? q.col : '#ffffff', 1 - u); }
+    }
+  }
+  for (let i = wins.length - 1; i >= 0; i--) {        // an old computer's error windows
+    const q = wins[i]; q.t += dt;
+    if (q.t >= q.life || !q.o || q.o.ko) { wins.splice(i, 1); continue; }
+    const pop = Math.min(1, q.t / .08), c = F(q.o.x + q.dx, q.o.y + q.dy), k = c[2] * (.6 + .4 * pop) * (q.t > q.life - .1 ? (q.life - q.t) / .1 : 1);
+    const w = 190 * k, h = 96 * k, x0 = c[0] - w / 2, y0 = c[1] - h / 2, bar = 22 * k;
+    g.fillStyle = INK; g.fillRect(x0 - 3 * k, y0 - 3 * k, w + 6 * k, h + 6 * k);
+    g.fillStyle = '#c8c8d2'; g.fillRect(x0, y0, w, h);
+    g.fillStyle = q.col; g.fillRect(x0, y0, w, bar);
+    g.fillStyle = '#ffffff'; g.font = `${Math.max(6, 10 * k) | 0}px ${PIX}`; g.textAlign = 'left'; g.textBaseline = 'middle'; g.fillText(q.title, x0 + 6 * k, y0 + bar / 2 + 1);
+    g.fillStyle = INK; g.fillRect(x0 + w - bar + 3 * k, y0 + 3 * k, bar - 6 * k, bar - 6 * k);
+    g.fillStyle = '#ff2440'; g.fillRect(x0 + 10 * k, y0 + bar + 12 * k, 22 * k, 22 * k);
+    g.fillStyle = '#fff'; g.fillText('!', x0 + 18 * k, y0 + bar + 24 * k);
+    g.fillStyle = INK; g.fillText(q.code, x0 + 42 * k, y0 + bar + 23 * k);
+    g.fillStyle = '#9a9aa8'; g.fillRect(x0 + w / 2 - 26 * k, y0 + h - 24 * k, 52 * k, 17 * k);
+    g.fillStyle = INK; g.textAlign = 'center'; g.fillText('OK', x0 + w / 2, y0 + h - 15 * k);
+  }
   for (let i = booms.length - 1; i >= 0; i--) {
     const b = booms[i]; b.t += dt;
     if (b.t >= b.life) { booms.splice(i, 1); continue; }
@@ -863,14 +1139,35 @@ H.fx = dt => {
     const w = words[i]; w.t += dt;
     if (w.t >= w.life) { words.splice(i, 1); continue; }
     if (!w.n) continue;
-    const c = F(w.x, w.y + w.t * 50), u = w.t / w.life, sz = Math.max(8, w.size * c[2]) | 0;
+    const pop = w.pop && w.t < .14 ? 1 + .7 * (1 - w.t / .14) : 1;      // (Build 0.36: it lands with a bounce)
+    const c = F(w.x, w.y + w.t * 50), u = w.t / w.life, sz = Math.max(8, w.size * c[2] * pop) | 0;
     g.globalAlpha = u > .7 ? (1 - u) / .3 : 1; g.font = `${sz}px ${PIX}`;
     g.fillStyle = INK; for (const [dx, dy] of [[3, 3], [-2, 0], [2, 0], [0, -2], [0, 2]]) g.fillText(w.n, c[0] + dx * c[2], c[1] + dy * c[2]);
-    g.fillStyle = w.col; g.fillText(w.n, c[0], c[1]);
+    g.fillStyle = w.rain ? RAINBOW[(E.T * 14 | 0) % RAINBOW.length] : w.col; g.fillText(w.n, c[0], c[1]);
     g.globalAlpha = 1;
   }
 };
-H.post = dt => { post0(dt); if (on()) drawKill(); };
+// (Build 0.36) over the whole picture: a flash of colour, and the picture slipping sideways in slices for a moment
+function screenFx(dt) {
+  if (flashA > 0) {
+    g.globalAlpha = Math.min(1, flashA); g.globalCompositeOperation = 'lighter'; g.fillStyle = flashC; g.fillRect(0, 0, E.VW, E.VH);
+    g.globalCompositeOperation = 'source-over'; g.globalAlpha = 1;
+    flashA = Math.max(0, flashA - dt * 3.2);
+  }
+  if (glitchT > 0 && !JU.reduceMotion) {
+    const cv = g.canvas, Wc = cv.width, Hc = cv.height, pw = glitchP * (glitchT / glitchL), n = 3 + Math.round(9 * pw);
+    g.save(); g.setTransform(1, 0, 0, 1, 0, 0);
+    for (let i = 0; i < n; i++) {
+      const y = Math.random() * Hc | 0, h = Math.max(2, (.004 + Math.random() * .05 * pw) * Hc | 0), dx = ((Math.random() - .5) * .09 * pw * Wc) | 0;
+      g.drawImage(cv, 0, y, Wc, h, dx, y, Wc, h);
+    }
+    g.globalCompositeOperation = 'lighter';
+    for (let i = 0; i < 3; i++) { g.globalAlpha = .22 * pw; g.fillStyle = ['#ff3dd8', '#3dfcff', GREEN][i]; g.fillRect(0, Math.random() * Hc, Wc, Math.max(1, Math.random() * .012 * Hc)); }
+    g.restore();
+    glitchT = Math.max(0, glitchT - dt); if (!glitchT) glitchP = 0;
+  }
+}
+H.post = dt => { post0(dt); if (on()) { drawKill(); screenFx(dt); } else if (flashA || glitchT) { flashA = 0; glitchT = 0; glitchP = 0; } };
 function fresh() { clearAll(); saved = null; ks = null; scd = 0; ecd = 0; lives = 1; }
 H.reset = () => { reset0(); fresh(); };
 H.fightStart = (cfg, wave) => { start0(cfg, wave); if (!wave) fresh(); else { shots.length = 0; props.length = 0; } paintMode(false); };

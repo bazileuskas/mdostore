@@ -5,6 +5,14 @@
 // Newest first. v = the build, jp = the seal stamped beside it, pic = notes/<pic>.jpg, cap = what the picture shows.
 // A new update goes at the top of this list.
 const NOTES = [
+  { v: '0.36', name: 'The Hundred Doors', jp: '百扉', date: '8 Nov 2026', pic: 'doors', cap: 'The Stampede running through a room; the Watcher in a dark one; the Doorkeeper in the archive at door 50, one book left to find; the lamp hall at door 100 with every lamp lit', items: [
+    'NEW DLC: THE HUNDRED DOORS. The old wooden doors above Play, black goo running off them: knock, and they open. Their page has the door × JUJUTSU UNLIMITEDS, all hundred doors as a map, how far you have got, and your records',
+    'A cursed inn of a hundred rooms, one after another: walk to the numbered door at the end of each and go through it. Search the chests (keys, healing talismans, Cursed Tokens, notes the last guests left) and hide in the closets',
+    'What lives there: THE STAMPEDE (the lamps shake and the floor rumbles: get into a closet before the herd runs through), THE WATCHER (an eye opens in the wall of a dark room: keep still while it looks), THE GRASP (a black pool under your feet: step off it), a closet that breathes (do not hide in that one), and sealed rooms, where you fight your way out with whatever you have equipped',
+    'Doors 50 and 100: RAID BOSS, THE DOORKEEPER. At 50, five books glow round the archive: touch them and it weakens. At 100, five switches in the lamp hall: every lamp you light weakens it. The first clears pay 100 and 300 Cursed Tokens, and beating door 100 gets you out',
+    'A little shrine every ten doors: rest there for all your health back. Fall, and you carry on from the last shrine (or from the boss door itself)',
+    'BIT MODE has ended. BITKING stays with everyone who beat it',
+    'The moves of BITKING look cooler: glowing trails on everything it fires, square shockwaves and sparks of bits on every hit, afterimages on Byte Dash, Sprite Dive and Combo Breaker, error windows popping up all over them in System Crash, a satellite for Orbital Laser, a beam full of running data, a bomb that fizzes and blinks, a rewind for Load State, and the screen glitching on the big ones'] },
   { v: '0.35v2', name: 'Still Equipped', jp: '装備', date: '8 Nov 2026', pic: 'discharge', cap: 'Overflow, the Granite raid, and True Direct Cursed Energy Discharge\'s Omnidirectional Discharge and City Breaker', items: [
     'Fixed: Direct Cursed Energy Discharge, True Direct Cursed Energy Discharge, True Love Reaper, Final Love Reaper and True Final Love Reaper came off every time the game was loaded, even once they were yours, so they had to be equipped again on every visit. They stay equipped now',
     'Anything equipped that is not yours is still taken off when the game loads, as before'] },
