@@ -894,7 +894,8 @@ function render(fdt, extra) {
 
 function frame(now) {
   if (!running) return;
-  const real = Math.min(.033, (now - last) / 1000);
+  raf = requestAnimationFrame(frame);               // first: whatever goes wrong in this frame, there is a next one (Build 0.35: one bad frame used to stop the fight for good)
+  const real = Math.min(.033, Math.max(0, (now - last) / 1000) || 0);      // (never backwards: the frame after a start can be stamped a moment before the start itself, Build 0.35)
   last = now; T += real;
   let dt = real;
   if (stopT > 0) { stopT -= real; dt = 0; }
@@ -905,7 +906,6 @@ function frame(now) {
   if (scene) scene.update(dt, real); else update(dt, real);
   cyaw = Math.cos(cam.yaw); syaw = Math.sin(cam.yaw);
   if (scene) scene.render(dt, real); else render(dt);
-  raf = requestAnimationFrame(frame);
 }
 
 /* ================= input ================= */

@@ -5,6 +5,9 @@
 // Newest first. v = the build, jp = the seal stamped beside it, pic = notes/<pic>.jpg, cap = what the picture shows.
 // A new update goes at the top of this list.
 const NOTES = [
+  { v: '0.35v1', name: 'Unfrozen', jp: '解凍', date: '8 Nov 2026', pic: 'unfrozen', cap: 'All four of the BIT MODE bosses, each fight drawn from its very first frame', items: [
+    'Fixed: a fight could freeze on its very first frame and show only the stage, with nobody in it. It happened most in the BIT MODE stages, which start straight from the event page. The first frame of a fight could be stamped a moment before the fight began, and the shockwave of a boss, drawn backwards in time, stopped the game. Time never runs backwards now',
+    'And if anything ever goes wrong in a single frame again, the fight carries on instead of stopping for good'] },
   { v: '0.35', name: 'BIT MODE', jp: 'ビット', date: '8 Nov 2026', pic: 'bitmode', cap: 'BITKING in BIT MODE (Mega Beam); THE BIT KING on the street of the BIT RAID; his Kill Screen; and BITKING in Training', items: [
     'BIT MODE, a DLC, and free. A green arcade button sits above Play now, and its bits are getting out: they creep over the menu round it. Press it and it starts to beat like a heart, faster and faster, the menu breaks apart, and the event page comes on like an old screen: BITHIT × JUJUTSU UNLIMITEDS. Like a real DLC, it downloads when you press it',
     'JJU in BIT MODE: the game as an old console would show it, a few hundred pixels across, in 64 colours, with the lines of an old screen over it and the bars and names in arcade letters. Your own technique, clan and cursed tool come with you',

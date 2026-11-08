@@ -134,7 +134,7 @@ function drawShocks(dt) {
     const s = shocks[i];
     s.t += dt;
     if (s.t >= s.life) { shocks.splice(i, 1); continue; }
-    const u = s.t / s.life, c = F(s.x, 0), r = s.r * ease(u) * c[2];
+    const u = clamp(s.t / s.life, 0, 1), c = F(s.x, 0), r = Math.max(0, s.r * ease(u) * c[2]);      // (never below nothing: a negative ring stops the frame, Build 0.35)
     lite(() => {
       g.strokeStyle = `rgba(${s.rgb},${1 - u})`; g.lineWidth = (s.w * (1 - u) + 1) * c[2]; g.beginPath(); g.ellipse(c[0], c[1] + 3, r, r * .26, 0, 0, TAU); g.stroke();
       g.strokeStyle = `rgba(255,255,255,${.7 * (1 - u)})`; g.lineWidth = 2 * c[2]; g.beginPath(); g.ellipse(c[0], c[1] + 3, r * .93, r * .93 * .26, 0, 0, TAU); g.stroke();
