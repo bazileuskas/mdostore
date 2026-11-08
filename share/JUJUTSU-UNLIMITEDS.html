@@ -1474,7 +1474,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
   </div>
 
   <div class="side" aria-hidden="true" lang="ja">領域展開</div>
-  <div class="hud tl"><b lang="ja">呪</b>Fan project · Build 0.35v1 · Unfrozen</div>
+  <div class="hud tl"><b lang="ja">呪</b>Fan project · Build 0.35v2 · Still Equipped</div>
   <div class="hud bl">↑ ↓ Select &nbsp;·&nbsp; Enter Confirm</div>
   <div class="hud br">Title screen</div>
   <div class="acct" id="acct">
@@ -38260,6 +38260,9 @@ JU.shinjuku = { world, AREAS };
 // Newest first. v = the build, jp = the seal stamped beside it, pic = notes/<pic>.jpg, cap = what the picture shows.
 // A new update goes at the top of this list.
 const NOTES = [
+  { v: '0.35v2', name: 'Still Equipped', jp: '装備', date: '8 Nov 2026', pic: 'discharge', cap: 'Overflow, the Granite raid, and True Direct Cursed Energy Discharge\'s Omnidirectional Discharge and City Breaker', items: [
+    'Fixed: Direct Cursed Energy Discharge, True Direct Cursed Energy Discharge, True Love Reaper, Final Love Reaper and True Final Love Reaper came off every time the game was loaded, even once they were yours, so they had to be equipped again on every visit. They stay equipped now',
+    'Anything equipped that is not yours is still taken off when the game loads, as before'] },
   { v: '0.35v1', name: 'Unfrozen', jp: '解凍', date: '8 Nov 2026', pic: 'unfrozen', cap: 'All four of the BIT MODE bosses, each fight drawn from its very first frame', items: [
     'Fixed: a fight could freeze on its very first frame and show only the stage, with nobody in it. It happened most in the BIT MODE stages, which start straight from the event page. The first frame of a fight could be stamped a moment before the fight began, and the shockwave of a boss, drawn backwards in time, stopped the game. Time never runs backwards now',
     'And if anything ever goes wrong in a single frame again, the fight carries on instead of stopping for good'] },
@@ -39147,11 +39150,12 @@ function allowed(id) {
   if (t.awakened) { const a = JU.awakened.LIST.find(x => x.id === id); return !!(a && a.open && a.open()); }
   return holds('tech', id);
 }
-// what is equipped has to be something he may equip. When the page loads, and whenever a clan or a slot changes (Sukuna's Mark leans on
-// his clan, an awakened technique on the one it awakens), anything that is not is put down
-let checking = false;
+// what is equipped has to be something he may equip. Once the whole game is in (the foot of this file), and whenever a clan or a slot
+// changes (Sukuna's Mark leans on his clan, an awakened technique on the one it awakens), anything that is not is put down. Before that
+// nothing is: a technique from a file after this one in the list is not there yet, and would be taken for one he may not have
+let checking = false, ready = false;
 function check() {
-  if (checking || dev()) return;
+  if (checking || !ready || dev()) return;
   checking = true;
   if (JU.clan.equipped && !owns('clan', JU.clan.equipped)) JU.clan.equip('');
   if (JU.tech.equipped && !allowed(JU.tech.equipped)) JU.tech.equip('');
@@ -39311,7 +39315,14 @@ function keepAll() {
 JU.shop = { mount, take, has, give, tix, earn, offers, fee, owns, holds, grant, allowed, check, slotsOf, pick, place, plan, ask, gory, row, giveUp, PACKS, FEES, PRICE, RARE,
   get PAID() { return paid(); }, get dev() { return dev(); }, get tokens() { return S.t; }, get owned() { return { ct: S.ct, cl: S.cl, tl: S.tl }; },
   get state() { return { slots: { tech: S.slots.tech.slice(), clan: S.slots.clan.slice() }, lim: { tech: S.lim.tech.slice(), clan: S.lim.clan.slice() }, ea: { tech: S.ea.tech.slice(), clan: S.ea.clan.slice() }, sel: Object.assign({}, S.sel), tool: S.own.tool.slice() }; } };
-migrate(); keepAll(); check(); sync();
+migrate(); keepAll(); sync();
+// what is equipped is looked at once the whole game is in, not while this file loads (Build 0.35v2): dced.js, tdced.js and lovereap.js
+// come after it in the list, and their techniques were put down on every load. index.html's loader says when its core is in; the page
+// sent to friends (build.py, JU_ALL) has its loader after every file, so there it is once the page has been read
+const settled = () => { ready = true; check(); };
+if (JU.load && JU.load.want) JU.load.want('core').then(settled);
+else if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', settled, { once: true });
+else settled();
 })();
 </script>
 <script>

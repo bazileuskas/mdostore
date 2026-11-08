@@ -5,6 +5,9 @@
 // Newest first. v = the build, jp = the seal stamped beside it, pic = notes/<pic>.jpg, cap = what the picture shows.
 // A new update goes at the top of this list.
 const NOTES = [
+  { v: '0.35v2', name: 'Still Equipped', jp: '装備', date: '8 Nov 2026', pic: 'discharge', cap: 'Overflow, the Granite raid, and True Direct Cursed Energy Discharge\'s Omnidirectional Discharge and City Breaker', items: [
+    'Fixed: Direct Cursed Energy Discharge, True Direct Cursed Energy Discharge, True Love Reaper, Final Love Reaper and True Final Love Reaper came off every time the game was loaded, even once they were yours, so they had to be equipped again on every visit. They stay equipped now',
+    'Anything equipped that is not yours is still taken off when the game loads, as before'] },
   { v: '0.35v1', name: 'Unfrozen', jp: '解凍', date: '8 Nov 2026', pic: 'unfrozen', cap: 'All four of the BIT MODE bosses, each fight drawn from its very first frame', items: [
     'Fixed: a fight could freeze on its very first frame and show only the stage, with nobody in it. It happened most in the BIT MODE stages, which start straight from the event page. The first frame of a fight could be stamped a moment before the fight began, and the shockwave of a boss, drawn backwards in time, stopped the game. Time never runs backwards now',
     'And if anything ever goes wrong in a single frame again, the fight carries on instead of stopping for good'] },

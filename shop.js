@@ -181,11 +181,12 @@ function allowed(id) {
   if (t.awakened) { const a = JU.awakened.LIST.find(x => x.id === id); return !!(a && a.open && a.open()); }
   return holds('tech', id);
 }
-// what is equipped has to be something he may equip. When the page loads, and whenever a clan or a slot changes (Sukuna's Mark leans on
-// his clan, an awakened technique on the one it awakens), anything that is not is put down
-let checking = false;
+// what is equipped has to be something he may equip. Once the whole game is in (the foot of this file), and whenever a clan or a slot
+// changes (Sukuna's Mark leans on his clan, an awakened technique on the one it awakens), anything that is not is put down. Before that
+// nothing is: a technique from a file after this one in the list is not there yet, and would be taken for one he may not have
+let checking = false, ready = false;
 function check() {
-  if (checking || dev()) return;
+  if (checking || !ready || dev()) return;
   checking = true;
   if (JU.clan.equipped && !owns('clan', JU.clan.equipped)) JU.clan.equip('');
   if (JU.tech.equipped && !allowed(JU.tech.equipped)) JU.tech.equip('');
@@ -345,5 +346,12 @@ function keepAll() {
 JU.shop = { mount, take, has, give, tix, earn, offers, fee, owns, holds, grant, allowed, check, slotsOf, pick, place, plan, ask, gory, row, giveUp, PACKS, FEES, PRICE, RARE,
   get PAID() { return paid(); }, get dev() { return dev(); }, get tokens() { return S.t; }, get owned() { return { ct: S.ct, cl: S.cl, tl: S.tl }; },
   get state() { return { slots: { tech: S.slots.tech.slice(), clan: S.slots.clan.slice() }, lim: { tech: S.lim.tech.slice(), clan: S.lim.clan.slice() }, ea: { tech: S.ea.tech.slice(), clan: S.ea.clan.slice() }, sel: Object.assign({}, S.sel), tool: S.own.tool.slice() }; } };
-migrate(); keepAll(); check(); sync();
+migrate(); keepAll(); sync();
+// what is equipped is looked at once the whole game is in, not while this file loads (Build 0.35v2): dced.js, tdced.js and lovereap.js
+// come after it in the list, and their techniques were put down on every load. index.html's loader says when its core is in; the page
+// sent to friends (build.py, JU_ALL) has its loader after every file, so there it is once the page has been read
+const settled = () => { ready = true; check(); };
+if (JU.load && JU.load.want) JU.load.want('core').then(settled);
+else if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', settled, { once: true });
+else settled();
 })();
